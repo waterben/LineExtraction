@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 2.6)
+
+add_subdirectory(lsd)
+add_subdirectory(lfd)
+add_subdirectory(other)
+add_subdirectory(imgproc)
+add_subdirectory(edge)
+add_subdirectory(geometry)
+add_subdirectory(ceres)
+if(OPENGL_FOUND)
+    add_subdirectory(opengl_sim)
+endif()
+
+if (USE_QT5 AND Qt5Widgets_FOUND)
+    add_subdirectory(qt)
+endif()

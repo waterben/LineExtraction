@@ -1,0 +1,56 @@
+# -Try to find Lapack
+#
+#
+# The following are set after configuration is done: 
+#  LAPACK_FOUND
+#  LAPACK_LIBRARIES
+
+find_package (BLASExtern)
+
+IF (NOT BLAS_FOUND)
+#message(SEND_ERROR "Lapack requires Blas")
+return()
+ENDIF (NOT BLAS_FOUND)
+
+
+IF(NOT LAPACK_DIR)
+IF (WIN32)
+SET(LAPACK_DIR
+    ${MAINFOLDER}/extern_libs/lapack/lib
+)
+ELSE(WIN32)
+SET(LAPACK_DIR
+  /usr/lib
+  /usr/local/lib
+  /usr/lib64
+  /usr/local/lib64
+  ${MAINFOLDER}/extern_libs/lapack/lib
+)
+ENDIF(WIN32)
+ENDIF(NOT LAPACK_DIR)
+
+IF (WIN32)
+SET (LAPACK_NAME liblapack)
+ELSE(WIN32)
+SET (LAPACK_NAME lapack)
+ENDIF(WIN32)
+
+FIND_LIBRARY(LAPACK_LIBRARIES 
+  NAMES ${LAPACK_NAME}
+  PATHS ${LAPACK_DIR}
+)
+
+IF(LAPACK_LIBRARIES)
+	SET(LAPACK_FOUND TRUE)
+    SET(LAPACK_LIBRARIES ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+    SET(LAPACK_LIBS ${LAPACK_LIBRARIES})
+    MESSAGE(STATUS "Lapack library found.")
+ELSE(LAPACK_LIBRARIES)
+	SET(LAPACK_FOUND FALSE)
+    #MESSAGE(WARNING "Lapack library not found.")
+ENDIF(LAPACK_LIBRARIES)
+
+MARK_AS_ADVANCED(
+  LAPACK_LIBRARIES
+  LAPACK_FOUND
+)

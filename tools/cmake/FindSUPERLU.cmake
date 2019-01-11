@@ -1,0 +1,47 @@
+# -Try to find SuperLU
+#
+#
+# The following are set after configuration is done: 
+#  SUPERLU_FOUND
+#  SUPERLU_LIBRARIES
+
+IF(NOT SUPERLU_DIR)
+IF (WIN32)
+SET(SUPERLU_DIR
+    ${MAINFOLDER}/extern_libs/superlu/lib
+)
+ELSE(WIN32)
+SET(SUPERLU_DIR
+  ${MAINFOLDER}/extern_libs/superlu/lib
+  /usr/lib
+  /usr/local/lib
+  /usr/lib64
+  /usr/local/lib64
+)
+ENDIF(WIN32)
+ENDIF(NOT SUPERLU_DIR)
+
+IF (WIN32)
+SET (SUPERLU_NAME libsuperlu)
+ELSE(WIN32)
+SET (SUPERLU_NAME superlu)
+ENDIF(WIN32)
+
+FIND_LIBRARY(SUPERLU_LIBRARIES 
+  NAMES ${SUPERLU_NAME}
+  PATHS ${SUPERLU_DIR}
+)
+
+IF(SUPERLU_LIBRARIES)
+	SET(SUPERLU_FOUND TRUE)
+    SET(SUPERLU_LIBS ${SUPERLU_LIBRARIES})
+    MESSAGE(STATUS "SuperLU library found.")
+ELSE(SUPERLU_LIBRARIES)
+	SET(SUPERLU_FOUND FALSE)
+    MESSAGE(WARNING "SuperLU library not found.")
+ENDIF(SUPERLU_LIBRARIES)
+
+MARK_AS_ADVANCED(
+  SUPERLU_LIBRARIES
+  SUPERLU_FOUND
+)
