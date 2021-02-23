@@ -1,5 +1,6 @@
 # This file contains macros and functions for including remote source code repositories.
 include(IncludeExternalProject)
+include(extern_tools)
 
 macro(dlib_extern quiet)
     unset(DLIB_FOUND)

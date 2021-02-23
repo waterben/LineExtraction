@@ -7,6 +7,7 @@
 #include <imgproc/gradient_adapter.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/susan.hpp>
 #include <imgproc/rcmg.hpp>

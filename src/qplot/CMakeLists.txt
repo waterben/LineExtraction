@@ -1,4 +1,4 @@
-# Copyright (c) 2014 by Benjamin Wassermann
+# Copyright (c) 2014 - 2021 by Benjamin Wassermann
 cmake_minimum_required(VERSION 2.6)
 
 # Add source code properties

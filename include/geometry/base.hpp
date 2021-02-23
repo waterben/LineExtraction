@@ -48,41 +48,12 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
-#ifdef USE_CERES_JET
-#include <ceres/jet.h>
-#include <ceres/rotation.h>
-#endif
 #include "../utility/limit.hpp"
 #include <cstdlib>
 
 namespace lsfm {
     namespace detail {
         using std::round;
-#ifdef USE_CERES_JET
-        using ceres::abs;
-        using ceres::log;
-        using ceres::exp;
-        using ceres::sqrt;
-        using ceres::cos;
-        using ceres::acos;
-        using ceres::sin;
-        using ceres::asin;
-        using ceres::tan;
-        using ceres::atan;
-        using ceres::sinh;
-        using ceres::cosh;
-        using ceres::tanh;
-        using ceres::pow;
-        using ceres::atan2;
-
-        template<class T, int N>
-        inline T round(const ceres::Jet<T,N> &j) { return std::round(j.a); }
-
-        template<class T>
-        inline T hypot(T x, T y) {
-            return ceres::sqrt(x*x + y*y);
-        }
-#else
         using std::abs;
         using std::log;
         using std::exp;
@@ -99,7 +70,6 @@ namespace lsfm {
         using std::pow;
         using std::atan2;
         using std::hypot;
-#endif
     }
 
 
@@ -107,13 +77,6 @@ namespace lsfm {
     FT getScalar(FT val){
         return val;
     }
-
-#ifdef USE_CERES_JET
-    template<class FT, int N>
-    FT getScalar(const ceres::Jet<FT,N> &val){
-        return val.a;
-    }
-#endif
 
     // note -> use Eigen::DontAlign for eigen matrix to prevent align problems, eg. transpose etc.
     // eigen seems to have problems wiht stl vector -> Eigen::aligned_allocator has to be used or
@@ -308,29 +271,6 @@ namespace lsfm {
     typedef RowVec4<float> RowVec4f;
     typedef RowVec4<double> RowVec4d;
 
-#ifdef USE_CERES_JET
-
-    //! convert rot vec to rot matrix
-    template<class FT>
-    inline Matx33<FT> rodrigues(const Vec3<FT> &r) {
-
-        Matx33<FT> rotM;
-        ceres::AngleAxisToRotationMatrix(r.data(), ceres::RowMajorAdapter3x3(&rotM[0]));
-        return rotM;
-
-    }
-
-    //! convert rot matrix to rot vec
-    template<class FT>
-    inline Vec3<FT> rodrigues(const Matx33<FT> &r) {
-
-        Vec3<FT> tmpVec;
-        ceres::RotationMatrixToAngleAxis(ceres::RowMajorAdapter3x3(r.data()), &tmpVec[0]);
-        return tmpVec;
-    }
-
-#else
-
     //! convert rot vec to rot matrix
     template<class FT>
     inline Matx33<FT> rodrigues(const Vec3<FT> &r) {
@@ -346,8 +286,6 @@ namespace lsfm {
         Eigen::AngleAxis<FT> axis(r);
         return axis.axis() * axis.angle();
     }
-
-#endif
 
     //! convert rot point to rot axis and angle
     template<class FT>

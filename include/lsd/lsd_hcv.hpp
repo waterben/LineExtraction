@@ -44,7 +44,7 @@
 #define _HOUGH_CV_LSD_HPP_
 #ifdef __cplusplus
 
-#include <opencv/cv.hpp>
+#include <opencv2/opencv.hpp>
 #include <lsd/lsd_ld.hpp>
 #include <edge/edge_source.hpp>
 

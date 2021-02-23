@@ -17,6 +17,7 @@ set(ENABLE_DOCS ON CACHE BOOL "Enable doxygen documentation genereation")
 set(ENABLE_EVALUATION ON CACHE BOOL "Enable building of algorithm evaluation")
 set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
+set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
 if(${BUILD_DEBUG})
     MESSAGE(STATUS "Setting build type to debug.")
@@ -58,36 +59,32 @@ include_directories(${Boost_INCLUDE_DIR})
 include(extern_opencv)
 include_directories(${OpenCV_INCLUDE_DIR})
 
-# If Qt5 shall not be used e.g. for Graphical Interface then remove
-set(USE_QT5 1)
+if(ENABLE_QT)
+    #include(extern_qt)
+    find_package (Qt5Core)
+    if (Qt5Core_FOUND)
+        MESSAGE(STATUS "Qt5 found")
+        # Tell CMake to run moc when necessary
+        set(CMAKE_AUTOMOC ON)
+        # Tell CMake to run uic when necessary
+        set(CMAKE_AUTOUIC ON)
 
-if(EXISTS ${MAINFOLDER}/extern/qt)
-    list (APPEND CMAKE_PREFIX_PATH "${MAINFOLDER}/extern/qt")
-endif()
+        # As moc files are generated in the binary dir, tell CMake
+        # to always look for includes there:
+        set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package (Qt5Core)
-if (Qt5Core_FOUND)
-    MESSAGE(STATUS "Qt5 found")
-    # Tell CMake to run moc when necessary
-    set(CMAKE_AUTOMOC ON)
-    # Tell CMake to run uic when necessary
-    set(CMAKE_AUTOUIC ON)
-
-    # As moc files are generated in the binary dir, tell CMake
-    # to always look for includes there:
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-    # not required, only for qt apps
-    # place IF (Qt5Widgets_FOUND) around qt project, to add them only if
-    # qt was added
-    # for .ui files, you need to run uic from qt manually (uic file.ui -o ui_file.h)
-    # or add execute_process(COMMAND uic path/file.ui -o path/ui_file.h)
-    #find_package (Qt5Core)
-    find_package (Qt5Gui)
-    find_package (Qt5Widgets)
-    find_package (Qt5PrintSupport)
-    include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
-    #MESSAGE(STATUS ${Qt5Gui_LIBRARY_DIRS})
+        # not required, only for qt apps
+        # place IF (Qt5Widgets_FOUND) around qt project, to add them only if
+        # qt was added
+        # for .ui files, you need to run uic from qt manually (uic file.ui -o ui_file.h)
+        # or add execute_process(COMMAND uic path/file.ui -o path/ui_file.h)
+        #find_package (Qt5Core)
+        find_package (Qt5Gui)
+        find_package (Qt5Widgets)
+        find_package (Qt5PrintSupport)
+        include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
+        #MESSAGE(STATUS ${Qt5Gui_LIBRARY_DIRS})
+    endif ()
 endif ()
 
 find_package(GLUT QUIET)
@@ -111,27 +108,10 @@ endif(NOT LAPACK_FOUND)
 find_package (SUPERLU)
 find_package (ARPACK)
 
-find_package(Ceres QUIET)
-IF (CERES_FOUND)
-find_package(Ceres)
-ELSE(CERES_FOUND)
-find_package(CERESExtern)
-ENDIF (CERES_FOUND)
-
-IF (CERES_FOUND)
-include_directories(${CERES_INCLUDE_DIRS})
-ENDIF (CERES_FOUND)
-
-
 include_directories( "include" )
 link_directories("lib")
 
 add_subdirectory( "src" )
-
-# Build target for creating evaluation
-if (${ENABLE_EVALUATION})
-    add_subdirectory( "evaluation" )
-endif()
 
 # Build target for creating examples
 if (${ENABLE_EXAMPLES})

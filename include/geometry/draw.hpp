@@ -46,6 +46,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include "line.hpp"
 #include "polygon.hpp"
 #include "../edge/edge_segment.hpp"

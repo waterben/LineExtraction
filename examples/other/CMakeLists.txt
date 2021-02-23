@@ -5,9 +5,6 @@ cmake_minimum_required(VERSION 2.6)
 add_executable(test_other_houghlines houghlines.cpp)
 target_link_libraries(test_other_houghlines ${OpenCV_LIBS})
 
-add_executable(test_other_line_opti cvplot.cpp line_opti.cpp)
-target_link_libraries(test_other_line_opti lib_lsd ${OpenCV_LIBS})
-
 add_executable(test_other_dlib test_dlib.cpp)
 target_link_libraries(test_other_dlib ${OpenCV_LIBS} ${DLIB_LIBRARY})
 

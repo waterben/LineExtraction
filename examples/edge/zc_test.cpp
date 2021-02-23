@@ -4,6 +4,7 @@
 #include <ctime>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/quadratureG2.hpp>
 #include <imgproc/quadratureLGF.hpp>

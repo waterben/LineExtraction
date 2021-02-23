@@ -36,13 +36,12 @@ endmacro()
 
 macro(eigen3_repo extern_path)
     IncludeExternalProject( managed_eigen ${extern_path}
-        HG_REPOSITORY https://bitbucket.org/eigen/eigen
-        HG_TAG ${EigenVersion}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG "${EigenVersion}"
         INSTALL_COMMAND ""
         LOG_DOWNLOAD ON
         LOG_CONFIGURE ON
+        CONF_ONLY ON
     )
 
     add_library(eigen IMPORTED STATIC GLOBAL)
@@ -57,7 +56,7 @@ set(EigenDetectionModes Auto System Extern Managed)
 set(EigenDetectionMode Auto CACHE STRING "Eigen detection mode: Auto - try system, then extern, then managed; System - use lib from system; Extern - use lib from extern folder varibale; Managed - get from repository")
 set(EigenExternPath "${PROJECT_SOURCE_DIR}/extern/eigen" CACHE PATH "Path to extern lib")
 set_property(CACHE EigenDetectionMode PROPERTY STRINGS ${EigenDetectionModes})
-set(EigenVersion "3.3.0" CACHE STRING "Required minimal eigen version")
+set(EigenVersion "3.3.9" CACHE STRING "Required minimal eigen version")
 
 
 list(FIND EigenDetectionModes ${EigenDetectionMode} index)
@@ -76,7 +75,8 @@ elseif (${EigenDetectionMode} STREQUAL Extern)
 elseif (${EigenDetectionMode} STREQUAL Managed)
     eigen3_repo("${PROJECT_SOURCE_DIR}/extern")
 else ()
-    find_package(Eigen3 ${EigenVersion} QUIET)
+    set(EIGEN3_FOUND FALSE)
+    #find_package(Eigen3 ${EigenVersion} QUIET)
     if (NOT ${EIGEN3_FOUND})
         eigen3_extern(${EigenExternPath})
     endif()

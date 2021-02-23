@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
 
 #include <geometry/draw.hpp>
 #include <lsd/lsd_el.hpp>
@@ -66,7 +67,7 @@ void showNfa(LSD &lsd, const cv::Mat &src, const NFA &nfa, const std::string &na
     char buffer[50];
     for (size_t i = 0; i != n.size(); ++i) {
         Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        sprintf(buffer, "%i",i);
+        sprintf(buffer, "%zu",i);
         std::cout << i << ": " << idxVec[i].second << std::endl;
         line(edgeImg, lsd.lineSegments()[idxVec[i].first], color);
         text(edgeImg, lsd.lineSegments()[idxVec[i].first].centerPoint(), buffer, color,0,0.4);
@@ -79,7 +80,7 @@ void showNfa(LSD &lsd, const cv::Mat &src, const NFA &nfa, const std::string &na
         if (idxVec[i].second < 0)
             break;
         Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        sprintf(buffer, "%i", i);
+        sprintf(buffer, "%zu", i);
         line(edgeImg, lsd.lineSegments()[idxVec[i].first], color);
         text(edgeImg, lsd.lineSegments()[idxVec[i].first].centerPoint(), buffer, color, 0, 0.4);
     }
@@ -89,7 +90,7 @@ void showNfa(LSD &lsd, const cv::Mat &src, const NFA &nfa, const std::string &na
     cvtColor(src, edgeImg, CV_GRAY2BGR);
     for (size_t i = 0; i != n.size()/2; ++i) {
         Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        sprintf(buffer, "%i", i);
+        sprintf(buffer, "%zu", i);
         line(edgeImg, lsd.lineSegments()[idxVec[i].first], color);
         text(edgeImg, lsd.lineSegments()[idxVec[i].first].centerPoint(), buffer, color, 0, 0.4);
     }
@@ -99,7 +100,7 @@ void showNfa(LSD &lsd, const cv::Mat &src, const NFA &nfa, const std::string &na
     cvtColor(src, edgeImg, CV_GRAY2BGR);
     for (size_t i = 0; i != n.size() && i != 20; ++i) {
         Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        sprintf(buffer, "%i", i);
+        sprintf(buffer, "%zu", i);
         line(edgeImg, lsd.lineSegments()[idxVec[i].first], color);
         text(edgeImg, lsd.lineSegments()[idxVec[i].first].centerPoint(), buffer, color, 0, 0.4);
     }
