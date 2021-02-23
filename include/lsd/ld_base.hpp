@@ -46,6 +46,7 @@
 #include "../geometry/line.hpp"
 #include "../utility/value_manager.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
 
 namespace lsfm {
 
