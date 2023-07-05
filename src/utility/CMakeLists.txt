@@ -6,3 +6,5 @@ cmake_minimum_required(VERSION 2.6)
 file(GLOB utility_hpp "../../include/utility/*.hpp")
 file(GLOB utility_cpp "*.cpp")
 add_library(lib_utility ${LIBRARY_TYPE} ${utility_cpp} ${utility_hpp})
+
+SET_TARGET_PROPERTIES(lib_utility PROPERTIES LINKER_LANGUAGE CXX)

@@ -11,6 +11,4 @@ add_library(lib_lfd ${LIBRARY_TYPE}
 ../../include/lfd/MotionLineFilter.hpp ../../include/lfd/MotionLineMatcher.hpp ../../include/lfd/MotionDescriptor.hpp
 )
 
-IF (WIN32)
-SET_TARGET_PROPERTIES(lib_lfd PROPERTIES LINKER_LANGUAGE C++)
-ENDIF (WIN32)
+SET_TARGET_PROPERTIES(lib_lfd PROPERTIES LINKER_LANGUAGE CXX)

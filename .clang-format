@@ -1,0 +1,20 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 120
+BinPackParameters: false
+DerivePointerAlignment: false
+PointerAlignment: Left
+IndentPPDirectives: AfterHash
+MaxEmptyLinesToKeep: 2
+IncludeBlocks: Regroup
+# Includes are sorted by matching against regular expressions.  The first match
+# wins, its priority is used to determine the include group.
+IncludeCategories:
+  - Regex: ^((<|")(gtest|Eigen|eigen3|json)(/|_))
+    Priority: 2
+  - Regex: "^<(tr[12]/)?[[:alnum:]._]+>"
+    Priority: 3
+  - Regex: ".*"
+    Priority: 1
+    SortPriority: 0

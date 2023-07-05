@@ -18,7 +18,7 @@ void drawEdge(cv::Mat &img, const LineSegment2<FT> &edge, size_t idx) {
     line(img,LineSegment2<FT>(edge.normalLineDist(0, edge.centerPoint()),edge.normalLineDist(10, edge.centerPoint())),cv::Scalar(0,0,200));
     Vec2<FT> ep = edge.lineDistOrigin(edge.end() - 3);
     cv::circle(img,cv::Point(static_cast<int>(round(ep.x())),static_cast<int>(round(ep.y()))),1,cv::Scalar(100,100,255));
-    sprintf(buffer,"%i",idx);
+    sprintf(buffer, "%lu", idx);
     ep = edge.centerPoint();
     cv::putText(img,buffer,cv::Point(static_cast<int>(round(ep.x())),static_cast<int>(round(ep.y()))),cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(100,100,255));
 }
@@ -36,8 +36,10 @@ cv::Mat drawGeometry(const vector<Vec2<FT>>& points, const vector<pair<size_t,si
 
     char buffer[50];
     for (size_t i = 0; i != points.size(); ++i) {
-        sprintf(buffer,"%i",i);
-        cv::putText(ret,buffer,cv::Point(static_cast<int>(round(points[i].x())),static_cast<int>(round(points[i].y()))),cv::FONT_HERSHEY_SIMPLEX,0.5,cv::Scalar(255,50,50));
+      sprintf(buffer, "%lu", i);
+      cv::putText(ret, buffer,
+                  cv::Point(static_cast<int>(round(points[i].x())), static_cast<int>(round(points[i].y()))),
+                  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 50, 50));
     }
     return ret;
 }

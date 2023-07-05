@@ -122,13 +122,9 @@ namespace lsfm {
             verticies_.push_back(vertex - piviot_);
         }
 
-        inline bool empty() const {
-            verticies_.empty();
-        }
+        inline bool empty() const { return verticies_.empty(); }
 
-        inline size_t size() const {
-            verticies_.size();
-        }
+        inline size_t size() const { return verticies_.size(); }
 
         //! translate polygon
         inline void translate(const point_type &t) {

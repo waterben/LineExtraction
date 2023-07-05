@@ -440,9 +440,7 @@ namespace lsfm {
                 return imageData_;
             }
 
-            virtual const EdgeSegmentVector& lineSupportSegments() const final {
-                tracer_.segments();
-            }
+            virtual const EdgeSegmentVector& lineSupportSegments() const final { return tracer_.segments(); }
 
             virtual const PointVector& points() const final {
                 return points_;

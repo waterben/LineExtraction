@@ -4,6 +4,7 @@ bin/
 lib/
 doc/
 extern/
+.vscode/
 
 #cmake
 CMakeLists.txt.user

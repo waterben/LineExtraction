@@ -145,34 +145,51 @@ namespace lsfm {
         }
 
         //! This variant will optimize the line object instead of just calculating the optimized parameters for the line
-        template<class FT, template<class> class LPT, class LV>
-        static inline double optimizeLV(const cv::Mat& mag, const LV& in, LV& out,
-            double d_lower = -1, double d_upper = 1, double r_lower = -CV_PI / 180, double r_upper = CV_PI / 180,
-            double mean_param = 1, double derivative_prec = 1e-7,
-            typename MeanHelper<FT,LPT>::func_type mean_op = Mean<double, mat_type, LinearInterpolator<double, mat_type>>::processs,
-            search_strategy_type search = dlib::bfgs_search_strategy(),
-            stop_strategy_type stop = dlib::objective_delta_stop_strategy(1e-7)) {
-            out.resize(in.size());
-            for (size_t i = 0; i != in.size(); ++i) {
-                out[i] = in[i];
-                optimize_line(mag, out[i], d_lower, d_upper, r_lower, r_upper, mean_param, derivative_prec, mean_op, search, stop);
-            }
+        template <class FT, template <class> class LPT, class LV>
+        static inline void optimizeLV(const cv::Mat& mag,
+                                      const LV& in,
+                                      LV& out,
+                                      double d_lower = -1,
+                                      double d_upper = 1,
+                                      double r_lower = -CV_PI / 180,
+                                      double r_upper = CV_PI / 180,
+                                      double mean_param = 1,
+                                      double derivative_prec = 1e-7,
+                                      typename MeanHelper<FT, LPT>::func_type mean_op =
+                                          Mean<double, mat_type, LinearInterpolator<double, mat_type>>::processs,
+                                      search_strategy_type search = dlib::bfgs_search_strategy(),
+                                      stop_strategy_type stop = dlib::objective_delta_stop_strategy(1e-7)) {
+          out.resize(in.size());
+          for (size_t i = 0; i != in.size(); ++i) {
+            out[i] = in[i];
+            optimize_line(mag, out[i], d_lower, d_upper, r_lower, r_upper, mean_param, derivative_prec, mean_op, search,
+                          stop);
+          }
         }
 
         //! This variant will optimize the line object instead of just calculating the optimized parameters for the line
-        template<class FT, template<class> class LPT, class LV>
-        static inline double optimizeLV(const cv::Mat& mag, const LV& in, LV& out, std::vector<double> &err,
-            double d_lower = -1, double d_upper = 1, double r_lower = -CV_PI / 180, double r_upper = CV_PI / 180,
-            double mean_param = 1, double derivative_prec = 1e-7,
-            typename MeanHelper<double,LPT>::func_type mean_op = Mean<double, mat_type, LinearInterpolator<double, mat_type>>::processs,
-            search_strategy_type search = dlib::bfgs_search_strategy(),
-            stop_strategy_type stop = dlib::objective_delta_stop_strategy(1e-7)) {
-            out.resize(in.size());
-            err.resize(in.size());
-            for (size_t i = 0; i != in.size(); ++i) {
-                out[i] = in[i];
-                err[i] = optimize_line(mag, out[i], d_lower, d_upper, r_lower, r_upper, mean_param, derivative_prec, mean_op, search, stop);
-            }
+        template <class FT, template <class> class LPT, class LV>
+        static inline void optimizeLV(const cv::Mat& mag,
+                                      const LV& in,
+                                      LV& out,
+                                      std::vector<double>& err,
+                                      double d_lower = -1,
+                                      double d_upper = 1,
+                                      double r_lower = -CV_PI / 180,
+                                      double r_upper = CV_PI / 180,
+                                      double mean_param = 1,
+                                      double derivative_prec = 1e-7,
+                                      typename MeanHelper<double, LPT>::func_type mean_op =
+                                          Mean<double, mat_type, LinearInterpolator<double, mat_type>>::processs,
+                                      search_strategy_type search = dlib::bfgs_search_strategy(),
+                                      stop_strategy_type stop = dlib::objective_delta_stop_strategy(1e-7)) {
+          out.resize(in.size());
+          err.resize(in.size());
+          for (size_t i = 0; i != in.size(); ++i) {
+            out[i] = in[i];
+            err[i] = optimize_line(mag, out[i], d_lower, d_upper, r_lower, r_upper, mean_param, derivative_prec,
+                                   mean_op, search, stop);
+          }
         }
     };
     

@@ -24,9 +24,22 @@
 
 - Clone this repo to your local machine using `https://github.com/waterben/LineExtraction.git`
 
-### Setup
+### Setup for Debian/Ubuntu
+ - Make sure following packages are installed: 
+ ```bash
+  sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default
+ ```
 
+ - Create build subfolder and run cmake from there:
+ ```bash
+  mkdir build
+  cd build
+  cmake ..
+ ```
+- All required dependencies to external libs are downloaded and locally built by the cmake script
 ---
+
+### Build Documentation
 
 ## Features
 ## FAQ

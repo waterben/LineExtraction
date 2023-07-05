@@ -246,9 +246,9 @@ namespace lsfm {
                 cv::sqrt(tmp, tmp);
 
             saveNormalized(tmp, name + "_" + filter, border);
-            if (tmpx)
+            if (!tmpx.empty())
                 saveNormalized(tmpx, name + "_" + filter + "_x", border);
-            if (tmpy)
+            if (!tmpy.empty())
                 saveNormalized(tmpy, name + "_" + filter + "_y", border);
         });
 

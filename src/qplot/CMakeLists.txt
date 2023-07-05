@@ -3,3 +3,5 @@ cmake_minimum_required(VERSION 2.6)
 
 # Add source code properties
 add_library(lib_qplot ${LIBRARY_TYPE} qcustomplot.cpp PlotWindow.cpp PlotManager.cpp)
+
+SET_TARGET_PROPERTIES(lib_qplot PROPERTIES LINKER_LANGUAGE CXX)

@@ -324,10 +324,8 @@ namespace lsfm {
             // since we know the type, just do a faster reinterpret cast
             return data.distance(reinterpret_cast<const FdDynamic<DT>*>(rhs)->data);
         }
-        
-        virtual std::string name() const {
-            "dynamic_" + data.name();
-        }
+
+        virtual std::string name() const { return "dynamic_" + data.name(); }
     };
 
 

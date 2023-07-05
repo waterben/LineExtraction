@@ -19,17 +19,20 @@ set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
+set (CMAKE_CXX_STANDARD 17)
+
+
 if(${BUILD_DEBUG})
     MESSAGE(STATUS "Setting build type to debug.")
     set(CMAKE_BUILD_TYPE DEBUG)
     if (NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-write-strings -pg")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -pg")
     endif()
 else()
     MESSAGE(STATUS "Setting build type to release.")
     set(CMAKE_BUILD_TYPE RELEASE)
     if (NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wno-write-strings -O3 -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -O3 -ffast-math")
     endif()
 endif()
 
