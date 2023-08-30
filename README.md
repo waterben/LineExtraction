@@ -27,7 +27,7 @@
 ### Setup for Debian/Ubuntu
  - Make sure following packages are installed: 
  ```bash
-  sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default
+  sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default libgtk2.0-dev
  ```
 
  - Create build subfolder and run cmake from there:
