@@ -4,23 +4,22 @@
 #include <string>
 #include <ctime>
 #define USE_PERIODIC_FFT
-#include <imgproc/gradient_adapter.hpp>
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/types_c.h>
+#include <edge/nms.hpp>
+#include <edge/otsu.hpp>
 #include <imgproc/derivative_gradient.hpp>
-#include <imgproc/susan.hpp>
-#include <imgproc/rcmg.hpp>
-#include <imgproc/quadratureG2.hpp>
-#include <imgproc/quadratureLGF.hpp>
+#include <imgproc/gradient_adapter.hpp>
+#include <imgproc/image_operator.hpp>
 #include <imgproc/pc_lgf.hpp>
 #include <imgproc/pc_matlab.hpp>
-#include <imgproc/otsu.hpp>
-#include <imgproc/image_operator.hpp>
+#include <imgproc/quadratureG2.hpp>
+#include <imgproc/quadratureLGF.hpp>
 #include <imgproc/quadratureS.hpp>
 #include <imgproc/quadratureSF.hpp>
-#include <edge/nms.hpp>
-
+#include <imgproc/rcmg.hpp>
+#include <imgproc/susan.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/opencv.hpp>
 
 
 using namespace std;

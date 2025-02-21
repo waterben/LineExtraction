@@ -44,7 +44,7 @@
 #define _THRESHOLD_HPP_
 #ifdef __cplusplus
 
-#include <imgproc/otsu.hpp>
+#include <edge/otsu.hpp>
 
 namespace lsfm {
     

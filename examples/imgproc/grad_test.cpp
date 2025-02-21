@@ -1,16 +1,18 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <ctime>
-#include <opencv2/opencv.hpp>
+#include <edge/nms.hpp>
+#include <edge/otsu.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <imgproc/image_operator.hpp>
+#include <imgproc/rcmg.hpp>
+#include <imgproc/susan.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
-#include <imgproc/derivative_gradient.hpp>
-#include <imgproc/susan.hpp>
-#include <imgproc/rcmg.hpp>
-#include <imgproc/otsu.hpp>
-#include <imgproc/image_operator.hpp>
-#include <edge/nms.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
+
 
 
 using namespace std;

@@ -1,16 +1,15 @@
-#include <iostream>
-#include <fstream>
-
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <edge/nms.hpp>
+#include <edge/threshold.hpp>
+#include <imgproc/derivative_gradient.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <imgproc/derivative_gradient.hpp>
-#include <imgproc/threshold.hpp>
-#include <edge/nms.hpp>
+#include <fstream>
+#include <iostream>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
-#include <boost/format.hpp>
 
 using namespace lsfm;
 using namespace std;

@@ -44,7 +44,7 @@
 #define _OTSU_HPP_
 #ifdef __cplusplus
 
-#include <imgproc/range.hpp>
+#include <utility/range.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <string>
 

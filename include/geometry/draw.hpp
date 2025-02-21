@@ -50,7 +50,7 @@
 #include "line.hpp"
 #include "polygon.hpp"
 #include "../edge/edge_segment.hpp"
-#include "../imgproc/range.hpp"
+#include "../utility/range.hpp"
 
 namespace lsfm {
 
