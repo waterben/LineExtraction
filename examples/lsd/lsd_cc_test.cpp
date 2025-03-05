@@ -16,18 +16,19 @@ using namespace lsfm;
 
 static void help()
 {
-    cout << "\nThis program demonstrates cc lsd.\n"
-        "Usage:\n"
-        "./test_lsd_data <image_name>, Default is ../../images/office1_low.jpg\n" << endl;
+  cout << "\nThis program demonstrates cc lsd.\n"
+          "Usage:\n"
+          "./test_lsd_data <image_name>, Default is ../images/office1_low.jpg\n"
+       << endl;
 }
 
 int main(int argc, char** argv)
 {
     //const char* filename = argc >= 2 ? argv[1] : "../../MiddEval3/trainingH/Adirondack/im0.png";
-	const char* filename = argc >= 2 ? argv[1] : "../../../images/office1_low.jpg";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/v1.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/lines.jpg";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/a1.jpg";
+    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/v1.png";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/lines.jpg";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/a1.jpg";
 
     cv::Mat src = cv::imread(filename, 0);
     if (src.empty())
@@ -37,8 +38,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (src.channels() != 1)
-        cvtColor(src, src, CV_RGB2GRAY);
+    if (src.channels() != 1) cvtColor(src, src, cv::COLOR_RGB2GRAY);
     cv::Mat srcS;
     resize(src,srcS,cv::Size(0,0),0.5,0.5);
 

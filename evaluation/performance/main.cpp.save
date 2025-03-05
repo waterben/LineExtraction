@@ -38,7 +38,7 @@ const DataProviderMap& getDefaultProvider() {
     static DataProviderMap map;
     if (map.empty()) {
         try {
-            //map["images"] = DataProviderPtr(new FileDataProvider("../images", "images"));
+            //map["images"] = DataProviderPtr(new FileDataProvider("../../images", "images"));
             map["a"] = DataProviderPtr(new FileDataProvider("../../images/small/a", "a"));
             map["b"] = DataProviderPtr(new FileDataProvider("../../images/small/b", "b"));
             map["c"] = DataProviderPtr(new FileDataProvider("../../images/small/c", "c"));

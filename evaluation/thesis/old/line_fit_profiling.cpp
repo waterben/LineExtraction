@@ -125,11 +125,11 @@ int main(int argc, char** argv)
     std::cin >> c;
 
     std::vector<std::pair<fs::path, std::string>> sets;
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
     sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-Q", "MDB-Q"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
 
     EntryVector fit;
     fit.push_back(EntryPtr(new Entry<FitLine<RegressionFit<float,cv::Point>>>("RegressionFit")));

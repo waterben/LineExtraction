@@ -277,7 +277,7 @@ namespace lsfm {
             return eo_done_;
         }
 
-        //! get reponse of even filter at strongest direction
+        //! get response of even filter at strongest direction
         cv::Mat even() const {
             if (!eo_done_) {
                 cv::Mat t1, t2;
@@ -295,7 +295,7 @@ namespace lsfm {
             return eo_done_;
         }
 
-        //! get reponse of odd filter at strongest direction
+        //! get response of odd filter at strongest direction
         cv::Mat odd() const {
             if (!eo_done_) {
                 cv::Mat t1, t2;
@@ -304,7 +304,7 @@ namespace lsfm {
             return o_;
         }
 
-        //! get reponse of even and odd filter at strongest direction
+        //! get response of even and odd filter at strongest direction
         void evenOdd(cv::Mat &e, cv::Mat &o) const {
             if (!eo_done_) {
                 steer(this->oddx(), oy_, e_, o_);

@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 
 #include <opencv2/core/core.hpp>
-#include "range.hpp"
+#include "utility/range.hpp"
 
 
 namespace lsfm {

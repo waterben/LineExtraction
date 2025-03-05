@@ -44,10 +44,12 @@
 #define _DIRECTION_HPP_
 #ifdef __cplusplus
 
-#include "range.hpp"
-#include <opencv2/imgproc/imgproc.hpp>
-#include "polar.hpp"
-#include <string>
+#  include "../utility/range.hpp"
+#  include "polar.hpp"
+#  include <opencv2/imgproc/imgproc.hpp>
+
+#  include <string>
+
 
 namespace lsfm {
     

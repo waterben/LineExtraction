@@ -78,42 +78,40 @@ void showPattern(EDGE &edge, const cv::Mat &src, const std::string &name, bool c
 
 int main(int argc, char** argv)
 {
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
 
-    cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (src.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (src.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() > 1)
-        cvtColor(src, src, CV_BGR2GRAY);
+  if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-    GaussianNoiseOperator noise(10);
-    //noise.apply(src);
-    GaussianBlur(src, src, cv::Size(5, 5), 0.6);
+  GaussianNoiseOperator noise(10);
+  // noise.apply(src);
+  GaussianBlur(src, src, cv::Size(5, 5), 0.6);
 
-    //imshow("img", src);
+  // imshow("img", src);
 
-    float th_low = 0.004, th_high = 0.012;
-    DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-    NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
+  float th_low = 0.004, th_high = 0.012;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
 
 
-    EsdPattern<int,8,true> pattern(10, 3, 3, sobel.magnitudeThreshold(th_low),2);
+  EsdPattern<int, 8, true> pattern(10, 3, 3, sobel.magnitudeThreshold(th_low), 2);
 
 
-    sobel.process(src);
-    nms.process(sobel);
-    pattern.detect(sobel, nms);
-    showPattern(pattern, src, "pattern");
+  sobel.process(src);
+  nms.process(sobel);
+  pattern.detect(sobel, nms);
+  showPattern(pattern, src, "pattern");
 
-    waitKey();
+  waitKey();
 
-    return 0;
+  return 0;
 }

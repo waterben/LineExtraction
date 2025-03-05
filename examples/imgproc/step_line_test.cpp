@@ -98,17 +98,15 @@ void showNMS(const std::string &name,NMS &nms,bool use_dir = true) {
 
 int main(int argc, char** argv)
 {
-    const char* filename = argc >= 2 ? argv[1] : "../../../images/step_line.png";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/step_line.png";
 
-    cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (src.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (src.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() > 1)
-        cvtColor(src, src, CV_BGR2GRAY);
+    if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
     GaussianNoiseOperator noise(10);
     //noise.apply(src);

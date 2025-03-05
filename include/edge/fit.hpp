@@ -503,9 +503,9 @@ namespace lsfm {
         static std::string name() {
             return "M-Estimator";
         }
-    
-        MEstimatorFit(int d = CV_DIST_L2, double p = 0, double r = 0.001, double a = 0.001) :
-        dist(d), param(p), reps(r), aeps(a) {}
+
+        MEstimatorFit(int d = cv::DIST_L2, double p = 0, double r = 0.001, double a = 0.001)
+            : dist(d), param(p), reps(r), aeps(a) {}
 
         void fit(const PT *beg, const PT *end, FT &cx, FT &cy, FT &nx, FT &ny) const {
             cv::Vec<float, 4> res;
@@ -551,10 +551,9 @@ namespace lsfm {
 
         typedef FT float_type;
         typedef cv::Point point_type;
-    
-        MEstimatorFit(int d = CV_DIST_L2, double p = 0, double r = 0.001, double a = 0.001) :
-            dist(d), param(p), reps(r), aeps(a) {
-        }
+
+        MEstimatorFit(int d = cv::DIST_L2, double p = 0, double r = 0.001, double a = 0.001)
+            : dist(d), param(p), reps(r), aeps(a) {}
 
         static std::string name() {
             return "M-Estimator";
@@ -594,35 +593,35 @@ namespace lsfm {
         using FitLine<MEstimatorFit<FT, PT>>::fit_;
 
         void init() {
-            fit_.dist = CV_DIST_L2;
-            fit_.param = 0;
-            fit_.reps = 0.001;
-            fit_.aeps = 0.001;
+          fit_.dist = cv::DIST_L2;
+          fit_.param = 0;
+          fit_.reps = 0.001;
+          fit_.aeps = 0.001;
 
-            this->add("fit_distance", std::bind(&MEstimatorFitLine<FT, PT>::valueDist, this, std::placeholders::_1),
-                "Distance used by the M-estimator.");
+          this->add("fit_distance", std::bind(&MEstimatorFitLine<FT, PT>::valueDist, this, std::placeholders::_1),
+                    "Distance used by the M-estimator.");
 
-            this->add("fit_param", std::bind(&MEstimatorFitLine<FT, PT>::valueParam, this, std::placeholders::_1),
-                "Numerical parameter for some types of distances. If it is 0, an optimal value is chosen.");
+          this->add("fit_param", std::bind(&MEstimatorFitLine<FT, PT>::valueParam, this, std::placeholders::_1),
+                    "Numerical parameter for some types of distances. If it is 0, an optimal value is chosen.");
 
-            this->add("fit_reps", std::bind(&MEstimatorFitLine<FT, PT>::valueREps, this, std::placeholders::_1),
-                "Sufficient accuracy for the radius (distance between the coordinate origin and the line)");
+          this->add("fit_reps", std::bind(&MEstimatorFitLine<FT, PT>::valueREps, this, std::placeholders::_1),
+                    "Sufficient accuracy for the radius (distance between the coordinate origin and the line)");
 
-            this->add("fit_aeps", std::bind(&MEstimatorFitLine<FT, PT>::valueAEps, this, std::placeholders::_1),
-                "Sufficient accuracy for the angle.");
+          this->add("fit_aeps", std::bind(&MEstimatorFitLine<FT, PT>::valueAEps, this, std::placeholders::_1),
+                    "Sufficient accuracy for the angle.");
         }
     public:
         using FitLine<MEstimatorFit<FT, PT>>::apply;
 
-        MEstimatorFitLine(int d = CV_DIST_L2, double p = 0, double r = 0.001, double a = 0.001) {
-            init();
+        MEstimatorFitLine(int d = cv::DIST_L2, double p = 0, double r = 0.001, double a = 0.001) {
+          init();
 
-            CV_Assert(d > 0 && d < 8 && p >= 0 && r > 0 && a > 0);
+          CV_Assert(d > 0 && d < 8 && p >= 0 && r > 0 && a > 0);
 
-            fit_.dist = d;
-            fit_.param = p;
-            fit_.reps = r;
-            fit_.aeps = a;
+          fit_.dist = d;
+          fit_.param = p;
+          fit_.reps = r;
+          fit_.aeps = a;
         }
 
         MEstimatorFitLine(const ValueManager::NameValueVector &options) {

@@ -393,27 +393,27 @@ void phasecong(const emxArray_real_T *im, const emxArray_real_T *lgf, const
 
 	c_rdivide(r14, weight);
 
-	//  Automatically determine noise threshold
-	//
-	//  Assuming the noise is Gaussian the response of the filters to noise will
-	//  form Rayleigh distribution.  We use the filter responses at the smallest
-	//  scale as a guide to the underlying noise level because the smallest scale
-	//  filters spend most of their time responding to noise, and only
-	//  occasionally responding to features. Either the median, or the mode, of
-	//  the distribution of filter responses can be used as a robust statistic to
-	//  estimate the distribution mean and standard deviation as these are related 
-	//  to the median or mode by fixed constants.  The response of the larger
-	//  scale filters to noise can then be estimated from the smallest scale
-	//  filter response according to their relative bandwidths.
-	//
-	//  This code assumes that the expected reponse to noise on the phase
-	//  congruency calculation is simply the sum of the expected noise responses
-	//  of each of the filters.  This is a simplistic overestimate, however these
-	//  two quantities should be related by some constant that will depend on the
-	//  filter bank being used.  Appropriate tuning of the parameter 'k' will
-	//  allow you to produce the desired output. (though the value of k seems to
-	//  be not at all critical)
-	emxFree_real_T(&r14);
+        //  Automatically determine noise threshold
+        //
+        //  Assuming the noise is Gaussian the response of the filters to noise will
+        //  form Rayleigh distribution.  We use the filter responses at the smallest
+        //  scale as a guide to the underlying noise level because the smallest scale
+        //  filters spend most of their time responding to noise, and only
+        //  occasionally responding to features. Either the median, or the mode, of
+        //  the distribution of filter responses can be used as a robust statistic to
+        //  estimate the distribution mean and standard deviation as these are related
+        //  to the median or mode by fixed constants.  The response of the larger
+        //  scale filters to noise can then be estimated from the smallest scale
+        //  filter response according to their relative bandwidths.
+        //
+        //  This code assumes that the expected response to noise on the phase
+        //  congruency calculation is simply the sum of the expected noise responses
+        //  of each of the filters.  This is a simplistic overestimate, however these
+        //  two quantities should be related by some constant that will depend on the
+        //  filter bank being used.  Appropriate tuning of the parameter 'k' will
+        //  allow you to produce the desired output. (though the value of k seems to
+        //  be not at all critical)
+        emxFree_real_T(&r14);
 	if (noiseMethod >= 0.0) {
 		//  We are using a fixed noise threshold
 		T = noiseMethod;

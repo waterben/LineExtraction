@@ -99,7 +99,9 @@ void Label::update()
 
     QFontInfo info(font_);
 
-    QRect r = QRect(QPoint(0, 0), fm.size(Qwt3D::SingleLine, text_));//fm.boundingRect(text_)  misbehaviour under linux;
+    // Misbehaviour under linux;
+    // QRect r = fm.boundingRect(text_)  
+    QRect r = QRect(QPoint(0, 0), fm.size(Qwt3D::SingleLine, text_));
 
     r.translate(0, -r.top());
 
@@ -131,11 +133,13 @@ void Label::update()
     p.drawText(0, r.height() - fm.descent() - 1, text_);
     p.end();
     buf_ = pm_.toImage();
-#ifdef WIN32
-    tex_ = QGLWidget::convertToGLFormat(buf_);	  // flipped 32bit RGBA ?
-#else
-    tex_ = buf_;
-#endif
+
+    // #ifdef WIN32
+    //     tex_ = QGLWidget::convertToGLFormat(buf_);	  // flipped 32bit RGBA ?
+    // #else
+    // tex_ = buf_;
+    // #endif
+    tex_ = QGLWidget::convertToGLFormat(buf_);  // flipped 32bit RGBA ?
 }
 
 /**
@@ -231,7 +235,6 @@ void Label::draw()
     else
     {
         drawDevicePixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, tex_.bits());
-        //    glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, tex_.bits());	
     }
 
 

@@ -40,15 +40,15 @@ const DataProviderMap& getDefaultProvider() {
     static DataProviderMap map;
     if (map.empty()) {
         try {
-            //map["images"] = DataProviderPtr(new FileDataProvider("../images", "images"));
-            map["a"] = DataProviderPtr(new FileDataProvider("../../images/small/a", "a"));
-            map["b"] = DataProviderPtr(new FileDataProvider("../../images/small/b", "b"));
-            map["c"] = DataProviderPtr(new FileDataProvider("../../images/small/c", "c"));
-            //map["Selection"] = DataProviderPtr(new FileDataProvider("../../images/Selection", "Selection"));
-            //map["BSDS500"] = DataProviderPtr(new FileDataProvider("../../images/BSDS500", "BSDS500"));
-            //map["MDB-Q"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-Q", "MDB-Q"));
-            //map["MDB-H"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-H", "MDB-H"));
-            //map["MDB-F"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-F", "MDB-F"));
+          // map["images"] = DataProviderPtr(new FileDataProvider("../../images", "images"));
+          map["a"] = DataProviderPtr(new FileDataProvider("../../images/small/a", "a"));
+          map["b"] = DataProviderPtr(new FileDataProvider("../../images/small/b", "b"));
+          map["c"] = DataProviderPtr(new FileDataProvider("../../images/small/c", "c"));
+          // map["Selection"] = DataProviderPtr(new FileDataProvider("../../images/Selection", "Selection"));
+          // map["BSDS500"] = DataProviderPtr(new FileDataProvider("../../images/BSDS500", "BSDS500"));
+          // map["MDB-Q"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-Q", "MDB-Q"));
+          // map["MDB-H"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-H", "MDB-H"));
+          // map["MDB-F"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-F", "MDB-F"));
         }
         catch (std::exception& e) {
             std::cout << "Default provider parse error: " << e.what() << std::endl;
@@ -73,21 +73,22 @@ void addDefault(const DataProviderMap& provider, DataProviderList& data) {
 }
 
 void help() {
-    std::cout << "Performace test options:" << std::endl
-        << "\t-help(h)\t\t\tthis information" << std::endl
-        << "\t-verbose(v)\t\tverbose mode" << std::endl
-        << "\t-high_prio(hp)\t\thigh priority mode" << std::endl
-        << "\t-low_prio(lp)\t\tlow priority mode" << std::endl
-        << "\t-transpose(t)\t\tprint tasks as columns" << std::endl
-        << "\t-full_report(fr)\tprint full report" << std::endl
-        << "\t-console_out(co)\tprint to console" << std::endl
-        << "\t-runs(r)\t\tnumber of runs (default 10)" << std::endl
-        << "\t-visual_res(vr)\t\tenable visual results" << std::endl
-        << "\t-no_total(nt)\t\tno total measure" << std::endl
-        << "\t-no_mean(nm)\t\tno mean measure" << std::endl
-        << "\t-no_stddev(ns)\t\tno std deviation measure" << std::endl
-        << "\t-no_mpix(np)\t\tno megapixel in title" << std::endl
-        << "\t-no_csv(nc)\t\tskip csv output" << std::endl << std::endl;
+  std::cout << "Performance test options:" << std::endl
+            << "\t-help(h)\t\t\tthis information" << std::endl
+            << "\t-verbose(v)\t\tverbose mode" << std::endl
+            << "\t-high_prio(hp)\t\thigh priority mode" << std::endl
+            << "\t-low_prio(lp)\t\tlow priority mode" << std::endl
+            << "\t-transpose(t)\t\tprint tasks as columns" << std::endl
+            << "\t-full_report(fr)\tprint full report" << std::endl
+            << "\t-console_out(co)\tprint to console" << std::endl
+            << "\t-runs(r)\t\tnumber of runs (default 10)" << std::endl
+            << "\t-visual_res(vr)\t\tenable visual results" << std::endl
+            << "\t-no_total(nt)\t\tno total measure" << std::endl
+            << "\t-no_mean(nm)\t\tno mean measure" << std::endl
+            << "\t-no_stddev(ns)\t\tno std deviation measure" << std::endl
+            << "\t-no_mpix(np)\t\tno megapixel in title" << std::endl
+            << "\t-no_csv(nc)\t\tskip csv output" << std::endl
+            << std::endl;
 }
 
 int main(int argc, char** argv)

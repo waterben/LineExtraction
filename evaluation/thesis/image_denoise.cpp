@@ -94,8 +94,8 @@ double processError(Entry &e, const fs::path& path, int n, double &time) {
             cout << "Can not open " << file.generic_string() << endl;
             return;
         }
-        
-        cv::cvtColor(src, src, CV_BGR2GRAY);
+
+        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
         src_n = src.clone();
         op_noise(src_n);
 
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
     std::cin >> c;
 
     fs::path path = "../../images/MDB/MiddEval3-Q";
-    
+
     std::vector<Entry> filter;
   
     filter.push_back(Entry(NoOp::create(), "noop"));

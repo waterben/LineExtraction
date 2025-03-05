@@ -48,25 +48,28 @@ class POFuncPlot : public LATool
         float_type z_scale;
 
     public:
-        FunctionPlot(QWidget * parent, Ui::POFuncPlot *p) :
-            QMainWindow(parent), src(0), po(p), plot(new Qwt3D::SurfacePlot(this)), lpoi(*plot), lpod(*plot), z_scale(1) {
-            
-            setWindowTitle("PO Function Plot");
+     FunctionPlot(QWidget* parent, Ui::POFuncPlot* p)
+         : QMainWindow(parent),
+           src(0),
+           po(p),
+           plot(new Qwt3D::SurfacePlot(this)),
+           lpoi(*plot),
+           lpod(*plot),
+           z_scale(1) {
+       setWindowTitle("PO Function Plot");
 
-            setCentralWidget(plot);
-            lpoi.setMinZ(0);
-            lpod.setMinZ(0);
+       setCentralWidget(plot);
+       lpoi.setMinZ(0);
+       lpod.setMinZ(0);
 
-            for (unsigned i = 0; i != plot->coordinates()->axes.size(); ++i)
-            {
-                plot->coordinates()->axes[i].setMajors(3);
-                plot->coordinates()->axes[i].setMinors(5);
-            }
+       for (unsigned i = 0; i != plot->coordinates()->axes.size(); ++i) {
+         plot->coordinates()->axes[i].setMajors(3);
+         plot->coordinates()->axes[i].setMinors(5);
+       }
 
-            //resetView();
-            plot->setRotation(20, 0, 44.9);
-
-        }
+       // resetView();
+       plot->setRotation(20, 0, 44.9);
+     }
 
         ~FunctionPlot() {
             delete plot;
@@ -79,7 +82,7 @@ class POFuncPlot : public LATool
 
         void resetView() {
             plot->setRotation(20, 0, 44.9);
-            plot->setScale(1, 1, 1);
+            plot->setScale(1, 1, -1);
             plot->setShift(0, 0, 0);
             plot->setZoom(1);
             plot->setViewportShift(0, 0);
@@ -88,7 +91,7 @@ class POFuncPlot : public LATool
 
         void fitProfile() {
             plot->setRotation(0, 0, 0);
-            plot->setScale(1, 1, 1);
+            plot->setScale(1, 1, -1);
             plot->setShift(0, 0, 0);
             plot->setViewportShift(0, 0);
             plot->setZoom(1);
@@ -98,7 +101,7 @@ class POFuncPlot : public LATool
 
         void fitRotation() {
             plot->setRotation(0, 0, 90);
-            plot->setScale(1, 1, 1);
+            plot->setScale(1, 1, -1);
             plot->setShift(0, 0, 0);
             plot->setViewportShift(0, 0);
             plot->setZoom(1);

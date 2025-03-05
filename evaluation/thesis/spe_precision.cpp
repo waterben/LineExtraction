@@ -136,9 +136,9 @@ struct GroundTruth {
     void draw(cv::Mat &out, const PT<FT> &p, size_t l, FT err) const {
         static cv::Vec3b color[] = { cv::Vec3b(255, 0, 0), cv::Vec3b(0, 255, 0), cv::Vec3b(255, 255, 0), cv::Vec3b(255, 0, 255), cv::Vec3b(0, 255, 255), cv::Vec3b(255, 255, 255), cv::Vec3b(0, 0, 255) };
         if (err > 1 || l > 5)
-            set(out, cv::Point(getX(p), getY(p)), color[6]);
+            setPixel(out, cv::Point(getX(p), getY(p)), color[6]);
         else
-            set(out, cv::Point(getX(p), getY(p)), color[l]);
+            setPixel(out, cv::Point(getX(p), getY(p)), color[l]);
     }
 };
 

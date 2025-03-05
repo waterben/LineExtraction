@@ -16,54 +16,46 @@ using namespace cv;
 
 static void help()
 {
-    cout << "\nThis program demonstrates lsd.\n"
-        "Usage:\n"
-        "./test_lsd_nfa <image_name>, Default is ../../images/office1_low.jpg\n" << endl;
+  cout << "\nThis program demonstrates lsd.\n"
+          "Usage:\n"
+          "./test_lsd_nfa <image_name>, Default is ../images/office1_low.jpg\n"
+       << endl;
 }
 
-int main(int argc, char** argv)
-{
-    
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+int main(int argc, char** argv) {
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
 
-    cv::Mat src = cv::imread(filename, 0);
-    if (src.empty())
-    {
-        help();
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, 0);
+  if (src.empty()) {
+    help();
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() != 1)
-        cvtColor(src, src, CV_RGB2GRAY);
-    
-    //blur(src, src, Size(3, 3));
-    GaussianBlur(src, src, cv::Size(3, 3), 0.6);
+  if (src.channels() != 1) cvtColor(src, src, cv::COLOR_RGB2GRAY);
 
-    typedef float FT;
-    
+  // blur(src, src, Size(3, 3));
+  GaussianBlur(src, src, cv::Size(3, 3), 0.6);
 
-    LsdEL<FT> lsd(0.004, 0.012, 30, 3, 5, 4, 0/*EL_USE_NFA*/);
+  typedef float FT;
 
-    lsd.detect(src);
-    LsdEL<FT>::LineSegmentVector lines = lsd.lineSegments();
 
-    // init as same line (e.g. diagonal of mat)
-    struct Dists {
-        Dists() {}
-        Dists(FT i, FT n = 0) :
-            id(i), nd(n) {}
-        
-        FT id, nd; // intersection distance and normal distance
+  LsdEL<FT> lsd(0.004, 0.012, 30, 3, 5, 4, 0 /*EL_USE_NFA*/);
 
-        // same line (could be oriented 180° in other direction and/or has different range)
-        inline bool equal() const {
-            return id == std::numeric_limits<FT>::infinity() && nd == 0;
-        }
+  lsd.detect(src);
+  LsdEL<FT>::LineSegmentVector lines = lsd.lineSegments();
 
-        inline bool parallel() const {
-            return id == std::numeric_limits<FT>::infinity();
-        }
+  // init as same line (e.g. diagonal of mat)
+  struct Dists {
+    Dists() {}
+    Dists(FT i, FT n = 0) : id(i), nd(n) {}
+
+    FT id, nd;  // intersection distance and normal distance
+
+    // same line (could be oriented 180ï¿½ in other direction and/or has different range)
+    inline bool equal() const { return id == std::numeric_limits<FT>::infinity() && nd == 0; }
+
+    inline bool parallel() const { return id == std::numeric_limits<FT>::infinity(); }
 
     };
 
@@ -105,4 +97,3 @@ int main(int argc, char** argv)
     
     return 0;
 }
-

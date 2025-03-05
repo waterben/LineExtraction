@@ -96,7 +96,7 @@ void processPath(std::vector<Entry<GT,MT,DT>> &entries, const std::pair<fs::path
         }
         std::cout << file << std::endl;
         cv::Mat src;
-        cv::cvtColor(rgb, src, CV_BGR2GRAY);
+        cv::cvtColor(rgb, src, cv::COLOR_BGR2GRAY);
 
         for_each(entries.begin(), entries.end(), [&](Entry<GT, MT, DT> &e) {
             e.process(e.rgb() ? rgb : src);
@@ -110,11 +110,11 @@ int main(int argc, char** argv)
     std::cin >> c;
 
     std::vector<std::pair<fs::path, std::string>> sets;
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
     sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-Q", "MDB-Q"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
 
     std::vector<Entry<short, int, float>> gradI;
     /*gradI.push_back(Entry<short, int, float>(new DerivativeGradient<uchar, short, int, float, RobertsDerivative<uchar, short>, QuadraticMagnitude>, "Roberts (2x2)"));

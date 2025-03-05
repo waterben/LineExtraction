@@ -19,12 +19,11 @@ constexpr float th_low = 0.004f, th_high = 0.012f;
 
 struct FitPerformaceData : public TaskData {
     FitPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(th_low, th_high), edge(10, 3, 3, grad.magnitudeThreshold(th_low)) {
-        if (src.channels() == 3)
-            cv::cvtColor(src, src, CV_BGR2GRAY);
-        grad.process(src);
-        nms.process(grad);
-        edge.detect(grad, nms);
-        PixelEstimator<float, cv::Point>::convert(edge.points(), points, grad.magnitude(), nms.directionMap());
+      if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+      grad.process(src);
+      nms.process(grad);
+      edge.detect(grad, nms);
+      PixelEstimator<float, cv::Point>::convert(edge.points(), points, grad.magnitude(), nms.directionMap());
     }
 
     Grad grad;

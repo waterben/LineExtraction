@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     capture = VideoCapture(filename1);
     capture.grab();
     capture.retrieve(frames, IMREAD_GRAYSCALE);
-    cvtColor(frames,frames,CV_RGB2GRAY);
+    cvtColor(frames, frames, cv::COLOR_RGB2GRAY);
     std:: cout << "type: " << frames.type() << std::endl;
 
     double scaleFactor = 1.0;
@@ -411,7 +411,7 @@ int main(int argc, char** argv)
         if(!capture.grab())
             break;
         capture.retrieve(frames, IMREAD_GRAYSCALE);
-        cvtColor(frames,frames,CV_RGB2GRAY);
+        cvtColor(frames, frames, cv::COLOR_RGB2GRAY);
 
         previousImGrayLeft = imL;
         previousLeftLines = lsdL.lineSegments();

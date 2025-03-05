@@ -44,10 +44,12 @@
 #define _FILTER_HPP_
 #ifdef __cplusplus
 
-#include <opencv2/core/core.hpp>
-#include "range.hpp"
-#include "../utility/value_manager.hpp"
-#include <map>
+#  include "../utility/range.hpp"
+#  include "../utility/value_manager.hpp"
+#  include <opencv2/core/core.hpp>
+
+#  include <map>
+
 
 namespace lsfm {
     struct FilterData {

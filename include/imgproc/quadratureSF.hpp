@@ -221,7 +221,7 @@ namespace lsfm {
             return oddxy_done_;
         }
 
-        //! get x,y odd reponses
+        //! get x,y odd responses
         void odd(cv::Mat& gx, cv::Mat& gy) const {
             if (!oddxy_done_) {
                 cv::Mat_<std::complex<FT>> tmpc = ifft2(multiply(imgf_, fo_));

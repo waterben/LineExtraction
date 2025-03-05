@@ -110,74 +110,72 @@ void showNfa(LSD &lsd, const cv::Mat &src, const NFA &nfa, const std::string &na
 
 static void help()
 {
-    cout << "\nThis program demonstrates lsd.\n"
-        "Usage:\n"
-        "./test_lsd_nfa <image_name>, Default is ../../images/office1_low.JPG\n" << endl;
+  cout << "\nThis program demonstrates lsd.\n"
+          "Usage:\n"
+          "./test_lsd_nfa <image_name>, Default is ../images/office1_low.JPG\n"
+       << endl;
 }
 
-int main(int argc, char** argv)
-{
-    
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+int main(int argc, char** argv) {
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
 
-    cv::Mat src = cv::imread(filename, 0);
-    if (src.empty())
-    {
-        help();
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, 0);
+  if (src.empty()) {
+    help();
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() != 1)
-        cvtColor(src, src, CV_RGB2GRAY);
-    
-    //blur(src, src, Size(3, 3));
-    GaussianBlur(src, src, cv::Size(3, 3), 0.8);
+  if (src.channels() != 1) cvtColor(src, src, cv::COLOR_RGB2GRAY);
 
-    typedef float FT;
-    
+  // blur(src, src, Size(3, 3));
+  GaussianBlur(src, src, cv::Size(3, 3), 0.8);
 
-//    LsdCC<FT> lsd(0.008, 0.012, 30, 0, 2);
-    LsdEL<FT> lsd(0.004, 0.012, 10, 3, 10, 4, 0/*EL_USE_NFA*/);
+  typedef float FT;
 
 
-    NfaContrast<int, float, index_type, std::map<int, float>> nfac(8);
-    NfaBinom<short, float, index_type> nfab(8, 1.0 / 8);
-    NfaBinom2<short, float, index_type> nfab2(8, 1.0 / 8);
+  //    LsdCC<FT> lsd(0.008, 0.012, 30, 0, 2);
+  LsdEL<FT> lsd(0.004, 0.012, 10, 3, 10, 4, 0 /*EL_USE_NFA*/);
 
-    lsd.detect(src);
-    std::cout << "lines: " << lsd.lineSegments().size() << std::endl;
 
-    double scale = 2;
-    cv::Mat q = quiver<short>(src, lsd.imageData("gx"), lsd.imageData("gy"), 4, 4, scale, 2, 10, Scalar(0,0,255), 1,CV_AA);
-    for_each(lsd.lineSegments().begin(), lsd.lineSegments().end(), [&](LineSegment<FT> l) {
+  NfaContrast<int, float, index_type, std::map<int, float>> nfac(8);
+  NfaBinom<short, float, index_type> nfab(8, 1.0 / 8);
+  NfaBinom2<short, float, index_type> nfab2(8, 1.0 / 8);
+
+  lsd.detect(src);
+  std::cout << "lines: " << lsd.lineSegments().size() << std::endl;
+
+  double scale = 2;
+  cv::Mat q = quiver<short>(src, lsd.imageData("gx"), lsd.imageData("gy"), 4, 4, scale, 2, 10, Scalar(0, 0, 255), 1,
+                            cv::LINE_AA);
+  for_each(
+      lsd.lineSegments().begin(), lsd.lineSegments().end(), [&](LineSegment<FT> l) {
         l.scale(scale);
         Vec2<FT> pt1 = l.centerPoint();
         Vec2<FT> pt2 = lsfm::Vec2<FT>(10 * cos(l.gradientAnglef() * CV_PI/180), 10 * sin(l.gradientAnglef() * CV_PI/180)) + l.centerPoint();
         LineSegment<FT> l2(pt1, pt2);
-        line(q, l2, Scalar(255,0,0),1,CV_AA,0.0,4.0);
-    });
-    imshow("quiver", q);
+        line(q, l2, Scalar(255, 0, 0), 1, cv::LINE_AA, 0.0, 4.0);
+      });
+  imshow("quiver", q);
 
-    nfac.update(lsd.edgeSource());
-    nfab.update(lsd.edgeSource());
-    nfab2.update(lsd.edgeSource());
+  nfac.update(lsd.edgeSource());
+  nfab.update(lsd.edgeSource());
+  nfab2.update(lsd.edgeSource());
 
-    testNfa(lsd, nfac, "nfa constrast");
-    testNfa(lsd, nfab, "nfa binomial");
-    testNfa(lsd, nfab2, "nfa binomial 2");
-    
-    showNfa(lsd, src, nfac, "link constrast");
-    showNfa(lsd, src, nfab, "link binomial");    
-    showNfa(lsd, src, nfab2, "link binomial 2");
+  testNfa(lsd, nfac, "nfa constrast");
+  testNfa(lsd, nfab, "nfa binomial");
+  testNfa(lsd, nfab2, "nfa binomial 2");
+
+  showNfa(lsd, src, nfac, "link constrast");
+  showNfa(lsd, src, nfab, "link binomial");
+  showNfa(lsd, src, nfab2, "link binomial 2");
 
 
-    //template<class FT, class PT, class MT>
-    std::vector<FT> n;
-    calcMagnitude<FT, int>(lsd.segments(), lsd.indexes(), lsd.edgeSource().magnitude(), n);
+  // template<class FT, class PT, class MT>
+  std::vector<FT> n;
+  calcMagnitude<FT, int>(lsd.segments(), lsd.indexes(), lsd.edgeSource().magnitude(), n);
 
-    cv::waitKey();
-    
-    return 0;
+  cv::waitKey();
+
+  return 0;
 }
-

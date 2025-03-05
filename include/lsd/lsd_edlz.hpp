@@ -194,8 +194,7 @@ namespace lsfm {
             cv::Mat img = image;
             CV_Assert(!img.empty());
 
-            if (img.channels() != 1)
-                cvtColor(img, img, CV_BGR2GRAY);
+            if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
 
             this->clearData();
             imageData_.clear();

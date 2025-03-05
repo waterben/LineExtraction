@@ -127,7 +127,7 @@ void processPath(std::vector<Entry> &entries, const std::pair<fs::path, std::str
             return;
         }
         std::cout << file << std::endl;
-        cv::cvtColor(src, src, CV_BGR2GRAY);
+        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
         cv::GaussianBlur(src, src, cv::Size(3, 3), 0.6);
 
         for_each(entries.begin(), entries.end(), [&](Entry &e) {
@@ -140,12 +140,12 @@ void processPath(std::vector<Entry> &entries, const std::pair<fs::path, std::str
 int main(int argc, char** argv)
 {  
     std::vector<std::pair<fs::path, std::string>> sets;
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
     sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-Q", "MDB-Q"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
-    //sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/BSDS500", "BSDS500"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-Q", "MDB-Q"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-H", "MDB-H"));
+    // sets.push_back(std::pair<fs::path, std::string>("../../images/MDB/MiddEval3-F", "MDB-F"));
 
     std::vector<Entry> filter;
     filter.push_back(Entry(new DerivativeGradient<uchar, short,FT, FT, SobelDerivative>, new GlobalThreshold<FT,ThresholdOtsu<FT,256>>(1141), "Otsu_G"));

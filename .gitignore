@@ -5,6 +5,8 @@ lib/
 doc/
 extern/
 .vscode/
+.cache/
+images/
 
 #cmake
 CMakeLists.txt.user

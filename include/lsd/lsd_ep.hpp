@@ -67,7 +67,7 @@ namespace lsfm {
     class LsdEP: public LsdExt<FT,LPT,PT>
     {
         ESOURCE esource_;
-        EsdPattern<typename ESOURCE::EdgeReponseFilter::mag_type, ESOURCE::NUM_DIR, CORNER_RULE> edge_;
+        EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, ESOURCE::NUM_DIR, CORNER_RULE> edge_;
         SPLIT split_;
         FIT fit_;
         int flags_;
@@ -100,7 +100,7 @@ namespace lsfm {
         typedef FT float_type;
         typedef LPT<FT> line_point;
         typedef PT point_type;
-        typedef EsdPattern<typename ESOURCE::EdgeReponseFilter::mag_type, CORNER_RULE> Edge;
+        typedef EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, CORNER_RULE> Edge;
 
         typedef typename LsdBase<FT, LPT>::Line Line;
         typedef typename LsdBase<FT, LPT>::LineVector LineVector;

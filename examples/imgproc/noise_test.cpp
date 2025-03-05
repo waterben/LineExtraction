@@ -13,14 +13,13 @@ using namespace cv;
 
 int main(int argc, char** argv)
 {
-    string filename = argc >= 2 ? argv[1] : "../../images/noise/circle.png";
+  string filename = argc >= 2 ? argv[1] : "../../images/noise/circle.png";
 
-    cv::Mat src = cv::imread(filename);
-    if (src.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename);
+  if (src.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
     size_t p = filename.find_last_of('/');
     if (p == string::npos)

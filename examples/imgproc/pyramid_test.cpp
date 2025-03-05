@@ -33,39 +33,36 @@ void showPyramid(const std::string &name,P &p, bool BW = false) {
 
 int main(int argc, char** argv)
 {
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/b1.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/outsideC.jpg";
-    const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/b1.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/outsideC.jpg";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
 
-    cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (src.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (src.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() > 1)
-        cvtColor(src, src, CV_BGR2GRAY);
+  if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-    GaussianBlur(src, src, cv::Size(3, 3),0.6);
+  GaussianBlur(src, src, cv::Size(3, 3), 0.6);
 
 
-    DerivativeGradient<uchar,short,float,float,SobelDerivative> sobel;
-    NonMaximaSuppression<short,float,float,FastNMS8<short,float,float>> nms;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative> sobel;
+  NonMaximaSuppression<short, float, float, FastNMS8<short, float, float>> nms;
 
-    Pyramid<uchar> imgP(src,-3);
-    Pyramid<float> imgGrad(src.size(),-3);
-    Pyramid<char> imgNMS(src.size(),-3);
-    int64 start = cv::getTickCount();
-    double t;
-    for(int i = 0; i != imgP.size(); ++i) {
-        sobel.process(imgP[i]);
-        imgGrad[i] = sobel.magnitude();
-        nms.process(sobel);
-        imgNMS[i] = nms.hysteresis();
-        if (i == 0)
-            t = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
+  Pyramid<uchar> imgP(src, -3);
+  Pyramid<float> imgGrad(src.size(), -3);
+  Pyramid<char> imgNMS(src.size(), -3);
+  int64 start = cv::getTickCount();
+  double t;
+  for (int i = 0; i != imgP.size(); ++i) {
+    sobel.process(imgP[i]);
+    imgGrad[i] = sobel.magnitude();
+    nms.process(sobel);
+    imgNMS[i] = nms.hysteresis();
+    if (i == 0) t = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
     }
     double time = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
     std::cout << "time image: " <<  t << "ms, time pyramid: " << time << "ms" << std::endl;

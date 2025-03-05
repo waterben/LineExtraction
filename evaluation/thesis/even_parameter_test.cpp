@@ -85,15 +85,14 @@ double optimizeGradKernel2( GRAD& grad,
 
 int main(int argc, char** argv)
 {
-    const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/bike.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/bike.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
 
-    cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (src.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
+  cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (src.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
     }
 
     GaussianBlur(src, src, cv::Size(3, 3),0.6);

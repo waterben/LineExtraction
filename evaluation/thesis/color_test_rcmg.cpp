@@ -39,7 +39,7 @@ double test(const std::vector<fs::path> &files, GRAD1 &rcmg, GRAD2 &rmg, NMS &nm
         GaussianBlur(src, src, cv::Size(7, 7), blur);
 
         cv::Mat srcG;
-        cvtColor(src, srcG, CV_RGB2GRAY);
+        cvtColor(src, srcG, cv::COLOR_RGB2GRAY);
 
         rmg.process(srcG);
         nms.process(rmg, th_low, th_high);
@@ -103,15 +103,14 @@ double test(const std::vector<fs::path> &files, GRAD1 &rcmg, GRAD2 &rmg, NMS &nm
 
 int main(int argc, char** argv)
 {
-    const char* cfolder = argc >= 2 ? argv[1] : "../../images/BSDS500";
+  const char* cfolder = argc >= 2 ? argv[1] : "../../images/BSDS500";
 
-    fs::path folder(cfolder);
+  fs::path folder(cfolder);
 
-    if (!fs::is_directory(folder))
-    {
-        cout << "Can not open folder" << cfolder << endl;
-        return -1;
-    }
+  if (!fs::is_directory(folder)) {
+    cout << "Can not open folder" << cfolder << endl;
+    return -1;
+  }
 
     std::vector<fs::path> files;
     fs::directory_iterator end_iter;

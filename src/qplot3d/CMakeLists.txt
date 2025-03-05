@@ -8,4 +8,5 @@ qwt3d_types.cpp qwt3d_enrichment_std.cpp qwt3d_autoscaler.cpp qwt3d_io_reader.cp
 qwt3d_gridmapping.cpp qwt3d_parametricsurface.cpp qwt3d_function.cpp qwt3d_surfaceplot.cpp qwt3d_gridplot.cpp 
 qwt3d_meshplot.cpp qwt3d_io_gl2ps.cpp gl2ps.c)
 
+qt5_use_modules(lib_qplot3d OpenGL)
 SET_TARGET_PROPERTIES(lib_qplot3d PROPERTIES LINKER_LANGUAGE CXX)

@@ -28,9 +28,10 @@ struct Entry {
 
 static void help()
 {
-    cout << "\nThis program demonstrates lsd.\n"
-        "Usage:\n"
-        "./test_lsd <image_name>, Default is ../../images/office1_low.jpg\n" << endl;
+  cout << "\nThis program demonstrates lsd.\n"
+          "Usage:\n"
+          "./test_lsd <image_name>, Default is ../images/office1_low.jpg\n"
+       << endl;
 }
 
 template<typename FT>
@@ -54,80 +55,74 @@ void showData(const cv::Mat &src, const Entry<FT>& e) {
     cv::waitKey(1);
 }
 
-int main(int argc, char** argv)
-{
-    
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
+int main(int argc, char** argv) {
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
 
-    cv::Mat src = cv::imread(filename, 0);
-    if (src.empty())
-    {
-        help();
-        cout << "Can not open " << filename << endl;
-        return -1;
+  cv::Mat src = cv::imread(filename, 0);
+  if (src.empty()) {
+    help();
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
+
+  if (src.channels() != 1) cvtColor(src, src, cv::COLOR_RGB2GRAY);
+
+  // blur(src, src, Size(3, 3));
+  GaussianBlur(src, src, cv::Size(3, 3), 0.6);
+
+  typedef float FT;
+  typedef Vec2i PT;
+  typedef RamerSplit<FT, PT> Split;
+  // typedef ExtRamerSplit<SimpleMerge<ExtSplitCheck<FT, PT>>> Split;
+  typedef FitLine<EigenFit<FT, PT>> Fit;
+  typedef DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude> Grad;
+  typedef NonMaximaSuppression<short, int, FT> Nms;
+  typedef EdgeSourceGRAD<Grad, Nms> EdgeSource;
+  typedef NfaBinom<short, FT, index_type> Nfa;
+  typedef PixelEstimator<FT, PT> Conv;
+
+  std::vector<Entry<FT>> vlsd;
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdSimple<int>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd es"));
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdDrawing<int>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd ed"));
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, false>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      "lsd el"));
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, true>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      "lsd elc"));
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, false>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      "lsd elp"));
+
+  vlsd.push_back(Entry<FT>(
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, true>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      "lsd elpc"));
+
+  vlsd.push_back(
+      Entry<FT>(new LsdEP<FT, Vec2, false, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd ep"));
+
+  vlsd.push_back(
+      Entry<FT>(new LsdEP<FT, Vec2, true, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd epc"));
+
+
+  int runs = 10;
+  std::for_each(vlsd.begin(), vlsd.end(), [&runs, &src](Entry<FT>& entry) {
+    for (int i = 0; i != runs; ++i) {
+      double start = double(cv::getTickCount());
+      entry.lsd->detect(src);
+      entry.time += (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency() / runs;
     }
+    showData(src, entry);
+  });
 
-    if (src.channels() != 1)
-        cvtColor(src, src, CV_RGB2GRAY);
-    
-    //blur(src, src, Size(3, 3));
-    GaussianBlur(src, src, cv::Size(3, 3), 0.6);
+  cv::waitKey();
 
-    typedef float FT;
-    typedef Vec2i PT;
-    typedef RamerSplit<FT, PT> Split;
-    //typedef ExtRamerSplit<SimpleMerge<ExtSplitCheck<FT, PT>>> Split;
-    typedef FitLine<EigenFit<FT, PT>> Fit;
-    typedef DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude> Grad;
-    typedef NonMaximaSuppression<short, int, FT> Nms;
-    typedef EdgeSourceGRAD<Grad, Nms> EdgeSource;
-    typedef NfaBinom<short, FT, index_type> Nfa;
-    typedef PixelEstimator<FT, PT> Conv;
-
-    std::vector<Entry<FT>> vlsd;
-    
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource,
-        EsdSimple<int>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd es"));
-
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource,
-        EsdDrawing<int>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd ed"));
-
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2,PT, EdgeSource,
-        EsdLinking<int,8,false>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd el"));
-
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource,
-        EsdLinking<int,8,true>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd elc"));
-
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource,
-        EsdPattern<int, 8,false>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd elp"));
-
-    vlsd.push_back(Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource,
-        EsdPattern<int, 8,true>,
-        Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd elpc"));
-
-    vlsd.push_back(Entry<FT>(new LsdEP<FT, Vec2, false, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd ep"));
-
-    vlsd.push_back(Entry<FT>(new LsdEP<FT, Vec2, true, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd epc"));
-
-    
-
-    int runs = 10;
-    std::for_each(vlsd.begin(), vlsd.end(), [&runs, &src](Entry<FT>& entry) {
-        for (int i = 0; i != runs; ++i) {
-            double start = double(cv::getTickCount());
-            entry.lsd->detect(src);
-            entry.time += (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency() / runs;
-        }
-        showData(src, entry);
-    });
-
-    cv::waitKey();
-    
-    return 0;
+  return 0;
 }
-

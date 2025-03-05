@@ -67,11 +67,11 @@ int main(int argc, char** argv)
 {
     char s;
     std::cin >> s;
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
     const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
+    // const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
 
     cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
     if (src.empty())
@@ -80,8 +80,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (src.channels() > 1)
-        cvtColor(src, src, CV_BGR2GRAY);
+    if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
     GaussianNoiseOperator noise(10);
     //noise.apply(src);

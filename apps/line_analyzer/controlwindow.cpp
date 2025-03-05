@@ -61,7 +61,7 @@ qo(new Quiver(this)), imgMap(0), lineSel(-1), ui(new Ui::ControlWindow), tools(0
 
     indicator = 0;
 
-    ui->le_image_filename->setText("../../../images/office1_low.JPG");
+    ui->le_image_filename->setText("../../images/office1_low.JPG");
     ui->pb_pre->setEnabled(true);
     ui->pb_load->setEnabled(true);
 	ui->pb_line_color->setEnabled(true);
@@ -112,7 +112,7 @@ void ControlWindow::loadImage() {
         sources.back().modes.push_back(ImageMode("RGB"));
         
         cv::Mat tmp;
-        cv::cvtColor(img, tmp, CV_BGR2GRAY);
+        cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
 
         sources.push_back(ImageSource("Image (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
         if (pp->ui->chb_gray->isChecked())
@@ -132,7 +132,7 @@ void ControlWindow::loadImage() {
             sources.back().modes.push_back(ImageMode("RGB"));
 
             cv::Mat tmp;
-            cv::cvtColor(img, tmp, CV_BGR2GRAY);
+            cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
 
             sources.push_back(ImageSource("Noise (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
         }
@@ -147,7 +147,7 @@ void ControlWindow::loadImage() {
             sources.back().modes.push_back(ImageMode("RGB"));
 
             cv::Mat tmp;
-            cv::cvtColor(img, tmp, CV_BGR2GRAY);
+            cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
 
             sources.push_back(ImageSource("Blured (grayscale)", tmp, Detector::imageModePresets, QCPRange(0,255)));
         } else

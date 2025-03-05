@@ -90,7 +90,7 @@ double processError(Entry &e, const fs::path& path) {
     std::for_each(files.begin(), files.end(), [&](const fs::path& file) {
         
         cv::Mat src = cv::imread(file.generic_string());
-        cv::cvtColor(src, src, CV_BGR2GRAY);
+        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
         if (src.empty())
         {
             cout << "Can not open " << file.generic_string() << endl;
@@ -106,67 +106,61 @@ double processError(Entry &e, const fs::path& path) {
     return ret;
 }
 
-int main(int argc, char** argv)
-{  
-    fs::path path = "../../images/MDB/MiddEval3-Q";
+int main(int argc, char** argv) {
+  fs::path path = "../../images/MDB/MiddEval3-Q";
 
-    cv::Ptr<QuadratureI<uchar, double, double, double, double>> gt(new QuadratureSF<uchar, FT>(1, 2, 1.2));
-    cv::Ptr<QuadratureI<uchar, double, double, double, double>> ft(new QuadratureS<uchar, FT, FT>(1, 2, 3, 1.2));
-        
-    std::vector<Entry> filter;
-   
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 3, 1.2), gt, ft, "SQF Po (3x3)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 5, 1.2), gt, ft, "SQF Po (5x5)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 7, 1.2), gt, ft, "SQF Po (7x7)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 9, 1.2), gt, ft, "SQF Po (9x9)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 11, 1.2), gt, ft, "SQF Po (11x11)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 13, 1.2), gt, ft, "SQF Po (13x13)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 15, 1.2), gt, ft, "SQF Po (15x15)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 17, 1.2), gt, ft, "SQF Po (17x17)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 19, 1.2), gt, ft, "SQF Po (19x19)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 31, 1.2), gt, ft, "SQF Po (31x31)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 63, 1.2), gt, ft, "SQF Po (63x63)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 127, 1.2), gt, ft, "SQF Po (127x127)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 255, 1.2), gt, ft, "SQF Po (255x255)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 511, 1.2), gt, ft, "SQF Po (511x511)"));
-    filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 749, 1.2), gt, ft, "SQF Po (749x749)"));
-    
-    
-    int rows = filter.size() + 1;
-    int cols = 2;
-    std::vector<std::vector<std::string>> table;
-    table.resize(rows);
-    for_each(table.begin(), table.end(), [&](std::vector<std::string> &col) {
-        col.resize(cols);
-    });
+  cv::Ptr<QuadratureI<uchar, double, double, double, double>> gt(new QuadratureSF<uchar, FT>(1, 2, 1.2));
+  cv::Ptr<QuadratureI<uchar, double, double, double, double>> ft(new QuadratureS<uchar, FT, FT>(1, 2, 3, 1.2));
 
-    table[0][0] = "Method";
-    table[0][1] = "Error";
-    
-    int row = 1;
-    for_each(filter.begin(), filter.end(), [&](Entry &e) {
-        table[row++][0] = e.name;
-    });
-    
-    row = 1;
-    for_each(filter.begin(), filter.end(), [&](Entry &e) {
-        table[row++][1] = boost::str(boost::format("%.3f") % (processError(e, path)));
-    });
+  std::vector<Entry> filter;
 
-    std::ofstream ofs;
-    ofs.open("phase_error.csv");
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 3, 1.2), gt, ft, "SQF Po (3x3)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 5, 1.2), gt, ft, "SQF Po (5x5)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 7, 1.2), gt, ft, "SQF Po (7x7)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 9, 1.2), gt, ft, "SQF Po (9x9)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 11, 1.2), gt, ft, "SQF Po (11x11)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 13, 1.2), gt, ft, "SQF Po (13x13)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 15, 1.2), gt, ft, "SQF Po (15x15)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 17, 1.2), gt, ft, "SQF Po (17x17)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 19, 1.2), gt, ft, "SQF Po (19x19)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 31, 1.2), gt, ft, "SQF Po (31x31)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 63, 1.2), gt, ft, "SQF Po (63x63)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 127, 1.2), gt, ft, "SQF Po (127x127)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 255, 1.2), gt, ft, "SQF Po (255x255)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 511, 1.2), gt, ft, "SQF Po (511x511)"));
+  filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 749, 1.2), gt, ft, "SQF Po (749x749)"));
 
-    for_each(table.begin(), table.end(), [&](const std::vector<std::string> &col) {
+
+  int rows = filter.size() + 1;
+  int cols = 2;
+  std::vector<std::vector<std::string>> table;
+  table.resize(rows);
+  for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(cols); });
+
+  table[0][0] = "Method";
+  table[0][1] = "Error";
+
+  int row = 1;
+  for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
+
+  row = 1;
+  for_each(filter.begin(), filter.end(),
+           [&](Entry& e) { table[row++][1] = boost::str(boost::format("%.3f") % (processError(e, path))); });
+
+  std::ofstream ofs;
+  ofs.open("phase_error.csv");
+
+  for_each(
+      table.begin(), table.end(), [&](const std::vector<std::string>& col) {
         for_each(col.begin(), col.end(), [&](const std::string &cell) {
             std::cout << cell << "\t";
             ofs << cell << ";";
         });
         std::cout << std::endl;
         ofs << std::endl;
-    });
+      });
 
-    ofs.close();
+  ofs.close();
 
-    return 0;
+  return 0;
 }
-

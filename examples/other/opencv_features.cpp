@@ -167,13 +167,19 @@ int main(int argc, char **argv)
     namedWindow(video_name, WINDOW_NORMAL);
     cv::resizeWindow(video_name, frame.cols, frame.rows);
 
-    cout << "Please select a bounding box, and press any key to continue." << endl;
+    // cout << "Please select a bounding box, and press any key to continue." << endl;
+    // vector<Point2f> bb;
+    // cv::Rect2d uBox = selectROI(video_name, frame);
+    // bb.push_back(cv::Point2f(static_cast<float>(uBox.x), static_cast<float>(uBox.y)));
+    // bb.push_back(cv::Point2f(static_cast<float>(uBox.x + uBox.width), static_cast<float>(uBox.y)));
+    // bb.push_back(cv::Point2f(static_cast<float>(uBox.x + uBox.width), static_cast<float>(uBox.y + uBox.height)));
+    // bb.push_back(cv::Point2f(static_cast<float>(uBox.x), static_cast<float>(uBox.y + uBox.height)));
+
     vector<Point2f> bb;
-    cv::Rect2d uBox = selectROI(video_name, frame);
-    bb.push_back(cv::Point2f(static_cast<float>(uBox.x), static_cast<float>(uBox.y)));
-    bb.push_back(cv::Point2f(static_cast<float>(uBox.x + uBox.width), static_cast<float>(uBox.y)));
-    bb.push_back(cv::Point2f(static_cast<float>(uBox.x + uBox.width), static_cast<float>(uBox.y + uBox.height)));
-    bb.push_back(cv::Point2f(static_cast<float>(uBox.x), static_cast<float>(uBox.y + uBox.height)));
+    bb.push_back(cv::Point2f(static_cast<float>(0), static_cast<float>(0)));
+    bb.push_back(cv::Point2f(static_cast<float>(frame.cols), static_cast<float>(0)));
+    bb.push_back(cv::Point2f(static_cast<float>(frame.cols), static_cast<float>(frame.rows)));
+    bb.push_back(cv::Point2f(static_cast<float>(0), static_cast<float>(frame.rows)));
 
     akaze_tracker.setFirstFrame(frame, bb, "AKAZE", stats);
     orb_tracker.setFirstFrame(frame, bb, "ORB", stats);

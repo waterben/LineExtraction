@@ -10,7 +10,7 @@ namespace lsfm {
 
     PerformanceData::PerformanceData(const std::string& n, const cv::Mat& s) : TaskData(n, s) {
         if (src.channels() == 3)
-            cv::cvtColor(src, src_gray, CV_BGR2GRAY);
+          cv::cvtColor(src, src_gray, cv::COLOR_BGR2GRAY);
         else {
             src_gray = src;
             cv::cvtColor(src_gray, src, CV_GRAY2RGB);

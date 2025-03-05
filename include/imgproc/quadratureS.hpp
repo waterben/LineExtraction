@@ -241,7 +241,7 @@ namespace lsfm {
             cv::filter2D(img, oy_, cv::DataType<GT>::type, koy_, anchor, 0, cv::BORDER_REFLECT_101);
         }
 
-        //! get x,y odd reponses
+        //! get x,y odd responses
         void odd(cv::Mat& gx, cv::Mat& gy) const {
             gx = ox_; gy = oy_;
         }

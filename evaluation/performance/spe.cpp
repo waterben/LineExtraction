@@ -15,10 +15,9 @@ using NmsFT = NonMaximaSuppression<FT, FT, FT, FastNMS8<FT, FT, FT>>;
 template<class FT>
 struct SpePerformaceData : public TaskData {
     SpePerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(0.004, 0.012, 2) {
-        if (src.channels() == 3)
-            cv::cvtColor(src, src, CV_BGR2GRAY);
-        grad.process(src);
-        nms.process(grad);
+      if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+      grad.process(src);
+      nms.process(grad);
     }
 
     GradFT<FT> grad;

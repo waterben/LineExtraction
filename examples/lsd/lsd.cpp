@@ -47,9 +47,10 @@ struct Entry {
 
 static void help()
 {
-    cout << "\nThis program demonstrates lsd.\n"
-        "Usage:\n"
-        "./test_lsd <image_name>, Default is ../../images/office1_low.jpg\n" << endl;
+  cout << "\nThis program demonstrates lsd.\n"
+          "Usage:\n"
+          "./test_lsd <image_name>, Default is ../images/office1_low.jpg\n"
+       << endl;
 }
 
 template<typename FT>
@@ -73,37 +74,33 @@ void showData(const cv::Mat &src, const Entry<FT>& e) {
     cv::waitKey(1);
 }
 
-int main(int argc, char** argv)
-{
-    
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+int main(int argc, char** argv) {
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
 
-    cv::Mat src = cv::imread(filename, 0);
-    if (src.empty())
-    {
-        help();
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, 0);
+  if (src.empty()) {
+    help();
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() != 1)
-        cvtColor(src, src, CV_RGB2GRAY);
-    
-    //blur(src, src, Size(3, 3));
-    GaussianBlur(src, src, cv::Size(3, 3), 0.8);
+  if (src.channels() != 1) cvtColor(src, src, cv::COLOR_RGB2GRAY);
 
-    typedef float FT;
-    
-    std::vector<Entry<FT>> vlsd;
+  // blur(src, src, Size(3, 3));
+  GaussianBlur(src, src, cv::Size(3, 3), 0.8);
 
-    vlsd.push_back(Entry<FT>(new LsdCC<FT>(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX), "lsd cc"));
-    vlsd.push_back(Entry<FT>(new LsdCP<FT>(0.004, 0.012, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX ), "lsd cp"));
-    vlsd.push_back(Entry<FT>(new LsdEL<FT>(0.004, 0.012, 10, 3, 10, 4, 0/*EL_USE_NFA*/), "lsd el"));
-    vlsd.push_back(Entry<FT>(new LsdEP<FT>(0.004, 0.012, 10, 3, 10, 2,3,3,5,0), "lsd ep"));
-    vlsd.push_back(Entry<FT>(new LsdBurns<FT>(0.004, 0.012, 10, 12, BURNS_NMS), "lsd burns"));
-    vlsd.push_back(Entry<FT>(new LsdFBW<FT>(0.004, 0.012, 10, 22.5, FBW_NMS), "lsd fbw"));
-    vlsd.push_back(Entry<FT>(new LsdFGioi<FT>(2, 22.5, 0, 0.7, 1024), "lsd fgioi"));
-    vlsd.push_back(Entry<FT>(new LsdEDLZ<FT>(10, 2, 2, 10, 2, false), "lsd edlz"));
+  typedef float FT;
+
+  std::vector<Entry<FT>> vlsd;
+
+  vlsd.push_back(Entry<FT>(new LsdCC<FT>(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX), "lsd cc"));
+  vlsd.push_back(Entry<FT>(new LsdCP<FT>(0.004, 0.012, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX), "lsd cp"));
+  vlsd.push_back(Entry<FT>(new LsdEL<FT>(0.004, 0.012, 10, 3, 10, 4, 0 /*EL_USE_NFA*/), "lsd el"));
+  vlsd.push_back(Entry<FT>(new LsdEP<FT>(0.004, 0.012, 10, 3, 10, 2, 3, 3, 5, 0), "lsd ep"));
+  vlsd.push_back(Entry<FT>(new LsdBurns<FT>(0.004, 0.012, 10, 12, BURNS_NMS), "lsd burns"));
+  vlsd.push_back(Entry<FT>(new LsdFBW<FT>(0.004, 0.012, 10, 22.5, FBW_NMS), "lsd fbw"));
+  vlsd.push_back(Entry<FT>(new LsdFGioi<FT>(2, 22.5, 0, 0.7, 1024), "lsd fgioi"));
+  vlsd.push_back(Entry<FT>(new LsdEDLZ<FT>(10, 2, 2, 10, 2, false), "lsd edlz"));
 #ifdef _MSC_VER
     vlsd.push_back(Entry<FT>(new LsdEDTA<FT>, "lsd edta"));
 #endif
@@ -124,4 +121,3 @@ int main(int argc, char** argv)
     
     return 0;
 }
-

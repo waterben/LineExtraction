@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     std::string filename1 = "../../images/elas/Adirondack/im0.png";
     std::string filename2 = "../../images/elas/Adirondack/im1.png";
 #else
-    std::string filename1 = "../images/elas/im0.png";
-    std::string filename2 = "../images/elas/im1.png";
+    std::string filename1 = "../../images/elas/im0.png";
+    std::string filename2 = "../../images/elas/im1.png";
 #endif
   
     if (argc > 2) {

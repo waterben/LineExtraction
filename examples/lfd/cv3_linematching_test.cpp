@@ -39,19 +39,19 @@ using namespace cv::line_descriptor;
 int main(int argc, char** argv)
 {
 #ifdef WIN32
-    std::string filename1 = "../../images/elas/Adirondack/im0.png";
-    std::string filename2 = "../../images/elas/Adirondack/im1.png";
-#else
-    std::string filename1 = "../../images/elas/im0.png";
-    std::string filename2 = "../../images/elas/im1.png";
-#endif
-    //std::string filename1 = "../../../MiddEval3/im0.png";
-    //std::string filename2 = "../../../MiddEval3/im1.png";
+  std::string filename1 = "../../images/elas/Adirondack/im0.png";
+  std::string filename2 = "../../images/elas/Adirondack/im1.png";
+#  else
+  std::string filename1 = "../../images/elas/im0.png";
+  std::string filename2 = "../../images/elas/im1.png";
+#  endif
+  // std::string filename1 = "../../../MiddEval3/im0.png";
+  // std::string filename2 = "../../../MiddEval3/im1.png";
 
-    if (argc > 2) {
-        filename1 = argv[1];
-        filename2 = argv[2];
-    }
+  if (argc > 2) {
+    filename1 = argv[1];
+    filename2 = argv[2];
+  }
 
     cv::Mat srcL = imread(filename1, IMREAD_GRAYSCALE);
     cv::Mat srcR = imread(filename2, IMREAD_GRAYSCALE);

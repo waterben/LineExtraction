@@ -130,71 +130,69 @@ void showNfa(EDGE &edge, const cv::Mat &src, const NFA &nfa, const std::string &
 
 int main(int argc, char** argv)
 {
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
 
-    cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (src.empty())
-    {
-        std::cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (src.empty()) {
+    std::cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
-    if (src.channels() > 1)
-        cvtColor(src, src, CV_BGR2GRAY);
+  if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-    GaussianNoiseOperator noise(5);
-    //noise.apply(src);
-    GaussianBlur(src, src, cv::Size(5, 5),0.6);
+  GaussianNoiseOperator noise(5);
+  // noise.apply(src);
+  GaussianBlur(src, src, cv::Size(5, 5), 0.6);
 
-    //imshow("img",src);
-    lsfm::Vec2i a(1, 2);
-    lsfm::Vec2f b(getX(a),getY(a));
+  // imshow("img",src);
+  lsfm::Vec2i a(1, 2);
+  lsfm::Vec2f b(getX(a), getY(a));
 
-    float th_low = 0.004, th_high = 0.012;
-    DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-    NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
-    
+  float th_low = 0.004, th_high = 0.012;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
 
-    NfaContrast<int, float, index_type, std::map<int, float>> nfac(8);
-    NfaBinom<short, float, index_type> nfab(8,1.0/8);
-    NfaBinom2<short, float, index_type> nfab2(8, 1.0 / 8);
 
-    EsdSimple<int> simple;
-    EsdDrawing<int> draw(10, 3, sobel.magnitudeThreshold(th_low));
-    EsdLinking<int> link(10, 3, 3, sobel.magnitudeThreshold(th_low));
+  NfaContrast<int, float, index_type, std::map<int, float>> nfac(8);
+  NfaBinom<short, float, index_type> nfab(8, 1.0 / 8);
+  NfaBinom2<short, float, index_type> nfab2(8, 1.0 / 8);
 
-    sobel.process(src);
-    nfac.update(sobel.magnitude());
-    nfab.update(sobel.gx(), sobel.gy());
-    nfab2.update(sobel.gx(), sobel.gy());
-    nms.process(sobel);
+  EsdSimple<int> simple;
+  EsdDrawing<int> draw(10, 3, sobel.magnitudeThreshold(th_low));
+  EsdLinking<int> link(10, 3, 3, sobel.magnitudeThreshold(th_low));
 
-    /*testNfa(sobel, nms, simple, nfac, "simple c");
-    showNfa(simple, src, nfac, "simple c");
+  sobel.process(src);
+  nfac.update(sobel.magnitude());
+  nfab.update(sobel.gx(), sobel.gy());
+  nfab2.update(sobel.gx(), sobel.gy());
+  nms.process(sobel);
 
-    testNfa(sobel, nms, simple, nfab, "simple b");
-    showNfa(simple, src, nfab, "simple b");
+  /*testNfa(sobel, nms, simple, nfac, "simple c");
+  showNfa(simple, src, nfac, "simple c");
 
-    testNfa(sobel, nms, draw, nfac, "draw c");
-    showNfa(draw, src, nfac, "draw c");
+  testNfa(sobel, nms, simple, nfab, "simple b");
+  showNfa(simple, src, nfab, "simple b");
 
-    testNfa(sobel, nms, draw, nfab, "draw b");
-    showNfa(draw, src, nfab, "draw b");*/
+  testNfa(sobel, nms, draw, nfac, "draw c");
+  showNfa(draw, src, nfac, "draw c");
 
-    testNfa(sobel, nms, link, nfac, "link c");
-    showNfa(link, src, nfac, "link c");
+  testNfa(sobel, nms, draw, nfab, "draw b");
+  showNfa(draw, src, nfab, "draw b");*/
 
-    testNfa(sobel, nms, link, nfab, "link b");
-    showNfa(link, src, nfab, "link b");
+  testNfa(sobel, nms, link, nfac, "link c");
+  showNfa(link, src, nfac, "link c");
 
-    testNfa(sobel, nms, link, nfab2, "link b2");
-    showNfa(link, src, nfab2, "link b2");
-    
-    waitKey();
+  testNfa(sobel, nms, link, nfab, "link b");
+  showNfa(link, src, nfab, "link b");
 
-    return 0;
+  testNfa(sobel, nms, link, nfab2, "link b2");
+  showNfa(link, src, nfab2, "link b2");
+
+  waitKey();
+
+  return 0;
 }

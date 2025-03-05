@@ -51,8 +51,7 @@ int main(int argc, char** argv)
         count++;
 
         cv::Mat src  = frame.clone();
-        if (src.channels() != 1)
-            cv::cvtColor(src, src, CV_RGB2GRAY);
+        if (src.channels() != 1) cv::cvtColor(src, src, cv::COLOR_RGB2GRAY);
 
         // Reduce noise with a kernel 3x3
         cv::blur(src, src, cv::Size(3,3));

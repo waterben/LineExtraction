@@ -172,7 +172,7 @@ namespace lsfm {
             splitT(tmpv, ox_, oy_);
         }
 
-        //! get even reponse
+        //! get even response
         cv::Mat even() const {
             return e_;
         }

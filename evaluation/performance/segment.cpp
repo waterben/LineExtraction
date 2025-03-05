@@ -17,10 +17,9 @@ typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms
 constexpr  float th_low = 0.004f, th_high = 0.012f;
 struct SegPerformaceData : public TaskData {
     SegPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(th_low, th_high) {
-        if (src.channels() == 3)
-            cv::cvtColor(src, src, CV_BGR2GRAY);
-        grad.process(src);
-        nms.process(grad);
+      if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+      grad.process(src);
+      nms.process(grad);
     }
 
     Grad grad;

@@ -23,18 +23,17 @@ void showFFT(const std::string &name, const cv::Mat &fft) {
 
 int main(int argc, char** argv)
 {
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-    //const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low_quad.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low_quad.png";
 
-    cv::Mat im = cv::imread(filename, IMREAD_GRAYSCALE);
-    if (im.empty())
-    {
-        cout << "Can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat im = cv::imread(filename, IMREAD_GRAYSCALE);
+  if (im.empty()) {
+    cout << "Can not open " << filename << endl;
+    return -1;
+  }
 
     if (im.channels() > 1)
         cvtColor(im, im, cv::COLOR_BGR2GRAY);

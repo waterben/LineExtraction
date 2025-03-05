@@ -149,43 +149,31 @@ namespace lsfm {
         ERF erf_;
         EPE epe_;
     public:
-        typedef ERF EdgeReponseFilter;
-        typedef EPE EdgePixelExtractor;
+     typedef ERF EdgeResponseFilter;
+     typedef EPE EdgePixelExtractor;
 
-        static constexpr int NUM_DIR = EPE::NUM_DIR;
+     static constexpr int NUM_DIR = EPE::NUM_DIR;
 
-        using EdgeSourceI::hysteresis;
-        using EdgeSourceI::hysteresis_edgels;
+     using EdgeSourceI::hysteresis;
+     using EdgeSourceI::hysteresis_edgels;
 
-        virtual ~EdgeSourceT() {}
+     virtual ~EdgeSourceT() {}
 
-        const ERF& reponseFilter() const {
-            return erf_;
-        }
+     const ERF& responseFilter() const { return erf_; }
 
-        ERF& reponseFilter() {
-            return erf_;
-        }
+     ERF& responseFilter() { return erf_; }
 
-        const EPE& pixelExtractor() const {
-            return epe_;
-        }
+     const EPE& pixelExtractor() const { return epe_; }
 
-        EPE& pixelExtractor() {
-            return epe_;
-        }
+     EPE& pixelExtractor() { return epe_; }
 
-        virtual FilterResults results() const override {
-            return erf_.results();
-        }
+     virtual FilterResults results() const override { return erf_.results(); }
 
-        virtual cv::Mat direction() const override {
-            return erf_.direction();
-        }
+     virtual cv::Mat direction() const override { return erf_.direction(); }
 
-        virtual Range<double> directionRange() const override {
-            auto tmp = erf_.directionRange();
-            return Range<double>(tmp.lower, tmp.upper);
+     virtual Range<double> directionRange() const override {
+       auto tmp = erf_.directionRange();
+       return Range<double>(tmp.lower, tmp.upper);
         }
 
         virtual std::string name() const override {
@@ -294,7 +282,7 @@ namespace lsfm {
 
         Value valueUseDir(const Value &v = Value::NAV()) { if (v.type()) useDir_ = (v.getInt() != 0); return (useDir_ ? 1 : 0); }
 
-        using EdgeSourceT<GRAD, NMS>::reponseFilter;
+        using EdgeSourceT<GRAD, NMS>::responseFilter;
         using EdgeSourceT<GRAD, NMS>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -365,7 +353,7 @@ namespace lsfm {
 
         Value valueDirOps(const Value &v = Value::NAV()) { if (v.type()) dirOps_ = static_cast<ESDirectionOptions>(v.getInt()); return static_cast<int>(dirOps_); }
 
-        using EdgeSourceT<GRAD, ZC>::reponseFilter;
+        using EdgeSourceT<GRAD, ZC>::responseFilter;
         using EdgeSourceT<GRAD, ZC>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -423,7 +411,7 @@ namespace lsfm {
         ESQO_PC,
     };
 
-    //! Quadrature edge source (odd reponse)
+    //! Quadrature edge source (odd response)
     template<class QUAD, class NMS>
     class EdgeSourceQUAD : public EdgeSourceNMS<QUAD, NMS> {
         EdgeSourceQUAD(const EdgeSourceQUAD&);
@@ -461,7 +449,7 @@ namespace lsfm {
         Value valueUseDir(const Value &v = Value::NAV()) { if (v.type()) useDir_ = (v.getInt() != 0); return useDir_ ? 1 : 0; }
         Value valueQuadOps(const Value &v = Value::NAV()) { if (v.type()) quadOps_ = static_cast<ESQuadratureOptions>(v.getInt()); return static_cast<int>(quadOps_); }
 
-        using EdgeSourceT<QUAD, NMS>::reponseFilter;
+        using EdgeSourceT<QUAD, NMS>::responseFilter;
         using EdgeSourceT<QUAD, NMS>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -514,7 +502,7 @@ namespace lsfm {
         }
     };
 
-    //! Phase congruency edge source (odd reponse)
+    //! Phase congruency edge source (odd response)
     template<class PC, class NMS>
     class EdgeSourcePC : public EdgeSourceQUAD<PC, NMS> {
         EdgeSourcePC(const EdgeSourcePC&);
@@ -536,7 +524,7 @@ namespace lsfm {
             this->value(options);
         }
 
-        using EdgeSourceT<PC, NMS>::reponseFilter;
+        using EdgeSourceT<PC, NMS>::responseFilter;
         using EdgeSourceT<PC, NMS>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -565,7 +553,7 @@ namespace lsfm {
         }
     };
 
-    //! Quadrature edge source (even reponse)
+    //! Quadrature edge source (even response)
     template<class QUAD, class ZC>
     class EdgeSourceQUADZC : public EdgeSourceZC<QUAD, ZC> {
         EdgeSourceQUADZC(const EdgeSourceQUADZC&);
@@ -603,7 +591,7 @@ namespace lsfm {
         Value valueDirOps(const Value &v = Value::NAV()) { if (v.type()) dirOps_ = static_cast<ESDirectionOptions>(v.getInt()); return static_cast<int>(dirOps_); }
         Value valueQuadOps(const Value &v = Value::NAV()) { if (v.type()) quadOps_ = static_cast<ESQuadratureOptions>(v.getInt()); return static_cast<int>(quadOps_); }
 
-        using EdgeSourceT<QUAD, ZC>::reponseFilter;
+        using EdgeSourceT<QUAD, ZC>::responseFilter;
         using EdgeSourceT<QUAD, ZC>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -648,7 +636,7 @@ namespace lsfm {
         }
     };
 
-    //! Phase congruency edge source (even reponse)
+    //! Phase congruency edge source (even response)
     template<class PC, class ZC>
     class EdgeSourcePCZC : public EdgeSourceQUADZC<PC, ZC> {
         EdgeSourcePCZC(const EdgeSourcePCZC&);
@@ -666,7 +654,7 @@ namespace lsfm {
         EdgeSourcePCZC(ValueManager::InitializerList &options)
             : EdgeSourceQUADZC<PC, ZC>(options) {}
 
-        using EdgeSourceT<PC, ZC>::reponseFilter;
+        using EdgeSourceT<PC, ZC>::responseFilter;
         using EdgeSourceT<PC, ZC>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;
@@ -695,7 +683,7 @@ namespace lsfm {
     };
 
 
-    //! Phase congruency laplace edge source (even reponse)
+    //! Phase congruency laplace edge source (even response)
     template<class PCL, class ZC>
     class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
         EdgeSourcePCLZC(const EdgeSourcePCLZC&);
@@ -719,7 +707,7 @@ namespace lsfm {
         EdgeSourcePCLZC(ValueManager::InitializerList &options, ESQuadratureOptions quadOps = ESQO_MAG, ESDirectionOptions dirOps = ESDO_NONE)
             : EdgeSourceQUADZC<PCL, ZC>(options) {}
 
-        using EdgeSourceT<PCL, ZC>::reponseFilter;
+        using EdgeSourceT<PCL, ZC>::responseFilter;
         using EdgeSourceT<PCL, ZC>::pixelExtractor;
         using EdgeSourceI::hysteresis;
         using EdgeSourceI::hysteresis_edgels;

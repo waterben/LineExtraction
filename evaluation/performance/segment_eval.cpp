@@ -16,11 +16,10 @@ constexpr float th_low = 0.004f, th_high = 0.012f;
 
 struct SegEvalPerformaceData : public TaskData {
     SegEvalPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(th_low, th_high), edge(10, 3, 3, grad.magnitudeThreshold(th_low)) {
-        if (src.channels() == 3)
-            cv::cvtColor(src, src, CV_BGR2GRAY);
-        grad.process(src);
-        nms.process(grad);
-        edge.detect(grad, nms);
+      if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+      grad.process(src);
+      nms.process(grad);
+      edge.detect(grad, nms);
     }
 
     Grad grad;

@@ -169,10 +169,10 @@ namespace lsfm {
         }
 
         cv::Mat preprocessImage(const cv::Mat img, const int id){
-//            cvtColor(img,img,CV_RGB2GRAY);
-            cv::Mat img1, im_gray;
-            if(id == 0){
-                remap(img, img1, map11, map12, cv::INTER_LINEAR);   // undistort
+          //            cvtColor(img,img,cv::COLOR_RGB2GRAY);
+          cv::Mat img1, im_gray;
+          if (id == 0) {
+            remap(img, img1, map11, map12, cv::INTER_LINEAR);  // undistort
             } else if(id == 1){
                 remap(img, img1, map21, map22, cv::INTER_LINEAR);   // undistort
             } else {

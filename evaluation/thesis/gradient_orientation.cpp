@@ -211,7 +211,7 @@ double testBox(Entry<GT,MT,DT> &e, cv::Mat img, cv::Mat mask, double blur = 0, d
 cv::Mat diskImage() {
     cv::Mat img(512, 512, CV_8U);
     img.setTo(85);
-    cv::circle(img, cv::Point(256, 256), 150, 170, -1, CV_AA);
+    cv::circle(img, cv::Point(256, 256), 150, 170, -1, cv::LINE_AA);
     return img;
 }
 

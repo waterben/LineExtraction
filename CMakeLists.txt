@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project( LineExtraction LANGUAGES C CXX VERSION 1.0.0 )
 
+set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
 # Configurable environment variables that are stored in CMakeCache. These 
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
@@ -53,12 +55,16 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin/")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib/")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
 
-include(extern_eigen)
+find_package(Eigen3)
+#include(extern_eigen)
 include_directories(${EIGEN3_INCLUDE_DIR})
+
 include(extern_dlib)
 include_directories(${DLIB_INCLUDE_DIR})
+
 include(extern_boost)
 include_directories(${Boost_INCLUDE_DIR})
+
 include(extern_opencv)
 include_directories(${OpenCV_INCLUDE_DIR})
 
@@ -126,6 +132,11 @@ if (${ENABLE_APPS})
     add_subdirectory( "apps" )
 endif()
 
+# Build target for creating apps
+if (${ENABLE_EVALUATION})
+    add_subdirectory( "evaluation" )
+endif()
+
 # Build target for creating unit test
 if( ${ENABLE_UNIT_TEST} )
     find_package(Threads REQUIRED)    
@@ -144,5 +155,3 @@ if (${ENABLE_DOCS})
         install_dir( "${CMAKE_CURRENT_BINARY_DIR}/doc/html" "${PROJECT_SOURCE_DIR}/doc" "documentation" )
     endif()
 endif()
-
-

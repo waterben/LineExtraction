@@ -15,15 +15,14 @@ static void help()
 
 int main(int argc, char** argv)
 {
-    const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
+  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
 
-    cv::Mat src = imread(filename, 0);
-    if (src.empty())
-    {
-        help();
-        cout << "can not open " << filename << endl;
-        return -1;
-    }
+  cv::Mat src = imread(filename, 0);
+  if (src.empty()) {
+    help();
+    cout << "can not open " << filename << endl;
+    return -1;
+  }
 
     cv::Mat dst, cdst;
     Canny(src, dst, 15, 30, 3);
@@ -51,7 +50,7 @@ int main(int argc, char** argv)
         pt1.y = cvRound(y0 + 1000*(a));
         pt2.x = cvRound(x0 - 1000*(-b));
         pt2.y = cvRound(y0 - 1000*(a));
-        line( cdst, pt1, pt2, Scalar(0,0,255), 1, CV_AA);
+        line( cdst, pt1, pt2, Scalar(0,0,255), 1, cv::LINE_AA);
     }
 #else
     double duration_ms = 0;
