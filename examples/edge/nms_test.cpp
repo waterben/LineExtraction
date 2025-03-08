@@ -1,11 +1,11 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
 #include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+
 #define USE_PERIODIC_FFT
 #include <edge/nms.hpp>
-#include <edge/otsu.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>
 #include <imgproc/image_operator.hpp>
@@ -26,79 +26,81 @@ using namespace std;
 using namespace lsfm;
 using namespace cv;
 
-template<class GRAD>
-void testGradient(GRAD &grad, const Mat &src, const std::string &name) {
-    int runs = 20;
-    int64 rt = 0, tmp;
-    for (int i = 0; i != runs; ++i) {
-        tmp = cv::getTickCount();
-        grad.process(src);
-        grad.magnitude();
-        rt += cv::getTickCount() - tmp;
-    }
+template <class GRAD>
+void testGradient(GRAD& grad, const Mat& src, const std::string& name) {
+  int runs = 20;
+  int64 rt = 0, tmp;
+  for (int i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    grad.process(src);
+    grad.magnitude();
+    rt += cv::getTickCount() - tmp;
+  }
 
-    std::cout << "gradient - " << name <<": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "gradient - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
 }
 
-template<class NMS, class GRAD>
-void testNMS(NMS &nms, GRAD &grad, const std::string &name, bool force_dir = false, double th_low = 0.008, double th_high = 0.016) {
-    int runs = 20;
-    int64 rt = 0, tmp;
-    nms.threshold(th_low, th_high);
-    for (int i = 0; i != runs; ++i) {
-        tmp = cv::getTickCount();
-        nms.process(grad, force_dir);
-        rt += cv::getTickCount() - tmp;
-    }
+template <class NMS, class GRAD>
+void testNMS(NMS& nms,
+             GRAD& grad,
+             const std::string& name,
+             bool force_dir = false,
+             double th_low = 0.008,
+             double th_high = 0.016) {
+  int runs = 20;
+  int64 rt = 0, tmp;
+  nms.threshold(th_low, th_high);
+  for (int i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    nms.process(grad, force_dir);
+    rt += cv::getTickCount() - tmp;
+  }
 
-    std::cout << "nms - " << name <<": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "nms - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
 }
 
-template<class GRAD>
-void showGradient(const std::string &name,GRAD &grad,int use_range = 0) {
-    cv::Mat mag;
-    grad.magnitude().convertTo(mag,CV_32F);
-    if (use_range) {
-        mag /= grad.magnitudeRange().upper;
-        if (use_range > 1)
-            mag *= use_range;
-    } else {
-        double vmin,vmax;
-        cv::minMaxIdx(mag,&vmin,&vmax);
-        mag /= vmax;
-        //std::cout << "gradient max - " << name << ": " << vmax << std::endl;
-    }
-    imshow("gradient " + name,mag);
+template <class GRAD>
+void showGradient(const std::string& name, GRAD& grad, int use_range = 0) {
+  cv::Mat mag;
+  grad.magnitude().convertTo(mag, CV_32F);
+  if (use_range) {
+    mag /= grad.magnitudeRange().upper;
+    if (use_range > 1) mag *= use_range;
+  } else {
+    double vmin, vmax;
+    cv::minMaxIdx(mag, &vmin, &vmax);
+    mag /= vmax;
+    // std::cout << "gradient max - " << name << ": " << vmax << std::endl;
+  }
+  imshow("gradient " + name, mag);
 }
 
-template<class NMS>
-void showNMS(const std::string &name,NMS &nms,bool use_dir = true) {
+template <class NMS>
+void showNMS(const std::string& name, NMS& nms, bool use_dir = true) {
+  // cv::Mat emap = nms.directionMap();
+  cv::Mat emap = nms.hysteresis();
+  cv::Mat emapImg;
+  emapImg.create(emap.rows, emap.cols, CV_8UC3);
 
-    //cv::Mat emap = nms.directionMap();
-    cv::Mat emap = nms.hysteresis();
-    cv::Mat emapImg;
-    emapImg.create(emap.rows, emap.cols, CV_8UC3);
+  if (use_dir) {
+    emapImg.setTo(cv::Vec3b(0, 0, 0));
+    emapImg.setTo(cv::Vec3b(220, 150, 255), emap == 7);  // magenta2
+    emapImg.setTo(cv::Vec3b(255, 0, 150), emap == 6);    // lila
+    emapImg.setTo(cv::Vec3b(255, 0, 0), emap == 5);      // blue
+    emapImg.setTo(cv::Vec3b(255, 255, 0), emap == 4);    // cyan
+    emapImg.setTo(cv::Vec3b(0, 255, 0), emap == 3);      // green
+    emapImg.setTo(cv::Vec3b(0, 255, 255), emap == 2);    // yellow
+    emapImg.setTo(cv::Vec3b(0, 150, 255), emap == 1);    // orange
+    emapImg.setTo(cv::Vec3b(0, 0, 255), emap == 0);      // red
+  } else {
+    emapImg.setTo(cv::Vec3b(255, 255, 255), emap >= 0);
+  }
 
-    if (use_dir) {
-        emapImg.setTo(cv::Vec3b(0, 0, 0));
-        emapImg.setTo(cv::Vec3b(220, 150, 255), emap == 7); // magenta2
-        emapImg.setTo(cv::Vec3b(255, 0, 150), emap == 6); // lila
-        emapImg.setTo(cv::Vec3b(255, 0, 0), emap == 5); // blue
-        emapImg.setTo(cv::Vec3b(255, 255, 0), emap == 4); // cyan
-        emapImg.setTo(cv::Vec3b(0, 255, 0), emap == 3); // green
-        emapImg.setTo(cv::Vec3b(0, 255, 255), emap == 2); // yellow
-        emapImg.setTo(cv::Vec3b(0, 150, 255), emap == 1); // orange
-        emapImg.setTo(cv::Vec3b(0, 0, 255), emap == 0); // red
-    } else {
-        emapImg.setTo(cv::Vec3b(255, 255,255),emap >= 0);
-    }
-
-    imshow("nms " + name,emapImg);
+  imshow("nms " + name, emapImg);
 }
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/bike.png";
   const char* filename = argc >= 2 ? argv[1] : "../../images/geom.png";

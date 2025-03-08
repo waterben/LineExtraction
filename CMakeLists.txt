@@ -68,6 +68,9 @@ include_directories(${Boost_INCLUDE_DIR})
 include(extern_opencv)
 include_directories(${OpenCV_INCLUDE_DIR})
 
+MESSAGE(STATUS "${OpenCV_INCLUDE_DIR}")
+MESSAGE(STATUS "${OpenCV_LIBS}")
+
 if(ENABLE_QT)
     #include(extern_qt)
     find_package (Qt5Core)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 # Add Libraries
 
@@ -30,6 +30,6 @@ add_executable(eval_phase_dc phase_dc.cpp)
 target_link_libraries(eval_phase_dc lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )
 
 add_executable(eval_spe_precision spe_precision.cpp)
-target_link_libraries(eval_spe_precision lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )
+target_link_libraries(eval_spe_precision lib_utility lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )
 
 add_subdirectory(old)

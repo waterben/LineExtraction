@@ -40,260 +40,283 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _THRESHOLD_HPP_
-#define _THRESHOLD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <edge/otsu.hpp>
+#include <edge/threshold_estimator.hpp>
+#include <opencv2/core.hpp>
+
+#include <algorithm>
+
 
 namespace lsfm {
-    
-    template<class IT>
-    class Threshold {
-    protected:
-        Threshold() {}
-    public:
-        typedef IT img_type;
 
-        virtual ~Threshold() {}
+template <class IT>
+class Threshold {
+ protected:
+  Threshold() {}
 
-        virtual cv::Mat_<IT> process(const cv::Mat &img) = 0;
+ public:
+  typedef IT img_type;
 
-        virtual std::string name() const = 0;
-    };
+  virtual ~Threshold() {}
 
-    //! Global threshold class
-    template<class IT, class E = ThresholdOtsu<IT,512,float>>
-    class GlobalThreshold : public Threshold<IT> {
-        E th_;
-    public:
-        typedef IT img_type;
+  virtual cv::Mat_<IT> process(const cv::Mat& img) const = 0;
 
-        GlobalThreshold(IT rMax = std::numeric_limits<IT>::max()) : th_(rMax) {}
+  virtual std::string name() const = 0;
+};
 
-        
-        //! Compute global threshold
-        cv::Mat_<IT> process(const cv::Mat &mag) {
-            cv::Mat_<IT> ret(mag.size());
-            ret.setTo(th_.process(mag));
-            return ret;
+//! Global threshold class
+template <class IT, class E = ThresholdOtsu<IT, 512, float>>
+class GlobalThreshold : public Threshold<IT> {
+  E th_{};
+
+ public:
+  typedef IT img_type;
+
+  GlobalThreshold(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0) : th_(r_max, r_min) {}
+
+
+  //! Compute global threshold
+  cv::Mat_<IT> process(const cv::Mat& mag) const {
+    cv::Mat_<IT> ret(mag.size());
+    cv::threshold(mag, ret, th_.process(mag), th_.max(), cv::THRESH_BINARY);
+    return ret;
+  }
+
+
+  //! Get name of threshold method
+  std::string name() const { return "global " + E::name(); }
+};
+
+//! Local threshold class using fixed window
+template <class IT, class E = ThresholdOtsu<IT, 512, float>>
+class LocalThreshold : public Threshold<IT> {
+ protected:
+  E th_;
+  int wx_, wy_;
+
+ public:
+  typedef IT img_type;
+
+  LocalThreshold(int win_size_x, int win_size_y, IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0)
+      : th_(r_max, r_min), wx_(win_size_x), wy_(win_size_y) {}
+
+
+  //! Compute local threshold
+  cv::Mat_<IT> process(const cv::Mat& mag) const {
+    cv::Mat_<IT> ret(mag.size());
+    if ((wx_ >= mag.cols && wy_ >= mag.rows) || (wx_ <= 0 && wy_ <= 0)) {
+      cv::threshold(mag, ret, th_.process(mag), th_.max(), cv::THRESH_BINARY);
+      return ret;
+    }
+    // 0 or negative means auto value. In this case we use mat width or height
+    int wx = wx_ <= 0 ? mag.cols : wx_;
+    int wy = wy_ <= 0 ? mag.rows : wy_;
+
+    // Loop over the mag matrix in steps of wx_ and wy_
+    for (int y = 0; y < mag.rows; y += wy) {
+      for (int x = 0; x < mag.cols; x += wx) {
+        // Compute width and height of the tile
+        int tile_width = std::min(wx, mag.cols - x);
+        int tile_height = std::min(wy, mag.rows - y);
+
+        // Define tile region
+        cv::Rect tile_region(x, y, tile_width, tile_height);
+
+        // Extract tile
+        cv::Mat mag_tile = mag(tile_region);
+        cv::Mat ret_tile = ret(tile_region);
+
+        cv::threshold(mag_tile, ret_tile, th_.process(mag_tile), th_.max(), cv::THRESH_BINARY);
+      }
+    }
+    return ret;
+  }
+
+
+  //! Get name of threshold method
+  std::string name() const { return "local window " + E::name(); }
+};
+
+//! Local dynamic threshold class using tiles
+template <class IT, class E = ThresholdOtsu<IT, 512, float>, bool PARALLEL_FOR = true>
+class LocalThresholdTiles : public Threshold<IT> {
+  E th_;
+  float scale_{2.};
+  int tiles_x_, tiles_y_;
+
+ public:
+  typedef IT img_type;
+
+  LocalThresholdTiles(
+      int tiles_x, int tiles_y, IT r_max = std::numeric_limits<IT>::max(), float scale = 1.0f, IT r_min = 0)
+      : th_(r_max, r_min), tiles_x_(tiles_x), tiles_y_(tiles_y), scale_(scale) {}
+
+
+  //! Compute local threshold
+  cv::Mat_<IT> process(const cv::Mat& mag) const {
+    cv::Mat_<IT> ret(mag.size());
+    if (tiles_x_ <= 1 && tiles_y_ <= 1) {
+      cv::threshold(mag, ret, th_.process(mag), th_.max(), cv::THRESH_BINARY);
+      return ret;
+    }
+
+    int wx = mag.cols / tiles_x_;
+    int wy = mag.rows / tiles_y_;
+    int rx = mag.cols % tiles_x_;
+    int ry = mag.rows % tiles_y_;
+
+    if (scale_ <= 1.0) {
+      if constexpr (PARALLEL_FOR) {
+        // Parallel processing using cv::parallel_for_
+        cv::parallel_for_(cv::Range(0, tiles_y_ * tiles_x_), [&](const cv::Range& range) {
+          for (int i = range.start; i < range.end; ++i) {
+            int tile_y = i / tiles_x_;
+            int tile_x = i % tiles_x_;
+
+            // Define tile region
+            cv::Rect tile_region(tile_x * wx, tile_y * wy, wx + (rx - tile_x > 0 ? 1 : 0),
+                                 wy + (ry - tile_y > 0 ? 1 : 0));
+            cv::Mat mag_tile = mag(tile_region);
+            cv::threshold(mag_tile, ret(tile_region), th_.process(mag_tile), th_.max(), cv::THRESH_BINARY);
+          }
+        });
+      } else {
+        int y_start = 0;
+        for (int ty = 0; ty != tiles_y_; ++ty) {
+          int wy_local = wy + (ry-- > 0 ? 1 : 0);
+          int x_start = 0;
+          int rx_local = rx;
+          for (int tx = 0; tx != tiles_x_; ++tx) {
+            int wx_local = wx + (rx_local-- > 0 ? 1 : 0);
+            // Define tile region
+            cv::Rect tile_region(x_start, y_start, wx_local, wy_local);
+            cv::Mat mag_tile = mag(tile_region);
+            cv::threshold(mag_tile, ret(tile_region), th_.process(mag_tile), th_.max(), cv::THRESH_BINARY);
+            x_start += wx_local;
+          }
+          y_start += wy_local;
         }
+      }
+    } else {
+      cv::Rect image_bounds(0, 0, mag.cols, mag.rows);
+      if constexpr (PARALLEL_FOR) {
+        // Parallel processing using cv::parallel_for_
+        cv::parallel_for_(cv::Range(0, tiles_y_ * tiles_x_), [&](const cv::Range& range) {
+          for (int i = range.start; i < range.end; ++i) {
+            int tile_y = i / tiles_x_;
+            int tile_x = i % tiles_x_;
 
+            // Define tile region
+            cv::Rect tile_region(tile_x * wx, tile_y * wy, wx + (rx - tile_x > 0 ? 1 : 0),
+                                 wy + (ry - tile_y > 0 ? 1 : 0));
+            cv::Rect scaled_region = scaledRegion(image_bounds, tile_region, scale_);
 
-        //! Get name of threshold method
-        std::string name() const {
-            return "global " + E::name();
+            cv::threshold(mag(tile_region), ret(tile_region), th_.process(mag(scaled_region)), th_.max(),
+                          cv::THRESH_BINARY);
+          }
+        });
+      } else {
+        int y_start = 0;
+        for (int ty = 0; ty != tiles_y_; ++ty) {
+          int wy_local = wy + (ry-- > 0 ? 1 : 0);
+          int x_start = 0;
+          int rx_local = rx;
+          for (int tx = 0; tx != tiles_x_; ++tx) {
+            int wx_local = wx + (rx_local-- > 0 ? 1 : 0);
+            // Define tile region
+            cv::Rect tile_region(x_start, y_start, wx_local, wy_local);
+            cv::Rect scaled_region = scaledRegion(image_bounds, tile_region, scale_);
+
+            cv::threshold(mag(tile_region), ret(tile_region), th_.process(mag(scaled_region)), th_.max(),
+                          cv::THRESH_BINARY);
+            x_start += wx_local;
+          }
+          y_start += wy_local;
         }
+      }
+    }
 
-    };
-
-    //! Local threshold class using fixed window
-    template<class IT, class E = ThresholdOtsu<IT, 512, float>>
-    class LocalThreshold : public Threshold<IT> {
-    protected:
-        E th_;
-        int wx_, wy_;
-        bool as_;
-    public:
-        typedef IT img_type;
-
-        LocalThreshold(int win_size_x, int win_size_y, bool auto_adapt_size = true, IT rMax = std::numeric_limits<IT>::max()) : 
-            th_(rMax), wx_(win_size_x), wy_(win_size_y), as_(auto_adapt_size) {}
+    return ret;
+  }
 
 
-        //! Compute local threshold
-        cv::Mat_<IT> process(const cv::Mat &mag) {
-            cv::Size s = mag.size();
-            cv::Mat_<IT> ret(s);
+  //! Get name of threshold method
+  std::string name() const { return "local tiles " + E::name(); }
 
-            int wx = wx_, wy = wy_;
-            int tilesx = s.width / wx, tilesy = s.height / wy;
-            int rx = s.width % wx, ry = s.height % wy;
-            
-            if (as_) {
-                wx += rx / tilesx;
-                rx = rx % tilesx;
+  static cv::Rect scaledRegion(const cv::Rect image_bounds, const cv::Rect& tile_region, float scale) {
+    int newWidth = static_cast<int>(static_cast<float>(tile_region.width) * scale);
+    int newHeight = static_cast<int>(static_cast<float>(tile_region.height) * scale);
 
-                wy += ry / tilesy;
-                ry = ry % tilesy;
+    // Scale region at center
+    cv::Rect scaled_region = cv::Rect(tile_region.x - (tile_region.width - newWidth) / 2,
+                                      tile_region.y - (tile_region.height - newHeight) / 2, newWidth, newHeight);
 
-                int starty = 0;
-                for (int y = 0; y != tilesy; ++y) {
-                    int endy = starty + wy + (ry > y ? 1 : 0);
-                    cv::Mat row_ret = ret.rowRange(starty, endy), row_mag = mag.rowRange(starty, endy);
-                    starty = endy;
-                    int startx = 0;
-                    for (int x = 0; x != tilesx; ++x) {
-                        int endx = startx + wx + (rx > x ? 1 : 0);
-                        row_ret.colRange(startx, endx).setTo(th_.process(row_mag.colRange(startx, endx)));
-                        startx = endx;
-                    }
-                }
-            }
-            else {
-                int starty = 0;
-                if (ry)
-                    ++tilesy;
-                for (int y = 0; y != tilesy; ++y) {
-                    int endy = std::min(s.height,starty + wy);
-                    cv::Mat row_ret = ret.rowRange(starty, endy), row_mag = mag.rowRange(starty, endy);
-                    starty = endy;
-                    int startx = 0;
-                    for (int x = 0; x != tilesx; ++x) {
-                        int endx = startx + wx;
-                        row_ret.colRange(startx, endx).setTo(th_.process(row_mag.colRange(startx, endx)));
-                        startx = endx;
-                    }
-                    if (rx)
-                        row_ret.colRange(startx, row_ret.cols).setTo(th_.process(row_mag.colRange(startx, row_mag.cols)));
-                }
-            }
 
-            return ret;
+    // Return valid range by calculating the intersection part of image bounds and scaled region
+    return scaled_region & image_bounds;
+  }
+};
+
+//! Dynamic threshold class using radius to define sliding window size
+template <class IT, class E = ThresholdOtsu<IT, 512, float>, bool PARALLEL_FOR = true>
+class DynamicThreshold : public Threshold<IT> {
+ protected:
+  E th_;
+  int r_;
+
+ public:
+  typedef IT img_type;
+
+  DynamicThreshold(int radius, IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0)
+      : th_(r_max, r_min), r_(radius) {}
+
+
+  //! Compute dynamic threshold
+  cv::Mat_<IT> process(const cv::Mat& mag) const {
+    cv::Mat_<IT> ret(mag.size());
+
+    if constexpr (PARALLEL_FOR) {
+      // Parallel processing using cv::parallel_for_
+      cv::parallel_for_(cv::Range(0, mag.rows * mag.cols), [&](const cv::Range& range) {
+        for (int i = range.start; i < range.end; ++i) {
+          int y = i / mag.cols;  // Row index
+          int x = i % mag.cols;  // Column index
+          // Define the window range, ensuring boundaries
+          int x_start = std::max(0, x - r_);
+          int y_start = std::max(0, y - r_);
+          int x_end = std::min(mag.cols, x + r_ + 1);
+          int y_end = std::min(mag.rows, y + r_ + 1);
+
+          // Store the processed value in ret at (y, x)
+          ret(y, x) = mag.at<IT>(y, x) >= th_.process(mag(cv::Range(y_start, y_end), cv::Range(x_start, x_end)))
+                          ? th_.max()
+                          : 0;
         }
+      });
+    } else {
+      // Iterate over each pixel
+      for (int y = 0; y < mag.rows; ++y) {
+        for (int x = 0; x < mag.cols; ++x) {
+          // Define the window range, ensuring boundaries
+          int x_start = std::max(0, x - r_);
+          int y_start = std::max(0, y - r_);
+          int x_end = std::min(mag.cols, x + r_ + 1);
+          int y_end = std::min(mag.rows, y + r_ + 1);
 
-
-        //! Get name of threshold method
-        std::string name() const {
-            return "local window " + E::name();
+          // Store the processed value in ret at (y, x)
+          ret(y, x) = mag.at<IT>(y, x) >= th_.process(mag(cv::Range(y_start, y_end), cv::Range(x_start, x_end)))
+                          ? th_.max()
+                          : 0;
         }
+      }
+    }
 
-    };
+    return ret;
+  }
 
-    //! Local threshold class using tiles
-    template<class IT, class E = ThresholdOtsu<IT, 512, float>>
-    class LocalThresholdTiles : public LocalThreshold<IT,E> {
-        int tx_, ty_;
-    public:
-        typedef IT img_type;
+  //! Get name of threshold method
+  std::string name() const { return "dynamic " + E::name(); }
+};
 
-        LocalThresholdTiles(int tiles_x, int tiles_y, IT rMax = std::numeric_limits<IT>::max()) :
-            LocalThreshold<IT,E>(0, 0, true, rMax), tx_(tiles_x), ty_(tiles_y)  {}
-
-
-        //! Compute local threshold
-        cv::Mat_<IT> process(const cv::Mat &mag) {
-            cv::Size s = mag.size();
-            this->wx_ = s.width / tx_;
-            this->wy_ = s.height / ty_;
-            return LocalThreshold<IT, E>::process(mag);
-        }
-
-
-        //! Get name of threshold method
-        std::string name() const {
-            return "local tiles " + E::name();
-        }
-
-    };
-
-    //! Dynamic threshold class using radius to define sliding window size
-    template<class IT, class E = ThresholdOtsu<IT, 512, float>>
-    class DynamicThreshold : public Threshold<IT> {
-    protected:
-        E th_;
-        int r_;
-    public:
-        typedef IT img_type;
-
-        DynamicThreshold(int radius, IT rMax = std::numeric_limits<IT>::max()) :
-            th_(rMax), r_(radius) {}
-
-
-        //! Compute dynamic threshold
-        cv::Mat_<IT> process(const cv::Mat &mag) {
-            cv::Size s = mag.size();
-            cv::Mat_<IT> ret(s);
-
-            // compute without border checks
-            int endy = s.height - r_;
-            int endx = s.width - r_;
-
-            // first compute inner
-            for (int y = r_; y != endy; ++y) {
-                cv::Mat win_mag = mag.rowRange(y - r_, y + r_).colRange(0, r_ + r_);
-                for (int x = r_; x != endx; ++x) {
-                    ret(y,x) = th_.process(win_mag);
-                    win_mag.adjustROI(0, 0, -1, 1);
-                }
-            }
-
-            // compute top rows
-            for (int y = 0; y != r_; ++y) {
-                cv::Mat win_mag = mag.rowRange(0, y + r_).colRange(0, r_ + r_);
-                for (int x = r_; x != endx; ++x) {
-                    ret(y, x) = th_.process(win_mag);
-                    win_mag.adjustROI(0, 0, -1, 1);
-                }
-            }
-
-            // compute bottom rows
-            for (int y = s.height - r_; y != s.height; ++y) {
-                cv::Mat win_mag = mag.rowRange(y - r_, s.height).colRange(0, r_ + r_);
-                for (int x = r_; x != endx; ++x) {
-                    ret(y, x) = th_.process(win_mag);
-                    win_mag.adjustROI(0, 0, -1, 1);
-                }
-            }
-
-            // compute left cols
-            for (int y = r_; y != endy; ++y) {
-                cv::Mat row_mag = mag.rowRange(y - r_, y + r_);
-                for (int x = 0; x != r_; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(0, x + r_));
-                }
-            }
-
-            // compute right cols
-            for (int y = r_; y != endy; ++y) {
-                cv::Mat row_mag = mag.rowRange(y - r_, y + r_);
-                for (int x = s.width - r_; x != s.width; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(x - r_, s.width));
-                }
-            }
-
-            // compute top left
-            for (int y = 0; y != r_; ++y) {
-                cv::Mat row_mag = mag.rowRange(0, y + r_);
-                for (int x = 0; x != r_; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(0, x + r_));
-                }
-            }
-
-            // compute top right
-            for (int y = 0; y != r_; ++y) {
-                cv::Mat row_mag = mag.rowRange(0, y + r_);
-                for (int x = s.width - r_; x != s.width; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(x - r_, s.width));
-                }
-            }
-
-            // compute bottom left
-            for (int y = s.height - r_; y != s.height; ++y) {
-                cv::Mat row_mag = mag.rowRange(y - r_, s.height);
-                for (int x = 0; x != r_; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(0, x + r_));
-                }
-            }
-
-            // compute bottom right
-            for (int y = s.height - r_; y != s.height; ++y) {
-                cv::Mat row_mag = mag.rowRange(y - r_, s.height);
-                for (int x = s.width - r_; x != s.width; ++x) {
-                    ret(y, x) = th_.process(row_mag.colRange(x - r_, s.width));
-                }
-            }
-
-            return ret;
-        }
-
-        //! Get name of threshold method
-        std::string name() const {
-            return "dynamic " + E::name();
-        }
-
-    };
-    
-}
-#endif
-#endif
+}  // namespace lsfm

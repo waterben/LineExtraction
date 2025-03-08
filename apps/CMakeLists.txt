@@ -1,5 +1,5 @@
 # Copyright (c) 2014 - 2021 by Benjamin Wassermann
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 # Add Build Targets
 

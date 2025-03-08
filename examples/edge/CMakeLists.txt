@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 add_executable(test_edge_nms nms_test.cpp)
 target_link_libraries(test_edge_nms lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS})

@@ -102,7 +102,7 @@ set(BoostDetectionMode Auto CACHE STRING "Boost detection mode: Auto - try syste
 set(BoostExternPath "${PROJECT_SOURCE_DIR}/extern/boost" CACHE PATH "Path to extern lib")
 set_property(CACHE BoostDetectionMode PROPERTY STRINGS ${BoostDetectionModes})
 set(BoostVersion "1.74.0" CACHE STRING "Managed boost version")
-set(BoostComponents "regex;thread;system;atomic;chrono;date_time;filesystem" CACHE STRING "Boost components to include")
+set(BoostComponents "regex;thread;system;atomic;chrono;date_time;filesystem;program_options" CACHE STRING "Boost components to include")
 
 set(BoostMultiThreaded ON CACHE BOOL "Build/Use multi threaded libraries")
 set(BoostStaticLibs ON CACHE BOOL "Build/Use static libraries")

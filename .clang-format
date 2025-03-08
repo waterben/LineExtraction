@@ -7,6 +7,7 @@ DerivePointerAlignment: false
 PointerAlignment: Left
 IndentPPDirectives: AfterHash
 MaxEmptyLinesToKeep: 2
+IndentWidth: 2
 IncludeBlocks: Regroup
 # Includes are sorted by matching against regular expressions.  The first match
 # wins, its priority is used to determine the include group.

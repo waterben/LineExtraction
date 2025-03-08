@@ -1,5 +1,3 @@
-***INSERT GRAPHIC HERE (include hyperlink in image)***
-
 # Line Extraction Tool Library
 
 
@@ -27,7 +25,7 @@
 ### Setup for Debian/Ubuntu
  - Make sure following packages are installed: 
  ```bash
-  sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default libgtk2.0-dev
+  sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default libgtk2.0-dev libeigen3-dev
  ```
 
  - Create build subfolder and run cmake from there:
@@ -51,4 +49,3 @@
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
 - **[MIT license](http://opensource.org/licenses/mit-license.php)**
-- Copyright 2015 © <a href="http://fvcproductions.com" target="_blank">FVCproductions</a>.

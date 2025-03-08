@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 add_executable(test_lsd lsd.cpp)
 target_link_libraries(test_lsd lib_lsd ${Boost_LIBRARIES} ${OpenCV_LIBS})

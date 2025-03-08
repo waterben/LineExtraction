@@ -1,5 +1,5 @@
 #include <edge/nms.hpp>
-#include <edge/otsu.hpp>
+#include <edge/threshold_estimator.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/rcmg.hpp>
@@ -14,43 +14,40 @@
 #include <string>
 
 
-
 using namespace std;
 using namespace lsfm;
 using namespace cv;
 
-template<class OP>
-void testOP(OP &op, const Mat &src, const std::string &name) {
-    int runs = 2;
-    int64 rt = 0, tmp;
-    for (int i = 0; i != runs; ++i) {
-        tmp = cv::getTickCount();
-        op.process(src);
-        rt += cv::getTickCount() - tmp;
-    }
+template <class OP>
+void testOP(OP& op, const Mat& src, const std::string& name) {
+  int runs = 2;
+  int64 rt = 0, tmp;
+  for (int i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    op.process(src);
+    rt += cv::getTickCount() - tmp;
+  }
 
-    std::cout << name <<": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
 }
 
-template<class OP>
-void showOp(const std::string &name,OP &op,int use_range = 0) {
-    cv::Mat mag;
-    op.magnitude().copyTo(mag);
-    if (use_range) {
-        mag /= op.magnitudeRange().upper;
-        if (use_range > 1)
-            mag *= use_range;
-    } else {
-        double vmin,vmax;
-        cv::minMaxIdx(mag,&vmin,&vmax);
-        mag /= vmax;
-    }
-    imshow(name,mag);
+template <class OP>
+void showOp(const std::string& name, OP& op, int use_range = 0) {
+  cv::Mat mag;
+  op.magnitude().copyTo(mag);
+  if (use_range) {
+    mag /= op.magnitudeRange().upper;
+    if (use_range > 1) mag *= use_range;
+  } else {
+    double vmin, vmax;
+    cv::minMaxIdx(mag, &vmin, &vmax);
+    mag /= vmax;
+  }
+  imshow(name, mag);
 }
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
 
   cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
@@ -69,16 +66,15 @@ int main(int argc, char** argv)
 
   imshow("img", src);
 
-  /*double tmp = cv::getTickCount();
+  double tmp = cv::getTickCount();
   int th = otsu.process(src);
-  std::cout << "otsu: " << th << ", "<< ((cv::getTickCount() - tmp)  * 1000.0 / cv::getTickFrequency()) << std::endl;
+  std::cout << "otsu: " << th << ", " << ((cv::getTickCount() - tmp) * 1000.0 / cv::getTickFrequency()) << std::endl;
   cv::Mat src_th;
   src.copyTo(src_th);
-  src_th.setTo(0,src < th);
-  src_th.setTo(255,src >= th);
+  src_th.setTo(0, src < th);
+  src_th.setTo(255, src >= th);
 
-  imshow("img th",src_th);*/
-
+  imshow("img th", src_th);
   DerivativeGradient<uchar, short, float, float, RobertsDerivative> roberts;
   DerivativeGradient<uchar, short, float, float, PrewittDerivative> prewitt;
   DerivativeGradient<uchar, short, float, float, SobelDerivative> sobel;
@@ -134,42 +130,42 @@ int main(int argc, char** argv)
   showOp("rcmg", rcmg);
   // showOp("phase",phase);
 
-  /*ThresholdOtsu<float,256,float> otsu2(sobel.magnitudeRange().upper);
+  ThresholdOtsu<float, 256, float> otsu2(sobel.magnitudeRange().upper);
   tmp = cv::getTickCount();
-  cv::Mat mag; sobel.magnitude().copyTo(mag);
+  cv::Mat mag;
+  sobel.magnitude().copyTo(mag);
   th = otsu2.process(mag);
-  std::cout << "otsu2: " << th << ", "<< ((cv::getTickCount() - tmp)  * 1000.0 / cv::getTickFrequency()) << std::endl;
-  mag.setTo(0,mag < th);
+  std::cout << "otsu2: " << th << ", " << ((cv::getTickCount() - tmp) * 1000.0 / cv::getTickFrequency()) << std::endl;
+  mag.setTo(0, mag < th);
 
-  imshow("sobel_th",mag/sobel.magnitudeRange().upper*4);
+  imshow("sobel_th", mag / sobel.magnitudeRange().upper * 4);
 
-  //mag = sobel.magnitude();
+  // mag = sobel.magnitude();
 
   int histSize = 256;
-  float range[] = { 0, sobel.magnitudeRange().upper } ;
-  const float* histRange = { range };
+  float range[] = {0, sobel.magnitudeRange().upper};
+  const float* histRange = {range};
 
   cv::Mat hist;
-  cv::calcHist(&mag, 1, 0, Mat(), hist, 1, &histSize, &histRange, true, false );
+  cv::calcHist(&mag, 1, 0, Mat(), hist, 1, &histSize, &histRange, true, false);
 
-  int hist_w = 512; int hist_h = 400;
-  int bin_w = cvRound( (double) hist_w/histSize );
+  int hist_w = 512;
+  int hist_h = 400;
+  int bin_w = cvRound((double)hist_w / histSize);
 
-  Mat histImage( hist_h, hist_w, CV_8U, Scalar( 0,0,0) );
+  Mat histImage(hist_h, hist_w, CV_8U, Scalar(0, 0, 0));
 
   /// Normalize the result to [ 0, histImage.rows ]
-  cv::normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+  cv::normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
 
 
   /// Draw for each channel
-  for( int i = 1; i < histSize; i++ )
-  {
-    cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
-                     cv::Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
-                     cv::Scalar( 255, 0, 0), 2, 8, 0  );
+  for (int i = 1; i < histSize; i++) {
+    cv::line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+             cv::Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))), cv::Scalar(255, 0, 0), 2, 8, 0);
   }
 
-  imshow("calcHist Demo", histImage );*/
+  imshow("calcHist Demo", histImage);
 
 
   waitKey();
