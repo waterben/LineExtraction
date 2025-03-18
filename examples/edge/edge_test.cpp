@@ -65,8 +65,6 @@ void showEdge(EDGE& edge, const cv::Mat& src, const std::string& name, bool circ
 
 
 int main(int argc, char** argv) {
-  char s;
-  std::cin >> s;
   // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
@@ -81,8 +79,8 @@ int main(int argc, char** argv) {
 
   if (src.channels() > 1) cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-  GaussianNoiseOperator noise(10);
-  // noise.apply(src);
+  // GaussianNoiseOperator noise(10);
+  //  noise.apply(src);
   GaussianBlur(src, src, cv::Size(5, 5), 0.6);
 
   imshow("img", src);

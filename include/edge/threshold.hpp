@@ -66,7 +66,7 @@ class Threshold {
 };
 
 //! Global threshold class
-template <class IT, class E = ThresholdOtsu<IT, 512, float>>
+template <class IT, class E = ThresholdOtsu<IT, 512, float>, bool PARALLEL_FOR = false>
 class GlobalThreshold : public Threshold<IT> {
   E th_{};
 
@@ -79,7 +79,36 @@ class GlobalThreshold : public Threshold<IT> {
   //! Compute global threshold
   cv::Mat_<IT> process(const cv::Mat& mag) const {
     cv::Mat_<IT> ret(mag.size());
-    cv::threshold(mag, ret, th_.process(mag), th_.max(), cv::THRESH_BINARY);
+
+    if constexpr (PARALLEL_FOR) {
+      auto global_th = th_.process(mag);
+      int tiles_x = 3;
+      int tiles_y = 3;
+      int wx = mag.cols / tiles_x;
+      int wy = mag.rows / tiles_y;
+      int rx = mag.cols % tiles_x;
+      int ry = mag.rows % tiles_y;
+      // Parallel processing using cv::parallel_for_
+      cv::parallel_for_(cv::Range(0, tiles_y * tiles_x), [&](const cv::Range& range) {
+        for (int i = range.start; i < range.end; ++i) {
+          int tile_y = i / tiles_x;
+          int tile_x = i % tiles_x;
+
+          int x_off = std::min(rx, tile_x);
+          int y_off = std::min(ry, tile_y);
+
+          // Define tile region
+          cv::Rect tile_region(tile_x * wx + x_off, tile_y * wy + y_off, wx + (rx - tile_x > 0 ? 1 : 0),
+                               wy + (ry - tile_y > 0 ? 1 : 0));
+          cv::Mat mag_tile = mag(tile_region);
+          cv::threshold(mag_tile, ret(tile_region), global_th, th_.max(), cv::THRESH_BINARY);
+        }
+      });
+    } else {
+      cv::threshold(mag, ret, th_.process(mag), th_.max(), cv::THRESH_BINARY);
+    }
+
+
     return ret;
   }
 
@@ -174,8 +203,11 @@ class LocalThresholdTiles : public Threshold<IT> {
             int tile_y = i / tiles_x_;
             int tile_x = i % tiles_x_;
 
+            int x_off = std::min(rx, tile_x);
+            int y_off = std::min(ry, tile_y);
+
             // Define tile region
-            cv::Rect tile_region(tile_x * wx, tile_y * wy, wx + (rx - tile_x > 0 ? 1 : 0),
+            cv::Rect tile_region(tile_x * wx + x_off, tile_y * wy + y_off, wx + (rx - tile_x > 0 ? 1 : 0),
                                  wy + (ry - tile_y > 0 ? 1 : 0));
             cv::Mat mag_tile = mag(tile_region);
             cv::threshold(mag_tile, ret(tile_region), th_.process(mag_tile), th_.max(), cv::THRESH_BINARY);
@@ -184,11 +216,10 @@ class LocalThresholdTiles : public Threshold<IT> {
       } else {
         int y_start = 0;
         for (int ty = 0; ty != tiles_y_; ++ty) {
-          int wy_local = wy + (ry-- > 0 ? 1 : 0);
+          int wy_local = wy + (ry - ty > 0 ? 1 : 0);
           int x_start = 0;
-          int rx_local = rx;
           for (int tx = 0; tx != tiles_x_; ++tx) {
-            int wx_local = wx + (rx_local-- > 0 ? 1 : 0);
+            int wx_local = wx + (rx - tx > 0 ? 1 : 0);
             // Define tile region
             cv::Rect tile_region(x_start, y_start, wx_local, wy_local);
             cv::Mat mag_tile = mag(tile_region);
@@ -207,8 +238,11 @@ class LocalThresholdTiles : public Threshold<IT> {
             int tile_y = i / tiles_x_;
             int tile_x = i % tiles_x_;
 
+            int x_off = std::min(rx, tile_x);
+            int y_off = std::min(ry, tile_y);
+
             // Define tile region
-            cv::Rect tile_region(tile_x * wx, tile_y * wy, wx + (rx - tile_x > 0 ? 1 : 0),
+            cv::Rect tile_region(tile_x * wx + x_off, tile_y * wy + y_off, wx + (rx - tile_x > 0 ? 1 : 0),
                                  wy + (ry - tile_y > 0 ? 1 : 0));
             cv::Rect scaled_region = scaledRegion(image_bounds, tile_region, scale_);
 
@@ -219,11 +253,10 @@ class LocalThresholdTiles : public Threshold<IT> {
       } else {
         int y_start = 0;
         for (int ty = 0; ty != tiles_y_; ++ty) {
-          int wy_local = wy + (ry-- > 0 ? 1 : 0);
+          int wy_local = wy + (ry - ty > 0 ? 1 : 0);
           int x_start = 0;
-          int rx_local = rx;
           for (int tx = 0; tx != tiles_x_; ++tx) {
-            int wx_local = wx + (rx_local-- > 0 ? 1 : 0);
+            int wx_local = wx + (rx - tx > 0 ? 1 : 0);
             // Define tile region
             cv::Rect tile_region(x_start, y_start, wx_local, wy_local);
             cv::Rect scaled_region = scaledRegion(image_bounds, tile_region, scale_);

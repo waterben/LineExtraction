@@ -76,14 +76,14 @@ void showGradient(const std::string& name, GRAD& grad, int use_range = 0) {
 }
 
 template <class NMS>
-void showNMS(const std::string& name, NMS& nms, bool use_dir = true) {
+void showNMS(const std::string& name, NMS& nms, bool use_dir = false) {
   // cv::Mat emap = nms.directionMap();
   cv::Mat emap = nms.hysteresis();
   cv::Mat emapImg;
   emapImg.create(emap.rows, emap.cols, CV_8UC3);
+  emapImg.setTo(cv::Vec3b(0, 0, 0));
 
   if (use_dir) {
-    emapImg.setTo(cv::Vec3b(0, 0, 0));
     emapImg.setTo(cv::Vec3b(220, 150, 255), emap == 7);  // magenta2
     emapImg.setTo(cv::Vec3b(255, 0, 150), emap == 6);    // lila
     emapImg.setTo(cv::Vec3b(255, 0, 0), emap == 5);      // blue

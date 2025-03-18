@@ -3,27 +3,22 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <edge/edge_linking.hpp>
+#include <edge/fit.hpp>
 #include <edge/nms.hpp>
 #include <edge/spe.hpp>
+#include <edge/threshold.hpp>
 #include <edge/zc.hpp>
 #include <geometry/draw.hpp>
 #include <imgproc/derivative_gradient.hpp>
-#include <imgproc/gradient_adapter.hpp>
-#include <imgproc/image_operator.hpp>
-#include <imgproc/pc_lgf.hpp>
-#include <imgproc/pc_matlab.hpp>
-#include <imgproc/pc_sqf.hpp>
-#include <imgproc/quadratureG2.hpp>
-#include <imgproc/quadratureLGF.hpp>
-#include <imgproc/quadratureS.hpp>
-#include <imgproc/quadratureSF.hpp>
-#include <imgproc/rcmg.hpp>
-#include <imgproc/susan.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/ximgproc.hpp>
 #include <utility/eval_app.hpp>
 #include <utility/matlab_helpers.hpp>
+#include <utility/response_convert.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -36,6 +31,105 @@
 using namespace lsfm;
 using namespace std;
 namespace fs = boost::filesystem;
+
+constexpr int global_runs = 100;
+
+template <class OP>
+double performanceNMS(OP& op, const cv::Mat& src, double th_low, double th_high, size_t runs = global_runs) {
+  int64 rt{}, tmp{};
+  for (size_t i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    op.process(src, th_low, th_high);
+    rt += cv::getTickCount() - tmp;
+  }
+
+  return (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+}
+
+template <class OP>
+double performanceNMS(OP& op,
+                      const cv::Mat& dir,
+                      const cv::Mat& src,
+                      double th_low,
+                      double th_high,
+                      double r_low,
+                      double r_high,
+                      size_t runs = 10) {
+  int64 rt{}, tmp{};
+  for (size_t i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    op.process(dir, src, th_low, th_high, r_low, r_high);
+    rt += cv::getTickCount() - tmp;
+  }
+
+  return (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+}
+
+template <class OP>
+double performanceNMS(OP& op,
+                      const cv::Mat& gx,
+                      const cv::Mat& gy,
+                      const cv::Mat& mag,
+                      double th_low,
+                      double th_high,
+                      size_t runs = global_runs) {
+  int64 rt{}, tmp{};
+  for (size_t i = 0; i != runs; ++i) {
+    tmp = cv::getTickCount();
+    op.process(gx, gy, mag, th_low, th_high);
+    rt += cv::getTickCount() - tmp;
+  }
+
+  return (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+}
+
+
+template <class OP, typename FT, template <class> class PT>
+double performanceSPE(OP& op,
+                      const IndexVector& idxs,
+                      std::vector<PT<FT>>& pts,
+                      const cv::Mat& src,
+                      const cv::Mat& dir,
+                      size_t runs = 10) {
+  int64 rt{}, tmp{};
+  for (size_t i = 0; i != runs; ++i) {
+    std::vector<PT<FT>> lpts;
+    tmp = cv::getTickCount();
+    op.convert(idxs, lpts, src, dir);
+    rt += cv::getTickCount() - tmp;
+    pts.swap(lpts);
+  }
+
+  return (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+}
+
+template <class OP, typename FT, template <class> class PT>
+double performanceSPE_DIR(OP& op,
+                          const IndexVector& idxs,
+                          std::vector<PT<FT>>& pts,
+                          const cv::Mat& src,
+                          const cv::Mat& dir,
+                          size_t runs = 10) {
+  int64 rt{}, tmp{};
+  for (size_t i = 0; i != runs; ++i) {
+    std::vector<PT<FT>> lpts;
+    tmp = cv::getTickCount();
+    op.convertDir(idxs, lpts, src, dir);
+    rt += cv::getTickCount() - tmp;
+    pts.swap(lpts);
+  }
+
+  return (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+}
+
+
+cv::Mat thinImage(const cv::Mat& src) {
+  cv::Mat thinnedImage;
+  cv::threshold(src, thinnedImage, 0, 255, cv::THRESH_BINARY);
+  thinnedImage.convertTo(thinnedImage, CV_8UC1);
+  cv::ximgproc::thinning(thinnedImage, thinnedImage, cv::ximgproc::THINNING_ZHANGSUEN);
+  return thinnedImage;
+}
 
 template <class FT, template <class> class PT = cv::Point_>
 struct GroundTruth {
@@ -62,8 +156,9 @@ struct GroundTruth {
       tmp.setTo(0);
 
       poly.fill(tmp, 180);
-      cv::GaussianBlur(tmp, tmp, cv::Size(kernel, kernel), sigma);  // long runtime
 
+      cv::GaussianBlur(tmp, tmp, cv::Size(kernel, kernel), sigma);  // long runtime
+      // cv::blur(tmp, tmp, cv::Size(101, 101));
       cv::resize(tmp, img, cv::Size(), scale, scale, cv::INTER_NEAREST);
 
       cv::imwrite(file.str(), img);
@@ -108,6 +203,7 @@ struct GroundTruth {
     return e;
   }
 
+  // Extract nearest line for point and calc distance as error
   size_t line(const PT<FT>& p, FT& err = FT()) const {
     size_t ret = 0;
     err = std::numeric_limits<FT>::max();
@@ -131,173 +227,272 @@ struct GroundTruth {
     else
       setPixel(out, cv::Point(getX(p), getY(p)), color[l]);
   }
+
+  cv::Mat drawGT() const {
+    static cv::Vec3b color[] = {cv::Vec3b(255, 0, 0),   cv::Vec3b(0, 255, 0),   cv::Vec3b(255, 255, 0),
+                                cv::Vec3b(255, 0, 255), cv::Vec3b(0, 255, 255), cv::Vec3b(255, 255, 255),
+                                cv::Vec3b(0, 0, 255)};
+    cv::Mat ret;
+    ret.create(img.size(), CV_8UC3);
+    ret.setTo(0);
+    for (std::size_t i = 0; i != segments.size(); ++i) {
+      segments[i].draw(ret, color[i]);
+    }
+    return ret;
+  }
+};
+
+template <class FT, template <class> class PT = cv::Point_>
+struct Data {
+  Data() = default;
+  Data(const Data&) = default;
+  Data(Data&&) = default;
+  Data& operator=(const Data&) = default;
+  Data& operator=(Data&&) = default;
+
+  Data(std::string n, std::vector<PT<FT>>&& p, const GroundTruth<FT, PT>& gt, double rt_nms = 0, double rt_spe = 0)
+      : points(std::move(p)), name(std::move(n)), runtime_nms(rt_nms), runtime_spe(rt_spe) {
+    process(gt);
+  }
+
+  std::vector<PT<FT>> points{};
+  std::vector<std::size_t> outlier{};
+  std::vector<std::vector<std::size_t>> segment_points{};
+
+  struct Error {
+    double sum{};
+    double sum_pow_2{};
+    std::size_t count{};
+
+    double value() const {
+      if (count == 0) {
+        return 0;
+      }
+      return sum / static_cast<double>(count);
+    }
+
+    double stdDev() const {
+      if (count == 0) {
+        return 0;
+      }
+      const auto val = value();
+      return std::sqrt(std::abs(sum_pow_2 / static_cast<double>(count) - val * val));
+    }
+
+    void clear() {
+      sum = 0;
+      sum_pow_2 = 0;
+      count = 0;
+    }
+
+    void add(double e) {
+      sum += e;
+      sum_pow_2 += e * e;
+      ++count;
+    }
+  };
+
+  Error error;
+  std::vector<Error> error_lines{};
+
+  void clearError() {
+    error.clear();
+    for (auto& lerr : error_lines) {
+      lerr.clear();
+    }
+  }
+
+  FT runtime_nms{};
+  FT runtime_spe{};
+  FT runtime() const { return runtime_nms + runtime_spe; }
+  cv::Mat img{};
+  std::string name{};
+
+  void process(const GroundTruth<FT, PT>& gt) {
+    img.create(gt.img.size(), CV_8UC3);
+    img.setTo(0);
+    outlier.clear();
+    segment_points.clear();
+    segment_points.resize(gt.segments.size());
+    error_lines.clear();
+    error_lines.resize(gt.segments.size());
+    error.clear();
+
+    for (std::size_t i = 0; i != points.size(); ++i) {
+      const auto& p = points[i];
+      FT e;
+      size_t l = gt.line(p, e);
+      if (e > 1) {
+        outlier.push_back(i);
+      } else {
+        segment_points[l].push_back(i);
+        // only measure points for error that are far enough from corners
+        if (gt.inRange(l, p, -10)) {
+          error.add(e);
+          error_lines[l].add(e);
+        }
+      }
+      if (getX(p) > -1 && getX(p) < img.cols && getY(p) > -1 && getY(p) < img.rows) {
+        gt.draw(img, p, l, e);
+      }
+    }
+  }
+
+  LineSegment2Vector<FT, PT> lineSegsFromSegPoints() const {
+    LineSegment2Vector<FT, PT> ret;
+    using MyPoint = PT<FT>;
+    using MyEigenFit = EigenFit<FT, MyPoint>;
+    FitLine<MyEigenFit> fit;
+    ret.reserve(segment_points.size());
+    for (const auto& seg_points : segment_points) {
+      std::vector<PT<FT>> point_list;
+      point_list.reserve(segment_points.size());
+      PT pt_min(std::numeric_limits<FT>::max(), std::numeric_limits<FT>::max());
+      PT pt_max(std::numeric_limits<FT>::min(), std::numeric_limits<FT>::min());
+      for (const auto& point_index : seg_points) {
+        auto pt = points[point_index];
+        pt_max.x = std::max(pt_max.x, pt.x);
+        pt_max.y = std::max(pt_max.y, pt.y);
+        pt_min.x = std::min(pt_min.x, pt.x);
+        pt_min.y = std::min(pt_min.y, pt.y);
+        point_list.push_back(pt);
+      }
+      Line<FT, PT> l;
+      fit.apply(point_list.begin(), point_list.end(), l);
+
+      ret.push_back(LineSegment<FT, PT>(l, pt_min, pt_max));
+    }
+    return ret;
+  }
 };
 
 template <class FT, template <class> class PT = cv::Point_>
 class Entry {
  protected:
-  Entry(const GroundTruth<FT, PT>& gt_in, const cv::Ptr<FilterI<uchar>>& fil, const std::string& n, int f)
+  Entry(const GroundTruth<FT, PT>& gt_in,
+        const cv::Ptr<FilterI<uchar>>& fil,
+        const std::string& n,
+        int f,
+        cv::Mat odir = cv::Mat())
       : gt(gt_in), name(n), filter(fil), flags(f) {}
 
  public:
-  struct Data {
-    Data() : points(0), outlier(0), error(0), stdDev(0) {}
-    size_t points;
-    int outlier;
-    FT error;
-    FT stdDev;
-    cv::Mat img;
-    std::string name;
-  };
-
+  using MyData = Data<FT, PT>;
   const GroundTruth<FT, PT>& gt;
-  std::string name;
-  std::vector<Data> allData;
-  cv::Ptr<FilterI<uchar>> filter;
-  int flags;
+  std::string name{};
+  std::vector<MyData> allData{};
+  cv::Ptr<FilterI<uchar>> filter{};
+  cv::Mat optional_dir{};
+  int flags{};
+
 
   virtual ~Entry() {}
   virtual void process(const cv::Mat& src) = 0;
 
   void process() { process(gt.img); }
 
-  void process(const std::vector<PT<FT>>& pts, Data& data) {
-    data.points = pts.size();
-    data.outlier = 0;
-    data.error = 0;
-    data.img.create(gt.img.size(), CV_8UC3);
-    data.img.setTo(0);
-    FT errSqr = 0;
-    for_each(pts.begin(), pts.end(), [&](const PT<FT>& p) {
-      FT e;
-      size_t l = gt.line(p, e);
-      if (e > 1)
-        ++data.outlier;
-      else {
-        // only measure points for error that are far enough from corners
-        if (gt.inRange(l, p, -10)) {
-          data.error += e;
-          errSqr += e * e;
-        }
-      }
-
-      if (getX(p) > -1 && getX(p) < data.img.cols && getY(p) > -1 && getY(p) < data.img.rows)
-        gt.draw(data.img, p, l, e);
-    });
-    if ((pts.size() - data.outlier)) {
-      data.error /= (pts.size() - data.outlier);
-      errSqr /= (pts.size() - data.outlier);
-    } else
-      data.error = 0;
-    data.stdDev = sqrt(errSqr - data.error * data.error);
-  }
-
   template <class ZC>
-  void processZC(
-      const std::string& name, const std::string& type, const cv::Mat& l, double th_low, double th_high, ZC& zc) {
+  void processZC(const std::string& name, std::string type, const cv::Mat& l, double th_low, double th_high, ZC& zc) {
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
     PixelEstimator<FT, cv::Point_<FT>> pe;
-    Data data;
-    data.name = name + "_spe_nearest_" + type;
-    zc.process(l, th_low, th_high);
+    auto rt_nms = performanceNMS(zc, l, th_low, th_high);
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
-    pe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
+    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
         spe_linear;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name + "_spe_linear_" + type, l, th_low, th_high, zc, spe_linear);
-    processZC(name + "_spe_cubic_" + type, l, th_low, th_high, zc, spe_cubic);
+    processZC(name + " spe lin" + type, l, th_low, th_high, zc, spe_linear);
+    processZC(name + " spe cub" + type, l, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
   void processZC(const std::string& name, const cv::Mat& l, double th_low, double th_high, ZC& zc, SPE& spe) {
-    Data data;
-    data.name = name;
-    zc.process(l, th_low, th_high);
+    auto rt_nms = performanceNMS(zc, l, th_low, th_high);
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
-    spe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
+    allData.emplace_back(MyData{name, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class ZC>
   void processZC(const std::string& name,
-                 const std::string& type,
+                 std::string type,
                  const cv::Mat& l,
                  const cv::Mat& dir,
                  double th_low,
                  double th_high,
                  ZC& zc) {
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
     PixelEstimator<FT, cv::Point_<FT>> pe;
-    Data data;
-    data.name = name + "_spe_nearest_" + type;
-    zc.process(l, th_low, th_high);
+    auto rt_nms = performanceNMS(zc, l, th_low, th_high);
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
-    pe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
+    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    data.name = name + "_dir_spe_nearest_" + type;
-    zc.process(dir, l, th_low, th_high, -CV_PI, CV_PI);
-    idxs = zc.hysteresis_edgels();
-    pe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    if (name != "zc fast") {
+      rt_nms = performanceNMS(zc, dir, l, th_low, th_high, -CV_PI, CV_PI);
+      idxs = zc.hysteresis_edgels();
+      pts.clear();
+      rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
+      allData.emplace_back(MyData{name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    }
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
         spe_linear;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name, "spe_linear", type, l, dir, th_low, th_high, zc, spe_linear);
-    processZC(name, "spe_cubic", type, l, dir, th_low, th_high, zc, spe_cubic);
+    processZC(name, "spe lin", type, l, dir, th_low, th_high, zc, spe_linear);
+    processZC(name, "spe cub", type, l, dir, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
   void processZC(const std::string& name,
-                 const std::string& spe_type,
-                 const std::string& type,
+                 std::string spe_type,
+                 std::string type,
                  const cv::Mat& l,
                  const cv::Mat& dir,
                  double th_low,
                  double th_high,
                  ZC& zc,
                  SPE& spe) {
-    Data data;
-    data.name = name + "_" + spe_type + "_" + type;
-    zc.process(l, th_low, th_high);
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
+    if (spe_type.size() && spe_type[0] != ' ') {
+      spe_type.insert(0, 1, ' ');
+    }
+    auto rt_nms = performanceNMS(zc, l, th_low, th_high);
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
-    spe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
+    allData.emplace_back(MyData{name + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    data.name = name + "_" + spe_type + "_dir_" + type;
     pts.clear();
-    spe.convertDir(idxs, pts, l, dir);
-    process(pts, data);
-    allData.push_back(data);
+    rt_spe = performanceSPE_DIR(spe, idxs, pts, l, dir);
+    allData.emplace_back(MyData{name + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    data.name = name + "_dir_" + spe_type + "_dir_" + type;
-    zc.process(dir, l, th_low, th_high, -CV_PI, CV_PI);
-    idxs = zc.hysteresis_edgels();
-    pts.clear();
-    spe.convertDir(idxs, pts, l, dir);
-    process(pts, data);
-    allData.push_back(data);
+    if (name != "zc fast") {
+      rt_nms = performanceNMS(zc, dir, l, th_low, th_high, -CV_PI, CV_PI);
+      idxs = zc.hysteresis_edgels();
+      pts.clear();
+      rt_spe = performanceSPE_DIR(spe, idxs, pts, l, dir);
+      allData.emplace_back(MyData{name + " dir" + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    data.name = name + "_dir_" + spe_type + "_" + type;
-    pts.clear();
-    spe.convert(idxs, pts, l, zc.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+      pts.clear();
+      rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
+      allData.emplace_back(MyData{name + " dir" + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
+    }
   }
 
   static inline void filterDirX(const IndexVector& in, const cv::Mat& dir, IndexVector& out) {
@@ -327,54 +522,50 @@ class Entry {
 
   template <class ZC>
   void processZC(const std::string& name,
-                 const std::string& type,
+                 std::string type,
                  const cv::Mat& lx,
                  const cv::Mat& ly,
                  const cv::Mat& dir,
                  double th_low,
                  double th_high,
                  ZC& zc) {
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
     PixelEstimator<FT, cv::Point_<FT>> pe;
-    Data data;
-    data.name = name + "_spe_nearest_" + type;
-    zc.process(lx, th_low, th_high);
+    auto rt_nms = performanceNMS(zc, lx, th_low, th_high);
     IndexVector idxsx = filterDirX(zc.hysteresis_edgels(), dir);
-    zc.process(ly, th_low, th_high);
+    rt_nms += performanceNMS(zc, ly, th_low, th_high);
     IndexVector idxsy = filterDirY(zc.hysteresis_edgels(), dir);
 
     std::vector<PT<FT>> pts, tmp;
-    pe.convert(idxsx, pts, lx, dir);
-    pe.convert(idxsy, tmp, ly, dir);
+    auto rt_spe = performanceSPE(pe, idxsx, pts, lx, dir);
+    rt_spe += performanceSPE(pe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
+    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    process(pts, data);
-    allData.push_back(data);
-
-    data.name = name + "_dir_spe_nearest_" + type;
-    zc.process(dir, lx, th_low, th_high, -CV_PI, CV_PI);
+    rt_nms = performanceNMS(zc, dir, lx, th_low, th_high, -CV_PI, CV_PI);
     idxsx = filterDirX(zc.hysteresis_edgels(), dir);
-    zc.process(dir, ly, th_low, th_high, -CV_PI, CV_PI);
+    rt_nms += performanceNMS(zc, dir, ly, th_low, th_high, -CV_PI, CV_PI);
     idxsy = filterDirY(zc.hysteresis_edgels(), dir);
 
-    pe.convert(idxsx, pts, lx, dir);
-    pe.convert(idxsy, tmp, ly, dir);
+    rt_spe = performanceSPE(pe, idxsx, pts, lx, dir);
+    rt_spe += performanceSPE(pe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
-
-    process(pts, data);
-    allData.push_back(data);
+    allData.emplace_back(MyData{name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
         spe_linear;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name, "spe_linear_dir_" + type, lx, ly, dir, th_low, th_high, zc, spe_linear);
-    processZC(name, "spe_cubic_dir_" + type, lx, ly, dir, th_low, th_high, zc, spe_cubic);
+    processZC(name, "spe lin dir" + type, lx, ly, dir, th_low, th_high, zc, spe_linear);
+    processZC(name, "spe cub dir" + type, lx, ly, dir, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
   void processZC(const std::string& name,
-                 const std::string& type,
+                 std::string type,
                  const cv::Mat& lx,
                  const cv::Mat& ly,
                  const cv::Mat& dir,
@@ -382,38 +573,35 @@ class Entry {
                  double th_high,
                  ZC& zc,
                  SPE& spe) {
-    Data data;
-    data.name = name + "_" + type;
-    zc.process(lx, th_low, th_high);
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
+    auto rt_nms = performanceNMS(zc, lx, th_low, th_high);
     IndexVector idxsx = filterDirX(zc.hysteresis_edgels(), dir);
-    zc.process(ly, th_low, th_high);
+    rt_nms += performanceNMS(zc, ly, th_low, th_high);
     IndexVector idxsy = filterDirY(zc.hysteresis_edgels(), dir);
 
     std::vector<PT<FT>> pts, tmp;
-    spe.convertDir(idxsx, pts, lx, dir);
-    spe.convertDir(idxsy, tmp, ly, dir);
+    auto rt_spe = performanceSPE_DIR(spe, idxsx, pts, lx, dir);
+    rt_spe += performanceSPE_DIR(spe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
+    allData.emplace_back(MyData{name + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    process(pts, data);
-    allData.push_back(data);
-
-    data.name = name + "_dir_" + type;
-    zc.process(dir, lx, th_low, th_high, -CV_PI, CV_PI);
+    rt_nms = performanceNMS(zc, dir, lx, th_low, th_high, -CV_PI, CV_PI);
     idxsx = filterDirX(zc.hysteresis_edgels(), dir);
-    zc.process(dir, ly, th_low, th_high, -CV_PI, CV_PI);
+    rt_nms += performanceNMS(zc, dir, ly, th_low, th_high, -CV_PI, CV_PI);
     idxsy = filterDirY(zc.hysteresis_edgels(), dir);
 
-    spe.convertDir(idxsx, pts, lx, dir);
-    spe.convertDir(idxsy, tmp, ly, dir);
+    rt_spe = performanceSPE_DIR(spe, idxsx, pts, lx, dir);
+    rt_spe += performanceSPE_DIR(spe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
 
-    process(pts, data);
-    allData.push_back(data);
+    allData.emplace_back(MyData{name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class NMS>
   void processNMS(const std::string& name,
-                  const std::string& type,
+                  std::string type,
                   const cv::Mat& gx,
                   const cv::Mat& gy,
                   const cv::Mat& mag,
@@ -422,27 +610,26 @@ class Entry {
                   double th_high,
                   NMS& nms,
                   bool force_dir = false) {
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
     PixelEstimator<FT, cv::Point_<FT>> pe;
-    Data data;
-    data.name = name + "_spe_nearest_" + type;
-    if (force_dir)
-      nms.process(dir, mag, th_low, th_high, -CV_PI, CV_PI);
-    else
-      nms.process(gx, gy, mag, th_low, th_high);
+    auto rt_nms = force_dir ? performanceNMS(nms, dir, mag, th_low, th_high, -CV_PI, CV_PI)
+                            : performanceNMS(nms, gx, gy, mag, th_low, th_high);
     IndexVector idxs = nms.hysteresis_edgels();
     std::vector<PT<FT>> pts;
-    pe.convert(idxs, pts, mag, nms.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(pe, idxs, pts, mag, nms.directionMap());
+    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>>
         spe_linear_est_lin;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>>
         spe_cubic_est_lin;
 
-    processNMS(name + "_spe_linear", "est_lin_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_lin,
+    processNMS(name + " spe lin", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_lin,
                force_dir);
-    processNMS(name + "_spe_cubic", "est_lin_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_lin,
+    processNMS(name + " spe cub", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_lin,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
@@ -450,9 +637,9 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>>
         spe_cubic_est_quad;
 
-    processNMS(name + "_spe_linear", "est_quad_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_quad,
+    processNMS(name + " spe lin", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_quad,
                force_dir);
-    processNMS(name + "_spe_cubic", "est_quad_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_quad,
+    processNMS(name + " spe cub", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_quad,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>>
@@ -460,9 +647,9 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>>
         spe_cubic_est_cog;
 
-    processNMS(name + "_spe_linear", "est_cog_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_cog,
+    processNMS(name + " spe lin", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_cog,
                force_dir);
-    processNMS(name + "_spe_cubic", "est_cog_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_cog,
+    processNMS(name + " spe cub", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_cog,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>>
@@ -470,15 +657,15 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>>
         spe_cubic_est_sobel;
 
-    processNMS(name + "_spe_linear", "est_sobel_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_sobel,
+    processNMS(name + " spe lin", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_sobel,
                force_dir);
-    processNMS(name + "_spe_cubic", "est_sobel_" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_sobel,
+    processNMS(name + " spe cub", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_sobel,
                force_dir);
   }
 
   template <class NMS, class SPE>
   void processNMS(const std::string& name,
-                  const std::string& type,
+                  std::string type,
                   const cv::Mat& gx,
                   const cv::Mat& gy,
                   const cv::Mat& mag,
@@ -488,24 +675,19 @@ class Entry {
                   NMS& nms,
                   SPE& spe,
                   bool force_dir = false) {
-    Data data;
-    data.name = name + "_" + type;
-    if (force_dir)
-      nms.process(dir, mag, th_low, th_high, -CV_PI, CV_PI);
-    else
-      nms.process(gx, gy, mag, th_low, th_high);
+    if (type.size() && type[0] != ' ') {
+      type.insert(0, 1, ' ');
+    }
+    auto rt_nms = force_dir ? performanceNMS(nms, dir, mag, th_low, th_high, -CV_PI, CV_PI)
+                            : performanceNMS(nms, gx, gy, mag, th_low, th_high);
     IndexVector idxs = nms.hysteresis_edgels();
-    data.points = idxs.size();
     std::vector<PT<FT>> pts;
-    spe.convert(idxs, pts, mag, nms.directionMap());
-    process(pts, data);
-    allData.push_back(data);
+    auto rt_spe = performanceSPE(spe, idxs, pts, mag, nms.directionMap());
+    allData.emplace_back(MyData{name + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    data.name = name + "_dir_" + type;
     pts.clear();
-    spe.convertDir(idxs, pts, mag, dir);
-    process(pts, data);
-    allData.push_back(data);
+    rt_spe = performanceSPE_DIR(spe, idxs, pts, mag, dir);
+    allData.emplace_back(MyData{name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class NMS, class ZC>
@@ -520,7 +702,11 @@ class Entry {
       low = f->second.range.upper * th_low;
       high = f->second.range.upper * th_high;
       // std::cout << "laplace:" << low << ", " << high << std::endl;
-      processZC("zc_" + n, "laplace", f->second.data, low, high, zc);
+      if (optional_dir.empty()) {
+        processZC("zc " + n, "", f->second.data, low, high, zc);
+      } else {
+        processZC("zc " + n, "", f->second.data, optional_dir, low, high, zc);
+      }
     }
 
     f = results.find("mag");
@@ -535,7 +721,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "mag:" << low << ", " << high << std::endl;
-      processNMS("nms_" + n, "mag", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
+      processNMS("nms " + n, "", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
     }
 
     f = results.find("even");
@@ -546,7 +732,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "even:" << low << ", " << high << std::endl;
-      processZC("zc_" + n, "even", tmp, dir, low, high, zc);
+      processZC("zc " + n, "even", tmp, dir, low, high, zc);
     }
 
     f = results.find("odd");
@@ -561,7 +747,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "odd:" << low << ", " << high << std::endl;
-      processNMS("nms_" + n, "odd", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
+      processNMS("nms " + n, "odd", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
     }
 
     f = results.find("energy");
@@ -576,7 +762,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "energy:" << low << ", " << high << std::endl;
-      processNMS("nms_" + n, "energy", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
+      processNMS("nms " + n, "energy", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
     }
 
     f = results.find("pc");
@@ -591,7 +777,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "pc:" << low << ", " << high << std::endl;
-      processNMS("nms_" + n, "pc", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
+      processNMS("nms " + n, "pc", tmpx, tmpy, tmp, dir, low, high, nms, force_dir);
     }
 
     f = results.find("pclx");
@@ -604,7 +790,7 @@ class Entry {
       f = results.find("dir");
       dir = f->second.data;
       // std::cout << "pcl:" << low << ", " << high << std::endl;
-      processZC("zc_" + n, "pcl", tmpx, tmpy, dir, low, high, zc);
+      processZC("zc " + n, "pcl", tmpx, tmpy, dir, low, high, zc);
     }
   }
 };
@@ -621,13 +807,13 @@ class EntryT : public Entry<FT, PT> {
          const cv::Ptr<FilterI<uchar>>& fil,
          const std::string& n,
          int f = 0,
-         double th_low = 0.01,
-         double th_high = 0.03)
+         double th_low = 0.1,
+         double th_high = 0.2)
       : Entry<FT, PT>(gt, fil, n, f), th_low_(th_low), th_high_(th_high) {}
 
   using Entry<FT, PT>::process;
 
-  void process(const cv::Mat& src) {
+  void process(const cv::Mat& src) override {
     NonMaximaSuppression<FT, FT, FT> fast_nms(th_low_, th_high_, 3);
     NonMaximaSuppression<FT, FT, FT, PreciseNMS<FT, FT, false, FT, EMap8, LinearInterpolator, Polar>>
         precise_nms_linear(th_low_, th_high_, 3);
@@ -641,14 +827,66 @@ class EntryT : public Entry<FT, PT> {
         th_low_, th_high_, 3);
 
     this->process(src, fast_nms, fast_zc, "fast");
-    this->process(src, precise_nms_linear, precise_zc_linear, "precise_linear", true);
-    this->process(src, precise_nms_cubic, precise_zc_cubic, "precise_cubic", true);
+    this->process(src, precise_nms_linear, precise_zc_linear, "prec lin", true);
+    this->process(src, precise_nms_cubic, precise_zc_cubic, "prec cub", true);
+  }
+};
+
+template <class FT, template <class> class PT = cv::Point_>
+class EntryTreshT : public Entry<FT, PT> {
+  double th_{};
+
+ public:
+  EntryTreshT(const GroundTruth<FT, PT>& gt,
+              const cv::Ptr<FilterI<uchar>>& fil,
+              const std::string& n,
+              int f = 0,
+              double th = 0.3)
+      : Entry<FT, PT>(gt, fil, n, f), th_(th) {}
+
+  using Entry<FT, PT>::process;
+  using MyData = typename Entry<FT, PT>::MyData;
+
+  void process(const cv::Mat& src) override {
+    this->filter->process(src);
+    FilterResults results = this->filter->results();
+    auto iter = results.find("mag");
+    if (iter == results.end()) {
+      return;
+    }
+    cv::Mat mag = iter->second.data;
+    GlobalThreshold<FT, ThresholdUser<FT>> global_th_mag(iter->second.range.upper * th_);
+    cv::Mat edge_pix;
+
+    int runs = global_runs;
+    int64 rt{}, tmp{};
+    for (size_t i = 0; i != runs; ++i) {
+      tmp = cv::getTickCount();
+      cv::Mat mag_th = global_th_mag.process(mag);
+      edge_pix = thinImage(mag_th);
+      rt += cv::getTickCount() - tmp;
+    }
+    double rt_nms = (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+
+    std::vector<PT<FT>> edge_pts;
+    rt = 0;
+    tmp = 0;
+    for (size_t i = 0; i != runs; ++i) {
+      tmp = cv::getTickCount();
+      edge_pts.clear();
+      cv::findNonZero(edge_pix, edge_pts);
+      rt += cv::getTickCount() - tmp;
+    }
+    double rt_spe = (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs);
+
+    this->allData.emplace_back(MyData{"threshold", std::move(edge_pts), this->gt, rt_nms, rt_spe});
   }
 };
 
 class SpeApp : public EvalApp {
   using FT = double;
   using MyEntry = EntryT<FT, cv::Point_>;
+  using MyEntryTresh = EntryTreshT<FT, cv::Point_>;
   using MyEntryPtr = EntryPtr<FT, cv::Point_>;
   std::vector<MyEntryPtr> entries_{};
   std::unique_ptr<GroundTruth<FT, cv::Point_>> gt;
@@ -679,166 +917,238 @@ class SpeApp : public EvalApp {
     gt = make_unique<GroundTruth<FT, cv::Point_>>(output_, show_visuals_, verbose_);
 
     entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new DerivativeGradient<uchar, FT, FT, FT, RobertsDerivative>, "Roberts_(2x2)")));
-    entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new DerivativeGradient<uchar, FT, FT, FT, PrewittDerivative>, "Prewitt_(3x3)")));
-    entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new DerivativeGradient<uchar, FT, FT, FT, ScharrDerivative>, "Scharr_(3x3)")));
+        MyEntryPtr(new MyEntryTresh(*gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>, "TH")));
 
-    entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>, "Sobel_(3x3)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(
-        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 5)}), "Sobel_(5x5)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(
-        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 7)}), "Sobel_(7x7)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(
-        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 9)}), "Sobel_(9x9)")));
-
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt,
-                                              new DerivativeGradient<uchar, FT, FT, FT, GaussianDerivative, Magnitude>(
-                                                  {NV("grad_kernel_size", 3), NV("grad_range", 1.5)}),
-                                              "Gauss_(3x3)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt,
-                                              new DerivativeGradient<uchar, FT, FT, FT, GaussianDerivative, Magnitude>(
-                                                  {NV("grad_kernel_size", 5), NV("grad_range", 2.3)}),
-                                              "Gauss_(5x5)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt,
-                                              new DerivativeGradient<uchar, FT, FT, FT, GaussianDerivative, Magnitude>(
-                                                  {NV("grad_kernel_size", 7), NV("grad_range", 3.0)}),
-                                              "Gauss_(7x7)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt,
-                                              new DerivativeGradient<uchar, FT, FT, FT, GaussianDerivative, Magnitude>(
-                                                  {NV("grad_kernel_size", 9), NV("grad_range", 3.5)}),
-                                              "Gauss_(9x9)")));
-
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new SusanGradient<FT, FT, FT>(20), "Susan_(37)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new SusanGradient<FT, FT, FT>(20, true), "Susan_(3x3)")));
-    entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new RCMGradient<uchar, 1, FT, FT, FT>(3, 1, cv::NORM_L2), "RMG_(3x3)")));
-    entries_.push_back(
-        MyEntryPtr(new MyEntry(*gt, new RCMGradient<uchar, 1, FT, FT, FT>(5, 3, cv::NORM_L2), "RMG_(5x5)")));
-
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceSimple<uchar, FT>, "Laplace_(3x3)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(5), "Laplace_Sobel_(5x5)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(7), "Laplace_Sobel_(7x7)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(9), "Laplace_Sobel_(9x9)")));
-
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LoG<uchar, FT>(3, 1.240080), "LoG_(3x3)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LoG<uchar, FT>(5, 1.008030), "LoG_(5x5)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LoG<uchar, FT>(7, 0.873228), "LoG_(7x7)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LoG<uchar, FT>(9, 0.781859), "LoG_(9x9)")));
-
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new QuadratureG2<uchar, FT>(3, 1.24008), "QF_StG_(3x3)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new QuadratureG2<uchar, FT>(5, 1.008), "QF_StG_(5x5)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new QuadratureG2<uchar, FT>(7, 0.873226), "QF_StG_(7x7)")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new QuadratureG2<uchar, FT>(9, 0.781854), "QF_StG_(9x9)")));
-
-    entries_.push_back(MyEntryPtr(
-        new MyEntry(*gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSq<uchar, FT, FT>(1, 2, 3, 1.2)),
-                    "SQF_Po_(3x3)")));
-    entries_.push_back(MyEntryPtr(
-        new MyEntry(*gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSq<uchar, FT, FT>(1, 2, 5, 1.2)),
-                    "SQF_Po_(5x5)")));
-    entries_.push_back(MyEntryPtr(
-        new MyEntry(*gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSq<uchar, FT, FT>(1, 2, 7, 1.2)),
-                    "SQF_Po_(7x7)")));
-    entries_.push_back(MyEntryPtr(
-        new MyEntry(*gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSq<uchar, FT, FT>(1, 2, 9, 1.2)),
-                    "SQF_Po_(9x9)")));
-
+    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>, "S3")));
+    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceSimple<uchar, FT>(), "L3")));
+    {
+      DerivativeGradient<uchar, FT, FT, FT, SobelDerivative> tmp;
+      tmp.process(gt->img);
+      entries_.back()->optional_dir = tmp.direction();
+    }
 
     entries_.push_back(MyEntryPtr(new MyEntry(
-        *gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSqf<uchar, FT>(1, 2, 1.2)), "SQFF_Po_12")));
-    entries_.push_back(MyEntryPtr(new MyEntry(
-        *gt, dynamic_cast<Quadrature<uchar, FT, FT, FT, FT>*>(new PCLSqf<uchar, FT>(1, 3, 2.5)), "SQFF_Po")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new QuadratureLGF<uchar, FT>(5, 0.55), "SQFF_Lg")));
+        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 5)}), "S5")));
+    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(5), "L5")));
+    {
+      DerivativeGradient<uchar, FT, FT, FT, SobelDerivative> tmp({NV("grad_kernel_size", 5)});
+      tmp.process(gt->img);
+      entries_.back()->optional_dir = tmp.direction();
+    }
 
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new PCLgf<uchar, FT>(4, 3, 2.1, 0.55), "PCF_Lg")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new PCMatlab<uchar>(4, 3, 2.1, 0.55), "PCF_Ml")));
-    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new PCSqf<uchar, FT>(1, 3, 2.5), "PCF_Po")));
+    entries_.push_back(MyEntryPtr(new MyEntry(
+        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 7)}), "S7")));
+    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(7), "L7")));
+    {
+      DerivativeGradient<uchar, FT, FT, FT, SobelDerivative> tmp({NV("grad_kernel_size", 7)});
+      tmp.process(gt->img);
+      entries_.back()->optional_dir = tmp.direction();
+    }
+
+    entries_.push_back(MyEntryPtr(new MyEntry(
+        *gt, new DerivativeGradient<uchar, FT, FT, FT, SobelDerivative>({NV("grad_kernel_size", 9)}), "S9")));
+    entries_.push_back(MyEntryPtr(new MyEntry(*gt, new LaplaceCV<uchar, FT>(9), "L9")));
+    {
+      DerivativeGradient<uchar, FT, FT, FT, SobelDerivative> tmp({NV("grad_kernel_size", 9)});
+      tmp.process(gt->img);
+      entries_.back()->optional_dir = tmp.direction();
+    }
+  }
+
+  template <typename DT>
+  void printDefaultData(const DT& data, std::ostream& os, const std::string entry_name = "") {
+    if (!entry_name.empty()) {
+      os << entry_name << " ";
+    }
+    os << data.name << ";" << data.points.size() << ";" << data.outlier.size() << ";" << data.error.value() << ";"
+       << data.error.stdDev() << ";" << data.runtime() << std::endl;
+  }
+
+  void printDefaultHeader(std::ostream& os) { os << "Method;Points;Outlier;Error;StdDev;Runtime(ms)" << std::endl; }
+
+  template <typename ET>
+  void printEntry(const ET& entry) {
+    std::ofstream ofs, ofsd;
+    std::string spe_precision_out1 = output_ + "/spe_precision_" + entry.name + ".csv";
+    std::string spe_precision_out2 = output_ + "/spe_precision_" + entry.name + "_details.csv";
+    ofs.open(spe_precision_out1.c_str());
+    ofsd.open(spe_precision_out2.c_str());
+    printDefaultHeader(ofs);
+    ofsd << "Method";
+    for (std::size_t i = 0; i != gt->segments.size(); ++i) {
+      ofsd << ";Error " << i << ";StdDev " << i;
+    }
+    ofsd << std::endl;
+    for (const auto& data : entry.allData) {
+      printDefaultData(data, ofs);
+      ofsd << data.name;
+      for (const auto& err : data.error_lines) {
+        ofsd << ";" << err.value() << ";" << err.stdDev();
+      }
+      ofsd << std::endl;
+    }
   }
 
   void runEval() override {
-    fs::path spe_precision_out(output_ + "/spe_precision.csv");
-    fs::path spe_precision_best_out(output_ + "/spe_precision_best.csv");
+    fs::path spe_precision_out(output_ + "/spe_precision_all.csv");
 
     std::ofstream ofs;
-    ofs.open(spe_precision_out.c_str());
-    std::ofstream ofs_best;
-    ofs_best.open(spe_precision_best_out.c_str());
+    if (!no_results_) {
+      ofs.open(spe_precision_out.c_str());
 
-    cout.precision(5);
-    cout.setf(std::ios::fixed, std::ios::floatfield);
-    ofs.precision(5);
-    ofs.setf(std::ios::fixed, std::ios::floatfield);
-    if (verbose_) {
-      cout << "Method\tPoints\tOutlier\tError\tStdDev" << std::endl;
+      cout.precision(7);
+      cout.setf(std::ios::fixed, std::ios::floatfield);
+      ofs.precision(7);
+      ofs.setf(std::ios::fixed, std::ios::floatfield);
     }
-    ofs << "Method;Points;Outlier;Error;StdDev" << std::endl;
-    ofs_best << "Method;Points;Outlier;Error;StdDev" << std::endl;
-    Entry<FT, cv::Point_>::Data best;
-    struct MeanError {
-      MeanError() : err(0), stdDev(0), count(0), points(0), outlier(0) {}
-      FT err, stdDev;
-      int count, points, outlier;
-    };
-    std::map<std::string, MeanError> meanMap;
-    for_each(entries_.begin(), entries_.end(), [&](const MyEntryPtr& e) {
-      e->process();
-      best.error = std::numeric_limits<FT>::max();
-      for_each(e->allData.begin(), e->allData.end(), [&](const Entry<FT, cv::Point_>::Data& data) {
-        ofs << data.name << "_" << e->name << ";" << data.points << ";" << data.outlier << ";" << data.error << ";"
-            << data.stdDev << std::endl;
-        if (write_visuals_) {
-          cv::imwrite(output_ + "/" + data.name + "_" + e->name + ".png", data.img);
-        }
-        if (data.error < best.error) best = data;
-        MeanError& me = meanMap[data.name];
-        ++me.count;
-        me.err += data.error;
-        me.stdDev += data.stdDev;
-        me.points += data.points;
-        me.outlier += data.outlier;
-      });
-      if (verbose_) {
-        cout << best.name << "_" << e->name << "\t" << best.points << "\t" << best.outlier << "\t" << best.error << "\t"
-             << best.stdDev << std::endl;
+    if (verbose_) {
+      cout << "Method\t\t\tPoints\tOutlier\tError\t\tStdDev\t\tRuntime(ms)" << std::endl;
+    }
+    if (!no_results_) {
+      ofs << "Method;Points;Outlier;Error;StdDev;Runtime(ms)";
+      for (std::size_t i = 0; i != gt->segments.size(); ++i) {
+        ofs << ";Error " << i << ";StdDev " << i;
       }
-      ofs_best << best.name << "_" << e->name << ";" << best.points << ";" << best.outlier << ";" << best.error << ";"
-               << best.stdDev << std::endl;
-    });
+      ofs << std::endl;
+    }
 
-    ofs.close();
-    ofs_best.close();
+    struct BestData {
+      std::size_t entry_index{0};
+      std::size_t data_index{std::string::npos};
+      double err = std::numeric_limits<double>::max();
+    };
+    struct BestDataCat {
+      BestData fast{};
+      BestData precise_linear{};
+      BestData precise_cubic{};
+    };
+    std::vector<BestDataCat> bestData;
 
-    ofs.clear();
-    spe_precision_out = (output_ + "/spe_precision_mean_all.csv");
-    ofs.open(spe_precision_out.c_str());
-    ofs << "Method;Points;Outlier;Error;StdDev;Count" << std::endl;
-    std::map<std::string, MeanError> meanMap2;
-    for_each(meanMap.begin(), meanMap.end(), [&](const std::pair<std::string, MeanError>& me) {
-      MeanError& me2 = meanMap2[me.first.substr(0, me.first.find_last_of('_'))];
-      me2.count += me.second.count;
-      me2.err += me.second.err;
-      me2.stdDev += me.second.stdDev;
-      me2.points += me.second.points;
-      me2.outlier += me.second.outlier;
-      ofs << me.first << ";" << me.second.points / me.second.count << ";" << me.second.outlier / me.second.count << ";"
-          << me.second.err / me.second.count << ";" << me.second.stdDev / me.second.count << ";" << me.second.count
-          << std::endl;
-    });
-    ofs.close();
+    for (std::size_t i = 0; i != entries_.size(); ++i) {
+      auto& entry = *entries_[i];
+      entry.process();
+      BestData best_fast{i};
+      BestData best_precise_linear{i};
+      BestData best_precise_cubic{i};
+      for (std::size_t j = 0; j != entry.allData.size(); ++j) {
+        const auto& data = entry.allData[j];
+        if (data.name.find("fast") != std::string::npos && data.error.sum < best_fast.err) {
+          best_fast.data_index = j;
+          best_fast.err = data.error.sum;
+        }
+        if (data.name.find("prec lin") != std::string::npos && data.error.sum < best_precise_linear.err) {
+          best_precise_linear.data_index = j;
+          best_precise_linear.err = data.error.sum;
+        }
+        if (data.name.find("prec cub") != std::string::npos && data.error.sum < best_precise_cubic.err) {
+          best_precise_cubic.data_index = j;
+          best_precise_cubic.err = data.error.sum;
+        }
+        if (!no_results_) {
+          ofs << entry.name << " " << data.name << ";" << data.points.size() << ";" << data.outlier.size() << ";"
+              << data.error.value() << ";" << data.error.stdDev() << ";" << data.runtime();
+          for (const auto& err : data.error_lines) {
+            ofs << ";" << err.value() << ";" << err.stdDev();
+          }
+          ofs << std::endl;
+        }
 
-    ofs.clear();
-    spe_precision_out = (output_ + "/spe_precision_mean.csv");
-    ofs.open(spe_precision_out.c_str());
-    ofs << "Method;Points;Outlier;Error;StdDev;Count" << std::endl;
-    for_each(meanMap2.begin(), meanMap2.end(), [&](const std::pair<std::string, MeanError>& me) {
-      ofs << me.first << ";" << me.second.points / me.second.count << ";" << me.second.outlier / me.second.count << ";"
-          << me.second.err / me.second.count << ";" << me.second.stdDev / me.second.count << ";" << me.second.count
-          << std::endl;
-    });
-    ofs.close();
+        if (verbose_) {
+          cout << entry.name << " " << data.name << "\t" << data.points.size() << "\t" << data.outlier.size() << "\t"
+               << data.error.value() << "\t" << data.error.stdDev() << std::endl;
+        }
+
+        if (write_visuals_) {
+          std::string fn = entry.name + "_" + data.name;
+          std::replace(fn.begin(), fn.end(), ' ', '_');
+          cv::imwrite(output_ + "/" + fn + ".png", data.img);
+
+          FilterResults results = entry.filter->results();
+          auto iter = results.find("laplace");
+          if (iter != results.end()) {
+            cv::imwrite(output_ + "/" + fn + "_response.png", convertLaplace(iter->second.data));
+          }
+          iter = results.find("mag");
+          if (iter != results.end()) {
+            cv::imwrite(output_ + "/" + fn + "_response.png", convertMag(iter->second.data));
+          }
+        }
+      }
+      bestData.emplace_back(BestDataCat{best_fast, best_precise_linear, best_precise_cubic});
+    }
+    if (!no_results_) {
+      ofs.close();
+      ofs.clear();
+      spe_precision_out = output_ + "/spe_precision_best.csv";
+      ofs.open(spe_precision_out.c_str());
+      printDefaultHeader(ofs);
+      for (const auto& best : bestData) {
+        if (best.fast.data_index != 0 && best.precise_linear.data_index != 0 && best.precise_cubic.data_index != 0) {
+          printDefaultData(entries_[best.fast.entry_index]->allData[0], ofs, entries_[best.fast.entry_index]->name);
+        }
+        if (best.fast.data_index != std::string::npos) {
+          printDefaultData(entries_[best.fast.entry_index]->allData[best.fast.data_index], ofs,
+                           entries_[best.fast.entry_index]->name);
+        }
+        if (best.precise_linear.data_index != std::string::npos) {
+          printDefaultData(entries_[best.precise_linear.entry_index]->allData[best.precise_linear.data_index], ofs,
+                           entries_[best.precise_linear.entry_index]->name);
+        }
+        if (best.precise_cubic.data_index != std::string::npos) {
+          printDefaultData(entries_[best.precise_cubic.entry_index]->allData[best.precise_cubic.data_index], ofs,
+                           entries_[best.precise_cubic.entry_index]->name);
+        }
+      }
+      ofs.close();
+
+      printEntry(*entries_[1]);  // S3
+      printEntry(*entries_[2]);  // L3
+    }
+
+    if (write_visuals_) {
+      cv::imwrite(output_ + "/gt_lines.png", gt->drawGT());
+
+      // static cv::Vec3b color[] = {cv::Vec3b(200, 50, 50),  cv::Vec3b(50, 200, 50),  cv::Vec3b(50, 50, 200),
+      //                             cv::Vec3b(200, 200, 50), cv::Vec3b(200, 50, 200), cv::Vec3b(50, 200, 200),
+      //                             cv::Vec3b(150, 100, 50), cv::Vec3b(100, 150, 200)};
+
+      static cv::Vec3b color[] = {cv::Vec3b(50, 200, 50),  cv::Vec3b(50, 50, 200),  cv::Vec3b(200, 50, 50),
+                                  cv::Vec3b(200, 200, 50), cv::Vec3b(100, 50, 00),  cv::Vec3b(50, 200, 200),
+                                  cv::Vec3b(40, 90, 180),  cv::Vec3b(100, 150, 200)};
+
+      std::vector<Polygon<FT, cv::Point_>> polys;
+      polys.emplace_back(Polygon{gt->segments});                                     // gt grün
+      polys.emplace_back(Polygon{entries_[0]->allData[0].lineSegsFromSegPoints()});  // th rot
+      polys.emplace_back(Polygon{entries_[1]->allData[0].lineSegsFromSegPoints()});  // nms blau
+      polys.emplace_back(Polygon{entries_[1]->allData[1].lineSegsFromSegPoints()});  // nms fast Cyan
+      polys.emplace_back(Polygon{entries_[7]->allData[2].lineSegsFromSegPoints()});  // nms türkies
+      polys.emplace_back(Polygon{entries_[2]->allData[0].lineSegsFromSegPoints()});  // zc gelb
+      polys.emplace_back(Polygon{entries_[2]->allData[1].lineSegsFromSegPoints()});  // zc fast dark orange
+      polys.emplace_back(Polygon{entries_[8]->allData[1].lineSegsFromSegPoints()});  // zc precise orange
+
+
+      int scale = 500;
+      int x = static_cast<int>(std::floor(polys[0].verticies()[3].x) - 1);
+      int y = static_cast<int>(std::floor(polys[0].verticies()[3].y) - 1);
+
+      cv::Mat tmp;
+      gt->img(cv::Rect(x, y, 3, 3)).copyTo(tmp);
+      cv::resize(tmp, tmp, cv::Size(3 * scale, 3 * scale), scale, scale, cv::INTER_NEAREST);
+      cvtColor(tmp, tmp, CV_GRAY2RGB);
+
+      for (std::size_t i = 0; i != polys.size(); ++i) {
+        polys[i].scale(scale);
+      }
+      cv::Point_<FT> trans{-(x - 0.2) * scale, -y * scale};
+
+      std::cout << "x: " << x << ", " << -trans.x << "; y: " << y << ", " << -trans.y << std::endl;
+
+      for (std::size_t i = 0; i != polys.size(); ++i) {
+        polys[i].translate(trans);
+        polys[i].draw(tmp, color[i]);
+      }
+      cv::imwrite(output_ + "/lines_high_res.png", tmp);
+    }
   }
 };
 

@@ -1,16 +1,18 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <ctime>
-#include <stdio.h>
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <geometry/draw.hpp>
-#include <lsd/lsd_cc.hpp>
-#include <lfd/LRDescriptor.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>
-#include <lfd/StereoLineFilter.hpp>
+#include <lfd/LRDescriptor.hpp>
 #include <lfd/PairwiseLineMatcher.hpp>
+#include <lfd/StereoLineFilter.hpp>
+#include <lsd/lsd_cc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
+#include <string>
+
 
 
 using namespace std;
@@ -18,160 +20,155 @@ using namespace lsfm;
 using namespace cv;
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 #ifdef WIN32
   std::string filename1 = "../../images/elas/Adirondack/im0.png";
   std::string filename2 = "../../images/elas/Adirondack/im1.png";
 #else
-  std::string filename1 = "../../images/elas/im0.png";
-  std::string filename2 = "../../images/elas/im1.png";
+  std::string filename1 = "../images/im2.png";
+  std::string filename2 = "../images/im6.png";
 #endif
-    //std::string filename1 = "../../MiddEval3/im0.png";
-    //std::string filename2 = "../../MiddEval3/im1.png";
-  
-    if (argc > 2) {
-        filename1 = argv[1];
-        filename2 = argv[2];
-    }
+  // std::string filename1 = "../../MiddEval3/im0.png";
+  // std::string filename2 = "../../MiddEval3/im1.png";
 
-    cv::Mat srcL = imread(filename1, IMREAD_GRAYSCALE);
-    cv::Mat srcR = imread(filename2, IMREAD_GRAYSCALE);
-    
-    if (srcL.empty() || srcR.empty())
-    {
-        cout << "Can not open files" << endl;
-        return -1;
-    }
+  if (argc > 2) {
+    filename1 = argv[1];
+    filename2 = argv[2];
+  }
 
-    resize(srcL,srcL,Size(0,0),0.6,0.6);
-    resize(srcR,srcR,Size(0,0),0.6,0.6);
+  cv::Mat srcL = imread(filename1, IMREAD_GRAYSCALE);
+  cv::Mat srcR = imread(filename2, IMREAD_GRAYSCALE);
 
-    //GaussianBlur(srcL, srcL, Size(3, 3), 0.3);
-    //GaussianBlur(srcR, srcR, Size(3, 3), 0.3);
+  if (srcL.empty() || srcR.empty()) {
+    cout << "Can not open files" << endl;
+    return -1;
+  }
 
-    typedef double MyFloat;
+  resize(srcL, srcL, Size(0, 0), 0.6, 0.6);
+  resize(srcR, srcR, Size(0, 0), 0.6, 0.6);
 
-    LsdCC<MyFloat> lsdL(0.004, 0.008, 20, 0, 3);
-    LsdCC<MyFloat> lsdR(0.004, 0.008, 20, 0, 3);
+  // GaussianBlur(srcL, srcL, Size(3, 3), 0.3);
+  // GaussianBlur(srcR, srcR, Size(3, 3), 0.3);
 
-    double start = double(getTickCount());
-    lsdL.detect(srcL);
-    lsdR.detect(srcR);
-    double end = double(getTickCount());
-    std::cout << "lines: " << lsdL.lineSegments().size() + lsdR.lineSegments().size() << ", time for detecting lines: " << (end - start) * 1000 / getTickFrequency() << "ms" << std::endl;
+  typedef double MyFloat;
 
-    MatMap dataL, dataR;
-    dataL["gx"] = lsdL.imageData()[0];
-    dataL["gy"] = lsdL.imageData()[1];
-    dataL["img"] = srcL;
+  LsdCC<MyFloat> lsdL(0.004, 0.008, 20, 0, 3);
+  LsdCC<MyFloat> lsdR(0.004, 0.008, 20, 0, 3);
 
-    dataR["gx"] = lsdR.imageData()[0];
-    dataR["gy"] = lsdR.imageData()[1];
-    dataR["img"] = srcR;
+  double start = double(getTickCount());
+  lsdL.detect(srcL);
+  lsdR.detect(srcR);
+  double end = double(getTickCount());
+  std::cout << "lines: " << lsdL.lineSegments().size() + lsdR.lineSegments().size()
+            << ", time for detecting lines: " << (end - start) * 1000 / getTickFrequency() << "ms" << std::endl;
 
-    typedef GchGradImgInterpolate<MyFloat,1,2,NoAlign<MyFloat>,
-            FastRoundNearestInterpolator<MyFloat, short>,
-            FastRoundNearestInterpolator<MyFloat, uchar> > MyGchHelper;
+  MatMap dataL, dataR;
+  dataL["gx"] = lsdL.imageData()[0];
+  dataL["gy"] = lsdL.imageData()[1];
+  dataL["img"] = srcL;
 
-    //typedef FdcGenericLR<MyFloat,LsdCC<MyFloat>::LineSegment,MyGchHelper> MyFdc;
-    typedef FdcLBD<MyFloat, LsdCC<MyFloat>::LineSegment, short, FastRoundNearestInterpolator<MyFloat, short>> MyFdc;
-    std::vector<typename MyFdc::descriptor_type> dscL, dscR;
-    MyFdc::FdcPtr fdcL = MyFdc::createFdc(dataL);
-    MyFdc::FdcPtr fdcR = MyFdc::createFdc(dataR);
+  dataR["gx"] = lsdR.imageData()[0];
+  dataR["gy"] = lsdR.imageData()[1];
+  dataR["img"] = srcR;
 
-    StereoLineFilter<MyFloat, LsdCC<MyFloat>::LineSegmentVector> slf(srcL.rows, srcL.cols / 2);
-    PairwiseLineMatcher<MyFloat, typename MyFdc::descriptor_type> pmatcher;
-    std::vector<size_t> maskL, maskR;
+  typedef GchGradImgInterpolate<MyFloat, 1, 2, NoAlign<MyFloat>, FastRoundNearestInterpolator<MyFloat, short>,
+                                FastRoundNearestInterpolator<MyFloat, uchar>>
+      MyGchHelper;
 
-    std::vector<DescriptorMatch<MyFloat>> bfmatches, bfmatchesRes;
+  // typedef FdcGenericLR<MyFloat,LsdCC<MyFloat>::LineSegment,MyGchHelper> MyFdc;
+  typedef FdcLBD<MyFloat, LsdCC<MyFloat>::LineSegment, short, FastRoundNearestInterpolator<MyFloat, short>> MyFdc;
+  std::vector<typename MyFdc::descriptor_type> dscL, dscR;
+  MyFdc::FdcPtr fdcL = MyFdc::createFdc(dataL);
+  MyFdc::FdcPtr fdcR = MyFdc::createFdc(dataR);
 
-    start = double(getTickCount());
-    slf.create(lsdL.lineSegments(), lsdR.lineSegments(), bfmatches, maskL, maskR);
-    end = double(getTickCount());
-    std::cout <<  "candidates: " << bfmatches.size() << ", time for stereo filter create: " << (end - start) * 1000 / getTickFrequency() << "ms" << std::endl;
+  StereoLineFilter<MyFloat, LsdCC<MyFloat>::LineSegmentVector> slf(srcL.rows, srcL.cols / 2);
+  PairwiseLineMatcher<MyFloat, typename MyFdc::descriptor_type> pmatcher;
+  std::vector<size_t> maskL, maskR;
 
-    start = double(getTickCount());
-    fdcL->createList(lsdL.lineSegments(), maskL, dscL);
-    fdcR->createList(lsdR.lineSegments(), maskR, dscR);
-    end = double(getTickCount());
-    std::cout << "time for creating descriptors: " << (end - start) * 1000 / getTickFrequency() << std::endl;
+  std::vector<DescriptorMatch<MyFloat>> bfmatches, bfmatchesRes;
 
-    std::cout << dscL[1].data << std::endl;
-    std::cout << dscL[3].data << std::endl;
+  start = double(getTickCount());
+  slf.create(lsdL.lineSegments(), lsdR.lineSegments(), bfmatches, maskL, maskR);
+  end = double(getTickCount());
+  std::cout << "candidates: " << bfmatches.size()
+            << ", time for stereo filter create: " << (end - start) * 1000 / getTickFrequency() << "ms" << std::endl;
 
-    start = double(getTickCount());
-    pmatcher.match1D(lsdL.lineSegments(), lsdR.lineSegments(), dscL, dscR, bfmatches, bfmatchesRes);
-    end = double(getTickCount());
-    std::cout <<  "matches: " << bfmatchesRes.size() << ", time for matching: " << (end - start) * 1000 / getTickFrequency() << std::endl;
+  start = double(getTickCount());
+  fdcL->createList(lsdL.lineSegments(), maskL, dscL);
+  fdcR->createList(lsdR.lineSegments(), maskR, dscR);
+  end = double(getTickCount());
+  std::cout << "time for creating descriptors: " << (end - start) * 1000 / getTickFrequency() << std::endl;
 
-    imshow("Detected matches, SLF, PairwiseLineMatcher", drawMatches<MyFloat,DescriptorMatch<MyFloat>>(srcL, lsdL.lineSegments(), srcR, lsdR.lineSegments(), bfmatchesRes));
+  std::cout << dscL[1].data << std::endl;
+  std::cout << dscL[3].data << std::endl;
 
-    cv::Mat modelImage = lsfm::drawLines<MyFloat>(srcL, lsdL.lineSegments());
-    cv::imshow("srcL", modelImage);
-    modelImage = lsfm::drawLines<MyFloat>(srcR, lsdR.lineSegments());
-    cv::imshow("srcR", modelImage);
+  start = double(getTickCount());
+  pmatcher.match1D(lsdL.lineSegments(), lsdR.lineSegments(), dscL, dscR, bfmatches, bfmatchesRes);
+  end = double(getTickCount());
+  std::cout << "matches: " << bfmatchesRes.size()
+            << ", time for matching: " << (end - start) * 1000 / getTickFrequency() << std::endl;
 
+  imshow("Detected matches, SLF, PairwiseLineMatcher",
+         drawMatches<MyFloat, DescriptorMatch<MyFloat>>(srcL, lsdL.lineSegments(), srcR, lsdR.lineSegments(),
+                                                        bfmatchesRes));
 
-
-
-
-
+  cv::Mat modelImage = lsfm::drawLines<MyFloat>(srcL, lsdL.lineSegments());
+  cv::imshow("srcL", modelImage);
+  modelImage = lsfm::drawLines<MyFloat>(srcR, lsdR.lineSegments());
+  cv::imshow("srcR", modelImage);
 
 
+  /*cv::Mat segL, segR;
+  cvtColor(srcL, segL, CV_GRAY2BGR);
+  cvtColor(srcR, segR, CV_GRAY2BGR);
 
 
-    /*cv::Mat segL, segR;
-    cvtColor(srcL, segL, CV_GRAY2BGR);
-    cvtColor(srcR, segR, CV_GRAY2BGR);
+  RNG& rng = theRNG();
+  for_each(lsdL.lineSegments().begin(), lsdL.lineSegments().end(), [&](const LsdBase<MyFloat>::LineSegment &l){
+      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      Scalar scolor(color[0], color[1], color[2]);
+      drawLines(srcL, l, scolor);
+      Point2f p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
+      //drawLines(srcL, p1, p2, Scalar(0, 0, 255));
+
+  });
 
 
-    RNG& rng = theRNG();
-    for_each(lsdL.lineSegments().begin(), lsdL.lineSegments().end(), [&](const LsdBase<MyFloat>::LineSegment &l){
-        Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        Scalar scolor(color[0], color[1], color[2]);
-        drawLines(srcL, l, scolor);
-        Point2f p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
-        //drawLines(srcL, p1, p2, Scalar(0, 0, 255));
+  imshow("Detected lines L", srcL);
 
-    });
+  for_each(lsdR.lineSegments().begin(), lsdR.lineSegments().end(), [&](const LsdBase<MyFloat>::LineSegment &l){
+      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      Scalar scolor(color[0], color[1], color[2]);
+      drawLines(srcR, l, scolor);
+      Point2f p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
+      //drawLines(srcR, p1, p2, Scalar(0, 0, 255));
 
-
-    imshow("Detected lines L", srcL);
-
-    for_each(lsdR.lineSegments().begin(), lsdR.lineSegments().end(), [&](const LsdBase<MyFloat>::LineSegment &l){
-        Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        Scalar scolor(color[0], color[1], color[2]);
-        drawLines(srcR, l, scolor);
-        Point2f p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
-        //drawLines(srcR, p1, p2, Scalar(0, 0, 255));
-
-    });
+  });
 
 
-    imshow("Detected lines R", srcR);
+  imshow("Detected lines R", srcR);
 
 
-    for_each(lsdL.segments().begin(), lsdL.segments().end(), [&](const LsdCC<MyFloat>::LineData &seg){
-        Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        for_each(seg.begin(), seg.end(), [&](const Point& p){
-            segL.at<Vec3b>(p) = color;
-        });
-    });
+  for_each(lsdL.segments().begin(), lsdL.segments().end(), [&](const LsdCC<MyFloat>::LineData &seg){
+      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      for_each(seg.begin(), seg.end(), [&](const Point& p){
+          segL.at<Vec3b>(p) = color;
+      });
+  });
 
-    imshow("Detected Segements L", segL);
+  imshow("Detected Segements L", segL);
 
-    for_each(lsdR.segments().begin(), lsdR.segments().end(), [&](const LsdCC<MyFloat>::LineData &seg){
-        Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        for_each(seg.begin(), seg.end(), [&](const Point& p){
-            segR.at<Vec3b>(p) = color;
-        });
-    });
+  for_each(lsdR.segments().begin(), lsdR.segments().end(), [&](const LsdCC<MyFloat>::LineData &seg){
+      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      for_each(seg.begin(), seg.end(), [&](const Point& p){
+          segR.at<Vec3b>(p) = color;
+      });
+  });
 
-    imshow("Detected Segements R", segR);*/
+  imshow("Detected Segements R", segR);*/
 
 
-    waitKey();
+  waitKey();
 
-    return 0;
+  return 0;
 }

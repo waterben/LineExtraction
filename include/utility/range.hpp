@@ -40,23 +40,18 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _RANGE_HPP_
-#define _RANGE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <opencv2/imgproc/imgproc.hpp>
-#include <string>
+#include <cmath>
 
 namespace lsfm {
-    
-    //! simple range class
-    template<class T>
-    struct Range {
-        Range(T l = 0, T u = 0) : lower(l), upper(u) {}
-        void swap() { std::swap(lower, upper); }
-        T size() const { return std::abs(upper - lower); }
-        T lower, upper;
-    };
-}
-#endif
-#endif
+
+//! simple range class
+template <class T>
+struct Range {
+  Range(T l = 0, T u = 0) : lower(l), upper(u) {}
+  void swap() { std::swap(lower, upper); }
+  T size() const { return std::abs(upper - lower); }
+  T lower, upper;
+};
+}  // namespace lsfm

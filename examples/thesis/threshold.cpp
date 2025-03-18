@@ -90,7 +90,9 @@ class ThresholdApp : public EvalApp {
         std::cout << name << ": " << op_performance << "ms" << std::endl;
       }
       if (!no_results_) {
-        ofs_ << name << ";" << op_performance << std::endl;
+        std::string table_name = name;
+        std::replace(table_name.begin(), table_name.end(), '_', ' ');
+        ofs_ << table_name << ";" << op_performance << std::endl;
       }
     }
 
@@ -158,8 +160,11 @@ class ThresholdApp : public EvalApp {
                 << ", runtime:" << performanceOP(otsu_mag, mag) << "ms" << std::endl;
     }
 
-    GlobalThreshold<float, ThresholdOtsu<float, 256>> otsu_global_th_mag(sobel.magnitudeRange().upper);
+    GlobalThreshold<float, ThresholdOtsu<float, 256>, true> otsu_global_th_mag(sobel.magnitudeRange().upper);
     process(otsu_global_th_mag, mag, "otsu_global_th_mag", "Sobel mag Otsu th");
+
+    GlobalThreshold<float, ThresholdOtsu<float, 256>> otsu_global_th_mag_st(sobel.magnitudeRange().upper);
+    process(otsu_global_th_mag_st, mag, "otsu_global_th_mag_st", "Sobel mag Otsu th single thread");
 
     if (show_visuals_ || write_visuals_) {
       GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_low(sobel.magnitudeRange().upper,
@@ -178,6 +183,7 @@ class ThresholdApp : public EvalApp {
       cv::Mat mag_th_otsu_thin = thinImage(mag_th_otsu);
 
       if (show_visuals_) {
+        imshow("Image", img);
         imshow("Sobel magnitude", mag / sobel.magnitudeRange().upper);
         imshow("Sobel magnitude with low threshold", mag_th_low);
         imshow("Sobel magnitude with good threshold", mag_th_good);
@@ -187,6 +193,7 @@ class ThresholdApp : public EvalApp {
       }
 
       if (write_visuals_) {
+        cv::imwrite(output_ + "/image.png", img);
         cv::imwrite(output_ + "/sobel_mag.png", mag / sobel.magnitudeRange().upper * 255.0);
         cv::imwrite(output_ + "/low_global_th_mag.png", mag_th_low);
         cv::imwrite(output_ + "/good_global_th_mag.png", mag_th_good);
@@ -231,11 +238,22 @@ class ThresholdApp : public EvalApp {
     process(otsu_local_tiles_th_20x20_2_mag, mag, "otsu_local_tiles_th_20x20_2_mag",
             "Sobel mag local tiles (20x20, scale=2) Otsu th");
 
-    DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r5_mag(5, sobel.magnitudeRange().upper);
-    process(otsu_dynamic_th_r5_mag, mag, "otsu_dynamic_th_r5_mag", "Sobel mag dynamic (r5) Otsu th");
+    LocalThresholdTiles<float, ThresholdOtsu<float, 256>, false> otsu_local_tiles_th_20x20_2_st_mag(
+        20, 20, sobel.magnitudeRange().upper, 2.f);
+    process(otsu_local_tiles_th_20x20_2_st_mag, mag, "otsu_local_tiles_th_20x20_2_st_mag",
+            "Sobel mag local tiles (20x20, scale=2) Otsu th single thread");
+
+    DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r10_mag(10, sobel.magnitudeRange().upper);
+    process(otsu_dynamic_th_r10_mag, mag, "otsu_dynamic_th_r10_mag", "Sobel mag dynamic (r10) Otsu th");
 
     DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r20_mag(20, sobel.magnitudeRange().upper);
     process(otsu_dynamic_th_r20_mag, mag, "otsu_dynamic_th_r20_mag", "Sobel mag dynamic (r20) Otsu th");
+
+    DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r30_mag(30, sobel.magnitudeRange().upper);
+    process(otsu_dynamic_th_r30_mag, mag, "otsu_dynamic_th_r30_mag", "Sobel mag dynamic (r30) Otsu th");
+
+    DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r40_mag(40, sobel.magnitudeRange().upper);
+    process(otsu_dynamic_th_r40_mag, mag, "otsu_dynamic_th_r40_mag", "Sobel mag dynamic (r40) Otsu th");
 
     DynamicThreshold<float, ThresholdOtsu<float, 256>> otsu_dynamic_th_r50_mag(50, sobel.magnitudeRange().upper);
     process(otsu_dynamic_th_r50_mag, mag, "otsu_dynamic_th_r50_mag", "Sobel mag dynamic (r50) Otsu th");
@@ -245,50 +263,20 @@ class ThresholdApp : public EvalApp {
     process(otsu_dynamic_th_r50_mag_st, mag, "otsu_dynamic_th_r50_mag_st",
             "Sobel mag dynamic (r50) Otsu th single thread");
 
+    // DynamicThreshold<uchar, ThresholdOtsu<uchar, 256>> otsu_dynamic_th_r10_img(10, 255);
+    // process(otsu_dynamic_th_r10_img, img, "otsu_dynamic_th_r10_img", "Image dynamic (r10) Otsu th");
 
-    // if (verbose_) {
-    //   std::cout << "otsu_global_th_mag: " << performanceOP(otsu_global_th_mag, mag) << "ms" << std::endl;
-    // }
+    // DynamicThreshold<uchar, ThresholdOtsu<uchar, 256>> otsu_dynamic_th_r20_img(20, 255);
+    // process(otsu_dynamic_th_r20_img, img, "otsu_dynamic_th_r20_img", "Image dynamic (r20) Otsu th");
 
-    // tmp = cv::getTickCount();
-    // cv::Mat mag;
-    // sobel.magnitude().copyTo(mag);
-    // th = otsu2.process(mag);
-    // std::cout << "otsu2: " << th << ", " << ((cv::getTickCount() - tmp) * 1000.0 / cv::getTickFrequency()) <<
-    // std::endl; mag.setTo(0, mag < th);
+    // DynamicThreshold<uchar, ThresholdOtsu<uchar, 256>> otsu_dynamic_th_r30_img(30, 255);
+    // process(otsu_dynamic_th_r30_img, img, "otsu_dynamic_th_r30_img", "Image dynamic (r30) Otsu th");
 
-    // imshow("sobel_th", mag / sobel.magnitudeRange().upper * 4);
+    // DynamicThreshold<uchar, ThresholdOtsu<uchar, 256>> otsu_dynamic_th_r40_img(40, 255);
+    // process(otsu_dynamic_th_r40_img, img, "otsu_dynamic_th_r40_img", "Image dynamic (r40) Otsu th");
 
-    // ThresholdUser<uchar> low_th(10);
-    // ThresholdUser<uchar> good_th(100);
-    // ThresholdUser<uchar> high_th(200);
-
-    // mag = sobel.magnitude();
-
-    // int histSize = 256;
-    // float range[] = {0, sobel.magnitudeRange().upper};
-    // const float* histRange = {range};
-
-    // cv::Mat hist;
-    // cv::calcHist(&mag, 1, 0, Mat(), hist, 1, &histSize, &histRange, true, false);
-
-    // int hist_w = 512;
-    // int hist_h = 400;
-    // int bin_w = cvRound((double)hist_w / histSize);
-
-    // Mat histImage(hist_h, hist_w, CV_8U, Scalar(0, 0, 0));
-
-    // /// Normalize the result to [ 0, histImage.rows ]
-    // cv::normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat());
-
-
-    // /// Draw for each channel
-    // for (int i = 1; i < histSize; i++) {
-    //   cv::line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
-    //            cv::Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))), cv::Scalar(255, 0, 0), 2, 8, 0);
-    // }
-
-    // imshow("calcHist Demo", histImage);
+    // DynamicThreshold<uchar, ThresholdOtsu<uchar, 256>> otsu_dynamic_th_r50_img(50, 255);
+    // process(otsu_dynamic_th_r50_img, img, "otsu_dynamic_th_r50_img", "Image dynamic (r50) Otsu th");
 
 
     waitKey();
