@@ -51,7 +51,7 @@ PerformanceMeasure PerformanceTaskBase::accumulatedMeasure(const PerformanceMeas
 }
 
 void PerformanceTaskDefault::run(const TaskData& data, int loops, bool verbose) {
-  const auto& pdata = static_cast<const PerformanceData&>(data);
+  const auto& pdata = dynamic_cast<const PerformanceData&>(data);
   run(pdata.name, this->rgb() ? pdata.src : pdata.src_gray, loops, verbose);
 }
 
@@ -78,7 +78,7 @@ void PerformanceTest::run(int runs, bool verbose) {
     while (data[pos]->get(src_name, src)) {
       try {
         if (verbose) std::cout << "  Process source: " << src_name << std::endl;
-        std::unique_ptr<TaskData> data = std::move(this->prepareTaskData(src_name, src));
+        std::unique_ptr<TaskData> data = std::move(prepareTaskData(src_name, src));
         ++providerRecords_;
         for_each(tasks.begin(), tasks.end(), [&, this](PerformanceTaskPtr& task) {
           task->run(*data, runs, verbose);
