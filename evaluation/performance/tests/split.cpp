@@ -23,8 +23,6 @@ struct SplitPerformaceData : public TaskData {
     edge.detect(grad, nms);
   }
 
-  virtual ~SplitPerformaceData() = default;
-
   Grad grad;
   Nms nms;
   Edge edge;
@@ -154,4 +152,4 @@ bool addSplit() {
   return true;
 }
 
-bool splitAdded = addSplit();
+// bool splitAdded = addSplit();

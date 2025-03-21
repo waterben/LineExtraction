@@ -232,4 +232,4 @@ bool addGradient() {
   return true;
 }
 
-// bool gradientAdded = addGradient();
+bool gradientAdded = addGradient();

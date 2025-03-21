@@ -20,8 +20,6 @@ struct SegPerformaceData : public TaskData {
     nms.process(grad);
   }
 
-  virtual ~SegPerformaceData() = default;
-
   Grad grad;
   Nms nms;
 };
@@ -96,4 +94,4 @@ bool addSegment() {
   return true;
 }
 
-bool segmentAdded = addSegment();
+// bool segmentAdded = addSegment();

@@ -347,8 +347,8 @@ struct Data {
     for (const auto& seg_points : segment_points) {
       std::vector<PT<FT>> point_list;
       point_list.reserve(segment_points.size());
-      PT pt_min(std::numeric_limits<FT>::max(), std::numeric_limits<FT>::max());
-      PT pt_max(std::numeric_limits<FT>::min(), std::numeric_limits<FT>::min());
+      PT<FT> pt_min(std::numeric_limits<FT>::max(), std::numeric_limits<FT>::max());
+      PT<FT> pt_max(std::numeric_limits<FT>::min(), std::numeric_limits<FT>::min());
       for (const auto& point_index : seg_points) {
         auto pt = points[point_index];
         pt_max.x = std::max(pt_max.x, pt.x);
@@ -1117,14 +1117,16 @@ class SpeApp : public EvalApp {
                                   cv::Vec3b(40, 90, 180),  cv::Vec3b(100, 150, 200)};
 
       std::vector<Polygon<FT, cv::Point_>> polys;
-      polys.emplace_back(Polygon{gt->segments});                                     // gt grün
-      polys.emplace_back(Polygon{entries_[0]->allData[0].lineSegsFromSegPoints()});  // th rot
-      polys.emplace_back(Polygon{entries_[1]->allData[0].lineSegsFromSegPoints()});  // nms blau
-      polys.emplace_back(Polygon{entries_[1]->allData[1].lineSegsFromSegPoints()});  // nms fast Cyan
-      polys.emplace_back(Polygon{entries_[7]->allData[2].lineSegsFromSegPoints()});  // nms türkies
-      polys.emplace_back(Polygon{entries_[2]->allData[0].lineSegsFromSegPoints()});  // zc gelb
-      polys.emplace_back(Polygon{entries_[2]->allData[1].lineSegsFromSegPoints()});  // zc fast dark orange
-      polys.emplace_back(Polygon{entries_[8]->allData[1].lineSegsFromSegPoints()});  // zc precise orange
+      polys.emplace_back(Polygon<FT, cv::Point_>{gt->segments});                                     // gt grün
+      polys.emplace_back(Polygon<FT, cv::Point_>{entries_[0]->allData[0].lineSegsFromSegPoints()});  // th rot
+      polys.emplace_back(Polygon<FT, cv::Point_>{entries_[1]->allData[0].lineSegsFromSegPoints()});  // nms blau
+      polys.emplace_back(Polygon<FT, cv::Point_>{entries_[1]->allData[1].lineSegsFromSegPoints()});  // nms fast Cyan
+      polys.emplace_back(Polygon<FT, cv::Point_>{entries_[7]->allData[2].lineSegsFromSegPoints()});  // nms türkies
+      polys.emplace_back(Polygon<FT, cv::Point_>{entries_[2]->allData[0].lineSegsFromSegPoints()});  // zc gelb
+      polys.emplace_back(
+          Polygon<FT, cv::Point_>{entries_[2]->allData[1].lineSegsFromSegPoints()});  // zc fast dark orange
+      polys.emplace_back(
+          Polygon<FT, cv::Point_>{entries_[8]->allData[1].lineSegsFromSegPoints()});  // zc precise orange
 
 
       int scale = 500;

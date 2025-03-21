@@ -23,8 +23,8 @@ target_link_libraries(eval_gradient_orientation lib_phase_cong ${Boost_LIBRARIES
 add_executable(eval_image_denoise image_denoise.cpp)
 target_link_libraries(eval_image_denoise lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )
 
-add_executable(eval_lsd_precision lsd_precision.cpp)
-target_link_libraries(eval_lsd_precision ${Boost_LIBRARIES} ${OpenCV_LIBS} )
+add_executable(eval_gradient_performance gradient_performance.cpp)
+target_link_libraries(eval_gradient_performance lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )
 
 add_executable(eval_phase_dc phase_dc.cpp)
 target_link_libraries(eval_phase_dc lib_phase_cong ${Boost_LIBRARIES} ${OpenCV_LIBS} )

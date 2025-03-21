@@ -22,6 +22,7 @@ set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
 set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 if(${BUILD_DEBUG})

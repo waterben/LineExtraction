@@ -22,8 +22,6 @@ struct SegEvalPerformaceData : public TaskData {
     edge.detect(grad, nms);
   }
 
-  virtual ~SegEvalPerformaceData() = default;
-
   Grad grad;
   Nms nms;
   Edge edge;
@@ -96,4 +94,4 @@ bool addSegEval() {
   return true;
 }
 
-bool segEvalAdded = addSegEval();
+// bool segEvalAdded = addSegEval();

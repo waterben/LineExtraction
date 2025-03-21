@@ -17,37 +17,31 @@ std::vector<PerformanceTestPtr>& getTests() {
 
 void addPerformanceTest(PerformanceTestPtr test) { getTests().push_back(test); }
 
-const DataProviderMap& getDefaultProvider() {
-  static DataProviderMap map;
-  if (map.empty()) {
+const DataProviderList& getDefaultProvider() {
+  static DataProviderList list;
+  if (list.empty()) {
     try {
-      // map["images"] = DataProviderPtr(new FileDataProvider("../../images", "images"));
-      map["a"] = DataProviderPtr(new FileDataProvider("../../images/small/a", "a"));
-      map["b"] = DataProviderPtr(new FileDataProvider("../../images/small/b", "b"));
-      map["c"] = DataProviderPtr(new FileDataProvider("../../images/small/c", "c"));
-      // map["Selection"] = DataProviderPtr(new FileDataProvider("../../images/Selection", "Selection"));
-      // map["BSDS500"] = DataProviderPtr(new FileDataProvider("../../images/BSDS500", "BSDS500"));
-      // map["MDB-Q"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-Q", "MDB-Q"));
-      // map["MDB-H"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-H", "MDB-H"));
-      // map["MDB-F"] = DataProviderPtr(new FileDataProvider("../../images/MDB/MiddEval3-F", "MDB-F"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images", "images"));
+      list.push_back(std::make_shared<FileDataProvider>("../images/small/a", "a"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/small/b", "b"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/small/c", "c"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/Selection", "Selection"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/BSDS500", "BSDS500"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-Q", "MDB-Q"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-H", "MDB-H"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-F", "MDB-F"));
     } catch (std::exception& e) {
       std::cout << "Default provider parse error: " << e.what() << std::endl;
     }
   }
-  return map;
+  return list;
 }
 
 void addPerformanceTestCreator(PerformanceTestCreator creator) {
   fs::create_directory("./results");
   fs::create_directory("./results/visual");
   fs::create_directory("./results/performance");
-  getTests().push_back(PerformanceTestPtr());
-  creator(getTests().back(), getDefaultProvider());
-}
-
-void addDefault(const DataProviderMap& provider, DataProviderList& data) {
-  // simply add all
-  for_each(provider.begin(), provider.end(), [&](const DataProviderMap::value_type& p) { data.push_back(p.second); });
+  getTests().emplace_back(creator(getDefaultProvider()));
 }
 
 void help() {
@@ -70,6 +64,7 @@ void help() {
 }
 
 int main(int argc, char** argv) {
+  std::cout << "C++ version: " << __cplusplus << std::endl;
   bool verbose = false;
   bool printTables = false;
   bool highPriority = false;
