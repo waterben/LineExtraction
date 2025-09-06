@@ -96,4 +96,4 @@ bool addSegEval() {
   return true;
 }
 
-bool segEvalAdded = addSegEval();
+// bool segEvalAdded = addSegEval();

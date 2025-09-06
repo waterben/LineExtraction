@@ -101,4 +101,4 @@ bool addFit() {
   return true;
 }
 
-bool fitAdded = addFit();
+// bool fitAdded = addFit();

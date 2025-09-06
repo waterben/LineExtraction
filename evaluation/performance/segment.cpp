@@ -96,4 +96,4 @@ bool addSegment() {
   return true;
 }
 
-bool segmentAdded = addSegment();
+// bool segmentAdded = addSegment();

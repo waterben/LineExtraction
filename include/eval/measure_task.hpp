@@ -14,6 +14,7 @@ class MeasureTask : public InputTask<InputDataT> {
   using Measures = MeasuresT;
   using Result = typename Measures::Result;
   using Base = InputTask<InputDataT>;
+  using MeasuresMap = std::map<Measures>;
 
   MeasureTask(const std::string& mt_name, bool mt_verbose = false) : Base(mt_name, mt_verbose) {}
   virtual ~MeasureTask() {}
@@ -28,14 +29,11 @@ class MeasureTask : public InputTask<InputDataT> {
   using Task::verbose;
 
   /// Access measures
-  const Measures& measures() const { return measures_; }
+  const MeasuresMap& measures() const { return measures_; }
 
-  /// Access result via measures
-  Result result() const { return measures_.computeResult(); }
-
- private:
-  /// Task measures from run
-  Measures measures_{};
+ protected:
+  /// Task measures from run by source name
+  MeasuresMap measures_{};
 };
 
 

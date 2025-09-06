@@ -44,224 +44,212 @@
 #define _GRADIENT_ADAPTER_HPP_
 #ifdef __cplusplus
 
-#include <imgproc/gradient.hpp>
+#  include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
-    //! Gradient odd adapter class
-    template<class QUAD>
-    class GradientOdd : public GradientI<typename QUAD::img_type, typename QUAD::grad_type, typename QUAD::mag_type, typename QUAD::dir_type> {
-        typedef GradientI<typename QUAD::img_type, typename QUAD::grad_type, typename QUAD::mag_type, typename QUAD::dir_type> GRAD;
-    protected:
-        QUAD quad_;
+//! Gradient odd adapter class
+template <class QUAD>
+class GradientOdd : public GradientI<typename QUAD::img_type,
+                                     typename QUAD::grad_type,
+                                     typename QUAD::mag_type,
+                                     typename QUAD::dir_type> {
+  typedef GradientI<typename QUAD::img_type, typename QUAD::grad_type, typename QUAD::mag_type, typename QUAD::dir_type>
+      GRAD;
 
-    public:
-        typedef typename QUAD::img_type img_type;
-        typedef typename QUAD::mag_type mag_type;
-        typedef typename QUAD::grad_type grad_type;
-        typedef typename QUAD::dir_type dir_type;
-        typedef typename QUAD::IntensityRange IntensityRange;
-        typedef typename QUAD::GradientRange GradientRange;
-        typedef typename QUAD::MagnitudeRange MagnitudeRange;
-        typedef typename QUAD::DirectionRange DirectionRange;
+ protected:
+  QUAD quad_;
 
-        GradientOdd(img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : quad_({}, int_lower, int_upper) {
-            this->addManager(quad_);
-        }
+ public:
+  typedef typename QUAD::img_type img_type;
+  typedef typename QUAD::mag_type mag_type;
+  typedef typename QUAD::grad_type grad_type;
+  typedef typename QUAD::dir_type dir_type;
+  typedef typename QUAD::IntensityRange IntensityRange;
+  typedef typename QUAD::GradientRange GradientRange;
+  typedef typename QUAD::MagnitudeRange MagnitudeRange;
+  typedef typename QUAD::DirectionRange DirectionRange;
 
-        GradientOdd(const ValueManager::NameValueVector &options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : quad_(options,int_lower, int_upper) {
-            this->addManager(quad_);
-        }
+  GradientOdd(img_type int_lower = std::numeric_limits<img_type>::lowest(),
+              img_type int_upper = std::numeric_limits<img_type>::max())
+      : quad_({}, int_lower, int_upper) {
+    this->addManager(quad_);
+  }
 
-        GradientOdd(ValueManager::InitializerList options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : quad_(options,int_lower, int_upper) {
-            this->addManager(quad_);
-        }
+  GradientOdd(const ValueManager::NameValueVector& options,
+              img_type int_lower = std::numeric_limits<img_type>::lowest(),
+              img_type int_upper = std::numeric_limits<img_type>::max())
+      : quad_(options, int_lower, int_upper) {
+    this->addManager(quad_);
+  }
 
-        //! get magnitude
-        virtual cv::Mat magnitude() const {
-            return quad_.odd();
-        }
+  GradientOdd(ValueManager::InitializerList options,
+              img_type int_lower = std::numeric_limits<img_type>::lowest(),
+              img_type int_upper = std::numeric_limits<img_type>::max())
+      : quad_(options, int_lower, int_upper) {
+    this->addManager(quad_);
+  }
 
-		//! get magnitude range for intensity range
-        virtual MagnitudeRange magnitudeRange() const {
-            return quad_.oddRange();
-        }
+  //! get magnitude
+  virtual cv::Mat magnitude() const { return quad_.odd(); }
 
-        //! convert threshold between 0-1 to mangitude threshold
-        virtual mag_type magnitudeThreshold(double val) const {
-            return quad_.oddThreshold(val);
-        }
+  //! get magnitude range for intensity range
+  virtual MagnitudeRange magnitudeRange() const { return quad_.oddRange(); }
 
-		//! get information about magnitude norm type
-		//! default: NONE -> norm does not correspond gx, gy
-		virtual NormType normType() const {
-            return quad_.normType();
-		}
+  //! convert threshold between 0-1 to magnitude threshold
+  virtual mag_type magnitudeThreshold(double val) const { return quad_.oddThreshold(val); }
 
-        //! get direction
-        virtual cv::Mat direction() const {
-            return quad_.direction();
-        }
+  //! get information about magnitude norm type
+  //! default: NONE -> norm does not correspond gx, gy
+  virtual NormType normType() const { return quad_.normType(); }
 
-		//! get direction range ([-PI,PI], [0,2PI] or [0,360])
-        virtual DirectionRange directionRange() const {
-            return quad_.directionRange();
-        }
+  //! get direction
+  virtual cv::Mat direction() const { return quad_.direction(); }
 
-        //! get x,y derivatives or directional data
-        virtual void directionals(cv::Mat& gx, cv::Mat& gy) const {
-            quad_.odd(gx, gy);
-		}
+  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  virtual DirectionRange directionRange() const { return quad_.directionRange(); }
 
-		//! get gradient range
-        virtual GradientRange gradientRange() const {
-            return quad_.oddGradRange();
-        }
+  //! get x,y derivatives or directional data
+  virtual void directionals(cv::Mat& gx, cv::Mat& gy) const { quad_.odd(gx, gy); }
 
-        //! get image intensity range (for single channel)
-        IntensityRange intensityRange() const {
-            return quad_.intensityRange();
-        }
+  //! get gradient range
+  virtual GradientRange gradientRange() const { return quad_.oddGradRange(); }
 
-        //! process filter
-        virtual void process(const cv::Mat& img) {
-            quad_.process(img);
-        }
+  //! get image intensity range (for single channel)
+  IntensityRange intensityRange() const { return quad_.intensityRange(); }
 
-        //! generic interface to get processed data
-        virtual FilterResults results() const {
-            FilterResults ret = quad_.results();
-            ret["gx"] = this->gx();
-            ret["gy"] = this->gy();
-            ret["mag"] = this->magnitude();
-            ret["dir"] = this->direction();
-            return ret;
-        }
+  //! process filter
+  virtual void process(const cv::Mat& img) { quad_.process(img); }
 
-        //! get name of direction operator
-        std::string name() const {
-            return quad_.name();
-        }
+  //! generic interface to get processed data
+  virtual FilterResults results() const {
+    FilterResults ret = quad_.results();
+    ret["gx"] = this->gx();
+    ret["gy"] = this->gy();
+    ret["mag"] = this->magnitude();
+    ret["dir"] = this->direction();
+    return ret;
+  }
 
-        using GRAD::gx;
-        using GRAD::gy;
-        using ValueManager::values;
-        using ValueManager::valuePair;
-        using ValueManager::value;
-    };
+  //! get name of direction operator
+  std::string name() const { return quad_.name(); }
 
-    //! Gradient energy adapter class
-    template<class QUAD>
-    class GradientEnergy : public GradientOdd<QUAD> {
-        typedef GradientOdd<QUAD> GRAD;
-    public:
-        typedef typename QUAD::img_type img_type;
-        typedef typename QUAD::mag_type mag_type;
-        typedef typename QUAD::grad_type grad_type;
-        typedef typename QUAD::dir_type dir_type;
-        typedef typename QUAD::IntensityRange IntensityRange;
-        typedef typename QUAD::GradientRange GradientRange;
-        typedef typename QUAD::MagnitudeRange MagnitudeRange;
-        typedef typename QUAD::DirectionRange DirectionRange;
+  using GRAD::gx;
+  using GRAD::gy;
+  using ValueManager::value;
+  using ValueManager::valuePair;
+  using ValueManager::values;
+};
 
-        GradientEnergy(img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max()) 
-            : GradientOdd<QUAD>(int_lower, int_upper) {}
+//! Gradient energy adapter class
+template <class QUAD>
+class GradientEnergy : public GradientOdd<QUAD> {
+  typedef GradientOdd<QUAD> GRAD;
 
-        GradientEnergy(const ValueManager::NameValueVector &options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : GradientOdd<QUAD>(options, int_lower, int_upper) {}
+ public:
+  typedef typename QUAD::img_type img_type;
+  typedef typename QUAD::mag_type mag_type;
+  typedef typename QUAD::grad_type grad_type;
+  typedef typename QUAD::dir_type dir_type;
+  typedef typename QUAD::IntensityRange IntensityRange;
+  typedef typename QUAD::GradientRange GradientRange;
+  typedef typename QUAD::MagnitudeRange MagnitudeRange;
+  typedef typename QUAD::DirectionRange DirectionRange;
 
-        GradientEnergy(ValueManager::InitializerList options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : GradientOdd<QUAD>(options, int_lower, int_upper) {}
+  GradientEnergy(img_type int_lower = std::numeric_limits<img_type>::lowest(),
+                 img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(int_lower, int_upper) {}
 
-        //! get magnitude
-        virtual cv::Mat magnitude() const {
-            return this->quad_.energy();
-        }
+  GradientEnergy(const ValueManager::NameValueVector& options,
+                 img_type int_lower = std::numeric_limits<img_type>::lowest(),
+                 img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(options, int_lower, int_upper) {}
 
-        //! get magnitude range for intensity range
-        virtual MagnitudeRange magnitudeRange() const {
-            return this->quad_.energyRange();
-        }
+  GradientEnergy(ValueManager::InitializerList options,
+                 img_type int_lower = std::numeric_limits<img_type>::lowest(),
+                 img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(options, int_lower, int_upper) {}
 
-        //! convert threshold between 0-1 to mangitude threshold
-        virtual mag_type magnitudeThreshold(double val) const {
-            return this->quad_.energyThreshold(val);
-        }
+  //! get magnitude
+  virtual cv::Mat magnitude() const { return this->quad_.energy(); }
 
-        using GRAD::gx;
-        using GRAD::gy;
-        using GRAD::normType;
-        using GRAD::direction;
-        using GRAD::directionRange;
-        using GRAD::directionals;
-        using GRAD::gradientRange;
-        using GRAD::intensityRange;
-        using GRAD::process;
-        using GRAD::results;
-        using GRAD::name;
-        using GRAD::values;
-        using GRAD::valuePair;
-        using GRAD::value;
-    };
+  //! get magnitude range for intensity range
+  virtual MagnitudeRange magnitudeRange() const { return this->quad_.energyRange(); }
+
+  //! convert threshold between 0-1 to magnitude threshold
+  virtual mag_type magnitudeThreshold(double val) const { return this->quad_.energyThreshold(val); }
+
+  using GRAD::direction;
+  using GRAD::directionals;
+  using GRAD::directionRange;
+  using GRAD::gradientRange;
+  using GRAD::gx;
+  using GRAD::gy;
+  using GRAD::intensityRange;
+  using GRAD::name;
+  using GRAD::normType;
+  using GRAD::process;
+  using GRAD::results;
+  using GRAD::value;
+  using GRAD::valuePair;
+  using GRAD::values;
+};
 
 
-    //! Gradient phase congruency adapter class
-    template<class QUAD>
-    class GradientPC : public GradientOdd<QUAD> {
-        typedef GradientOdd<QUAD> GRAD;
-    public:
-        typedef typename QUAD::img_type img_type;
-        typedef typename QUAD::mag_type mag_type;
-        typedef typename QUAD::grad_type grad_type;
-        typedef typename QUAD::dir_type dir_type;
-        typedef typename QUAD::IntensityRange IntensityRange;
-        typedef typename QUAD::GradientRange GradientRange;
-        typedef typename QUAD::MagnitudeRange MagnitudeRange;
-        typedef typename QUAD::DirectionRange DirectionRange;
+//! Gradient phase congruency adapter class
+template <class QUAD>
+class GradientPC : public GradientOdd<QUAD> {
+  typedef GradientOdd<QUAD> GRAD;
 
-        GradientPC(img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : GradientOdd<QUAD>(int_lower, int_upper) {}
+ public:
+  typedef typename QUAD::img_type img_type;
+  typedef typename QUAD::mag_type mag_type;
+  typedef typename QUAD::grad_type grad_type;
+  typedef typename QUAD::dir_type dir_type;
+  typedef typename QUAD::IntensityRange IntensityRange;
+  typedef typename QUAD::GradientRange GradientRange;
+  typedef typename QUAD::MagnitudeRange MagnitudeRange;
+  typedef typename QUAD::DirectionRange DirectionRange;
 
-        GradientPC(const ValueManager::NameValueVector &options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : GradientOdd<QUAD>(options, int_lower, int_upper) {}
+  GradientPC(img_type int_lower = std::numeric_limits<img_type>::lowest(),
+             img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(int_lower, int_upper) {}
 
-        GradientPC(ValueManager::InitializerList options, img_type int_lower = std::numeric_limits<img_type>::lowest(), img_type int_upper = std::numeric_limits<img_type>::max())
-            : GradientOdd<QUAD>(options, int_lower, int_upper) {}
+  GradientPC(const ValueManager::NameValueVector& options,
+             img_type int_lower = std::numeric_limits<img_type>::lowest(),
+             img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(options, int_lower, int_upper) {}
 
-        //! get magnitude
-        virtual cv::Mat magnitude() const {
-            return this->quad_.phaseCongruency();
-        }
+  GradientPC(ValueManager::InitializerList options,
+             img_type int_lower = std::numeric_limits<img_type>::lowest(),
+             img_type int_upper = std::numeric_limits<img_type>::max())
+      : GradientOdd<QUAD>(options, int_lower, int_upper) {}
 
-        //! get magnitude range for intensity range
-        virtual MagnitudeRange magnitudeRange() const {
-            return this->quad_.phaseCongruencyRange();
-        }
+  //! get magnitude
+  virtual cv::Mat magnitude() const { return this->quad_.phaseCongruency(); }
 
-        //! convert threshold between 0-1 to mangitude threshold
-        virtual mag_type magnitudeThreshold(double val) const {
-            return static_cast<mag_type>(val);
-        }
+  //! get magnitude range for intensity range
+  virtual MagnitudeRange magnitudeRange() const { return this->quad_.phaseCongruencyRange(); }
 
-        using GRAD::gx;
-        using GRAD::gy;
-        using GRAD::normType;
-        using GRAD::direction;
-        using GRAD::directionRange;
-        using GRAD::directionals;
-        using GRAD::gradientRange;
-        using GRAD::intensityRange;
-        using GRAD::process;
-        using GRAD::results;
-        using GRAD::name;
-        using GRAD::values;
-        using GRAD::valuePair;
-        using GRAD::value;
-    };
-    
-}
+  //! convert threshold between 0-1 to magnitude threshold
+  virtual mag_type magnitudeThreshold(double val) const { return static_cast<mag_type>(val); }
+
+  using GRAD::direction;
+  using GRAD::directionals;
+  using GRAD::directionRange;
+  using GRAD::gradientRange;
+  using GRAD::gx;
+  using GRAD::gy;
+  using GRAD::intensityRange;
+  using GRAD::name;
+  using GRAD::normType;
+  using GRAD::process;
+  using GRAD::results;
+  using GRAD::value;
+  using GRAD::valuePair;
+  using GRAD::values;
+};
+
+}  // namespace lsfm
 #endif
 #endif

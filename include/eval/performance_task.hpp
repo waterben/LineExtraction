@@ -28,7 +28,7 @@ struct PerformanceMeasure {
 
 //! PerformanceTask
 template <typename InputDataT, typename PerformanceMeasureT>
-struct PerformanceTask : public Task<InputDataT> {
+struct PerformanceTask : public MeasureTask<InputDataT> {
   PerformanceTask(const std::string& pt_name, bool pt_verbose) : Task(pt_name, pt_verbose) {}
   virtual ~PerformanceTask() = default;
 

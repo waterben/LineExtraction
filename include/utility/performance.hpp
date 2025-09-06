@@ -16,9 +16,9 @@ struct PerformanceData : public TaskData {
 //! Performance results in millisec
 struct PerformanceResult {
   PerformanceResult(double t = 0, double m = 0, double d = 0) : total(t), mean(m), stddev(d) {}
-  double total;
-  double mean;
-  double stddev;
+  double total{};
+  double mean{};
+  double stddev{};
 };
 
 //! Performance measurements

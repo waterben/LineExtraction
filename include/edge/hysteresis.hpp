@@ -44,125 +44,164 @@
 #define _HYSTERESIS_HPP_
 #ifdef __cplusplus
 
-#include <opencv2/core/core.hpp>
-#include "index.hpp"
+#  include "index.hpp"
+#  include <opencv2/core/core.hpp>
+
 
 namespace lsfm {
 
-    namespace detail {
-        //! compute hysteresis of seeds and dmap
-        inline void hysteresis_map(cv::Mat& map, const cv::Mat& dmap, IndexVector& edgels) {
-            dmap.copyTo(map);
+namespace detail {
+//! compute hysteresis of seeds and dmap
+inline void hysteresis_map(cv::Mat& map, const cv::Mat& dmap, IndexVector& edgels) {
+  dmap.copyTo(map);
 
-            char *pmap = map.ptr<char>();
-            size_t visited = 0;
+  char* pmap = map.ptr<char>();
+  size_t visited = 0;
 
-            ptrdiff_t mapstep = map.cols;
-            // remove seeds
-            for_each(edgels.begin(), edgels.end(), [&pmap](index_type i) {
-                pmap[i] = -1;
-            });
+  ptrdiff_t mapstep = map.cols;
+  // remove seeds
+  for_each(edgels.begin(), edgels.end(), [&pmap](index_type i) { pmap[i] = -1; });
 
-            // now track the edges (hysteresis thresholding)
-            while (visited != edgels.size())
-            {
-                index_type i = edgels[visited];
-                char* m = pmap + i;
-                ++visited;
+  // now track the edges (hysteresis thresholding)
+  while (visited != edgels.size()) {
+    index_type i = edgels[visited];
+    char* m = pmap + i;
+    ++visited;
 
-                if (m[-1] > -1) { m[-1] = -1;  edgels.push_back(i - 1); }
-                if (m[1] > -1) { m[1] = -1; edgels.push_back(i + 1); }
-                if (m[-mapstep - 1] > -1) { m[-mapstep - 1] = -1;  edgels.push_back(i - mapstep - 1); }
-                if (m[-mapstep] > -1) { m[-mapstep] = -1;  edgels.push_back(i - mapstep); }
-                if (m[-mapstep + 1] > -1) { m[-mapstep + 1] = -1;  edgels.push_back(i - mapstep + 1); }
-                if (m[mapstep - 1] > -1) { m[mapstep - 1] = -1;  edgels.push_back(i + mapstep - 1); }
-                if (m[mapstep] > -1) { m[mapstep] = -1;  edgels.push_back(i + mapstep); }
-                if (m[mapstep + 1] > -1) { m[mapstep + 1] = -1;  edgels.push_back(i + mapstep + 1); }
-            }
-        }
+    if (m[-1] > -1) {
+      m[-1] = -1;
+      edgels.push_back(i - 1);
     }
-
-    //! compute hysteresis of seeds and dmap
-    inline void hysteresis_edgels(const cv::Mat &dmap, IndexVector &edgels) {
-        cv::Mat map;
-        detail::hysteresis_map(map, dmap, edgels);
+    if (m[1] > -1) {
+      m[1] = -1;
+      edgels.push_back(i + 1);
     }
-
-	//! compute hysteresis of seeds and dmap
-    inline cv::Mat hysteresis(const cv::Mat &dmap, IndexVector &edgels) {
-		cv::Mat map;
-        detail::hysteresis_map(map, dmap, edgels);
-		map.setTo(-1);
-        char *pmap = map.ptr<char>();
-		const char *pdmap = dmap.ptr<char>();
-		for_each(edgels.begin(), edgels.end(), [&pmap, &pdmap](index_type i) {
-			pmap[i] = pdmap[i];
-		});
-		return map;
-	}
-
-    //! compute binary hysteresis of seeds and dmap
-    inline cv::Mat hysteresis_binary(const cv::Mat &dmap, IndexVector &edgels) {
-        cv::Mat map;
-        dmap.convertTo(map, CV_8U);
-
-        uint8_t *pmap = map.ptr<uint8_t>();
-        size_t visited = 0;
-
-        ptrdiff_t mapstep = map.cols;
-        // remove seeds
-        for_each(edgels.begin(), edgels.end(), [&pmap](index_type i) {
-            pmap[i] = 0;
-        });
-
-        // now track the edges (hysteresis thresholding)
-        while (visited != edgels.size())
-        {
-            index_type i = edgels[visited];
-            uint8_t* m = pmap + i;
-            ++visited;
-
-            if (m[-1]) { m[-1] = 0;  edgels.push_back(i - 1); }
-            if (m[1]) { m[1] = 0; edgels.push_back(i + 1); }
-            if (m[-mapstep - 1]) { m[-mapstep - 1] = 0;  edgels.push_back(i - mapstep - 1); }
-            if (m[-mapstep]) { m[-mapstep] = 0;  edgels.push_back(i - mapstep); }
-            if (m[-mapstep + 1]) { m[-mapstep + 1] = 0;  edgels.push_back(i - mapstep + 1); }
-            if (m[mapstep - 1]) { m[mapstep - 1] = 0;  edgels.push_back(i + mapstep - 1); }
-            if (m[mapstep]) { m[mapstep] = 0;  edgels.push_back(i + mapstep); }
-            if (m[mapstep + 1]) { m[mapstep + 1] = 0;  edgels.push_back(i + mapstep + 1); }
-        }
-        map.setTo(0);
-        pmap = map.ptr<uint8_t>();
-        for_each(edgels.begin(), edgels.end(), [&pmap](index_type i) {
-            pmap[i] = 1;
-        });
-        return map;
+    if (m[-mapstep - 1] > -1) {
+      m[-mapstep - 1] = -1;
+      edgels.push_back(i - mapstep - 1);
     }
-
-    //! compute hysteresis of seeds and dmap
-    inline cv::Mat hysteresis(const cv::Mat &dmap, const IndexVector &edgels) {
-        IndexVector eg = edgels;
-        return hysteresis(dmap, eg);
+    if (m[-mapstep] > -1) {
+      m[-mapstep] = -1;
+      edgels.push_back(i - mapstep);
     }
-
-    //! compute binary hysteresis of seeds and dmap
-    inline cv::Mat hysteresis_binary(const cv::Mat &dmap, const IndexVector &edgels) {
-        IndexVector eg = edgels;
-        return hysteresis_binary(dmap, eg);
+    if (m[-mapstep + 1] > -1) {
+      m[-mapstep + 1] = -1;
+      edgels.push_back(i - mapstep + 1);
     }
-
-    //! compute hysteresis of seeds and dmap
-    inline cv::Mat hysteresis_const(const cv::Mat &dmap, const IndexVector &edgels) {
-        IndexVector eg = edgels;
-        return hysteresis(dmap, eg);
+    if (m[mapstep - 1] > -1) {
+      m[mapstep - 1] = -1;
+      edgels.push_back(i + mapstep - 1);
     }
-
-    //! compute binary hysteresis of seeds and dmap
-    inline cv::Mat hysteresis_binary_const(const cv::Mat &dmap, const IndexVector &edgels) {
-        IndexVector eg = edgels;
-        return hysteresis_binary(dmap, eg);
+    if (m[mapstep] > -1) {
+      m[mapstep] = -1;
+      edgels.push_back(i + mapstep);
     }
-
+    if (m[mapstep + 1] > -1) {
+      m[mapstep + 1] = -1;
+      edgels.push_back(i + mapstep + 1);
+    }
+  }
 }
+}  // namespace detail
+
+//! compute hysteresis of seeds and dmap
+inline void hysteresis_edgels(const cv::Mat& dmap, IndexVector& edgels) {
+  cv::Mat map;
+  detail::hysteresis_map(map, dmap, edgels);
+}
+
+//! compute hysteresis of seeds and dmap
+inline cv::Mat hysteresis(const cv::Mat& dmap, IndexVector& edgels) {
+  cv::Mat map;
+  detail::hysteresis_map(map, dmap, edgels);
+  map.setTo(-1);
+  char* pmap = map.ptr<char>();
+  const char* pdmap = dmap.ptr<char>();
+  for_each(edgels.begin(), edgels.end(), [&pmap, &pdmap](index_type i) { pmap[i] = pdmap[i]; });
+  return map;
+}
+
+//! compute binary hysteresis of seeds and dmap
+inline cv::Mat hysteresis_binary(const cv::Mat& dmap, IndexVector& edgels, uchar val = 1) {
+  cv::Mat map;
+  dmap.convertTo(map, CV_8U);
+
+  uint8_t* pmap = map.ptr<uint8_t>();
+  size_t visited = 0;
+
+  ptrdiff_t mapstep = map.cols;
+  // remove seeds
+  for_each(edgels.begin(), edgels.end(), [&pmap](index_type i) { pmap[i] = 0; });
+
+  // now track the edges (hysteresis thresholding)
+  while (visited != edgels.size()) {
+    index_type i = edgels[visited];
+    uint8_t* m = pmap + i;
+    ++visited;
+
+    if (m[-1]) {
+      m[-1] = 0;
+      edgels.push_back(i - 1);
+    }
+    if (m[1]) {
+      m[1] = 0;
+      edgels.push_back(i + 1);
+    }
+    if (m[-mapstep - 1]) {
+      m[-mapstep - 1] = 0;
+      edgels.push_back(i - mapstep - 1);
+    }
+    if (m[-mapstep]) {
+      m[-mapstep] = 0;
+      edgels.push_back(i - mapstep);
+    }
+    if (m[-mapstep + 1]) {
+      m[-mapstep + 1] = 0;
+      edgels.push_back(i - mapstep + 1);
+    }
+    if (m[mapstep - 1]) {
+      m[mapstep - 1] = 0;
+      edgels.push_back(i + mapstep - 1);
+    }
+    if (m[mapstep]) {
+      m[mapstep] = 0;
+      edgels.push_back(i + mapstep);
+    }
+    if (m[mapstep + 1]) {
+      m[mapstep + 1] = 0;
+      edgels.push_back(i + mapstep + 1);
+    }
+  }
+  map.setTo(0);
+  pmap = map.ptr<uint8_t>();
+  for_each(edgels.begin(), edgels.end(), [&pmap, &val](index_type i) { pmap[i] = val; });
+  return map;
+}
+
+//! compute hysteresis of seeds and dmap
+inline cv::Mat hysteresis(const cv::Mat& dmap, const IndexVector& edgels) {
+  IndexVector eg = edgels;
+  return hysteresis(dmap, eg);
+}
+
+//! compute binary hysteresis of seeds and dmap
+inline cv::Mat hysteresis_binary(const cv::Mat& dmap, const IndexVector& edgels, uchar val = 1) {
+  IndexVector eg = edgels;
+  return hysteresis_binary(dmap, eg, val);
+}
+
+//! compute hysteresis of seeds and dmap
+inline cv::Mat hysteresis_const(const cv::Mat& dmap, const IndexVector& edgels) {
+  IndexVector eg = edgels;
+  return hysteresis(dmap, eg);
+}
+
+//! compute binary hysteresis of seeds and dmap
+inline cv::Mat hysteresis_binary_const(const cv::Mat& dmap, const IndexVector& edgels, uchar val = 1) {
+  IndexVector eg = edgels;
+  return hysteresis_binary(dmap, eg, val);
+}
+
+}  // namespace lsfm
 #endif
 #endif

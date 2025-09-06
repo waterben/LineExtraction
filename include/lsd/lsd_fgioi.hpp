@@ -43,169 +43,164 @@
 #define _LSD_FGIOI_HPP_
 #ifdef __cplusplus
 
-#include <lsd/lsd_base.hpp>
-#include "../../src/lsd/lsd_fgioi_impl.hpp"
+#  include "../../src/lsd/lsd_fgioi_impl.hpp"
+#  include <lsd/lsd_base.hpp>
+
 
 namespace lsfm {
 
-    template<class FT, template<class> class LPT = Vec2>
-    class LsdFGioi : public LsdBase<FT,LPT> {
+template <class FT, template <class> class LPT = Vec2>
+class LsdFGioi : public LsdBase<FT, LPT> {
+  FT quant_, angle_th_, log_eps_, density_th_;
+  int num_bins_;
 
-        FT quant_, angle_th_, log_eps_, density_th_;
-        int num_bins_;
 
+  // LsdFGioi& operator= (const LsdFGioi&); // to quiet MSVC
 
-        //LsdFGioi& operator= (const LsdFGioi&); // to quiet MSVC
+  void init() {
+    this->add("quant_error", std::bind(&LsdFGioi<FT, LPT>::valueQuantError, this, std::placeholders::_1),
+              "Quantization error (Bound to the gradient norm).");
+    this->add("angle_th", std::bind(&LsdFGioi<FT, LPT>::valueAngleThreshold, this, std::placeholders::_1),
+              "Gradient angle tolerance.");
+    this->add("log_eps", std::bind(&LsdFGioi<FT, LPT>::valueLogEps, this, std::placeholders::_1),
+              "NFA Epsilon (logarithmic).");
+    this->add("density_th", std::bind(&LsdFGioi<FT, LPT>::valueDensityThreshold, this, std::placeholders::_1),
+              "Minimal density of aligned region points in rectangle.");
+    this->add("bins", std::bind(&LsdFGioi<FT, LPT>::valueBins, this, std::placeholders::_1),
+              "Number of bins in pseudo-ordering of gradient modulus.");
+  }
 
-        void init() {
-            this->add("quant_error", std::bind(&LsdFGioi<FT, LPT>::valueQuantError, this, std::placeholders::_1),
-                "Quantization error (Bound to the gradient norm).");
-            this->add("angle_th", std::bind(&LsdFGioi<FT, LPT>::valueAngleThreshold, this, std::placeholders::_1),
-                "Gradient angle tolerance.");
-            this->add("log_eps", std::bind(&LsdFGioi<FT, LPT>::valueLogEps, this, std::placeholders::_1),
-                "NFA Epislon (logartihmic).");
-            this->add("density_th", std::bind(&LsdFGioi<FT, LPT>::valueDensityThreshold, this, std::placeholders::_1),
-                "Minimal density of aligned region points in rectangle.");
-            this->add("bins", std::bind(&LsdFGioi<FT, LPT>::valueBins, this, std::placeholders::_1),
-                "Number of bins in pseudo-ordering of gradient modulus.");
-        }
+  using LsdBase<FT, LPT>::endPoints_;
+  using LsdBase<FT, LPT>::lineSegments_;
 
-        using LsdBase<FT,LPT>::endPoints_;
-        using LsdBase<FT,LPT>::lineSegments_;
-    public:
+ public:
+  typedef FT float_type;
+  typedef LPT<FT> line_point;
+  typedef typename LsdBase<FT, LPT>::Line Line;
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
 
-        typedef FT float_type;
-        typedef LPT<FT> line_point;
-        typedef typename LsdBase<FT, LPT>::Line Line;
-        typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-        typedef typename LsdBase<FT,LPT>::LineSegment LineSegment;
-        typedef typename LsdBase<FT,LPT>::LineSegmentVector LineSegmentVector;
-        typedef typename LsdBase<FT,LPT>::ImageData ImageData;
+  struct LineData {
+    LineData(double w = 0, double p = 0, double n = 0) : width(w), prec(p), nfa(n) {}
 
-        struct LineData {
+    double width, prec, nfa;
+  };
 
-            LineData(double w = 0, double p = 0, double n = 0) :
-                width(w), prec(p), nfa(n) {}
+  typedef std::vector<LineData> LineDataVector;
 
-            double width, prec, nfa;
-        };
+ private:
+  LineDataVector lineData_;
 
-        typedef std::vector<LineData> LineDataVector;
+ public:
+  //! Create a PrimalLineSegmentDetector object. Specifying scale, number of subdivisions for the image, should the
+  //! lines be refined and other constants as follows:
+  //! @param quant        Bound to the quantization error on the gradient norm.
+  //! @param ang_th       Gradient angle tolerance in degrees.
+  //! @param log_eps      Detection threshold: -log10(NFA) > _log_eps
+  //! @param density_th   Minimal density of aligned region points in rectangle.
+  //! @param n_bins       Number of bins in pseudo-ordering of gradient modulus.
+  LsdFGioi(FT quant = 2,
+           FT ang_th = static_cast<FT>(22.5),
+           FT log_eps = 0,
+           FT density_th = static_cast<FT>(0.7),
+           int n_bins = 1024)
+      : quant_(quant), angle_th_(ang_th), log_eps_(log_eps), density_th_(density_th), num_bins_(n_bins) {
+    CV_Assert(quant >= 0 && ang_th > 0 && ang_th <= 180 && log_eps >= 0 && density_th < 1 && density_th >= 0 &&
+              n_bins > 0);
+    init();
+  }
 
-    private:
-        LineDataVector lineData_;
-    
-    public:
+  LsdFGioi(ValueManager::InitializerList options) {
+    init();
+    this->value(options);
+  }
 
-        //! Create a PrimalLineSegmentDetector object. Specifying scale, number of subdivisions for the image, should the lines be refined and other constants as follows:
-        //! @param quant        Bound to the quantization error on the gradient norm.
-        //! @param ang_th       Gradient angle tolerance in degrees.
-        //! @param log_eps      Detection threshold: -log10(NFA) > _log_eps
-        //! @param density_th   Minimal density of aligned region points in rectangle.
-        //! @param n_bins       Number of bins in pseudo-ordering of gradient modulus.
-        LsdFGioi(FT quant = 2, FT ang_th = static_cast<FT>(22.5), FT log_eps = 0, FT density_th = static_cast<FT>(0.7), int n_bins = 1024) 
-            : quant_(quant), angle_th_(ang_th), log_eps_(log_eps), density_th_(density_th), num_bins_(n_bins) {
-                CV_Assert(quant >= 0 && ang_th > 0 && ang_th <= 180 && log_eps >= 0 && density_th < 1 && density_th >= 0 && n_bins > 0);
-                init();
-        }
+  LsdFGioi(const ValueManager::NameValueVector& options) {
+    init();
+    this->value(options);
+  }
 
-        LsdFGioi(ValueManager::InitializerList options) {
-            init();
-            this->value(options);
-        }
+  Value valueQuantError(const Value& q = Value::NAV()) {
+    if (q.type()) quantError(q.get<FT>());
+    return quant_;
+  }
 
-        LsdFGioi(const ValueManager::NameValueVector &options) {
-            init();
-            this->value(options);
-        }
+  FT quantError() const { return quant_; }
 
-        Value valueQuantError(const Value &q = Value::NAV()) { if (q.type()) quantError(q.get<FT>()); return quant_; }
+  void quantError(FT q) { quant_ = q; }
 
-        FT quantError() const {
-            return quant_;
-        }
+  Value valueAngleThreshold(const Value& t = Value::NAV()) {
+    if (t.type()) angleThreshold(t.get<FT>());
+    return angle_th_;
+  }
 
-        void quantError(FT q) {
-            quant_ = q;
-        }
+  FT angleThreshold() const { return angle_th_; }
 
-        Value valueAngleThreshold(const Value &t = Value::NAV()) { if (t.type()) angleThreshold(t.get<FT>()); return angle_th_; }
+  void angleThreshold(FT t) { angle_th_ = t; }
 
-        FT angleThreshold() const {
-            return angle_th_;
-        }
+  Value valueLogEps(const Value& e = Value::NAV()) {
+    if (e.type()) logEps(e.get<FT>());
+    return log_eps_;
+  }
 
-        void angleThreshold(FT t) {
-            angle_th_ = t;
-        }
+  FT logEps() const { return log_eps_; }
 
-        Value valueLogEps(const Value &e = Value::NAV()) { if (e.type()) logEps(e.get<FT>()); return log_eps_; }
+  void logEps(FT e) { log_eps_ = e; }
 
-        FT logEps() const {
-            return log_eps_;
-        }
+  Value valueDensityThreshold(const Value& t = Value::NAV()) {
+    if (t.type()) densityThreshold(t.get<FT>());
+    return density_th_;
+  }
 
-        void logEps(FT e) {
-            log_eps_ = e;
-        }
+  FT densityThreshold() const { return density_th_; }
 
-        Value valueDensityThreshold(const Value &t = Value::NAV()) { if (t.type()) densityThreshold(t.get<FT>()); return density_th_; }
+  void densityThreshold(FT t) { density_th_ = t; }
 
-        FT densityThreshold() const {
-            return density_th_;
-        }
+  Value valueBins(const Value& b = Value::NAV()) {
+    if (b.type()) bins(b.getInt());
+    return num_bins_;
+  }
 
-        void densityThreshold(FT t) {
-            density_th_ = t;
-        }
+  int bins() const { return num_bins_; }
 
-        Value valueBins(const Value &b = Value::NAV()) { if (b.type()) bins(b.getInt()); return num_bins_; }
+  void bins(int b) { num_bins_ = b; }
 
-        int bins() const {
-            return num_bins_;
-        }
+  using LsdBase<FT, LPT>::detect;
+  using LsdBase<FT, LPT>::lines;
+  using LsdBase<FT, LPT>::lineSegments;
+  using LsdBase<FT, LPT>::endPoints;
+  using LsdBase<FT, LPT>::imageDataDescriptor;
+  using LsdBase<FT, LPT>::imageData;
 
-        void bins(int b) {
-            num_bins_ = b;
-        }
+  virtual void detect(const cv::Mat& image) final {
+    cv::Mat img = image;
+    CV_Assert(!img.empty());
 
-        using LsdBase<FT,LPT>::detect;
-        using LsdBase<FT,LPT>::lines;
-        using LsdBase<FT, LPT>::lineSegments;
-        using LsdBase<FT,LPT>::endPoints;
-        using LsdBase<FT,LPT>::imageDataDescriptor;
-        using LsdBase<FT,LPT>::imageData;
+    if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
 
-       virtual void detect(const cv::Mat& image) final
-       {
-           cv::Mat img = image;
-           CV_Assert(!img.empty());
+    // Convert image to double
+    img.convertTo(img, CV_64FC1);
 
-           if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
+    this->clearData();
+    lineData_.clear();
 
-           // Convert image to double
-           img.convertTo(img, CV_64FC1);
+    int seg_num;
+    double* segs = LineSegmentDetection(&seg_num, img.ptr<double>(), img.cols, img.rows, 1.0, 0.1, quant_, angle_th_,
+                                        log_eps_, density_th_, num_bins_, NULL, NULL, NULL);
 
-           this->clearData();
-           lineData_.clear();
+    lineSegments_.reserve(seg_num);
+    lineData_.reserve(seg_num);
+    for (int i = 0; i != seg_num; ++i, segs += 7) {
+      lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(segs[0]), static_cast<FT>(segs[1])),
+                                          LPT<FT>(static_cast<FT>(segs[2]), static_cast<FT>(segs[3]))));
+      lineData_.push_back(LineData(segs[4], segs[5], segs[6]));
+    }
+  }
 
-           int seg_num;
-           double *segs = LineSegmentDetection(&seg_num, img.ptr<double>(), img.cols, img.rows,
-               1.0, 0.1, quant_, angle_th_, log_eps_, density_th_, num_bins_, NULL, NULL, NULL);
-
-           lineSegments_.reserve(seg_num);
-           lineData_.reserve(seg_num);
-           for (int i = 0; i != seg_num; ++i, segs += 7) {
-               lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(segs[0]), static_cast<FT>(segs[1])), LPT<FT>(static_cast<FT>(segs[2]), static_cast<FT>(segs[3]))));
-               lineData_.push_back(LineData(segs[4], segs[5], segs[6]));
-           }
-
-       }
-
-       const LineDataVector& lineData() const { return lineData_; }
-
-       
-    };
-}
+  const LineDataVector& lineData() const { return lineData_; }
+};
+}  // namespace lsfm
 #endif
 #endif

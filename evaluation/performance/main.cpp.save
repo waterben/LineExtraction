@@ -34,8 +34,8 @@ void addPerformanceTest(PerformanceTestPtr test) {
     getTests().push_back(test);
 }
 
-const DataProviderMap& getDefaultProvider() {
-    static DataProviderMap map;
+const DataProviderList& getDefaultProvider() {
+    static DataProviderList map;
     if (map.empty()) {
         try {
             //map["images"] = DataProviderPtr(new FileDataProvider("../../images", "images"));
@@ -60,9 +60,9 @@ void addPerformanceTestCreator(PerformanceTestCreator creator) {
     creator(getTests().back(), getDefaultProvider());
 }
 
-void addDefault(const DataProviderMap& provider, DataProviderList& data) {
+void addDefault(const DataProviderList& provider, DataProviderList& data) {
     // simply add all
-    for_each(provider.begin(), provider.end(), [&](const DataProviderMap::value_type& p) {
+    for_each(provider.begin(), provider.end(), [&](const DataProviderList::value_type& p) {
         data.push_back(p.second);
     });
 }

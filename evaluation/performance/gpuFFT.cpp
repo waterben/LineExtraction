@@ -196,4 +196,4 @@ bool addGpuFFT() {
   return true;
 }
 
-bool gpuFFTAdded = addGpuFFT();
+// bool gpuFFTAdded = addGpuFFT();

@@ -77,29 +77,22 @@ class InputTaskLoader : public TaskLoader {
       // Prepare input data for all tasks
       InputData data;
       while (dp->get(data)) {
-        try {
-          prepareInputData(data);
-          for (auto& task : tasks) {
-            // Clear measures of task
-            task->clear();
-            // Prepare task by providing new data input
-            task->prepare(data);
+        prepare(data);
+        for (auto& task : tasks) {
+          // Clear measures of task
+          task->clear();
+          // Prepare task by providing new data input
+          task->prepare(data);
+          for (int i = 0; i < loop; ++i) {
             // Run task
             task->run(loops);
             // Collect results if necessary
             collect(*task);
-            // Store visuals results if activated
-            if (visual_results) {
-              task->saveVisualResults(target_path);
-            }
           }
-        } catch (std::exception& e) {
-          std::cout << "TaskLoader::run: Exception occurred: " << e.what() << std::endl;
-        } catch (...) {
-          std::cout << "TaskLoader::run: Unknown exception occurred!" << std::endl;
         }
       }
     }
+
     std::cout << "Task sequence  " << name
               << " done: " << static_cast<double>((cv::getTickCount() - start)) / cv::getTickFrequency() << "s"
               << std::endl;

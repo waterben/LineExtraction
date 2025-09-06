@@ -19,18 +19,16 @@ PerformanceData::PerformanceData(const std::string& n, const cv::Mat& s) : TaskD
 }
 
 PerformanceResult PerformanceMeasure::computeResult(const std::vector<uint64>& data) {
-  PerformanceResult ret;
+  PerformanceResult ret{};
   if (data.empty()) return ret;
-  uint64 sum = 0, sqrSum = 0;
+  double sqrSum = 0;
   for_each(data.begin(), data.end(), [&](uint64 measure) {
-    sum += measure;
-    sqrSum += measure * measure;
+    double ms = static_cast<double>(measure * 1000) / cv::getTickFrequency();
+    ret.total += ms;
+    sqrSum += ms * ms;
   });
-  ret.total = static_cast<double>(sum * 1000) / cv::getTickFrequency();
-  ret.mean = static_cast<double>(sum) / data.size();
-  ret.stddev = std::sqrt(static_cast<double>(sqrSum) / data.size() - ret.mean * ret.mean);
-  ret.mean = (ret.mean * 1000) / cv::getTickFrequency();
-  ret.stddev = (ret.stddev * 1000) / cv::getTickFrequency();
+  ret.mean = ret.total / static_cast<double>(data.size());
+  ret.stddev = std::sqrt(std::abs(sqrSum / static_cast<double>(data.size()) - ret.mean * ret.mean));
   return ret;
 }
 

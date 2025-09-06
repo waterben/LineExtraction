@@ -5,6 +5,8 @@
 #include <edge/split.hpp>
 #include <imgproc/derivative_gradient.hpp>
 
+#include <cassert>
+
 
 using namespace lsfm;
 
@@ -59,9 +61,9 @@ struct Entry : public PerformanceTaskBase {
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
     uint64 start;
+    split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
-      split.setup(pdata.grad, pdata.nms);
       split.apply(pdata.edge, points, out);
       pm.measures.push_back(cv::getTickCount() - start);
     }
@@ -89,9 +91,9 @@ struct EntryPattern : public PerformanceTaskBase {
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
     uint64 start;
+    split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
-      split.setup(pdata.grad, pdata.nms);
       split.applyP(pdata.edge, points, out);
       pm.measures.push_back(cv::getTickCount() - start);
     }

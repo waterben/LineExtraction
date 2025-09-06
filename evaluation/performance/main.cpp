@@ -22,14 +22,14 @@ const DataProviderList& getDefaultProvider() {
   if (list.empty()) {
     try {
       // list.push_back(std::make_shared<FileDataProvider>("../images", "images"));
-      list.push_back(std::make_shared<FileDataProvider>("../images/small/a", "a"));
+      // list.push_back(std::make_shared<FileDataProvider>("../images/small/a", "a"));
       // list.push_back(std::make_shared<FileDataProvider>("../images/small/b", "b"));
       // list.push_back(std::make_shared<FileDataProvider>("../images/small/c", "c"));
       // list.push_back(std::make_shared<FileDataProvider>("../images/Selection", "Selection"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/BSDS500", "BSDS500"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-Q", "MDB-Q"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-H", "MDB-H"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-F", "MDB-F"));
+      list.push_back(std::make_shared<FileDataProvider>("../images/BSDS500", "BSDS500"));
+      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-Q", "MDB-Q"));
+      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-H", "MDB-H"));
+      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-F", "MDB-F"));
     } catch (std::exception& e) {
       std::cout << "Default provider parse error: " << e.what() << std::endl;
     }
