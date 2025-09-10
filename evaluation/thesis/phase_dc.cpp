@@ -19,13 +19,13 @@
 #include <imgproc/image_operator.hpp>
 #include <utility/matlab_helpers.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
+#include <filesystem>
+#include <algorithm>  
 #include <boost/format.hpp>
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int runs = 1;
 

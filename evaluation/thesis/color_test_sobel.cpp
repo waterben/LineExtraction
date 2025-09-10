@@ -7,15 +7,15 @@
 #include <imgproc/derivative_gradient.hpp>
 #include <edge/nms.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
+#include <filesystem>
+#include <algorithm>  
 
 
 
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 struct MyData {
     MyData(int g = 0, int c = 0, int d = 0) : gray(g), color(c), diff(d) {}

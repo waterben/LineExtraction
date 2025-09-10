@@ -23,10 +23,9 @@
 #include <edge/zc.hpp>
 #include <edge/spe.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
+#include <filesystem>
+#include <algorithm>  
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 
 #define WRITE_IMAGE_FILES

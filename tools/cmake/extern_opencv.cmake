@@ -65,7 +65,8 @@ set(OpenCVDetectionMode Auto CACHE STRING "OpenCV detection mode: Auto - try sys
 set(OpenCVExternPath "${PROJECT_SOURCE_DIR}/extern/opencv/build" CACHE PATH "Path to extern lib")
 set_property(CACHE OpenCVDetectionMode PROPERTY STRINGS ${OpenCVDetectionModes})
 set(OpenCVVersion "4.7.0" CACHE STRING "Managed opencv version")
-set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor cudev cudaarithm cudaimgproc cudafilters ximgproc CACHE STRING "OpenCV components to include")
+# set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor cudev cudaarithm cudaimgproc cudafilters ximgproc CACHE STRING "OpenCV components to include")
+set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor CACHE STRING "OpenCV components to include")
 set(OpenCVCMakeArgs "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_WITH_DEBUG_INFO=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DBUILD_NEW_PYTHON_SUPPORT=OFF -DBUILD_PACKAGE=OFF -DWITH_FFMPEG=ON -DWITH_IPP=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=ON -DBUILD_ZLIB=ON -DWITH_CUDA=ON" CACHE STRING "Custom cmake arguments")
 set(OpenCVBuildFlags -std=c++11 -fPIC -ffast-math CACHE STRING "Use C++ compiler flags")
 

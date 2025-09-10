@@ -1,5 +1,5 @@
 #include "performance_test.hpp"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/lexical_cast.hpp>
 #include <utility/high_prio.hpp>
 
@@ -8,7 +8,7 @@
 
 
 using namespace lsfm;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 std::vector<PerformanceTestPtr>& getTests() {
   static std::vector<PerformanceTestPtr> tests;

@@ -1,8 +1,6 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/path.hpp>
+#include <algorithm>
+#include <filesystem>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>
 #include <edge/nms.hpp>
@@ -30,7 +28,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int global_runs = 100;
 
@@ -147,7 +145,7 @@ struct GroundTruth {
 
     std::ostringstream file;
     file << input << "/gt_guassian_" << kernel << "_" << sigma << ".png";
-    if (!boost::filesystem::exists(file.str())) {
+    if (!std::filesystem::exists(file.str())) {
       if (verbose) {
         std::cout << "create ground truth..." << std::flush;
       }

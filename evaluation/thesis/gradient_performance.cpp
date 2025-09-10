@@ -1,5 +1,5 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <algorithm>
+#include <filesystem>
 #include <boost/format.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>
@@ -22,7 +22,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int ENTRY_RGB = 2;
 

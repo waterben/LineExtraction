@@ -6,8 +6,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project( LineExtraction LANGUAGES C CXX VERSION 1.0.0 )
 
-set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
+# set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
+# set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
 # Configurable environment variables that are stored in CMakeCache. These 
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
@@ -121,10 +121,21 @@ endif(NOT LAPACK_FOUND)
 find_package (SUPERLU)
 find_package (ARPACK)
 
-include_directories( "include" )
+include_directories(
+    "libs/utility/include"
+    "libs/edge/include"
+    "libs/imgproc/include"
+    "libs/lsd/include"
+    "libs/geometry/include"
+    "libs/lfd/include"
+    "libs/phase_cong/include"
+    "libs/opengl_sim/include"
+    "libs/qplot/include"
+    "libs/qplot3d/include"
+)
 link_directories("lib")
 
-add_subdirectory( "src" )
+add_subdirectory( "libs" )
 
 # Build target for creating examples
 if (${ENABLE_EXAMPLES})

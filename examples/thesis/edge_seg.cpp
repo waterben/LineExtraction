@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <edge/nfa.hpp>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
@@ -26,7 +26,7 @@
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 
 class EdgeSegApp : public EvalApp {

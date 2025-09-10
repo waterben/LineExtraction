@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <edge/threshold.hpp>
 #include <edge/zc.hpp>
 #include <imgproc/derivative_gradient.hpp>
@@ -14,7 +14,7 @@
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 
 cv::Mat visLaplace(const cv::Mat& laplace, bool green = false) {

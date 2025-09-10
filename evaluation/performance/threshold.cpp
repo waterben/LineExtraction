@@ -1,5 +1,5 @@
 #include "performance_test.hpp"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
 #include <imgproc/derivative_gradient.hpp>
@@ -7,7 +7,7 @@
 
 
 using namespace lsfm;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 template <class FT>
 struct Entry : public PerformanceTaskDefault {

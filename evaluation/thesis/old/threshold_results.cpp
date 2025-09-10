@@ -1,5 +1,5 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <algorithm>
+#include <filesystem>
 #include <boost/format.hpp>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
@@ -13,7 +13,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int runs = 1;
 

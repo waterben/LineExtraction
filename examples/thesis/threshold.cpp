@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
 #include <imgproc/derivative_gradient.hpp>
@@ -20,7 +20,7 @@
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 template <class OP>
 double performanceOP(OP& op, const Mat& src, size_t runs = 10) {
