@@ -5,8 +5,7 @@
 
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
-//#include "../line_tracker/linetracker.hpp"
-//#include "../lsd/lsd_el.hpp"
+//#include <lsd/lsd_el.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <geometry/draw.hpp>
 #include <geometry/base.hpp>

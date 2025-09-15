@@ -140,7 +140,6 @@ include_directories(
     "libs/geometry/include"
     "libs/lfd/include"
     "libs/phase_cong/include"
-    "libs/opengl_sim/include"
     "libs/qplot/include"
     "libs/qplot3d/include"
 )

@@ -16,7 +16,7 @@
 #include <lfd/StereoLineFilter.hpp>
 #include <lfd/StereoLineMatcher.hpp>
 #include <opencv2/line_descriptor/descriptor.hpp>
-#include <opengl_sim/lineMatching.hpp>      // drawKeyLineMatches
+#include <lfd/lineMatching.hpp>      // drawKeyLineMatches
 
 
 using namespace std;

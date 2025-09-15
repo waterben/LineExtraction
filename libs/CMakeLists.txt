@@ -9,10 +9,6 @@ add_subdirectory(imgproc)
 add_subdirectory(geometry)
 add_subdirectory(phase_cong)
 
-if(OPENGL_FOUND)
-    add_subdirectory(opengl_sim)
-endif()
-
 IF (ENABLE_QT AND Qt5Widgets_FOUND)
     add_subdirectory(qplot)
     add_subdirectory(qplot3d)

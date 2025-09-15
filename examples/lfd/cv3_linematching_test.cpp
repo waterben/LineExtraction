@@ -26,7 +26,7 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <opengl_sim/lineMatching.hpp>      // drawKeyLineMatches
+#include <lfd/lineMatching.hpp>      // drawKeyLineMatches
 
 #define MATCHES_DIST_THRESHOLD 25
 
