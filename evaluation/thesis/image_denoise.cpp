@@ -8,8 +8,9 @@
 #include <imgproc/derivative_gradient.hpp>
 #include <edge/nms.hpp>
 #include <filesystem>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 #define WRITE_IMAGE_FILES
 using namespace lsfm;
 using namespace std;
@@ -110,10 +111,16 @@ double processError(Entry &e, const fs::path& path, int n, double &time) {
 #ifdef WRITE_IMAGE_FILES
         std::string name = e.name;
         std::replace(name.begin(), name.end(), ' ', '_');
-        cv::imwrite("./denoise/" + file.stem().generic_string() + "_noise" + boost::str(boost::format("%i") % (n)) + "_" + name + ".png", res);
+        {
+            std::ostringstream oss; oss << "./denoise/" << file.stem().generic_string() << "_noise" << n << "_" << name << ".png";
+            cv::imwrite(oss.str(), res);
+        }
         sobel.process(res);
         nms.process(sobel);
-        cv::imwrite("./denoise/" + file.stem().generic_string() + "_noise" + boost::str(boost::format("%i") % (n)) + "_nms_" + name + ".png", createNMS(nms));
+        {
+            std::ostringstream oss; oss << "./denoise/" << file.stem().generic_string() << "_noise" << n << "_nms_" << name << ".png";
+            cv::imwrite(oss.str(), createNMS(nms));
+        }
 #endif
         res.convertTo(res, CV_32S);
         src.convertTo(src, CV_32S);
@@ -192,8 +199,15 @@ int main(int argc, char** argv)
         int row = 1;
         for_each(filter.begin(), filter.end(), [&](Entry &e) {
             double time;
-            table[row][col] = boost::str(boost::format("%.3f") % (processError(e, path, 10 * col, time)));
-            table[row++][col+5] = boost::str(boost::format("%.3f") % (time));
+            {
+                std::ostringstream oss1; oss1.setf(std::ios::fixed); oss1<<std::setprecision(3)
+                    << processError(e, path, 10 * col, time);
+                table[row][col] = oss1.str();
+            }
+            {
+                std::ostringstream oss2; oss2.setf(std::ios::fixed); oss2<<std::setprecision(3) << time;
+                table[row++][col+5] = oss2.str();
+            }
         });
     }
 

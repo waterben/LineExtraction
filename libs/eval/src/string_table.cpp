@@ -1,5 +1,3 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <utility/string_table.hpp>
 
 #include <fstream>

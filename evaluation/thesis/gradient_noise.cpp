@@ -19,8 +19,9 @@
 #include <imgproc/image_operator.hpp>
 
 #include <filesystem>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 using namespace lsfm;
 using namespace std;
@@ -220,7 +221,9 @@ int main(int argc, char** argv) {
   for (int col = 1; col != 6; ++col) {
     int row = 1;
     for_each(filter.begin(), filter.end(), [&](Entry& e) {
-      table[row++][col] = boost::str(boost::format("%.3f") % (processError(e, path, 10 * col)));
+      std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
+        << processError(e, path, 10 * col);
+      table[row++][col] = oss.str();
     });
   }
 
