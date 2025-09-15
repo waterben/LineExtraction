@@ -10,7 +10,5 @@ add_subdirectory(geometry)
 add_subdirectory(phase_cong)
 
 IF (ENABLE_QT AND Qt5Widgets_FOUND)
-    add_subdirectory(qplot)
-    add_subdirectory(qplot3d)
+    # moved to third-party/qplot and third-party/qplot3d
 ENDIF (ENABLE_QT AND Qt5Widgets_FOUND)
-

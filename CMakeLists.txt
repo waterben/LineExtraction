@@ -140,8 +140,8 @@ include_directories(
     "libs/geometry/include"
     "libs/lfd/include"
     "libs/phase_cong/include"
-    "libs/qplot/include"
-    "libs/qplot3d/include"
+    "third-party/qplot/include"
+    "third-party/qplot3d/include"
 )
 link_directories("lib")
 
@@ -154,6 +154,12 @@ if( ${ENABLE_UNIT_TEST} )
 endif()
 
 add_subdirectory( "libs" )
+
+# Third-party libraries (Qt plotting)
+if(ENABLE_QT AND Qt5Widgets_FOUND)
+    add_subdirectory("third-party/qplot")
+    add_subdirectory("third-party/qplot3d")
+endif()
 
 # Build target for creating examples
 if (${ENABLE_EXAMPLES})
