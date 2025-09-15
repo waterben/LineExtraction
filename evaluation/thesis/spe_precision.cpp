@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <filesystem>
-#include <boost/format.hpp>
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>
 #include <edge/nms.hpp>

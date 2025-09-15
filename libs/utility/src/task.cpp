@@ -3,7 +3,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <algorithm>
-#include <boost/format.hpp>
 #include <fstream>
 
 namespace fs = std::filesystem;

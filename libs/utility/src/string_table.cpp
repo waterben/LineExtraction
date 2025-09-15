@@ -1,8 +1,7 @@
 #include <utility/string_table.hpp>
 
 #include <iostream>
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+#include <algorithm>
 #include <fstream>
 
 namespace lsfm {

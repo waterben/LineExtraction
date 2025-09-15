@@ -20,8 +20,7 @@
 
 #include <filesystem>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
+#include <utility/format.hpp>
 
 using namespace lsfm;
 using namespace std;
@@ -221,9 +220,7 @@ int main(int argc, char** argv) {
   for (int col = 1; col != 6; ++col) {
     int row = 1;
     for_each(filter.begin(), filter.end(), [&](Entry& e) {
-      std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
-        << processError(e, path, 10 * col);
-      table[row++][col] = oss.str();
+      table[row++][col] = utility::format("%.3f", processError(e, path, 10 * col));
     });
   }
 

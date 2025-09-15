@@ -1,5 +1,4 @@
-#include <sstream>
-#include <iomanip>
+#include <utility/format.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
 #include <utility/performance.hpp>
@@ -105,26 +104,21 @@ void PerformanceTest::writeMeasure(const PerformanceMeasure& pm, StringTable& St
   std::string name;
   if (col == 1) {
     name = pm.sourceName;
-    if (showMegaPixel) {
-      std::ostringstream oss; oss.setf(std::ios::fixed); oss << std::setprecision(2)
-        << " (" << (pm.width * pm.height) << ")";
-      name += oss.str();
-    }
+    if (showMegaPixel) name += utility::format(" (%.2f)", (pm.width * pm.height));
   }
 
   PerformanceResult res = pm.computeResult();
-  auto fmt3 = [](double v){ std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<v; return oss.str(); };
   if (showTotal) {
     if (col == 1) StringTable(row, 0) = "total:" + name;
-    StringTable(row++, col) = fmt3(res.total);
+    StringTable(row++, col) = utility::format("%.3f", res.total);
   }
   if (showMean) {
     if (col == 1) StringTable(row, 0) = "mean:" + name;
-    StringTable(row++, col) = fmt3(res.mean);
+    StringTable(row++, col) = utility::format("%.3f", res.mean);
   }
   if (showStdDev) {
     if (col == 1) StringTable(row, 0) = "sdev:" + name;
-    StringTable(row, col) = fmt3(res.stddev);
+    StringTable(row, col) = utility::format("%.3f", res.stddev);
   }
 }
 

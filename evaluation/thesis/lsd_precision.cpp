@@ -19,8 +19,7 @@
 
 #include <filesystem>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
+#include <utility/format.hpp>
 
 
 using namespace lsfm;
@@ -203,21 +202,15 @@ int main(int argc, char** argv)
         table[0][col] = data.second;
         row = 1;
         for_each(gradI.begin(), gradI.end(), [&](const Entry<short, int, float> &e) {
-            std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
-                << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-            table[row++][col] = oss.str() + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
 
         for_each(gradF.begin(), gradF.end(), [&](const Entry<float, float, float> &e) {
-            std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
-                << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-            table[row++][col] = oss.str() + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
 
         for_each(gradD.begin(), gradD.end(), [&](const Entry<double, double, double> &e) {
-            std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
-                << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-            table[row++][col] = oss.str() + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
         ++col;
     });

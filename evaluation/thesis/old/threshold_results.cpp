@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <cctype>
-#include <boost/format.hpp>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
 #include <imgproc/derivative_gradient.hpp>

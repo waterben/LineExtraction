@@ -1,5 +1,4 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+#include <utility/format.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
 #include <utility/performance.hpp>
@@ -103,21 +102,21 @@ void PerformanceTest::writeMeasure(const PerformanceMeasure& pm, StringTable& St
   std::string name;
   if (col == 1) {
     name = pm.sourceName;
-    if (showMegaPixel) name += boost::str(boost::format(" (%.2f)") % (pm.width * pm.height));
+    if (showMegaPixel) name += utility::format(" (%.2f)", (pm.width * pm.height));
   }
 
   PerformanceResult res = pm.computeResult();
   if (showTotal) {
     if (col == 1) StringTable(row, 0) = "total:" + name;
-    StringTable(row++, col) = boost::str(boost::format("%.3f") % (res.total));
+    StringTable(row++, col) = utility::format("%.3f", res.total);
   }
   if (showMean) {
     if (col == 1) StringTable(row, 0) = "mean:" + name;
-    StringTable(row++, col) = boost::str(boost::format("%.3f") % (res.mean));
+    StringTable(row++, col) = utility::format("%.3f", res.mean);
   }
   if (showStdDev) {
     if (col == 1) StringTable(row, 0) = "sdev:" + name;
-    StringTable(row, col) = boost::str(boost::format("%.3f") % (res.stddev));
+    StringTable(row, col) = utility::format("%.3f", res.stddev);
   }
 }
 

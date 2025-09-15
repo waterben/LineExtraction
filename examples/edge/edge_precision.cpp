@@ -24,8 +24,7 @@
 #include <edge/spe.hpp>
 
 #include <filesystem>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <algorithm>
 
 
 #define WRITE_IMAGE_FILES
