@@ -146,6 +146,14 @@ include_directories(
 )
 link_directories("lib")
 
+# Configure unit test framework early, so libs can add their tests
+if( ${ENABLE_UNIT_TEST} )
+    find_package(Threads REQUIRED)
+    include(extern_gtest)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    enable_testing()
+endif()
+
 add_subdirectory( "libs" )
 
 # Build target for creating examples
@@ -161,15 +169,6 @@ endif()
 # Build target for creating apps
 if (${ENABLE_EVALUATION})
     add_subdirectory( "evaluation" )
-endif()
-
-# Build target for creating unit test
-if( ${ENABLE_UNIT_TEST} )
-    find_package(Threads REQUIRED)    
-    include(extern_gtest)
-    include_directories(${GTEST_INCLUDE_DIRS})    
-    enable_testing()
-    add_subdirectory( "test" )
 endif()
 
 # Build target for creating documentation
