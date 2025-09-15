@@ -19,9 +19,9 @@
 #include <edge/zc.hpp>
 #include <edge/nms.hpp>
 
-#include <boost/filesystem.hpp>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <filesystem>
+#include <algorithm>
+#include <cctype>
 
 using namespace lsfm;
 using namespace std;

@@ -8,7 +8,8 @@
 #include <edge/nms.hpp>
 
 #include <filesystem>
-#include <algorithm>  
+#include <algorithm>
+#include <cctype>
 
 
 
@@ -123,7 +124,9 @@ int main(int argc, char** argv)
         if (fs::is_regular_file(file))
         {
             std::string ext = file.extension().generic_string();
-            boost::algorithm::to_lower(ext);
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch){
+                return static_cast<char>(std::tolower(ch));
+            });
             if (ext == ".jpg" || ext == ".png") {
                 files.push_back(file);
                 //std::cout << file.filename().string() << std::endl;

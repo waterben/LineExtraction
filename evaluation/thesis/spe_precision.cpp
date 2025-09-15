@@ -11,7 +11,13 @@
 #include <imgproc/derivative_gradient.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/ximgproc.hpp>
+// ximgproc is optional and may require specific builds (e.g., CUDA-enabled)
+#if defined(__has_include)
+#  if __has_include(<opencv2/ximgproc.hpp>)
+#    define HAVE_OPENCV_XIMGPROC 1
+#    include <opencv2/ximgproc.hpp>
+#  endif
+#endif
 #include <utility/eval_app.hpp>
 #include <utility/matlab_helpers.hpp>
 #include <utility/response_convert.hpp>
@@ -121,6 +127,7 @@ double performanceSPE_DIR(OP& op,
 }
 
 
+#ifdef HAVE_OPENCV_XIMGPROC
 cv::Mat thinImage(const cv::Mat& src) {
   cv::Mat thinnedImage;
   cv::threshold(src, thinnedImage, 0, 255, cv::THRESH_BINARY);
@@ -128,6 +135,14 @@ cv::Mat thinImage(const cv::Mat& src) {
   cv::ximgproc::thinning(thinnedImage, thinnedImage, cv::ximgproc::THINNING_ZHANGSUEN);
   return thinnedImage;
 }
+#else
+// Fallback: return a binarized image if ximgproc isn't available
+cv::Mat thinImage(const cv::Mat& src) {
+  cv::Mat bin;
+  cv::threshold(src, bin, 0, 255, cv::THRESH_BINARY);
+  return bin;
+}
+#endif
 
 template <class FT, template <class> class PT = cv::Point_>
 struct GroundTruth {

@@ -9,8 +9,6 @@
 #include <geometry/line3.hpp>
 #include <map>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 //#include <boost/filesystem/fstream.hpp>
 
 #include <geometry/object3d.hpp>

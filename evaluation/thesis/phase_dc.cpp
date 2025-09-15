@@ -20,8 +20,10 @@
 #include <utility/matlab_helpers.hpp>
 
 #include <filesystem>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+#include <iomanip>
 
 using namespace lsfm;
 using namespace std;
@@ -70,7 +72,9 @@ void parseFolder(const fs::path &folder, std::vector<fs::path> &files) {
         if (fs::is_regular_file(file))
         {
             std::string ext = file.extension().generic_string();
-            boost::algorithm::to_lower(ext);
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch){
+                return static_cast<char>(std::tolower(ch));
+            });
             if (ext == ".jpg" || ext == ".png") {
                 files.push_back(file);
             }
@@ -144,8 +148,12 @@ int main(int argc, char** argv) {
   for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
 
   row = 1;
-  for_each(filter.begin(), filter.end(),
-           [&](Entry& e) { table[row++][1] = boost::str(boost::format("%.3f") % (processError(e, path))); });
+  for_each(filter.begin(), filter.end(), [&](Entry& e) {
+      std::ostringstream oss;
+      oss.setf(std::ios::fixed);
+      oss << std::setprecision(3) << processError(e, path);
+      table[row++][1] = oss.str();
+  });
 
   std::ofstream ofs;
   ofs.open("phase_error.csv");

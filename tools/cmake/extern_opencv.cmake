@@ -47,11 +47,18 @@ macro(opencv_repo extern_path)
     foreach(flag ${OpenCVBuildFlags})
 	    list(APPEND build_flags "DCMAKE_CXX_FLAGS=${flag}")
     endforeach()
+    # Map top-level WITH_CUDA option to OpenCV CMake flag
+    if (WITH_CUDA)
+        set(_OpenCV_WITH_CUDA "-DWITH_CUDA=ON")
+    else()
+        set(_OpenCV_WITH_CUDA "-DWITH_CUDA=OFF")
+    endif()
+
     IncludeExternalProject( managed_opencv ${extern_path}
         GIT_REPOSITORY https://github.com/opencv/opencv.git
         GIT_TAG "${OpenCVVersion}"
         INSTALL_COMMAND ""
-        CMAKE_ARGS "${OpenCVCMakeArgs}" "${build_list}" "${build_flags}"
+        CMAKE_ARGS "${OpenCVCMakeArgs}" "${build_list}" "${build_flags}" "${_OpenCV_WITH_CUDA}"
         LOG_DOWNLOAD ON
         LOG_CONFIGURE ON
         CONF_ONLY ON
@@ -66,8 +73,9 @@ set(OpenCVExternPath "${PROJECT_SOURCE_DIR}/extern/opencv/build" CACHE PATH "Pat
 set_property(CACHE OpenCVDetectionMode PROPERTY STRINGS ${OpenCVDetectionModes})
 set(OpenCVVersion "4.7.0" CACHE STRING "Managed opencv version")
 # set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor cudev cudaarithm cudaimgproc cudafilters ximgproc CACHE STRING "OpenCV components to include")
-set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor CACHE STRING "OpenCV components to include")
-set(OpenCVCMakeArgs "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_WITH_DEBUG_INFO=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DBUILD_NEW_PYTHON_SUPPORT=OFF -DBUILD_PACKAGE=OFF -DWITH_FFMPEG=ON -DWITH_IPP=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=ON -DBUILD_ZLIB=ON -DWITH_CUDA=ON" CACHE STRING "Custom cmake arguments")
+# Always include ximgproc from opencv_contrib regardless of CUDA availability
+set(OpenCVComponents core imgproc highgui video videoio imgcodecs features2d objdetect photo xfeatures2d line_descriptor ximgproc CACHE STRING "OpenCV components to include")
+set(OpenCVCMakeArgs "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_WITH_DEBUG_INFO=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOCS=OFF -DBUILD_NEW_PYTHON_SUPPORT=OFF -DBUILD_PACKAGE=OFF -DWITH_FFMPEG=ON -DWITH_IPP=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=ON -DBUILD_ZLIB=ON" CACHE STRING "Custom cmake arguments")
 set(OpenCVBuildFlags -std=c++11 -fPIC -ffast-math CACHE STRING "Use C++ compiler flags")
 
 set(OpenCVContrib ON CACHE BOOL "Also get opencv contrib modules")
@@ -104,4 +112,3 @@ set(OpenCV_INCLUDE_DIR "${OpenCV_INCLUDE_DIRS}")
 set(OpenCV_LIBRARY_DIRS "${OpenCV_INSTALL_PATH}/lib")
 set(OpenCV_LIBRARY_DIR "${OpenCV_LIBRARY_DIRS}")
 set(OpenCV_LIBRARIES "${OpenCV_LIBS}")
-

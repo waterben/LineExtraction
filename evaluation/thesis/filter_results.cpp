@@ -8,7 +8,7 @@
 #define USE_PERIODIC_FFT
 #include <algorithm>
 #include <filesystem>
-#include <boost/format.hpp>
+#include <cctype>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/laplace.hpp>
 #include <imgproc/pc_lgf.hpp>

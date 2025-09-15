@@ -13,9 +13,11 @@
 #include <edge/spe.hpp>
 #include <edge/fit.hpp>
 
-#include <boost/filesystem.hpp>
-#include <algorithm>  
-#include <boost/format.hpp>
+#include <filesystem>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+#include <iomanip>
 
 
 using namespace lsfm;
@@ -162,7 +164,9 @@ int main(int argc, char** argv)
         table[0][col] = data.second;
         row = 1;
         for_each(fit.begin(), fit.end(), [&](const EntryPtr &e) {
-            table[row++][col] = boost::str(boost::format("%.3f") % (static_cast<double>(e->time * 1000) / (e->images * cv::getTickFrequency()))) + "ms";
+            std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
+                << (static_cast<double>(e->time * 1000) / (e->images * cv::getTickFrequency()));
+            table[row++][col] = oss.str() + "ms";
         });
         ++col;
     });

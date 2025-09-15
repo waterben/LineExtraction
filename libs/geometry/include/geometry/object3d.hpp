@@ -5,14 +5,22 @@
 #include <geometry/line3.hpp>
 #include <map>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+// Removed Boost: provide local helpers instead
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
 //#include <boost/filesystem/fstream.hpp>     // <--- Opengl has trouble if included
 
 #include <fstream>
 #include <string>
 
 namespace lsfm {    
+
+    inline void trim_inplace(std::string& s) {
+        auto not_space = [](unsigned char ch) { return !std::isspace(ch); };
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
+        s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
+    }
 
     struct Triangle {
         Triangle(std::size_t va = 0, std::size_t vb = 0, std::size_t vc = 0, std::size_t vn = 0, std::size_t texa = 0, std::size_t texb = 0, std::size_t texc = 0) :
@@ -56,7 +64,7 @@ namespace lsfm {
             std::string line;
             std::istream::pos_type g = in.tellg();
             while (std::getline(in,line)) {
-                boost::trim(line);
+                trim_inplace(line);
                 if (line.size() < 3) {
                     g = in.tellg();
                     continue;
@@ -98,7 +106,7 @@ namespace lsfm {
                     if (idx != std::string::npos){
                         std::size_t idx2 = a.find_last_of("/");
                         if(idx != idx2 && idx + 1 != idx2)
-                            ta = boost::lexical_cast<std::size_t>(a.substr(idx+1, idx2 - (idx+1))) - 1 - textureOffset;
+                            ta = static_cast<std::size_t>(std::stoul(a.substr(idx+1, idx2 - (idx+1)))) - 1 - textureOffset;
                         else
                             ta = 0;
                         a = a.substr(0,idx);
@@ -108,7 +116,7 @@ namespace lsfm {
                     if (idx != std::string::npos){
                         std::size_t idx2 = b.find_last_of("/");
                         if(idx != idx2 && idx + 1 != idx2)
-                            tb = boost::lexical_cast<std::size_t>(b.substr(idx+1, idx2 - (idx+1))) - 1 - textureOffset;
+                            tb = static_cast<std::size_t>(std::stoul(b.substr(idx+1, idx2 - (idx+1)))) - 1 - textureOffset;
                         else
                             tb = 0;
                         b = b.substr(0,idx);
@@ -117,7 +125,7 @@ namespace lsfm {
                     if (idx != std::string::npos){
                         std::size_t idx2 = c.find_last_of("/");
                         if(idx != idx2 && idx + 1 != idx2)
-                            tc = boost::lexical_cast<std::size_t>(c.substr(idx+1, idx2 - (idx+1))) - 1 - textureOffset;
+                            tc = static_cast<std::size_t>(std::stoul(c.substr(idx+1, idx2 - (idx+1)))) - 1 - textureOffset;
                         else
                             tc = 0;
                         c = c.substr(0,idx);
@@ -125,14 +133,20 @@ namespace lsfm {
 
                     if (vn.empty()) {
                         // compute normal from triangle
-                        triangles.push_back(Triangle(boost::lexical_cast<std::size_t>(a) - 1 - pointOffset, boost::lexical_cast<std::size_t>(b) - 1 - pointOffset, boost::lexical_cast<std::size_t>(c) - 1 - pointOffset,normals.size()));
+                        triangles.push_back(Triangle(static_cast<std::size_t>(std::stoul(a)) - 1 - pointOffset,
+                                                     static_cast<std::size_t>(std::stoul(b)) - 1 - pointOffset,
+                                                     static_cast<std::size_t>(std::stoul(c)) - 1 - pointOffset,
+                                                     normals.size()));
                         Triangle &tri = triangles.back();
                         Vec3<FT> v1 = points[tri.b] - points[tri.a], v2 = points[tri.c] - points[tri.a];
                         normals.push_back(v1.cross(v2));
                         normals.back().normalize();
                     }
                     else
-                        triangles.push_back(Triangle(boost::lexical_cast<std::size_t>(a) - 1 - pointOffset, boost::lexical_cast<std::size_t>(b) - 1 - pointOffset, boost::lexical_cast<std::size_t>(c) - 1 - pointOffset, boost::lexical_cast<std::size_t>(vn) - 1 - normalOffset,
+                        triangles.push_back(Triangle(static_cast<std::size_t>(std::stoul(a)) - 1 - pointOffset,
+                                                     static_cast<std::size_t>(std::stoul(b)) - 1 - pointOffset,
+                                                     static_cast<std::size_t>(std::stoul(c)) - 1 - pointOffset,
+                                                     static_cast<std::size_t>(std::stoul(vn)) - 1 - normalOffset,
                                                      ta, tb, tc));
                 }
                 g = in.tellg();

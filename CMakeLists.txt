@@ -21,6 +21,9 @@ set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
+# Control CUDA usage in managed OpenCV build
+option(WITH_CUDA "Build OpenCV with CUDA support" OFF)
+
 set (CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -56,9 +59,20 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin/")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib/")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
 
-find_package(Eigen3)
-#include(extern_eigen)
-include_directories(${EIGEN3_INCLUDE_DIR})
+# Detect and configure Eigen. Prefer our helper which supports
+# system, extern, or managed (already vendored) sources.
+include(extern_eigen)
+# Make Eigen headers visible to all targets as before
+include_directories(${EIGEN3_INCLUDE_DIRS})
+
+# Some extern packages (e.g., OpenCV modules) expect the imported target
+# `Eigen3::Eigen`. Provide a lightweight interface target when not found.
+if (NOT TARGET Eigen3::Eigen)
+    add_library(Eigen3::Eigen INTERFACE IMPORTED)
+    set_target_properties(Eigen3::Eigen PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
+    )
+endif()
 
 include(extern_dlib)
 include_directories(${DLIB_INCLUDE_DIR})

@@ -8,7 +8,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/ximgproc.hpp>
+#if defined(__has_include)
+#  if __has_include(<opencv2/ximgproc.hpp>)
+#    define HAVE_OPENCV_XIMGPROC 1
+#    include <opencv2/ximgproc.hpp>
+#  endif
+#endif
 #include <utility/eval_app.hpp>
 
 #include <ctime>
@@ -53,7 +58,9 @@ Mat thinImage(const Mat& src) {
   Mat thinnedImage;
   cv::threshold(src, thinnedImage, 0, 255, cv::THRESH_BINARY);
   thinnedImage.convertTo(thinnedImage, CV_8UC1);
+#ifdef HAVE_OPENCV_XIMGPROC
   ximgproc::thinning(thinnedImage, thinnedImage, ximgproc::THINNING_ZHANGSUEN);
+#endif
   return thinnedImage;
 }
 

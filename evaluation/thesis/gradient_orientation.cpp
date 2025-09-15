@@ -20,9 +20,9 @@
 #include <utility/matlab_helpers.hpp>
 
 #include <filesystem>
-#include <algorithm>  
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 #define WRITE_IMAGE_FILES
 //#define SHOW_IMAGES
@@ -91,8 +91,10 @@ double error(const cv::Mat &gt, const cv::Mat &dir, bool hr = false) {
     write.convertTo(write, CV_8U);
     if (stepsi < 0)
         cv::imwrite(path + fname + "-error.png", write);
-    else
-        cv::imwrite(path + boost::str(boost::format("%04d-") % stepsi) + fname + "-error.png", write);
+    else {
+        std::ostringstream oss; oss<<std::setfill('0')<<std::setw(4)<<stepsi<<"-";
+        cv::imwrite(path + oss.str() + fname + "-error.png", write);
+    }
 #endif
 #ifdef SHOW_IMAGES
     imshow("error", res / CV_PI * 10);
@@ -147,8 +149,11 @@ double testSingle(Entry<GT, MT, DT> &e, const cv::Mat &img, const cv::Mat &mask,
     dir.setTo(0, nmask == 0);
 
 #ifdef WRITE_IMAGE_FILES
-    cv::imwrite(path + boost::str(boost::format("%04d-") % stepsi) + fname + ".png", nimg);
-    cv::imwrite(path + boost::str(boost::format("%04d-") % stepsi) + fname + "-mask.png", nmask > 0);
+    {
+        std::ostringstream oss; oss<<std::setfill('0')<<std::setw(4)<<stepsi<<"-";
+        cv::imwrite(path + oss.str() + fname + ".png", nimg);
+        cv::imwrite(path + oss.str() + fname + "-mask.png", nmask > 0);
+    }
 #endif
 #ifdef SHOW_IMAGES
     cv::imshow("img", nimg);
@@ -337,17 +342,17 @@ int main(int argc, char** argv)
         table_box[row][0] = e.name;
         table_disk[row][0] = e.name;
         fname = "box-"+ e.name;
-        table_box[row][1] = boost::str(boost::format("%.3f") % testBox(e,box.clone(),box_mask.clone(),0,0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e,box.clone(),box_mask.clone(),0,0); table_box[row][1] = oss.str(); }
         fname = "disk-"+ e.name;
-        table_disk[row++][1] = boost::str(boost::format("%.3f") % testDisk(e,disk.clone(),disk_mask.clone(),0,0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e,disk.clone(),disk_mask.clone(),0,0); table_disk[row++][1] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         table_box[row][0] = e.name;
         table_disk[row][0] = e.name;
         fname = "box-" + e.name;
-        table_box[row][1] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 0, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 0, 0); table_box[row][1] = oss.str(); }
         fname = "disk-" + e.name;
-        table_disk[row++][1] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 0, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 0, 0); table_disk[row++][1] = oss.str(); }
     });
 
     std::cout << "done" << std::endl << "blur...";
@@ -357,15 +362,15 @@ int main(int argc, char** argv)
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](Entry<short> &e) {
         fname = "box-blur" + e.name;
-        table_box[row][2] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 0); table_box[row][2] = oss.str(); }
         fname = "disk-blur" + e.name;
-        table_disk[row++][2] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 0); table_disk[row++][2] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         fname = "box-blur-"+ e.name;
-        table_box[row][2] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 0); table_box[row][2] = oss.str(); }
         fname = "disk-blur-"+ e.name;
-        table_disk[row++][2] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 0));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 0); table_disk[row++][2] = oss.str(); }
     });
 
     std::cout << "done" << std::endl << "noise 10...";
@@ -375,15 +380,15 @@ int main(int argc, char** argv)
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](Entry<short> &e) {
         fname = "box-noise10-"+ e.name;
-        table_box[row][3] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 0, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 0, 10); table_box[row][3] = oss.str(); }
         fname = "disk-noise10-"+ e.name;
-        table_disk[row++][3] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 0, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 0, 10); table_disk[row++][3] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         fname = "box-noise10-"+ e.name;
-        table_box[row][3] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 0, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 0, 10); table_box[row][3] = oss.str(); }
         fname = "disk-noise10-" + e.name;
-        table_disk[row++][3] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 0, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 0, 10); table_disk[row++][3] = oss.str(); }
     });
 
     std::cout << "done" << std::endl << "noise 40...";
@@ -393,15 +398,15 @@ int main(int argc, char** argv)
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](Entry<short> &e) {
         fname = "box-noise40-" + e.name;
-        table_box[row][4] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 0, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 0, 40); table_box[row][4] = oss.str(); }
         fname = "disk-noise40-" + e.name;
-        table_disk[row++][4] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 0, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 0, 40); table_disk[row++][4] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         fname = "box-noise40-" + e.name;
-        table_box[row][4] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 0, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 0, 40); table_box[row][4] = oss.str(); }
         fname = "disk-noise40-" + e.name;
-        table_disk[row++][4] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 0, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 0, 40); table_disk[row++][4] = oss.str(); }
     });
 
     std::cout << "done" << std::endl << "blur + noise 10...";
@@ -411,15 +416,15 @@ int main(int argc, char** argv)
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](Entry<short> &e) {
         fname = "box-bnoise10-" + e.name;
-        table_box[row][5] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 10); table_box[row][5] = oss.str(); }
         fname = "disk-bnoise10-" + e.name;
-        table_disk[row++][5] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 10); table_disk[row++][5] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         fname = "box-bnoise10-" + e.name;
-        table_box[row][5] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 10); table_box[row][5] = oss.str(); }
         fname = "disk-bnoise10-" + e.name;
-        table_disk[row++][5] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 10));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 10); table_disk[row++][5] = oss.str(); }
     });
 
     std::cout << "done" << std::endl << "blur + noise 40...";
@@ -429,15 +434,15 @@ int main(int argc, char** argv)
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](Entry<short> &e) {
         fname = "box-bnoise40-" + e.name;
-        table_box[row][6] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 40); table_box[row][6] = oss.str(); }
         fname = "disk-bnoise40-" + e.name;
-        table_disk[row++][6] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 40); table_disk[row++][6] = oss.str(); }
     });
     for_each(gradF.begin(), gradF.end(), [&](Entry<double, double> &e) {
         fname = "box-bnoise40-" + e.name;
-        table_box[row][6] = boost::str(boost::format("%.3f") % testBox(e, box.clone(), box_mask.clone(), 2, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testBox(e, box.clone(), box_mask.clone(), 2, 40); table_box[row][6] = oss.str(); }
         fname = "disk-bnoise40-" + e.name;
-        table_disk[row++][6] = boost::str(boost::format("%.3f") % testDisk(e, disk.clone(), disk_mask.clone(), 2, 40));
+        { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)<<testDisk(e, disk.clone(), disk_mask.clone(), 2, 40); table_disk[row++][6] = oss.str(); }
     });
     std::cout << "done" << std::endl;
     
