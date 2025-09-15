@@ -7,13 +7,13 @@
 #include <imgproc/image_operator.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <edge/nms.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
-#include <boost/format.hpp>
+#include <filesystem>
+#include <algorithm>
+#include <utility/format.hpp>
 #define WRITE_IMAGE_FILES
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 #ifdef WRITE_IMAGE_FILES
 constexpr int runs = 1;
@@ -64,7 +64,7 @@ void parseFolder(const fs::path &folder, std::vector<fs::path> &files) {
         if (fs::is_regular_file(file))
         {
             std::string ext = file.extension().generic_string();
-            boost::algorithm::to_lower(ext);
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
             if (ext == ".jpg" || ext == ".png") {
                 files.push_back(file);
             }
@@ -110,10 +110,10 @@ double processError(Entry &e, const fs::path& path, int n, double &time) {
 #ifdef WRITE_IMAGE_FILES
         std::string name = e.name;
         std::replace(name.begin(), name.end(), ' ', '_');
-        cv::imwrite("./denoise/" + file.stem().generic_string() + "_noise" + boost::str(boost::format("%i") % (n)) + "_" + name + ".png", res);
+        cv::imwrite(utility::format("./denoise/%s_noise%i_%s.png", file.stem().generic_string(), n, name), res);
         sobel.process(res);
         nms.process(sobel);
-        cv::imwrite("./denoise/" + file.stem().generic_string() + "_noise" + boost::str(boost::format("%i") % (n)) + "_nms_" + name + ".png", createNMS(nms));
+        cv::imwrite(utility::format("./denoise/%s_noise%i_nms_%s.png", file.stem().generic_string(), n, name), createNMS(nms));
 #endif
         res.convertTo(res, CV_32S);
         src.convertTo(src, CV_32S);
@@ -192,8 +192,8 @@ int main(int argc, char** argv)
         int row = 1;
         for_each(filter.begin(), filter.end(), [&](Entry &e) {
             double time;
-            table[row][col] = boost::str(boost::format("%.3f") % (processError(e, path, 10 * col, time)));
-            table[row++][col+5] = boost::str(boost::format("%.3f") % (time));
+            table[row][col] = utility::format("%.3f", processError(e, path, 10 * col, time));
+            table[row++][col+5] = utility::format("%.3f", time);
         });
     }
 

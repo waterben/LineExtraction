@@ -6,8 +6,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project( LineExtraction LANGUAGES C CXX VERSION 1.0.0 )
 
-set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
+# set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
+# set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
 # Configurable environment variables that are stored in CMakeCache. These 
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
@@ -20,6 +20,9 @@ set(ENABLE_EVALUATION ON CACHE BOOL "Enable building of algorithm evaluation")
 set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
+
+# Control CUDA usage in managed OpenCV build
+option(WITH_CUDA "Build OpenCV with CUDA support" OFF)
 
 set (CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,15 +59,23 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin/")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib/")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
 
-find_package(Eigen3)
-#include(extern_eigen)
-include_directories(${EIGEN3_INCLUDE_DIR})
+# Detect and configure Eigen. Prefer our helper which supports
+# system, extern, or managed (already vendored) sources.
+include(extern_eigen)
+# Make Eigen headers visible to all targets as before
+include_directories(${EIGEN3_INCLUDE_DIRS})
+
+# Some extern packages (e.g., OpenCV modules) expect the imported target
+# `Eigen3::Eigen`. Provide a lightweight interface target when not found.
+if (NOT TARGET Eigen3::Eigen)
+    add_library(Eigen3::Eigen INTERFACE IMPORTED)
+    set_target_properties(Eigen3::Eigen PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
+    )
+endif()
 
 include(extern_dlib)
 include_directories(${DLIB_INCLUDE_DIR})
-
-include(extern_boost)
-include_directories(${Boost_INCLUDE_DIR})
 
 include(extern_opencv)
 include_directories(${OpenCV_INCLUDE_DIR})
@@ -121,10 +132,21 @@ endif(NOT LAPACK_FOUND)
 find_package (SUPERLU)
 find_package (ARPACK)
 
-include_directories( "include" )
+include_directories(
+    "libs/utility/include"
+    "libs/edge/include"
+    "libs/imgproc/include"
+    "libs/lsd/include"
+    "libs/geometry/include"
+    "libs/lfd/include"
+    "libs/phase_cong/include"
+    "libs/opengl_sim/include"
+    "libs/qplot/include"
+    "libs/qplot3d/include"
+)
 link_directories("lib")
 
-add_subdirectory( "src" )
+add_subdirectory( "libs" )
 
 # Build target for creating examples
 if (${ENABLE_EXAMPLES})

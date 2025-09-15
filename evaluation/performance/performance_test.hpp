@@ -10,9 +10,16 @@
 #  include <vector>
 
 
-#  define ENABLE_CUDA
-
 #  include <opencv2/core.hpp>
+
+// Detect OpenCV CUDA module availability via header presence
+#  if defined(__has_include)
+#    if __has_include(<opencv2/core/cuda.hpp>) && \
+        __has_include(<opencv2/cudaarithm.hpp>) && \
+        __has_include(<opencv2/cudafilters.hpp>)
+#      define ENABLE_CUDA 1
+#    endif
+#  endif
 
 #  ifdef ENABLE_CUDA
 #    include <opencv2/core/cuda.hpp>

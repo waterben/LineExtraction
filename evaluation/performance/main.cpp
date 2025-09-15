@@ -1,6 +1,6 @@
 #include "performance_test.hpp"
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
+#include <filesystem>
+#include <string>
 #include <utility/high_prio.hpp>
 
 #include <functional>
@@ -8,7 +8,7 @@
 
 
 using namespace lsfm;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 std::vector<PerformanceTestPtr>& getTests() {
   static std::vector<PerformanceTestPtr> tests;
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
       visualResults = true;
     else if ((val == "-r" || val == "-runs") && i < argc + 1) {
       try {
-        runs = boost::lexical_cast<int>(std::string(argv[++i]));
+        runs = std::stoi(std::string(argv[++i]));
         if (runs < 1) {
           std::cout << "Fixed number of runs from " << runs << " to 1!" << std::endl;
           runs = 1;

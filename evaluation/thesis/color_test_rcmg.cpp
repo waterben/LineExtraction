@@ -7,15 +7,15 @@
 #include <imgproc/rcmg.hpp>
 #include <edge/nms.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
+#include <filesystem>
+#include <algorithm>  
 
 
 
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 struct MyData {
     MyData(int g = 0, int c = 0, int d = 0) : gray(g), color(c), diff(d) {}
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
         if (fs::is_regular_file(file))
         {
             std::string ext = file.extension().generic_string();
-            boost::algorithm::to_lower(ext);
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
             if (ext == ".jpg" || ext == ".png") {
                 files.push_back(file);
                 //std::cout << file.filename().string() << std::endl;

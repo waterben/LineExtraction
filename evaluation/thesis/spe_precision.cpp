@@ -1,8 +1,5 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
+#include <algorithm>
+#include <filesystem>
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>
 #include <edge/nms.hpp>
@@ -13,7 +10,13 @@
 #include <imgproc/derivative_gradient.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/ximgproc.hpp>
+// ximgproc is optional and may require specific builds (e.g., CUDA-enabled)
+#if defined(__has_include)
+#  if __has_include(<opencv2/ximgproc.hpp>)
+#    define HAVE_OPENCV_XIMGPROC 1
+#    include <opencv2/ximgproc.hpp>
+#  endif
+#endif
 #include <utility/eval_app.hpp>
 #include <utility/matlab_helpers.hpp>
 #include <utility/response_convert.hpp>
@@ -30,7 +33,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int global_runs = 100;
 
@@ -123,6 +126,7 @@ double performanceSPE_DIR(OP& op,
 }
 
 
+#ifdef HAVE_OPENCV_XIMGPROC
 cv::Mat thinImage(const cv::Mat& src) {
   cv::Mat thinnedImage;
   cv::threshold(src, thinnedImage, 0, 255, cv::THRESH_BINARY);
@@ -130,6 +134,14 @@ cv::Mat thinImage(const cv::Mat& src) {
   cv::ximgproc::thinning(thinnedImage, thinnedImage, cv::ximgproc::THINNING_ZHANGSUEN);
   return thinnedImage;
 }
+#else
+// Fallback: return a binarized image if ximgproc isn't available
+cv::Mat thinImage(const cv::Mat& src) {
+  cv::Mat bin;
+  cv::threshold(src, bin, 0, 255, cv::THRESH_BINARY);
+  return bin;
+}
+#endif
 
 template <class FT, template <class> class PT = cv::Point_>
 struct GroundTruth {
@@ -147,7 +159,7 @@ struct GroundTruth {
 
     std::ostringstream file;
     file << input << "/gt_guassian_" << kernel << "_" << sigma << ".png";
-    if (!boost::filesystem::exists(file.str())) {
+    if (!std::filesystem::exists(file.str())) {
       if (verbose) {
         std::cout << "create ground truth..." << std::flush;
       }
@@ -901,14 +913,11 @@ class SpeApp : public EvalApp {
 
   void defineArgs() {
     ConsoleApp::defineArgs();
-    // clang-format off
-        options_.add_options()
-        ("output,o", boost::program_options::value<std::string>(&output_)->default_value("./results/spe"), "Output folder")
-        ("prio,p", boost::program_options::bool_switch(&run_high_prio_), "Run as high prio process")
-        ("no-results", boost::program_options::bool_switch(&no_results_), "Don't write results")
-        ("write-visuals", boost::program_options::bool_switch(&write_visuals_), "Write visual results")
-        ("show-visuals", boost::program_options::bool_switch(&show_visuals_), "Show visual results");
-    // clang-format on
+    opts_.add_string("output", 'o', "Output folder", output_, false, "./results/spe");
+    opts_.add_switch("prio", 'p', "Run as high prio process", run_high_prio_);
+    opts_.add_switch("no-results", '\0', "Don't write results", no_results_);
+    opts_.add_switch("write-visuals", '\0', "Write visual results", write_visuals_);
+    opts_.add_switch("show-visuals", '\0', "Show visual results", show_visuals_);
   }
 
   void initEval() override {

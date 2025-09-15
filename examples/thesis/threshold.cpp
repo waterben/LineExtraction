@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
 #include <imgproc/derivative_gradient.hpp>
@@ -8,7 +8,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/ximgproc.hpp>
+#if defined(__has_include)
+#  if __has_include(<opencv2/ximgproc.hpp>)
+#    define HAVE_OPENCV_XIMGPROC 1
+#    include <opencv2/ximgproc.hpp>
+#  endif
+#endif
 #include <utility/eval_app.hpp>
 
 #include <ctime>
@@ -20,7 +25,7 @@
 using namespace std;
 using namespace lsfm;
 using namespace cv;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 template <class OP>
 double performanceOP(OP& op, const Mat& src, size_t runs = 10) {
@@ -53,7 +58,9 @@ Mat thinImage(const Mat& src) {
   Mat thinnedImage;
   cv::threshold(src, thinnedImage, 0, 255, cv::THRESH_BINARY);
   thinnedImage.convertTo(thinnedImage, CV_8UC1);
+#ifdef HAVE_OPENCV_XIMGPROC
   ximgproc::thinning(thinnedImage, thinnedImage, ximgproc::THINNING_ZHANGSUEN);
+#endif
   return thinnedImage;
 }
 
@@ -71,15 +78,12 @@ class ThresholdApp : public EvalApp {
 
   void defineArgs() {
     ConsoleApp::defineArgs();
-    // clang-format off
-        options_.add_options()
-        ("input,i", boost::program_options::value<std::string>(&input_)->default_value("../../images/windmill.jpg"), "Input file, defaults to ../../windmill.jpg")
-        ("output,o", boost::program_options::value<std::string>(&output_)->default_value("./results/threshold_example"), "Output folder")
-        ("prio,p", boost::program_options::bool_switch(&run_high_prio_), "Run as high prio process")
-        ("no-results", boost::program_options::bool_switch(&no_results_), "Don't write results")
-        ("write-visuals", boost::program_options::bool_switch(&write_visuals_), "Write visual results")
-        ("show-visuals", boost::program_options::bool_switch(&show_visuals_), "Show visual results");
-    // clang-format on
+    opts_.add_string("input", 'i', "Input file", input_, false, "../../images/windmill.jpg");
+    opts_.add_string("output", 'o', "Output folder", output_, false, "./results/threshold_example");
+    opts_.add_switch("prio", 'p', "Run as high prio process", run_high_prio_);
+    opts_.add_switch("no-results", '\0', "Don't write results", no_results_);
+    opts_.add_switch("write-visuals", '\0', "Write visual results", write_visuals_);
+    opts_.add_switch("show-visuals", '\0', "Show visual results", show_visuals_);
   }
 
   template <typename OP>

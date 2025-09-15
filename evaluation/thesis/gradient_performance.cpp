@@ -1,6 +1,8 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
+#include <algorithm>
+#include <filesystem>
+#include <cctype>
+#include <sstream>
+#include <iomanip>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>
 #include <imgproc/laplace.hpp>
@@ -22,7 +24,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int ENTRY_RGB = 2;
 
@@ -62,7 +64,7 @@ void parseFolder(const fs::path& folder, std::vector<fs::path>& files) {
   for_each(fs::directory_iterator(folder), fs::directory_iterator(), [&files](const fs::path& file) {
     if (fs::is_regular_file(file)) {
       std::string ext = file.extension().generic_string();
-      boost::algorithm::to_lower(ext);
+      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
       if (ext == ".jpg" || ext == ".png") {
         files.push_back(file);
       }
@@ -280,21 +282,23 @@ int main(int argc, char** argv) {
     table[0][col] = data.second;
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](const Entry<short, int, float>& e) {
-      table[row++][col] = boost::str(boost::format("%.3f") %
-                                     (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) +
-                          "ms";
+      {
+        std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
+          << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
+        table[row++][col] = oss.str() + "ms";
+      }
     });
 
     for_each(gradF.begin(), gradF.end(), [&](const Entry<float, float, float>& e) {
-      table[row++][col] = boost::str(boost::format("%.3f") %
-                                     (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) +
-                          "ms";
+      { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
+          << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
+        table[row++][col] = oss.str() + "ms"; }
     });
 
     for_each(gradD.begin(), gradD.end(), [&](const Entry<double, double, double>& e) {
-      table[row++][col] = boost::str(boost::format("%.3f") %
-                                     (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) +
-                          "ms";
+      { std::ostringstream oss; oss.setf(std::ios::fixed); oss<<std::setprecision(3)
+          << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
+        table[row++][col] = oss.str() + "ms"; }
     });
     ++col;
   });

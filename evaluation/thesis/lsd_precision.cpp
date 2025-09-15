@@ -17,14 +17,14 @@
 #include <imgproc/pc_matlab.hpp>
 #include <imgproc/laplace.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>  
-#include <boost/format.hpp>
+#include <filesystem>
+#include <algorithm>
+#include <utility/format.hpp>
 
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr int ENTRY_RGB = 2;
 
@@ -67,7 +67,7 @@ void parseFolder(const fs::path &folder, std::vector<fs::path> &files) {
         if (fs::is_regular_file(file))
         {
             std::string ext = file.extension().generic_string();
-            boost::algorithm::to_lower(ext);
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
             if (ext == ".jpg" || ext == ".png") {
                 files.push_back(file);
             }
@@ -202,15 +202,15 @@ int main(int argc, char** argv)
         table[0][col] = data.second;
         row = 1;
         for_each(gradI.begin(), gradI.end(), [&](const Entry<short, int, float> &e) {
-            table[row++][col] = boost::str(boost::format("%.3f") % (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
 
         for_each(gradF.begin(), gradF.end(), [&](const Entry<float, float, float> &e) {
-            table[row++][col] = boost::str(boost::format("%.3f") % (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
 
         for_each(gradD.begin(), gradD.end(), [&](const Entry<double, double, double> &e) {
-            table[row++][col] = boost::str(boost::format("%.3f") % (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
+            table[row++][col] = utility::format("%.3f", (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()))) + "ms";
         });
         ++col;
     });

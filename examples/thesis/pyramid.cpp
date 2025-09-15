@@ -1,6 +1,6 @@
 // C by Benjamin Wassermann
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -9,7 +9,7 @@
 
 using namespace lsfm;
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 constexpr bool invert_images = false;
 
