@@ -77,9 +77,6 @@ endif()
 include(extern_dlib)
 include_directories(${DLIB_INCLUDE_DIR})
 
-include(extern_boost)
-include_directories(${Boost_INCLUDE_DIR})
-
 include(extern_opencv)
 include_directories(${OpenCV_INCLUDE_DIR})
 

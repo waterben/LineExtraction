@@ -1,33 +1,30 @@
 #pragma once
 
-#include <boost/program_options.hpp>
 #include <utility/console_app_interface.hpp>
+#include <utility/options.hpp>
 
 #include <string>
 
 namespace lsfm {
 
-/// @brief Simple console app base class using boost::options
+/// @brief Simple console app base class using utility::Options
 class ConsoleApp : public ConsoleAppInterface {
  public:
   using ConsoleAppInterface::ConsoleAppInterface;
 
  protected:
-  /// @brief Define default parse arguments via boost::options
+  /// @brief Define default parse arguments via utility::Options
   void defineArgs() override;
 
   /// @brief Parse and eval arguments default arguments.
   void parseArgs(int argc, char** argv) final;
 
-  /// @brief Check if a specific option exists
-  bool isOptionDefined(const std::string& option_name);
-
   virtual std::string usage() const { return name() + " [options]"; }
 
-  /// Options description
-  boost::program_options::options_description options_;
-  /// Variables map to map options to member variables
-  boost::program_options::variables_map vm_;
+  /// Options parser
+  utility::Options opts_;
+  bool help_ = false;
+  bool version_flag_ = false;
 
   bool verbose_ = false;
 };

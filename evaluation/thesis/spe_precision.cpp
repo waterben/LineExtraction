@@ -913,14 +913,11 @@ class SpeApp : public EvalApp {
 
   void defineArgs() {
     ConsoleApp::defineArgs();
-    // clang-format off
-        options_.add_options()
-        ("output,o", boost::program_options::value<std::string>(&output_)->default_value("./results/spe"), "Output folder")
-        ("prio,p", boost::program_options::bool_switch(&run_high_prio_), "Run as high prio process")
-        ("no-results", boost::program_options::bool_switch(&no_results_), "Don't write results")
-        ("write-visuals", boost::program_options::bool_switch(&write_visuals_), "Write visual results")
-        ("show-visuals", boost::program_options::bool_switch(&show_visuals_), "Show visual results");
-    // clang-format on
+    opts_.add_string("output", 'o', "Output folder", output_, false, "./results/spe");
+    opts_.add_switch("prio", 'p', "Run as high prio process", run_high_prio_);
+    opts_.add_switch("no-results", '\0', "Don't write results", no_results_);
+    opts_.add_switch("write-visuals", '\0', "Write visual results", write_visuals_);
+    opts_.add_switch("show-visuals", '\0', "Show visual results", show_visuals_);
   }
 
   void initEval() override {
