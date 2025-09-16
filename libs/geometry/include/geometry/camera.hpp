@@ -501,9 +501,23 @@ namespace lsfm {
         template <template<class, class...> class V1, class... V1Args, template<class, class...> class V2, class... V2Args>
         inline void project(const V1<Vec3<FT>,V1Args...> &vh, V2<Vec2<FT>,V2Args...>& ret) const {
             ret.resize(vh.size());
-            // Use reliable element-wise projection to ensure consistency
-            for (size_t i = 0; i < vh.size(); ++i) {
-                ret[i] = project(vh[i]);
+            
+            if (vh.size() > 0) {
+                // Create temporary matrices with correct layout
+                Eigen::Matrix<FT,Eigen::Dynamic,3> pts_matrix(vh.size(), 3);
+                for (size_t i = 0; i < vh.size(); ++i) {
+                    pts_matrix.row(i) << vh[i].x(), vh[i].y(), vh[i].z();
+                }
+                
+                Eigen::Matrix<FT,Eigen::Dynamic,2> res_matrix(vh.size(), 2);
+                
+                // Use the optimized matrix projection
+                res_matrix = (pts_matrix.rowwise().homogeneous() * proj_.transpose()).rowwise().hnormalized();
+                
+                // Copy back to result vector
+                for (size_t i = 0; i < vh.size(); ++i) {
+                    ret[i] = Vec2<FT>(res_matrix(i, 0), res_matrix(i, 1));
+                }
             }
         }
     };
