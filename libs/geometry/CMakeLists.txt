@@ -24,3 +24,8 @@ if (GLUT_FOUND)
 endif()
 
 SET_TARGET_PROPERTIES(lib_geometry PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add unit tests for this library when enabled
+if(ENABLE_UNIT_TEST)
+  add_subdirectory(tests)
+endif()

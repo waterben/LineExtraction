@@ -479,12 +479,12 @@ namespace lsfm {
         }
 
         //! project homogeneous point mat (points as rows), results in mat with points as rows
-        inline void projectRowMap(const Eigen::Map<const Matx<FT,Eigen::Dynamic,3>> points, Eigen::Map<Matx<FT,Eigen::Dynamic,2>> res) const {
+        inline void projectRowMap(const Eigen::Map<const Eigen::Matrix<FT,Eigen::Dynamic,3>> points, Eigen::Map<Eigen::Matrix<FT,Eigen::Dynamic,2>> res) const {
             res = (points.rowwise().homogeneous() * proj_.transpose()).rowwise().hnormalized();
         }
 
         //! project homogeneous point mat (points as cols), results in mat with points as cols
-        inline void projectColMap(const Eigen::Map<const Matx<FT,3,Eigen::Dynamic>> points, Eigen::Map<Matx<FT,2,Eigen::Dynamic>> res) const {
+        inline void projectColMap(const Eigen::Map<const Eigen::Matrix<FT,3,Eigen::Dynamic>> points, Eigen::Map<Eigen::Matrix<FT,2,Eigen::Dynamic>> res) const {
             res = (proj_ * points.colwise().homogeneous()).colwise().hnormalized();
         }
 
@@ -500,13 +500,11 @@ namespace lsfm {
         //! project point vector
         template <template<class, class...> class V1, class... V1Args, template<class, class...> class V2, class... V2Args>
         inline void project(const V1<Vec3<FT>,V1Args...> &vh, V2<Vec2<FT>,V2Args...>& ret) const {
-            /*ret.clear();
-            ret.reserve(vh.size());
-            for_each(vh.begin(),vh.end(),[&](const Vec3<FT>& p){
-                ret.push_back(project(p));
-            });*/
             ret.resize(vh.size());
-            projectRowMap(Eigen::Map<const Matx<FT,Eigen::Dynamic,3>>(&vh[0][0],vh.size(),3),Eigen::Map<Matx<FT,Eigen::Dynamic,2>>(&ret[0][0],vh.size(),2));
+            // Use reliable element-wise projection to ensure consistency
+            for (size_t i = 0; i < vh.size(); ++i) {
+                ret[i] = project(vh[i]);
+            }
         }
     };
 
