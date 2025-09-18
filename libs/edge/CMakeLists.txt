@@ -14,3 +14,8 @@ target_link_libraries(lib_edge
 )
 
 SET_TARGET_PROPERTIES(lib_edge PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add tests if testing is enabled
+if(ENABLE_UNIT_TEST OR BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

@@ -14,3 +14,8 @@ target_link_libraries(lib_phase_cong
 )
 
 SET_TARGET_PROPERTIES(lib_phase_cong PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add tests subdirectory
+if(ENABLE_UNIT_TEST OR BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
