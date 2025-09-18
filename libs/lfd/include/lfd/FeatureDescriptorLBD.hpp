@@ -49,7 +49,7 @@
 
 #include <vector>
 #include <geometry/line.hpp>
-#include <utility/interpolate.hpp>
+#include <imgproc/interpolate.hpp>
 #include <lfd/FeatureDescriptor.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 

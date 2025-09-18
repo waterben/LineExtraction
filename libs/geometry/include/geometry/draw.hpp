@@ -49,27 +49,9 @@
 #include <opencv2/imgproc/types_c.h>
 #include <geometry/line.hpp>
 #include <geometry/polygon.hpp>
-#include <edge/edge_segment.hpp>
 #include <utility/range.hpp>
 
 namespace lsfm {
-
-    inline void drawSegment(cv::Mat& img, const EdgeSegment& seg, const IndexVector& points, const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
-        if (img.channels() == 1)
-            cv::cvtColor(img,img,CV_GRAY2RGB);
-        cv::Vec3b *pimg = img.ptr<cv::Vec3b>();
-        for (size_t i = seg.begin(); i != seg.end(); ++i) {
-            pimg[points[i]] = color;
-        }
-    }
-
-    inline void drawSegment(cv::Mat& img, const EdgeSegmentVector& segs, const IndexVector& points, const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
-        if (img.channels() == 1)
-            cv::cvtColor(img,img,CV_GRAY2RGB);
-        for_each(segs.begin(),segs.end(),[&](const EdgeSegment& seg) {
-            drawSegment(img,seg,points,color);
-        });
-    }
 
     template<class PT>
     inline void text(cv::Mat& img, const PT &pos, const std::string &txt, const cv::Scalar &color = cv::Scalar(0, 0, 255),

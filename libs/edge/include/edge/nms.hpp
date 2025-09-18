@@ -45,7 +45,7 @@
 #ifdef __cplusplus
 
 #  include <imgproc/gradient.hpp>
-#  include <utility/interpolate.hpp>
+#  include <imgproc/interpolate.hpp>
 #  include <edge/hysteresis.hpp>
 #  include <edge/index.hpp>
 #  include <opencv2/core/core.hpp>

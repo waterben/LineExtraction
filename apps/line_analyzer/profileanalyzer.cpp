@@ -1,7 +1,7 @@
 #include "profileanalyzer.h"
 #include "ui_profileanalyzer.h"
 #include "controlwindow.h"
-#include <utility/mean.hpp>
+#include <imgproc/mean.hpp>
 
 using namespace std;
 

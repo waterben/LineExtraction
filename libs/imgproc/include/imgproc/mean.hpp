@@ -44,7 +44,7 @@
 #define _MEAN_HPP_
 #ifdef __cplusplus
 
-#include <utility/interpolate.hpp>
+#include <imgproc/interpolate.hpp>
 #include <geometry/line.hpp>
 
 namespace lsfm {

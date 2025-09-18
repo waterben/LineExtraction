@@ -1,25 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
-file(GLOB utility_hpp "include/utility/*.hpp")
-file(GLOB utility_cpp "src/*.cpp")
-add_library(lib_utility ${LIBRARY_TYPE} ${utility_cpp} ${utility_hpp})
+# Create utility library using automatic source detection
+# This is the base utility library - avoid dependencies on other LineExtraction libs
+le_add_library(lib_utility
+    AUTO_TESTS
+    PUBLIC_DEPS 
+        ${OpenCV_LIBS}
+        Eigen3::Eigen
+    PUBLIC_INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${OpenCV_INCLUDE_DIR}
+    TEST_DEPS
+        ${CMAKE_THREAD_LIBS_INIT}
+)
 
-# Public include path for consumers
-target_include_directories(lib_utility PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-# Link OpenCV components used by sources (imwrite, cv::Mat, etc.)
-target_link_libraries(lib_utility PUBLIC ${OpenCV_LIBS})
-if (TARGET Eigen3::Eigen)
-    target_link_libraries(lib_utility PUBLIC Eigen3::Eigen)
-elseif(EIGEN3_INCLUDE_DIRS)
-    target_include_directories(lib_utility PUBLIC ${EIGEN3_INCLUDE_DIRS})
-elseif(EIGEN3_INCLUDE_DIR)
-    target_include_directories(lib_utility PUBLIC ${EIGEN3_INCLUDE_DIR})
-endif()
-
-SET_TARGET_PROPERTIES(lib_utility PROPERTIES LINKER_LANGUAGE CXX)
-
-# Add unit tests for this library when enabled
-if(ENABLE_UNIT_TEST)
-  add_subdirectory(tests)
-endif()

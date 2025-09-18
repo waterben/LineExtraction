@@ -1,13 +1,18 @@
 # Copyright (c) 2014 - 2021 by Benjamin Wassermann
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
-# Evaluation library
-if (ENABLE_EVALUATION)
-    # Add source directory (this creates the library with dependencies)
-    add_subdirectory(src)
-
-    # Enable testing if requested and directory exists
-    if(ENABLE_UNIT_TEST AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-        add_subdirectory(tests)
-    endif()
+# Evaluation library - only build if evaluation is enabled
+if(ENABLE_EVALUATION)
+    # Create eval library using automatic source detection
+    le_add_library(lib_eval
+        AUTO_TESTS
+        PUBLIC_DEPS 
+            lib_utility
+            lib_edge
+            lib_imgproc
+        PUBLIC_INCLUDES
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+        TEST_DEPS
+            ${CMAKE_THREAD_LIBS_INIT}
+    )
 endif()

@@ -15,7 +15,7 @@ of arbitrary size.
 #ifdef __cplusplus
 
 #include <imgproc/phase_congruency.hpp>
-#include <phase_cong/PhaseCong.hpp>
+#include <imgproc/impl/PhaseCong.hpp>
 
 namespace lsfm {
     template<class IT>

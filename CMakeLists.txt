@@ -1,13 +1,18 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
+
+# Set CMake policies to avoid warnings
+cmake_policy(SET CMP0074 NEW)  # find_package uses <PackageName>_ROOT variables
 
 # undocumented directives -> use with care!
 #set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 #set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
-project( LineExtraction LANGUAGES C CXX VERSION 1.0.0 )
+project(LineExtraction LANGUAGES C CXX VERSION 1.0.0)
 
-# set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
-# set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
+#===============================================================================
+# Project Configuration Options
+#===============================================================================
+
 # Configurable environment variables that are stored in CMakeCache. These 
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
@@ -21,167 +26,115 @@ set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
-# Control CUDA usage in managed OpenCV build
-option(WITH_CUDA "Build OpenCV with CUDA support" OFF)
+# Auto-detect CUDA and control CUDA usage in managed OpenCV build
+# First check if CUDA is available on the system
+include(CheckLanguage)
+check_language(CUDA)
 
-set (CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
-if(${BUILD_DEBUG})
-    MESSAGE(STATUS "Setting build type to debug.")
-    set(CMAKE_BUILD_TYPE DEBUG)
-    if (NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -pg")
+if(CMAKE_CUDA_COMPILER)
+    # CUDA is available - auto-enable by default, but allow user override
+    option(WITH_CUDA "Build OpenCV with CUDA support (auto-detected: AVAILABLE)" ON)
+    message(STATUS "CUDA detected: ${CMAKE_CUDA_COMPILER}")
+    if(WITH_CUDA)
+        enable_language(CUDA)
+        message(STATUS "CUDA support enabled for OpenCV")
+    else()
+        message(STATUS "CUDA available but disabled by user")
     endif()
 else()
-    MESSAGE(STATUS "Setting build type to release.")
-    set(CMAKE_BUILD_TYPE RELEASE)
-    if (NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -O3 -ffast-math")
+    # CUDA not available - default to OFF and inform user
+    option(WITH_CUDA "Build OpenCV with CUDA support (auto-detected: NOT AVAILABLE)" OFF)
+    message(STATUS "CUDA not detected - CUDA support disabled")
+    if(WITH_CUDA)
+        message(WARNING "WITH_CUDA is ON but CUDA compiler not found. Disabling CUDA support.")
+        set(WITH_CUDA OFF CACHE BOOL "Build OpenCV with CUDA support (auto-detected: NOT AVAILABLE)" FORCE)
     endif()
 endif()
 
+#===============================================================================
+# CMake Setup and Utilities
+#===============================================================================
 
-if(${BUILD_STATIC})
-    MESSAGE(STATUS "Setting library type to static.")
-    set(LIBRARY_TYPE STATIC)
-    add_definitions(-D_STATIC)
-else()
-    MESSAGE(STATUS "Setting library type to dynamic.")
-    set(LIBRARY_TYPE SHARED)
-    add_definitions(-D_SHARED)
-endif()
-
-
-set(MAINFOLDER ${PROJECT_SOURCE_DIR})
-set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin/")
-set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib/")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/tools/cmake")
+include(LineExtractionUtils)
 
-# Detect and configure Eigen. Prefer our helper which supports
-# system, extern, or managed (already vendored) sources.
+# Configure common settings
+le_configure_common_settings()
+
+#===============================================================================
+# Dependencies Setup
+#===============================================================================
+
+# Eigen
 include(extern_eigen)
-# Make Eigen headers visible to all targets as before
-include_directories(${EIGEN3_INCLUDE_DIRS})
-
-# Some extern packages (e.g., OpenCV modules) expect the imported target
-# `Eigen3::Eigen`. Provide a lightweight interface target when not found.
-if (NOT TARGET Eigen3::Eigen)
+if(NOT TARGET Eigen3::Eigen)
     add_library(Eigen3::Eigen INTERFACE IMPORTED)
     set_target_properties(Eigen3::Eigen PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
     )
 endif()
 
+# dlib  
 include(extern_dlib)
-include_directories(${DLIB_INCLUDE_DIR})
+if(NOT TARGET dlib::dlib)
+    add_library(dlib::dlib INTERFACE IMPORTED)
+    set_target_properties(dlib::dlib PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${DLIB_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES "${DLIB_LIBRARY}"
+    )
+endif()
 
+# OpenCV
 include(extern_opencv)
-include_directories(${OpenCV_INCLUDE_DIR})
 
-MESSAGE(STATUS "${OpenCV_INCLUDE_DIR}")
-MESSAGE(STATUS "${OpenCV_LIBS}")
+# Setup Qt dependencies if enabled
+le_setup_qt_dependencies()
 
-if(ENABLE_QT)
-    #include(extern_qt)
-    find_package (Qt5Core)
-    if (Qt5Core_FOUND)
-        MESSAGE(STATUS "Qt5 found")
-        # Tell CMake to run moc when necessary
-        set(CMAKE_AUTOMOC ON)
-        # Tell CMake to run uic when necessary
-        set(CMAKE_AUTOUIC ON)
+# Setup testing framework
+le_setup_testing()
 
-        # As moc files are generated in the binary dir, tell CMake
-        # to always look for includes there:
-        set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-        # not required, only for qt apps
-        # place IF (Qt5Widgets_FOUND) around qt project, to add them only if
-        # qt was added
-        # for .ui files, you need to run uic from qt manually (uic file.ui -o ui_file.h)
-        # or add execute_process(COMMAND uic path/file.ui -o path/ui_file.h)
-        #find_package (Qt5Core)
-        find_package (Qt5Gui)
-        find_package (Qt5Widgets)
-        find_package (Qt5PrintSupport)
-        include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
-        #MESSAGE(STATUS ${Qt5Gui_LIBRARY_DIRS})
-    endif ()
-endif ()
-
-find_package(GLUT QUIET)
-if (GLUT_FOUND)
-message(STATUS "GLUT (OpenGL) found")
-include_directories(${GLUT_INCLUDE_DIRS})
-endif (GLUT_FOUND)
-
-find_package(OpenGL QUIET)
-if (OPENGL_FOUND)
-message(STATUS "OpenGL found")
-include_directories(${OPENGL_INCLUDE_DIR})
-endif (OPENGL_FOUND)
-
-find_package (LAPACKExtern QUIET)
-if (NOT LAPACK_FOUND)
-find_package (LAPACK)
-SET(LAPACK_LIBS ${LAPACK_LIBRARIES})
-endif(NOT LAPACK_FOUND)
-
-find_package (SUPERLU)
-find_package (ARPACK)
-
-include_directories(
-    "libs/utility/include"
-    "libs/edge/include"
-    "libs/imgproc/include"
-    "libs/lsd/include"
-    "libs/geometry/include"
-    "libs/lfd/include"
-    "libs/phase_cong/include"
-    "third-party/qplot/include"
-    "third-party/qplot3d/include"
-)
-link_directories("lib")
-
-# Configure unit test framework early, so libs can add their tests
-if( ${ENABLE_UNIT_TEST} )
-    find_package(Threads REQUIRED)
-    include(extern_gtest)
-    include_directories(${GTEST_INCLUDE_DIRS})
+# Enable CTest at top level
+if(ENABLE_UNIT_TEST)
     enable_testing()
 endif()
 
-add_subdirectory( "libs" )
+#===============================================================================
+# Build Components
+#===============================================================================
+
+# Core libraries
+add_subdirectory("libs")
 
 # Third-party libraries (Qt plotting)
-if(ENABLE_QT AND Qt5Widgets_FOUND)
-    add_subdirectory("third-party/qplot")
-    add_subdirectory("third-party/qplot3d")
+add_subdirectory("third-party")
+
+# Examples
+if(ENABLE_EXAMPLES)
+    add_subdirectory("examples")
 endif()
 
-# Build target for creating examples
-if (${ENABLE_EXAMPLES})
-    add_subdirectory( "examples" )
+# Applications  
+if(ENABLE_APPS)
+    add_subdirectory("apps")
 endif()
 
-# Build target for creating apps
-if (${ENABLE_APPS})
-    add_subdirectory( "apps" )
+# Evaluation tools
+if(ENABLE_EVALUATION)
+    add_subdirectory("evaluation")
 endif()
 
-# Build target for creating apps
-if (${ENABLE_EVALUATION})
-    add_subdirectory( "evaluation" )
-endif()
+#===============================================================================
+# Documentation
+#===============================================================================
 
 # Build target for creating documentation
-if (${ENABLE_DOCS})
+if(ENABLE_DOCS)
     find_package(Doxygen)
-    if( ${DOXYGEN_FOUND} )
-        configure_file( ${PROJECT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY )
-        add_custom_target( doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMENT "Creating documentation" VERBATIM )
-        install_dir( "${CMAKE_CURRENT_BINARY_DIR}/doc/html" "${PROJECT_SOURCE_DIR}/doc" "documentation" )
+    if(DOXYGEN_FOUND)
+        configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+        add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile 
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} 
+                         COMMENT "Creating documentation" VERBATIM)
+        install_dir("${CMAKE_CURRENT_BINARY_DIR}/doc/html" "${PROJECT_SOURCE_DIR}/doc" "documentation")
     endif()
 endif()

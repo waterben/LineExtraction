@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <utility/interpolate.hpp>
+#include <imgproc/interpolate.hpp>
 #include <opencv2/opencv.hpp>
 
 using namespace lsfm;

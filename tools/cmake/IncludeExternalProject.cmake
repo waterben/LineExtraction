@@ -15,7 +15,7 @@ function (compare_files fileA fileB result)
 endfunction()
 
 function(_build_conf name path args)
-    string(REPLACE ";;" " \"\" " output "cmake_minimum_required(VERSION 3.0)\nproject(conf_${name})\ninclude(ExternalProject)\nExternalProject_Add(${name} ${args})\n")
+    string(REPLACE ";;" " \"\" " output "cmake_minimum_required(VERSION 3.5...3.27)\nproject(conf_${name})\ninclude(ExternalProject)\nExternalProject_Add(${name} ${args})\n")
     string(REPLACE ";" " " output "${output}")
     set(DO_EXECUTE TRUE)
     #message(STATUS "${path}/${name}/CMakeLists.txt")    
