@@ -13,3 +13,8 @@ target_link_libraries(lib_imgproc
 )
 
 SET_TARGET_PROPERTIES(lib_imgproc PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add unit tests for this library when enabled
+if(ENABLE_UNIT_TEST)
+  add_subdirectory(tests)
+endif()

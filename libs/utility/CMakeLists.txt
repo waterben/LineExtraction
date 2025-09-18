@@ -18,3 +18,8 @@ elseif(EIGEN3_INCLUDE_DIR)
 endif()
 
 SET_TARGET_PROPERTIES(lib_utility PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add unit tests for this library when enabled
+if(ENABLE_UNIT_TEST)
+  add_subdirectory(tests)
+endif()

@@ -8,7 +8,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/line_descriptor/descriptor.hpp>
 #include <opencv2/opencv.hpp>
-#include <opengl_sim/lineMatching.hpp>
+#include <lfd/lineMatching.hpp>
 
 #include <ctime>
 #include <fstream>

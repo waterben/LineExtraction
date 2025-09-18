@@ -3,7 +3,7 @@
 #include <edge/zc.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/laplace.hpp>
-#include <utility/eval_app.hpp>
+#include <eval/eval_app.hpp>
 
 #include <ctime>
 #include <fstream>

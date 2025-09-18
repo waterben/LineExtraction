@@ -140,13 +140,26 @@ include_directories(
     "libs/geometry/include"
     "libs/lfd/include"
     "libs/phase_cong/include"
-    "libs/opengl_sim/include"
-    "libs/qplot/include"
-    "libs/qplot3d/include"
+    "third-party/qplot/include"
+    "third-party/qplot3d/include"
 )
 link_directories("lib")
 
+# Configure unit test framework early, so libs can add their tests
+if( ${ENABLE_UNIT_TEST} )
+    find_package(Threads REQUIRED)
+    include(extern_gtest)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    enable_testing()
+endif()
+
 add_subdirectory( "libs" )
+
+# Third-party libraries (Qt plotting)
+if(ENABLE_QT AND Qt5Widgets_FOUND)
+    add_subdirectory("third-party/qplot")
+    add_subdirectory("third-party/qplot3d")
+endif()
 
 # Build target for creating examples
 if (${ENABLE_EXAMPLES})
@@ -161,15 +174,6 @@ endif()
 # Build target for creating apps
 if (${ENABLE_EVALUATION})
     add_subdirectory( "evaluation" )
-endif()
-
-# Build target for creating unit test
-if( ${ENABLE_UNIT_TEST} )
-    find_package(Threads REQUIRED)    
-    include(extern_gtest)
-    include_directories(${GTEST_INCLUDE_DIRS})    
-    enable_testing()
-    add_subdirectory( "test" )
 endif()
 
 # Build target for creating documentation

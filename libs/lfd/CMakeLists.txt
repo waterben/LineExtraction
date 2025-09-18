@@ -15,3 +15,8 @@ target_link_libraries(lib_lfd
 )
 
 SET_TARGET_PROPERTIES(lib_lfd PROPERTIES LINKER_LANGUAGE CXX)
+
+# Add tests subdirectory
+if(ENABLE_UNIT_TEST OR BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

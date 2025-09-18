@@ -479,12 +479,12 @@ namespace lsfm {
         }
 
         //! project homogeneous point mat (points as rows), results in mat with points as rows
-        inline void projectRowMap(const Eigen::Map<const Matx<FT,Eigen::Dynamic,3>> points, Eigen::Map<Matx<FT,Eigen::Dynamic,2>> res) const {
+        inline void projectRowMap(const Eigen::Map<const Eigen::Matrix<FT,Eigen::Dynamic,3>> points, Eigen::Map<Eigen::Matrix<FT,Eigen::Dynamic,2>> res) const {
             res = (points.rowwise().homogeneous() * proj_.transpose()).rowwise().hnormalized();
         }
 
         //! project homogeneous point mat (points as cols), results in mat with points as cols
-        inline void projectColMap(const Eigen::Map<const Matx<FT,3,Eigen::Dynamic>> points, Eigen::Map<Matx<FT,2,Eigen::Dynamic>> res) const {
+        inline void projectColMap(const Eigen::Map<const Eigen::Matrix<FT,3,Eigen::Dynamic>> points, Eigen::Map<Eigen::Matrix<FT,2,Eigen::Dynamic>> res) const {
             res = (proj_ * points.colwise().homogeneous()).colwise().hnormalized();
         }
 
@@ -500,13 +500,25 @@ namespace lsfm {
         //! project point vector
         template <template<class, class...> class V1, class... V1Args, template<class, class...> class V2, class... V2Args>
         inline void project(const V1<Vec3<FT>,V1Args...> &vh, V2<Vec2<FT>,V2Args...>& ret) const {
-            /*ret.clear();
-            ret.reserve(vh.size());
-            for_each(vh.begin(),vh.end(),[&](const Vec3<FT>& p){
-                ret.push_back(project(p));
-            });*/
             ret.resize(vh.size());
-            projectRowMap(Eigen::Map<const Matx<FT,Eigen::Dynamic,3>>(&vh[0][0],vh.size(),3),Eigen::Map<Matx<FT,Eigen::Dynamic,2>>(&ret[0][0],vh.size(),2));
+            
+            if (vh.size() > 0) {
+                // Create temporary matrices with correct layout
+                Eigen::Matrix<FT,Eigen::Dynamic,3> pts_matrix(vh.size(), 3);
+                for (size_t i = 0; i < vh.size(); ++i) {
+                    pts_matrix.row(i) << vh[i].x(), vh[i].y(), vh[i].z();
+                }
+                
+                Eigen::Matrix<FT,Eigen::Dynamic,2> res_matrix(vh.size(), 2);
+                
+                // Use the optimized matrix projection
+                res_matrix = (pts_matrix.rowwise().homogeneous() * proj_.transpose()).rowwise().hnormalized();
+                
+                // Copy back to result vector
+                for (size_t i = 0; i < vh.size(); ++i) {
+                    ret[i] = Vec2<FT>(res_matrix(i, 0), res_matrix(i, 1));
+                }
+            }
         }
     };
 
