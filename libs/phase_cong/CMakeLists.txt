@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB phase_cong_cpp "src/*.cpp")
 add_library(lib_phase_cong ${LIBRARY_TYPE} ${phase_cong_cpp} "include/phase_cong/PhaseCong.hpp")

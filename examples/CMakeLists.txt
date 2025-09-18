@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 add_subdirectory(lsd)
 add_subdirectory(lfd)

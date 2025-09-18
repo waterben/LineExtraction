@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB geometry_hpp "include/geometry/*.hpp")
 add_library(lib_geometry ${LIBRARY_TYPE} ${geometry_hpp} src/render_gl.cpp src/tr.c)

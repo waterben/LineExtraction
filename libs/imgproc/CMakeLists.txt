@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB imgproc_hpp "include/imgproc/*.hpp")
 add_library(lib_imgproc ${LIBRARY_TYPE} ${imgproc_hpp})

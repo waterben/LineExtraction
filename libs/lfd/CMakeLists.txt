@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB lfd_hpp "include/lfd/*.hpp")
 add_library(lib_lfd ${LIBRARY_TYPE} ${lfd_hpp})

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB utility_hpp "include/utility/*.hpp")
 file(GLOB utility_cpp "src/*.cpp")

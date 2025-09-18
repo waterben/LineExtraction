@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 add_library(lib_qplot3d ${LIBRARY_TYPE}
     src/qwt3d_axis.cpp src/qwt3d_color.cpp src/qwt3d_coordsys.cpp src/qwt3d_drawable.cpp 

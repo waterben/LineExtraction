@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 file(GLOB lsd_hpp "include/lsd/*.hpp")
 add_library(lib_lsd ${LIBRARY_TYPE}

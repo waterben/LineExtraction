@@ -1,5 +1,5 @@
 # Copyright (c) 2014 - 2021 by Benjamin Wassermann
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
 
 # Evaluation library
 if (ENABLE_EVALUATION)
