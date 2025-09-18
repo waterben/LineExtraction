@@ -2,6 +2,7 @@
 
 #include <eval/data_provider.hpp>
 #include <eval/task.hpp>
+#include <eval/string_table.hpp>
 
 
 namespace lsfm {

@@ -30,6 +30,6 @@ add_executable(eval_phase_dc phase_dc.cpp)
 target_link_libraries(eval_phase_dc lib_phase_cong ${OpenCV_LIBS} )
 
 add_executable(eval_spe_precision spe_precision.cpp)
-target_link_libraries(eval_spe_precision lib_utility lib_phase_cong ${OpenCV_LIBS} )
+target_link_libraries(eval_spe_precision lib_utility lib_eval lib_phase_cong ${OpenCV_LIBS} )
 
 add_subdirectory(old)

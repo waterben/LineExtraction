@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <utility/console_app.hpp>
-#include <utility/eval_app.hpp>
+#include <eval/eval_app.hpp>
 
 namespace {
 struct DummyConsole : public lsfm::ConsoleApp {

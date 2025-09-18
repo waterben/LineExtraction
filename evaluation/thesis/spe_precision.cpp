@@ -17,7 +17,7 @@
 #    include <opencv2/ximgproc.hpp>
 #  endif
 #endif
-#include <utility/eval_app.hpp>
+#include <eval/eval_app.hpp>
 #include <utility/matlab_helpers.hpp>
 #include <utility/response_convert.hpp>
 

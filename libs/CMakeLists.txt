@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 # Component libraries
 add_subdirectory(utility)
+add_subdirectory(eval)
 add_subdirectory(lsd)
 add_subdirectory(lfd)
 add_subdirectory(edge)

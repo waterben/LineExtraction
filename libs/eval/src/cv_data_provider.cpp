@@ -20,13 +20,13 @@ void FileCVDataProvider::parse(const fs::path& folder, bool recursive) {
   });
 }
 
-bool FileCVDataProvider::get(std::string& src_name, cv::Mat& src) {
+bool FileCVDataProvider::get(CVData& data) {
   if (pos_ >= files_.size()) return false;
   fs::path file = files_[pos_++];
-  src_name = file.filename().generic_string();
-  src = cv::imread(file.generic_string());
+  data.name = file.filename().generic_string();
+  data.src = cv::imread(file.generic_string());
 
-  if (src.empty()) {
+  if (data.src.empty()) {
     std::cout << "Can not open " << file.generic_string() << std::endl;
     return false;
   }

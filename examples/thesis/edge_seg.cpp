@@ -4,7 +4,7 @@
 #include <edge/threshold.hpp>
 #include <geometry/draw.hpp>
 #include <imgproc/derivative_gradient.hpp>
-#include <utility/eval_app.hpp>
+#include <eval/eval_app.hpp>
 
 
 #define EDGE_THICK_CHECK

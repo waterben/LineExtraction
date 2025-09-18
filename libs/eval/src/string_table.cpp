@@ -1,7 +1,8 @@
-#include <utility/string_table.hpp>
+#include <eval/string_table.hpp>
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 
 namespace lsfm {
