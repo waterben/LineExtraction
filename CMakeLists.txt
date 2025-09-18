@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5...3.27)
+
+# Set CMake policies to avoid warnings
+cmake_policy(SET CMP0074 NEW)  # find_package uses <PackageName>_ROOT variables
 
 # undocumented directives -> use with care!
 #set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -6,8 +9,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project( LineExtraction LANGUAGES C CXX VERSION 1.0.0 )
 
-# set(CMAKE_C_COMPILER "/usr/bin/gcc-10")
-# set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
 # Configurable environment variables that are stored in CMakeCache. These 
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
@@ -21,8 +22,30 @@ set(ENABLE_APPS ON CACHE BOOL "Enable building of applications")
 set(ENABLE_EXAMPLES ON CACHE BOOL "Enable building of code examples")
 set(ENABLE_QT ON CACHE BOOL "Enable building of qt code")
 
-# Control CUDA usage in managed OpenCV build
-option(WITH_CUDA "Build OpenCV with CUDA support" OFF)
+# Auto-detect CUDA and control CUDA usage in managed OpenCV build
+# First check if CUDA is available on the system
+include(CheckLanguage)
+check_language(CUDA)
+
+if(CMAKE_CUDA_COMPILER)
+    # CUDA is available - auto-enable by default, but allow user override
+    option(WITH_CUDA "Build OpenCV with CUDA support (auto-detected: AVAILABLE)" ON)
+    MESSAGE(STATUS "CUDA detected: ${CMAKE_CUDA_COMPILER}")
+    if(WITH_CUDA)
+        enable_language(CUDA)
+        MESSAGE(STATUS "CUDA support enabled for OpenCV")
+    else()
+        MESSAGE(STATUS "CUDA available but disabled by user")
+    endif()
+else()
+    # CUDA not available - default to OFF and inform user
+    option(WITH_CUDA "Build OpenCV with CUDA support (auto-detected: NOT AVAILABLE)" OFF)
+    MESSAGE(STATUS "CUDA not detected - CUDA support disabled")
+    if(WITH_CUDA)
+        MESSAGE(WARNING "WITH_CUDA is ON but CUDA compiler not found. Disabling CUDA support.")
+        set(WITH_CUDA OFF CACHE BOOL "Build OpenCV with CUDA support (auto-detected: NOT AVAILABLE)" FORCE)
+    endif()
+endif()
 
 set (CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -85,7 +108,7 @@ MESSAGE(STATUS "${OpenCV_LIBS}")
 
 if(ENABLE_QT)
     #include(extern_qt)
-    find_package (Qt5Core)
+    find_package (Qt5Core QUIET)
     if (Qt5Core_FOUND)
         MESSAGE(STATUS "Qt5 found")
         # Tell CMake to run moc when necessary
@@ -103,11 +126,19 @@ if(ENABLE_QT)
         # for .ui files, you need to run uic from qt manually (uic file.ui -o ui_file.h)
         # or add execute_process(COMMAND uic path/file.ui -o path/ui_file.h)
         #find_package (Qt5Core)
-        find_package (Qt5Gui)
-        find_package (Qt5Widgets)
-        find_package (Qt5PrintSupport)
-        include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
+        find_package (Qt5Gui QUIET)
+        find_package (Qt5Widgets QUIET)
+        find_package (Qt5PrintSupport QUIET)
+        if(Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5PrintSupport_FOUND)
+            include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
+        else()
+            MESSAGE(WARNING "Some Qt5 components not found. Qt-dependent features will be disabled.")
+            set(ENABLE_QT OFF)
+        endif()
         #MESSAGE(STATUS ${Qt5Gui_LIBRARY_DIRS})
+    else()
+        MESSAGE(WARNING "Qt5Core not found. Qt-dependent features will be disabled.")
+        set(ENABLE_QT OFF)
     endif ()
 endif ()
 
