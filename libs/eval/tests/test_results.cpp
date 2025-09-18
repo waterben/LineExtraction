@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <utility/results.hpp>
+#include <eval/results.hpp>
 
 using lsfm::applyBorderCopy;
 using lsfm::createNMS;

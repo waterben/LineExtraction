@@ -110,7 +110,7 @@ function(le_setup_testing)
     
     find_package(Threads REQUIRED)
     include(extern_gtest)
-    enable_testing()
+    # Note: enable_testing() is now called at top level in main CMakeLists.txt
 endfunction()
 
 # Add a LineExtraction library with common configuration
@@ -203,6 +203,7 @@ function(le_add_library target_name)
     if((LE_AUTO_TESTS OR ENABLE_UNIT_TEST) AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
         le_add_auto_tests(${target_name} 
             TEST_DEPS ${LE_TEST_DEPS}
+            EXCLUDED_SOURCES ${LE_EXCLUDED_SOURCES}
         )
     endif()
 endfunction()
@@ -212,15 +213,22 @@ function(le_add_auto_tests library_target)
     cmake_parse_arguments(LE_TEST
         ""             # boolean options
         ""             # single value args
-        "TEST_DEPS"    # multi-value args
+        "TEST_DEPS;EXCLUDED_SOURCES"    # multi-value args
         ${ARGN}
     )
     
     # Find all test files
     file(GLOB test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_*.cpp")
     
+    # Remove excluded test files if specified
+    if(LE_TEST_EXCLUDED_SOURCES)
+        foreach(excluded_source ${LE_TEST_EXCLUDED_SOURCES})
+            list(FILTER test_files EXCLUDE REGEX ".*${excluded_source}.*")
+        endforeach()
+    endif()
+    
     # Only proceed if we have test files and gtest is available
-    if(test_files AND GTEST_FOUND)
+    if(test_files AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY AND ENABLE_UNIT_TEST)
         foreach(test_file ${test_files})
             # Extract test name from filename
             get_filename_component(test_name_full ${test_file} NAME_WE)
@@ -228,15 +236,20 @@ function(le_add_auto_tests library_target)
             # Create test executable
             add_executable(${test_name_full} ${test_file})
             
+            # Set include directories for gtest
+            if(GTEST_INCLUDE_DIR)
+                target_include_directories(${test_name_full} PRIVATE ${GTEST_INCLUDE_DIR})
+            endif()
+            
             # Link to the library being tested
-            target_link_libraries(${test_name_full} ${library_target})
+            target_link_libraries(${test_name_full} PRIVATE ${library_target})
             
             # Link to gtest
-            target_link_libraries(${test_name_full} ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+            target_link_libraries(${test_name_full} PRIVATE ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
             
             # Link to additional test dependencies
             if(LE_TEST_TEST_DEPS)
-                target_link_libraries(${test_name_full} ${LE_TEST_TEST_DEPS})
+                target_link_libraries(${test_name_full} PRIVATE ${LE_TEST_TEST_DEPS})
             endif()
             
             # Add to test suite
@@ -247,7 +260,7 @@ function(le_add_auto_tests library_target)
                 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             )
         endforeach()
-    elseif(test_files AND NOT GTEST_FOUND)
+    elseif(test_files AND NOT (GTEST_LIBRARY AND GTEST_MAIN_LIBRARY))
         message(STATUS "Tests found for ${library_target} but gtest not available. Skipping test generation.")
     endif()
 endfunction()

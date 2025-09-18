@@ -3,7 +3,7 @@
 
 #include <qplot3d/qwt3d_surfaceplot.h>
 #include <qplot3d/qwt3d_function.h>
-#include <utility/mean.hpp>
+#include <imgproc/mean.hpp>
 
 #include "ui_pofuncplot.h"
 #include "controlwindow.h"

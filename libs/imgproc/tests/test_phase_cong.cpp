@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <phase_cong/PhaseCong.hpp>
+#include <imgproc/impl/PhaseCong.hpp>
 #include <opencv2/opencv.hpp>
 #include <cmath>
 

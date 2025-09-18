@@ -8,6 +8,8 @@ if(ENABLE_EVALUATION)
         AUTO_TESTS
         PUBLIC_DEPS 
             lib_utility
+            lib_edge
+            lib_imgproc
         PUBLIC_INCLUDES
             ${CMAKE_CURRENT_SOURCE_DIR}/include
         TEST_DEPS

@@ -50,7 +50,7 @@ le_add_executable(app_line_analyzer
     QT_MODULES Core Gui Widgets PrintSupport OpenGL
     DEPS 
         lib_lsd 
-        lib_phase_cong 
+        lib_imgproc 
         lib_qplot 
         lib_qplot3d 
         ${OPENGL_LIBRARIES} 

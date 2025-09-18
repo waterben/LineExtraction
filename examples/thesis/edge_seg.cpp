@@ -41,7 +41,7 @@ class EdgeSegApp : public EvalApp {
 
   using ConsoleAppInterface::run;
 
-  cv::RNG rng{time(0)};
+  cv::RNG rng{static_cast<uint64>(time(0))};
 
   void defineArgs() {
     ConsoleApp::defineArgs();

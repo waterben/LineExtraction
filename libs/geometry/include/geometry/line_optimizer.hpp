@@ -46,7 +46,7 @@
 #define _LINE_OPTIMIZER_HPP_
 #ifdef __cplusplus
 
-#include <utility/mean.hpp>
+#include <imgproc/mean.hpp>
 #include <dlib/optimization.h>
 
 namespace lsfm {

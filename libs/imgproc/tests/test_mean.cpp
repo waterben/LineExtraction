@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <utility/mean.hpp>
+#include <imgproc/mean.hpp>
 #include <opencv2/opencv.hpp>
 
 using namespace lsfm;

@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 
 #include <vector>
-#include <utility/interpolate.hpp>
+#include <imgproc/interpolate.hpp>
 #include <edge/index.hpp>
 #include <edge/edge_segment.hpp>
 

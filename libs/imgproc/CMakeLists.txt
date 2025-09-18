@@ -5,7 +5,7 @@ le_add_library(lib_imgproc
     AUTO_TESTS
     PUBLIC_DEPS 
         lib_utility
-        lib_phase_cong
+        lib_geometry
         ${OpenCV_LIBS}
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include

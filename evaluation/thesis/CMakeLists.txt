@@ -12,24 +12,24 @@ add_executable(eval_even_parameter even_parameter_test.cpp)
 target_link_libraries(eval_even_parameter lib_imgproc dlib::dlib ${OpenCV_LIBS})
 
 add_executable(eval_filter_results filter_results.cpp)
-target_link_libraries(eval_filter_results lib_imgproc lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(eval_filter_results lib_imgproc ${OpenCV_LIBS})
 
 add_executable(eval_gradient_noise gradient_noise.cpp)
-target_link_libraries(eval_gradient_noise lib_imgproc lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(eval_gradient_noise lib_imgproc ${OpenCV_LIBS})
 
 add_executable(eval_gradient_orientation gradient_orientation.cpp)
-target_link_libraries(eval_gradient_orientation lib_edge lib_geometry lib_imgproc lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(eval_gradient_orientation lib_edge lib_geometry lib_imgproc ${OpenCV_LIBS})
 
 add_executable(eval_image_denoise image_denoise.cpp)
-target_link_libraries(eval_image_denoise lib_edge lib_imgproc lib_utility lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(eval_image_denoise lib_edge lib_imgproc lib_utility lib_imgproc ${OpenCV_LIBS})
 
 add_executable(eval_gradient_performance gradient_performance.cpp)
-target_link_libraries(eval_gradient_performance lib_phase_cong ${OpenCV_LIBS} )
+target_link_libraries(eval_gradient_performance lib_imgproc ${OpenCV_LIBS} )
 
 add_executable(eval_phase_dc phase_dc.cpp)
-target_link_libraries(eval_phase_dc lib_phase_cong ${OpenCV_LIBS} )
+target_link_libraries(eval_phase_dc lib_imgproc ${OpenCV_LIBS} )
 
 add_executable(eval_spe_precision spe_precision.cpp)
-target_link_libraries(eval_spe_precision lib_edge lib_utility lib_eval lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(eval_spe_precision lib_edge lib_utility lib_eval lib_imgproc ${OpenCV_LIBS})
 
 add_subdirectory(old)

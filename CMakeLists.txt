@@ -93,6 +93,11 @@ le_setup_qt_dependencies()
 # Setup testing framework
 le_setup_testing()
 
+# Enable CTest at top level
+if(ENABLE_UNIT_TEST)
+    enable_testing()
+endif()
+
 #===============================================================================
 # Build Components
 #===============================================================================

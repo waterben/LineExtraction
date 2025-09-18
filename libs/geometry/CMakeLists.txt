@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.5...3.27)
 # Create geometry library using automatic source detection
 le_add_library(lib_geometry
     AUTO_TESTS
-    EXCLUDED_SOURCES
-        render_gl.cpp
+#    EXCLUDED_SOURCES
+#        render_gl.cpp
     PUBLIC_DEPS 
         lib_utility
         ${OpenCV_LIBS}
