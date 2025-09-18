@@ -8,6 +8,6 @@ add_subdirectory(edge)
 add_subdirectory(geometry)
 add_subdirectory(thesis)
 
-if (ENABLE_QT AND Qt5Widgets_FOUND)
+if(ENABLE_QT AND Qt5Widgets_FOUND)
     add_subdirectory(qt)
 endif()

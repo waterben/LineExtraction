@@ -15,7 +15,7 @@ add_executable(test_geometry_gt gt_test.cpp)
 target_link_libraries(test_geometry_gt lib_geometry ${OpenCV_LIBS})
 
 add_executable(test_geometry_line line_test.cpp)
-target_link_libraries(test_geometry_line lib_geometry ${OpenCV_LIBS})
+target_link_libraries(test_geometry_line lib_geometry lib_imgproc ${OpenCV_LIBS})
 
 if(OPENGL_FOUND)
     add_executable(test_geometry_obj obj_test.cpp)
@@ -29,4 +29,4 @@ if(OPENGL_FOUND)
 endif()
 
 add_executable(test_geometry_poly poly_test.cpp)
-target_link_libraries(test_geometry_poly lib_geometry ${OpenCV_LIBS})
+target_link_libraries(test_geometry_poly lib_imgproc lib_geometry ${OpenCV_LIBS})

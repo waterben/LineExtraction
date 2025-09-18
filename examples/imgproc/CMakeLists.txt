@@ -4,13 +4,13 @@ add_executable(test_imgproc_steer steer_test.cpp)
 target_link_libraries(test_imgproc_steer lib_imgproc ${OpenCV_LIBS})
 
 add_executable(test_imgproc_grad_ops grad_test.cpp)
-target_link_libraries(test_imgproc_grad_ops lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(test_imgproc_grad_ops lib_edge lib_imgproc lib_phase_cong ${OpenCV_LIBS})
 
 add_executable(test_imgproc_step_line step_line_test.cpp)
-target_link_libraries(test_imgproc_step_line lib_phase_cong ${OpenCV_LIBS})
+target_link_libraries(test_imgproc_step_line lib_edge lib_phase_cong ${OpenCV_LIBS})
 
 add_executable(test_imgproc_fft fft_test.cpp)
-target_link_libraries(test_imgproc_fft ${OpenCV_LIBS})
+target_link_libraries(test_imgproc_fft lib_utility ${OpenCV_LIBS})
 
 add_executable(test_imgproc_pyramid pyramid_test.cpp)
 target_link_libraries(test_imgproc_pyramid lib_edge lib_imgproc ${OpenCV_LIBS})
