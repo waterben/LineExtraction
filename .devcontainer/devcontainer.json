@@ -23,20 +23,19 @@
     // owned in entrypoint.sh
     {
       "source": "vscode-devcontainer-${devcontainerId}_bash_history",
-      "target": "/home/${localEnv:USER}/commandhistory,type=volume"
+      "target": "/home/${localEnv:USER}/commandhistory",
+      "type": "volume"
     },
     // Local time
     {
       "source": "/etc/timezone",
       "target": "/etc/timezone",
-      "type": "bind",
-      "consistency": "cached"
+      "type": "bind"
     },
     {
       "source": "/etc/localtime",
       "target": "/etc/localtime",
-      "type": "bind",
-      "consistency": "cached"
+      "type": "bind"
     },
     // CCache
     {
@@ -54,7 +53,7 @@
       "source": "${localEnv:HOME}/.netrc",
       "target": "/home/${localEnv:USER}/.netrc",
       "type": "bind"
-    },
+    }
   ],
   // Setup host environment before container launch
   "initializeCommand": [
@@ -93,8 +92,7 @@
         "benjamin-simmonds.pythoncpp-debug",
         "charliermarsh.ruff",
         "ms-vscode.cmake-tools",
-        "ms-python.python",
-        "charliermarsh.ruff",
+        "ms-python.python"
       ]
     }
   }

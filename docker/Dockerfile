@@ -39,8 +39,8 @@ RUN <<EOF
   curl -Ls https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip | bsdtar xf - --strip-components=1 -C /usr/local
   curl -Ls https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz | tar xfz  - -C /usr/local/bin
   curl -Ls https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq
-  curl -Ls https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-musl.tar.gz | tar xfz - -o --strip-components=1 -C /usr/local/bin
-  curl -Ls https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz | tar xfz - -o --strip-components=1 -C /usr/local/bin
+  curl -Ls https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
+  curl -Ls https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
   ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel
   chmod 755 /usr/local/bin/yq
   chmod 755 /usr/local/bin/buildifier
@@ -141,7 +141,7 @@ RUN : \
   && echo ${USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USER} \
   && install -m 755 /dev/null /usr/local/bin/devenv_entrypoint_custom.sh \
   && chmod 755 /devenv_entrypoint.sh \
-  && rm -rf /var/lib/apt/lists/* /tmp/common_packages.txt /tmp/requirements-pip.txt
+  && rm -rf /var/lib/apt/lists/* /tmp/common_packages.txt
 
 RUN <<EOF
   set -eux

@@ -41,7 +41,7 @@ case $1 in
         ;;
     -f|--file)
         if [ -z ${2+x} ]; then
-            writeError "No value given for parameter -v|--validated_test_param"
+            writeError "No value given for parameter -f|--file"
         fi
         file_path="$2"
         eval 'if [ ! -f $file_path ]; then writeError "File does not exist!"; fi'
