@@ -1,0 +1,101 @@
+{
+  // For specifications see https://containers.dev/implementors/json_reference/
+  "image": "${localEnv:USER}-devcontainer-line-extraction-devenv",
+  "runArgs": [
+    "-v",
+    "/var/run/docker.sock:/var/run/docker.sock",
+    "--name",
+    "vscode-devenv-${localWorkspaceFolderBasename}-${localEnv:USER}-${devcontainerId}",
+    // Debugging c/c++ code
+    "--cap-add=SYS_PTRACE",
+    "--env-file",
+    "${localWorkspaceFolder}/.devcontainer/.env",
+    "--network",
+    "host"
+  ],
+  "overrideCommand": true,
+  // Define where the workspace is actually located in the container
+  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+  "workspaceMount": "src=${localWorkspaceFolder},dst=${containerWorkspaceFolder},type=bind,consistency=cached",
+  "remoteUser": "${localEnv:USER}",
+  "mounts": [
+    // see https://code.visualstudio.com/remote/advancedcontainers/persist-bash-history
+    // owned in entrypoint.sh
+    {
+      "source": "vscode-devcontainer-${devcontainerId}_bash_history",
+      "target": "/home/${localEnv:USER}/commandhistory,type=volume"
+    },
+    // Local time
+    {
+      "source": "/etc/timezone",
+      "target": "/etc/timezone",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "/etc/localtime",
+      "target": "/etc/localtime",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    // CCache
+    {
+      "source": "vscode-devcontainer-${devcontainerId}_ccache_cache",
+      "target": "/home/${localEnv:USER}/.ccache",
+      "type": "volume"
+    },
+    // SSH, get git working, use creadentials of host system
+    {
+      "source": "${localEnv:HOME}/.ssh",
+      "target": "/home/${localEnv:USER}/.ssh",
+      "type": "bind"
+    },
+    {
+      "source": "${localEnv:HOME}/.netrc",
+      "target": "/home/${localEnv:USER}/.netrc",
+      "type": "bind"
+    },
+  ],
+  // Setup host environment before container launch
+  "initializeCommand": [
+    ".devcontainer/scripts/initialize.sh"
+  ],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  //"postCreateCommand": [],
+  // Setup container environment after launch
+  "postStartCommand": [
+    ".devcontainer/scripts/post_start.sh"
+  ],
+  "userEnvProbe": "none",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "${localEnv:SHELL}",
+        "http.proxyStrictSSL": false,
+        "python.defaultInterpreterPath": "/opt/venv/deps/python3.10/bin/python",
+        "python.autoComplete.extraPaths": [
+          "/opt/venv/deps/python3.10/lib/python3.10/site-packages"
+        ]
+      },
+      "extensions": [
+        "augustocdias.tasks-shell-input",
+        "BazelBuild.vscode-bazel",
+        "cschlosser.doxdocgen",
+        "DavidAnson.vscode-markdownlint",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "matepek.vscode-catch2-test-adapter",
+        "ms-vscode.cpptools",
+        "notskm.clang-tidy",
+        "streetsidesoftware.code-spell-checker",
+        "vscode-icons-team.vscode-icons",
+        "visualstudioexptteam.vscodeintellicode",
+        "ZainChen.json",
+        "benjamin-simmonds.pythoncpp-debug",
+        "charliermarsh.ruff",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "charliermarsh.ruff",
+      ]
+    }
+  }
+}

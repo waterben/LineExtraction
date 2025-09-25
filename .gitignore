@@ -20,6 +20,33 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 
+# bazel related settings
+MODULE.bazel.lock
+bazel-*
+external
+
+# user specific customization
+docker/devenv/custom/**/*
+.devcontainer/scripts/custom
+**/tmp
+**/temp
+**/*.log
+**/*.env
+
+# other
+.clangd
+# Clang - compile commands and corresponding cache
+.cache/
+compile_commands.json
+
+# Python
+**/.coverage
+**/.pytest_cache
+**/__pycache__
+**/*.egg-info
+**/*:Zone.Identifier
+.venv/**/*
+
 #c++
 # Prerequisites
 *.d
