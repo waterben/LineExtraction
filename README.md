@@ -38,10 +38,28 @@ Use the provided DevContainer configuration with VS Code for a consistent develo
 
 #### Option 2: Local Setup
 
-Use the automated setup script for local development:
+Use the automated setup script for local development (uses same components as Docker setup):
 
 ```bash
 ./tools/scripts/setup_local_dev.sh
+```
+
+Individual setup components can also be run separately:
+
+```bash
+# Install system packages
+./tools/scripts/install-system-packages.sh
+
+# Install development tools
+./tools/scripts/install-uv.sh
+./tools/scripts/install-bazel.sh
+./tools/scripts/install-clangd.sh
+
+# Setup Python environment
+./tools/scripts/setup-python-env.sh
+
+# Setup pre-commit hooks
+./tools/scripts/setup-precommit.sh
 ```
 
 #### Option 3: Manual Prerequisites (Debian/Ubuntu)

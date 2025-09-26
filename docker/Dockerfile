@@ -11,6 +11,8 @@ ENV BAZELISK_BASE_URL="https://github.com/bazelbuild/bazel/releases/download"
 ARG VARIANT
 COPY base /tmp/base
 COPY --chmod=755 scripts/install_apt_packages_from_list scripts/uvx-wrapper /usr/local/bin
+# Copy tool installation scripts from repo
+COPY --from=repo_root_context --chmod=755 tools/scripts /tmp/tools/scripts
 RUN <<EOF
   set -eux
   apt-get update
@@ -22,35 +24,55 @@ RUN <<EOF
 EOF
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
-ARG UV_VERSION="0.8.4"
-ARG CLANGD_VERSION="21.1.0"
-ARG PYTHON_DEV_VERSION="3.11.12"
-ARG BUILDIFIER_VERSION="8.2.1"
-ARG BAZELISK_VERSION="1.26.0"
-ARG GH_VERSION="2.76.2"
-ARG ACTIONLINT_VERSION="1.7.7"
-ARG YQ_VERSION="4.47.1"
-ARG RUFF_VERSION="0.12.7"
+# Install system packages first
+RUN echo "Installing system packages..." && /tmp/tools/scripts/install-system-packages.sh
+
+# Install UV (separated to identify failures)
+RUN ["/bin/bash", "-c", "set -eux && echo 'Installing UV...' && source /tmp/tools/scripts/install-uv.sh && install_uv /usr/local/bin false"]
+
+# Install Bazel (separated to identify failures)
+RUN ["/bin/bash", "-c", "echo 'Installing Bazel...' && source /tmp/tools/scripts/install-bazel.sh && install_bazel /usr/local/bin"]
+
+# Install clangd (separated to identify failures)
+RUN ["/bin/bash", "-c", "echo 'Installing clangd...' && source /tmp/tools/scripts/install-clangd.sh && install_clangd /usr/local/bin"]
+
+# Install additional tools that aren't in the modular scripts yet
 RUN <<EOF
   set -eux
+  # Source tool versions for consistency
+  source /tmp/tools/scripts/tool-versions.sh
+  
+  echo "Installing buildifier..."
   curl -Ls https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64 -o /usr/local/bin/buildifier
-  curl -Ls https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 -o /usr/local/bin/bazelisk
-  curl -Ls https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz | tar xfz - --strip-components=1 -C /usr/local
-  curl -Ls https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip | bsdtar xf - --strip-components=1 -C /usr/local
-  curl -Ls https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz | tar xfz  - -C /usr/local/bin
-  curl -Ls https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq
-  curl -Ls https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
-  curl -Ls https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
-  ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel
-  chmod 755 /usr/local/bin/yq
   chmod 755 /usr/local/bin/buildifier
-  chmod 755 /usr/local/bin/bazelisk
+  
+  echo "Installing GitHub CLI..."
+  curl -Ls https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz | tar xfz - --strip-components=1 -C /usr/local
+  
+  echo "Installing sonar-scanner..."
+  curl -Ls https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip | bsdtar xf - --strip-components=1 -C /usr/local
   chmod 755 /usr/local/bin/sonar*
+  
+  echo "Installing actionlint..."
+  curl -Ls https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz | tar xfz - -C /usr/local/bin
   chmod 755 /usr/local/bin/actionlint
-  chmod 755 /usr/local/jre/bin/java
-  chmod 755 /usr/local/bin/uv
-  chmod 755 /usr/local/bin/uvx
+  
+  echo "Installing yq..."
+  curl -Ls https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq
+  chmod 755 /usr/local/bin/yq
+  
+  echo "Installing ruff..."
+  curl -Ls https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
   chmod 755 /usr/local/bin/ruff
+  
+  # Clean up installation scripts
+  rm -rf /tmp/tools
+EOF
+
+# Verify all installations
+RUN <<EOF
+  set -eux
+  echo "Verifying installations..."
   yq --version
   buildifier --version
   bazel --version
@@ -141,14 +163,15 @@ RUN : \
   && echo ${USER} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USER} \
   && install -m 755 /dev/null /usr/local/bin/devenv_entrypoint_custom.sh \
   && chmod 755 /devenv_entrypoint.sh \
-  && rm -rf /var/lib/apt/lists/* /tmp/common_packages.txt
+  && rm -rf /var/lib/apt/lists/* /tmp/common_packages.txt /tmp/tools
 
 RUN <<EOF
   set -eux
-  curl -Ls https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd-linux-${CLANGD_VERSION}.zip | bsdtar xf - --strip-components=1 -C /usr/local
-  curl -Ls https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd_indexing_tools-linux-${CLANGD_VERSION}.zip | bsdtar xf - --strip-components=1 -C /usr/local
+  # Install clangd using shared script
+  /tmp/tools/install-clangd.sh "/usr/local"
+  
+  # Install git prompt script
   curl -Ls https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -o /usr/local/bin/git-prompt.sh
-  chmod 755 /usr/local/bin/clangd*
 EOF
 
 COPY devenv/custom /tmp/custom

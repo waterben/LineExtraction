@@ -94,3 +94,17 @@ bazel build //...
 
 - **base/packages_*.txt** - Packages to be installed during dev container image build in the base layer
 - **devenv/common_packages.txt** - Additional packages for development environment
+
+## Shared Scripts
+
+The Docker setup now uses shared scripts from `tools/scripts/` that are also used by the local development setup:
+
+- **tool-versions.sh** - Centralized version configuration for all tools
+- **install-system-packages.sh** - System package installation using Docker package lists
+- **install-uv.sh** - UV (Python package manager) installation
+- **install-bazel.sh** - Bazel/Bazelisk installation  
+- **install-clangd.sh** - clangd language server installation
+- **setup-python-env.sh** - Python virtual environment setup
+- **setup-precommit.sh** - Pre-commit hooks configuration
+
+This ensures consistency between Docker and local development environments.
