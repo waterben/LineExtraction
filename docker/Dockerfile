@@ -45,7 +45,6 @@ RUN <<EOF
   chmod 755 /usr/local/bin/buildifier
   chmod 755 /usr/local/bin/bazelisk
   chmod 755 /usr/local/bin/actionlint
-  chmod 755 /usr/local/jre/bin/java
   chmod 755 /usr/local/bin/uv
   chmod 755 /usr/local/bin/uvx
   chmod 755 /usr/local/bin/ruff

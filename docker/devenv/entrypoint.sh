@@ -20,6 +20,8 @@ mkdir -p \
 # Persist bash history between runs
 # https://code.visualstudio.com/remote/advancedcontainers/persist-bash-history
 mkdir -p ~/commandhistory
+# Fix ownership if the volume was created with wrong permissions
+sudo chown -R $(id -u):$(id -g) ~/commandhistory
 touch ~/commandhistory/.bash_history
 
 echo "export HISTFILE=~/commandhistory/.bash_history" >> ~/.bashrc
