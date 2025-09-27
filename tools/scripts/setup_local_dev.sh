@@ -9,7 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_SCRIPTS_DIR="${SCRIPT_DIR}/../../docker/scripts"
 DOCKER_BASE_DIR="${SCRIPT_DIR}/../../docker/base"
 DOCKER_DEVENV_DIR="${SCRIPT_DIR}/../../docker/devenv"
-REMOVE_MODE=false
+REMOVE_TOOLS_MODE=false
+REMOVE_PACKAGES_MODE=false
 
 writeError() {
     echo -e "\e[0;31mERROR: $1\e[0m" >&2
@@ -31,8 +32,10 @@ LineExtraction Local Development Environment Setup
 Usage: $0 [OPTIONS]
 
 OPTIONS:
-    --remove, -r    Remove the development environment instead of installing
-    --help, -h      Show this help message
+    --remove-tools      Remove only development tools and Python environments
+    --remove-packages   Remove only APT packages from Docker configuration
+    --remove, -r        Remove both tools and packages (equivalent to --remove-tools --remove-packages)
+    --help, -h          Show this help message
 
 DESCRIPTION:
     This script sets up (or removes) the development environment for the
@@ -40,13 +43,15 @@ DESCRIPTION:
     Must be run with sudo privileges.
 
 EXAMPLES:
-    sudo $0             # Install development environment
-    sudo $0 --remove    # Remove development environment
+    sudo $0                     # Install development environment
+    sudo $0 --remove-tools      # Remove only tools (uv, bazel, clangd, etc.)
+    sudo $0 --remove-packages   # Remove only APT packages
+    sudo $0 --remove            # Remove everything (tools + packages)
 
 NOTE:
-    This script installs system-wide packages and tools. Make sure you understand
-    what will be installed before running it. System packages are NOT removed
-    during removal for safety reasons.
+    This script installs system-wide packages and tools. Package removal will
+    only remove packages that were specifically listed in the Docker configuration
+    files, not their dependencies.
 HELP_EOF
 }
 
@@ -54,8 +59,17 @@ HELP_EOF
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
+            --remove-tools)
+                REMOVE_TOOLS_MODE=true
+                shift
+                ;;
+            --remove-packages)
+                REMOVE_PACKAGES_MODE=true
+                shift
+                ;;
             --remove|-r)
-                REMOVE_MODE=true
+                REMOVE_TOOLS_MODE=true
+                REMOVE_PACKAGES_MODE=true
                 shift
                 ;;
             --help|-h)
@@ -363,6 +377,108 @@ remove_precommit() {
     writeInfo "Pre-commit hooks removed successfully."
 }
 
+# Remove APT packages from Docker configuration files
+remove_system_packages() {
+    writeInfo "Removing APT packages from Docker configuration..."
+
+    # Function to extract package names from config file (same logic as install script)
+    extract_package_names() {
+        local file_path="$1"
+        if [[ ! -f "$file_path" ]]; then
+            return
+        fi
+        # sed 's/`.*`//g' removes everything between backticks (comments)
+        # tr '\n' ' ' converts newlines to spaces
+        cat "$file_path" | sed 's/`.*`//g' | tr '\n' ' '
+    }
+
+    # Get packages from base configuration
+    local base_packages=""
+    if [[ -f "$DOCKER_BASE_DIR/common_packages.txt" ]]; then
+        base_packages=$(extract_package_names "$DOCKER_BASE_DIR/common_packages.txt")
+        writeInfo "Base packages to remove: $base_packages"
+    fi
+
+    # Get packages from devenv configuration
+    local devenv_packages=""
+    if [[ -f "$DOCKER_DEVENV_DIR/common_packages.txt" ]]; then
+        devenv_packages=$(extract_package_names "$DOCKER_DEVENV_DIR/common_packages.txt")
+        writeInfo "DevEnv packages to remove: $devenv_packages"
+    fi
+
+    # Combine all packages
+    local all_packages="$base_packages $devenv_packages"
+
+    if [[ -z "$all_packages" ]]; then
+        writeWarning "No packages found to remove."
+        return
+    fi
+
+    # Remove packages (only if they are installed)
+    writeInfo "Removing APT packages..."
+    local packages_to_remove=""
+    local excluded_packages=("sudo" "ca-certificates" "curl" "git")
+
+    for package in $all_packages; do
+        # Skip empty strings
+        [[ -z "$package" ]] && continue
+
+        # Check if package is in excluded list
+        local exclude=false
+        for excluded in "${excluded_packages[@]}"; do
+            if [[ "$package" == "$excluded" ]]; then
+                writeInfo "Package $package is excluded from removal for safety."
+                exclude=true
+                break
+            fi
+        done
+
+        # Skip excluded packages
+        if [[ "$exclude" == "true" ]]; then
+            continue
+        fi
+
+        # Check if package is installed
+        if dpkg -l "$package" >/dev/null 2>&1; then
+            packages_to_remove="$packages_to_remove $package"
+        else
+            writeInfo "Package $package is not installed, skipping..."
+        fi
+    done
+
+    if [[ -n "$packages_to_remove" ]]; then
+        writeInfo "Removing installed packages:$packages_to_remove"
+        # Use --auto-remove to also remove dependencies that are no longer needed
+        DEBIAN_FRONTEND=noninteractive apt-get remove --auto-remove -y $packages_to_remove
+
+        # Clean up
+        apt-get autoremove -y
+        apt-get autoclean
+
+        writeInfo "APT packages removed successfully."
+    else
+        writeInfo "No packages need to be removed."
+    fi
+
+    # Remove environment variables
+    writeInfo "Cleaning up environment variables..."
+    if [[ -f "/etc/environment" ]]; then
+        # Create a backup
+        cp /etc/environment /etc/environment.bak.$(date +%Y%m%d_%H%M%S)
+
+        # Remove our specific environment variables
+        if grep -q "REQUESTS_CA_BUNDLE" /etc/environment; then
+            writeInfo "Removing REQUESTS_CA_BUNDLE from /etc/environment"
+            sed -i '/^export REQUESTS_CA_BUNDLE=/d' /etc/environment
+        fi
+
+        if grep -q "BAZELISK_BASE_URL" /etc/environment; then
+            writeInfo "Removing BAZELISK_BASE_URL from /etc/environment"
+            sed -i '/^export BAZELISK_BASE_URL=/d' /etc/environment
+        fi
+    fi
+}
+
 # Global variables for user handling
 ORIGINAL_USER=""
 ORIGINAL_HOME=""
@@ -372,8 +488,17 @@ main() {
     parse_args "$@"
     check_privileges
 
-    if [[ "$REMOVE_MODE" == "true" ]]; then
-        writeInfo "Starting LineExtraction local development environment removal..."
+    # Determine mode
+    if [[ "$REMOVE_TOOLS_MODE" == "true" ]] || [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
+        local mode_desc=""
+        if [[ "$REMOVE_TOOLS_MODE" == "true" ]] && [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
+            mode_desc="tools and packages"
+        elif [[ "$REMOVE_TOOLS_MODE" == "true" ]]; then
+            mode_desc="tools only"
+        else
+            mode_desc="packages only"
+        fi
+        writeInfo "Starting LineExtraction local development environment removal ($mode_desc)..."
     else
         writeInfo "Starting LineExtraction local development environment setup..."
         writeInfo "This will install system packages and development tools."
@@ -386,23 +511,39 @@ main() {
 
     check_os
 
-    if [[ "$REMOVE_MODE" == "true" ]]; then
-        # Remove in reverse order for dependencies - user components first
-        remove_precommit
-        remove_python_env_local
+    # Handle removal modes
+    if [[ "$REMOVE_TOOLS_MODE" == "true" ]] || [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
 
-        # Then system components as root
-        remove_all_tools
+        if [[ "$REMOVE_TOOLS_MODE" == "true" ]]; then
+            writeInfo "Removing development tools and environments..."
+
+            # Remove in reverse order for dependencies - user components first
+            remove_precommit
+            remove_python_env_local
+
+            # Then system components as root
+            remove_all_tools
+
+            writeInfo "Development tools removal completed."
+        fi
+
+        if [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
+            writeInfo "Removing APT packages..."
+            remove_system_packages
+            writeInfo "APT packages removal completed."
+        fi
 
         writeInfo ""
         writeInfo "=========================================="
         writeInfo "Environment removal completed successfully!"
         writeInfo "=========================================="
         writeInfo ""
-        writeInfo "NOTE: System packages are NOT removed for safety."
-        writeInfo "If you want to remove system packages, please do so manually:"
-        writeInfo "  - Base packages: see docker/base/common_packages.txt"
-        writeInfo "  - DevEnv packages: see docker/devenv/common_packages.txt"
+
+        if [[ "$REMOVE_TOOLS_MODE" == "true" ]] && [[ "$REMOVE_PACKAGES_MODE" == "false" ]]; then
+            writeInfo "NOTE: APT packages were NOT removed. Use --remove-packages to remove them."
+        elif [[ "$REMOVE_PACKAGES_MODE" == "true" ]] && [[ "$REMOVE_TOOLS_MODE" == "false" ]]; then
+            writeInfo "NOTE: Development tools were NOT removed. Use --remove-tools to remove them."
+        fi
     else
         # Verify Docker scripts exist
         writeInfo "Verifying Docker scripts..."
@@ -455,7 +596,7 @@ main() {
         writeInfo "  - bazel/bazelisk (Build system)"
         writeInfo "  - buildifier (Bazel formatter)"
         writeInfo "  - clangd (C++ language server)"
-        writeInfo "  - gh (GitHub CLI)" 
+        writeInfo "  - gh (GitHub CLI)"
         writeInfo "  - yq (YAML processor)"
         writeInfo "  - actionlint (GitHub Actions linter)"
         writeInfo "  - ruff (Python linter/formatter)"
