@@ -6,6 +6,8 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REMOVE_MODE=false
+ORIGINAL_USER=""
+ORIGINAL_HOME=""
 
 writeError() {
     echo -e "\e[0;31mERROR: $1\e[0m" >&2
@@ -18,6 +20,17 @@ writeWarning() {
 
 writeInfo() {
     echo -e "\e[0;32mINFO: $1\e[0m"
+}
+
+# Run command as original user (before sudo)
+run_as_user() {
+    if [[ "$ORIGINAL_USER" == "root" ]]; then
+        # No original user available, run as root
+        "$@"
+    else
+        # Run as original user with their environment
+        sudo -u "$ORIGINAL_USER" -H "$@"
+    fi
 }
 
 show_help() {
@@ -78,6 +91,18 @@ check_privileges() {
     if [[ $EUID -ne 0 ]]; then
         writeError "This script must be run as root (use sudo)."
     fi
+
+    # Check if we have the original user available for user-specific operations
+    if [[ -z "${SUDO_USER:-}" ]]; then
+        writeWarning "SUDO_USER not set. User-specific operations will run as root."
+        ORIGINAL_USER="root"
+        ORIGINAL_HOME="/root"
+    else
+        ORIGINAL_USER="$SUDO_USER"
+        ORIGINAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    fi
+
+    writeInfo "Running system operations as root, user operations as: $ORIGINAL_USER"
 }
 
 # Main function
@@ -101,27 +126,25 @@ main() {
     local flag=""
     if [[ "$REMOVE_MODE" == "true" ]]; then
         flag="--remove"
-        # Remove in reverse order for dependencies
-        "${SCRIPT_DIR}/setup-precommit.sh" $flag
-        "${SCRIPT_DIR}/install-clangd.sh" $flag
-        "${SCRIPT_DIR}/install-bazel.sh" $flag
-        "${SCRIPT_DIR}/install-uv.sh" $flag
-        "${SCRIPT_DIR}/install-system-packages.sh" $flag
+        # Remove in reverse order for dependencies - user components first
+        run_as_user "${SCRIPT_DIR}/setup-precommit.sh" $flag
+        run_as_user "${SCRIPT_DIR}/setup-python-env.sh" $flag
 
-        # Manually remove Python environment
-        if [[ -d ".venv" ]]; then
-            writeInfo "Removing Python virtual environment..."
-            rm -rf .venv
-            writeInfo "Python virtual environment removed."
-        fi
+        # Then system components as root
+        "${SCRIPT_DIR}/install-clangd.sh" $flag
+        "${SCRIPT_DIR}/install-bazel.sh" $flag
+        "${SCRIPT_DIR}/install-uv.sh" $flag
+        "${SCRIPT_DIR}/install-system-packages.sh" $flag
     else
-        # Install in normal order
+        # Install in normal order - system components as root
         "${SCRIPT_DIR}/install-system-packages.sh" $flag
         "${SCRIPT_DIR}/install-uv.sh" $flag
         "${SCRIPT_DIR}/install-bazel.sh" $flag
         "${SCRIPT_DIR}/install-clangd.sh" $flag
-        "${SCRIPT_DIR}/setup-python-env.sh" $flag
-        "${SCRIPT_DIR}/setup-precommit.sh" $flag
+
+        # User-specific components as original user
+        run_as_user "${SCRIPT_DIR}/setup-python-env.sh" $flag
+        run_as_user "${SCRIPT_DIR}/setup-precommit.sh" $flag
     fi
 
     if [[ "$REMOVE_MODE" == "true" ]]; then
