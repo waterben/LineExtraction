@@ -35,6 +35,10 @@ ACTIONLINT_VERSION="${ACTIONLINT_VERSION:-1.7.7}"
 YQ_VERSION="${YQ_VERSION:-4.47.1}"
 RUFF_VERSION="${RUFF_VERSION:-0.12.7}"
 
+# Bazelisk configuration
+BAZELISK_BASE_URL="${BAZELISK_BASE_URL:-https://github.com/bazelbuild/bazel/releases/download}"
+export BAZELISK_BASE_URL
+
 # Installation directory (default to /usr/local/bin)
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 

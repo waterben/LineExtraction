@@ -1,14 +1,15 @@
 
 ARG VARIANT="ubuntu:24.04"
 
-# Base image with all our dependencies needed for CI.
+# Base image with all our dependencies needed for CI and development
+# Uses multi-stage builds to keep the final image size small
 FROM ${VARIANT} AS base
 
-
-ENV BAZELISK_BASE_URL="https://github.com/bazelbuild/bazel/releases/download"
 # Re-propagate ARG-value in new build stage
 # See: https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG VARIANT
+
+# Install common dependencies
 COPY base /tmp/base
 COPY --chmod=755 scripts/install_apt_packages_from_list scripts/install_base_tools /usr/local/bin
 RUN <<EOF
@@ -21,8 +22,10 @@ RUN <<EOF
 EOF
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
+# Install base tools from custom sources
 RUN install_base_tools
 
+# Setup Python environment
 COPY --from=repo_root_context pyproject.toml /tmp/
 # Copy uv.lock if it exists to preserve dependency versions
 RUN --mount=from=repo_root_context,source=.,target=/src \
@@ -44,8 +47,11 @@ RUN --mount=from=repo_root_context,source=.,target=/src,rw \
     rm -f /tmp/pyproject.toml /tmp/uv.lock
 
 ENV PATH="/opt/venv/deps/python/bin:$PATH"
+
+# Default to bash shell
 CMD ["/bin/bash"]
 
+# CI image with user information added to the system (currently not used).
 FROM base AS cicd
 RUN : \
   && useradd -c "" --no-log-init -u 1001 -m github-action-runner \
@@ -62,15 +68,18 @@ EOF
 
 # Devenv image with user information added to the system.
 FROM base AS devenv
+
 ARG USER=dockeruser
+
 # 1000/998: default ids. Should be set by the caller and need to match ids of host user.
 ARG UID=1000
 ARG GID=1000
 ARG DOCKER_GID=998
 
-# Check if a user with this UID exists, and delete them before readding them later
+# Check if a user with this UID exists, and delete them before reading them later
 RUN getent passwd ${UID} && userdel --remove $(getent passwd ${UID} | cut -d: -f1) || true
 
+# Install common dependencies, add user, sudo and entrypoint
 COPY devenv/common_packages.txt /tmp/
 COPY devenv/entrypoint.sh /devenv_entrypoint.sh
 RUN : \
@@ -88,11 +97,9 @@ RUN : \
   && chmod 755 /devenv_entrypoint.sh \
   && rm -rf /var/lib/apt/lists/* /tmp/common_packages.txt
 
+# Install development tools from custom sources
 COPY --chmod=755 scripts/install_devenv_tools /usr/local/bin
 RUN install_devenv_tools
-
-COPY devenv/custom /tmp/custom
-RUN : [ -f /tmp/custom/entrypoint.sh ] && cat /tmp/custom/entrypoint.sh > /usr/local/bin/devenv_entrypoint_custom.sh || true
 
 USER ${USER}
 WORKDIR /workspace
