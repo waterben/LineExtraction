@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Internal script: Setup Python environment with multiple versions and virtual environments
+# This script is used by both Dockerfile and local setup scripts
+# Not intended for direct user execution
+# Requires uv to be already installed
+
+set -euo pipefail
+
+# Version and path variables with defaults (can be overridden by caller)
+PYTHON_DEV_VERSION="${PYTHON_DEV_VERSION:-3.11.12}"
+PYTHON_3_8_VERSION="${PYTHON_3_8_VERSION:-3.8.5}"
+PYTHON_3_10_VERSION="${PYTHON_3_10_VERSION:-3.10.11}"
+UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-/opt/python}"
+PYTHON_DEV_INTERPRETER_PATH="${PYTHON_DEV_INTERPRETER_PATH:-/opt/python/cpython-${PYTHON_DEV_VERSION}-linux-x86_64-gnu/bin/python}"
+PYTHON_DEV_VENV_PATH="${PYTHON_DEV_VENV_PATH:-/opt/venv/deps/python}"
+PYTHON_3_8_INTERPRETER_PATH="${PYTHON_3_8_INTERPRETER_PATH:-/opt/python/cpython-${PYTHON_3_8_VERSION}-linux-x86_64-gnu/bin/python}"
+PYTHON_3_10_INTERPRETER_PATH="${PYTHON_3_10_INTERPRETER_PATH:-/opt/python/cpython-${PYTHON_3_10_VERSION}-linux-x86_64-gnu/bin/python}"
+PYTHON_3_8_VENV_PATH="${PYTHON_3_8_VENV_PATH:-/opt/venv/deps/python3.8}"
+PYTHON_3_10_VENV_PATH="${PYTHON_3_10_VENV_PATH:-/opt/venv/deps/python3.10}"
+
+# Project file path (should be set by caller)
+PROJECT_FILE_PATH="${PROJECT_FILE_PATH:-/tmp}"
+
+# Export environment variables for Docker and system environment
+export UV_PYTHON_INSTALL_DIR
+export PYTHON_DEV_INTERPRETER_PATH
+export PYTHON_DEV_VENV_PATH
+export PYTHON_3_8_INTERPRETER_PATH
+export PYTHON_3_10_INTERPRETER_PATH
+export PYTHON_3_8_VENV_PATH
+export PYTHON_3_10_VENV_PATH
+
+setup_python_env() {
+    echo "Setting up Python environment..."
+
+    # Create directories
+    mkdir -p "$UV_PYTHON_INSTALL_DIR"
+    mkdir -p /opt/venv
+
+    # Install Python versions
+    echo "Installing Python versions..."
+    uv python install "$PYTHON_3_8_VERSION"
+    uv python install "$PYTHON_3_10_VERSION"
+    uv python install "$PYTHON_DEV_VERSION"
+
+    # Create virtual environments
+    echo "Creating virtual environments..."
+    uv venv --python "$PYTHON_3_8_INTERPRETER_PATH" "$PYTHON_3_8_VENV_PATH" --seed
+    uv venv --python "$PYTHON_3_10_INTERPRETER_PATH" "$PYTHON_3_10_VENV_PATH" --seed
+
+    # Install dependencies into virtual environments if project file exists
+    if [[ -f "$PROJECT_FILE_PATH/pyproject.toml" ]]; then
+        echo "Installing dependencies into virtual environments..."
+        cd "$PROJECT_FILE_PATH"
+
+        # Check if uv.lock exists and is valid, create if needed
+        local need_lock=false
+        if [[ ! -f "uv.lock" ]]; then
+            need_lock=true
+        elif [[ ! -s "uv.lock" ]]; then
+            need_lock=true
+        elif ! grep -q "^version" "uv.lock" 2>/dev/null; then
+            need_lock=true
+        fi
+
+        if [[ "$need_lock" == "true" ]]; then
+            echo "Creating/updating uv.lock from pyproject.toml..."
+            # Remove corrupted or empty uv.lock file first
+            rm -f uv.lock
+            uv lock
+        else
+            echo "Valid uv.lock found, using existing lock file"
+        fi
+
+        # Install into Python 3.8 environment
+        . "$PYTHON_3_8_VENV_PATH/bin/activate" && uv sync --active && deactivate
+
+        # Install into Python 3.10 environment
+        . "$PYTHON_3_10_VENV_PATH/bin/activate" && uv sync --active && deactivate
+    else
+        echo "No pyproject.toml found at $PROJECT_FILE_PATH, skipping dependency installation"
+    fi
+
+    # Setup uvx wrapper links
+    if [[ -f "/usr/local/bin/uvx_wrapper" ]]; then
+        echo "Setting up uvx wrapper links..."
+        for cmd in pre-commit rstcheck pymarkdownlnt yamllint docutils; do
+            ln -s /usr/local/bin/uvx_wrapper /usr/local/bin/$cmd
+        done
+    fi
+
+    # Clean up project files if they were copied temporarily
+    if [[ "$PROJECT_FILE_PATH" == "/tmp" ]]; then
+        rm -f /tmp/pyproject.toml /tmp/uv.lock
+    fi
+
+    # Set permissions (skip setfacl if not available)
+    chmod -R 755 /opt/venv || true
+
+    # Verify environment
+    echo "Verifying Python development environment..."
+    . "$PYTHON_DEV_VENV_PATH/bin/activate" && pip list && echo "Package count: $(pip list | wc -l)"
+
+    # Set up PATH for Docker environment by creating an environment file
+    if [[ -f /.dockerenv ]]; then
+        echo "Setting up PATH for Docker environment..."
+        echo "export PATH=\"$PYTHON_DEV_VENV_PATH/bin:\$PATH\"" > /etc/environment.d/python-venv.conf || true
+        # Also export for current session
+        export PATH="$PYTHON_DEV_VENV_PATH/bin:$PATH"
+    fi
+}
+
+# Execute if called directly
+setup_python_env

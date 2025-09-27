@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Internal script: Install development environment tools (clangd, clang indexing tools, git-prompt)
+# This script is used by both Dockerfile and local setup scripts
+# Not intended for direct user execution
+
+set -euo pipefail
+
+# Version variables (should be set by caller)
+CLANGD_VERSION="${CLANGD_VERSION:-21.1.0}"
+
+# Installation directory (default to /usr/local)
+INSTALL_DIR="${INSTALL_DIR:-/usr/local}"
+
+install_devenv_tools() {
+    echo "Installing development environment tools..."
+    echo "Installing clangd and related tools version $CLANGD_VERSION..."
+
+    # Install clangd
+    curl -Ls "https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd-linux-${CLANGD_VERSION}.zip" \
+        | bsdtar xf - --strip-components=1 -C "$INSTALL_DIR"
+
+    # Install clangd indexing tools
+    curl -Ls "https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd_indexing_tools-linux-${CLANGD_VERSION}.zip" \
+        | bsdtar xf - --strip-components=1 -C "$INSTALL_DIR"
+
+    # Install git-prompt for better shell experience
+    curl -Ls "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh" \
+        -o "$INSTALL_DIR/bin/git-prompt.sh"
+
+    # Set permissions
+    chmod 755 "$INSTALL_DIR/bin"/clangd*
+}
+
+# Execute if called directly
+install_devenv_tools
