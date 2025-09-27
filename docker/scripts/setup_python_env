@@ -147,11 +147,8 @@ setup_python_env() {
         log_info "uvx_wrapper not found, skipping wrapper setup"
     fi
 
-    # Clean up project files if they were copied temporarily
-    if [[ "$PROJECT_FILE_PATH" == "/tmp" ]]; then
-        log_info "Cleaning up temporary project files..."
-        rm -f /tmp/pyproject.toml /tmp/uv.lock
-    fi
+    # Note: Cleanup is handled by caller (e.g., Dockerfile) to allow
+    # copying back uv.lock if it was created/updated
 
     # Set permissions (skip setfacl if not available)
     log_info "Setting permissions on virtual environments..."

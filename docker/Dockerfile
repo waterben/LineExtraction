@@ -35,6 +35,14 @@ RUN --mount=from=repo_root_context,source=.,target=/src \
 COPY --chmod=755 scripts/setup_python_env scripts/uvx_wrapper /usr/local/bin
 RUN setup_python_env
 
+# Copy uv.lock back to source and clean up temp files
+RUN --mount=from=repo_root_context,source=.,target=/src,rw \
+    if [[ -f /tmp/uv.lock ]]; then \
+        echo "Copying uv.lock back to repository root"; \
+        cp /tmp/uv.lock /src/uv.lock; \
+    fi && \
+    rm -f /tmp/pyproject.toml /tmp/uv.lock
+
 ENV PATH="/opt/venv/deps/python/bin:$PATH"
 CMD ["/bin/bash"]
 
