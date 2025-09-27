@@ -39,8 +39,7 @@ echo 'export GIT_PS1_SHOWSTASHSTATE=0' >> ~/.vscode_profile
 echo 'export GIT_PS1_SHOWUNTRACKEDFILES=0' >> ~/.vscode_profile
 echo 'export GIT_PS1_SHOWUPSTREAM="auto"' >> ~/.vscode_profile
 echo 'export PS1="${COLOR_GREEN}\u@\h${COLOR_END}:${COLOR_BLUE}\w${COLOR_RED}''\$(__git_ps1)''${COLOR_END}\n> "' >> ~/.vscode_profile
-echo '# Adjust ccache to be persistent on volume' >> ~/.vscode_profile
-echo 'export CCACHE_DIR="${HOME}/.cache/ccache"' >> ~/.vscode_profile
+echo '# ccache uses default ~/.ccache directory (mounted as volume)' >> ~/.vscode_profile
 echo '# Set the bash history file to be persistent on volume and ensure it is activated before prompt' >> ~/.vscode_profile
 echo 'export PROMPT_COMMAND="history -a" && export HISTFILE="${HOME}/commandhistory/.bash_history"' >>  ~/.vscode_profile
 
