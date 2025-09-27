@@ -1,0 +1,39 @@
+yaml-files:
+  - "*.yaml"
+  - "*.yml"
+  - .yamllint
+
+# These rules are compatible with the auto-formatting applied by the VS code extension redhat.vscode-yaml
+# Run locally with: yamllint --strict -c .yamllint.yml <files>
+rules:
+  braces: enable
+  brackets: enable
+  # difference to PACE: allow arbitrary number of spaces after ":", because some like vertical alignment of arguments.
+  colons: {max-spaces-before: 0, max-spaces-after: -1}
+  commas: enable
+  comments:
+    level: warning
+    min-spaces-from-content: 1
+  comments-indentation:
+    level: warning
+  document-end: disable
+  document-start: disable
+  empty-lines: enable
+  empty-values: disable
+  hyphens: enable
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+    check-multi-line-strings: false
+  key-duplicates: enable
+  key-ordering: disable
+  # difference to PACE: 150 instead of 120. Rationale: YAML files often contain longer path strings.
+  line-length:
+    max: 210
+    level: warning
+  new-line-at-end-of-file: enable
+  new-lines: enable
+  octal-values: disable
+  quoted-strings: disable
+  trailing-spaces: enable
+  truthy: disable  # difference to PACE: disable instead of warning

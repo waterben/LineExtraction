@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+TOOL=$(basename "$0")
+exec uvx "$TOOL" "$@"

@@ -1,0 +1,59 @@
+---
+default_stages: [pre-commit]  # run hooks on commit unless specified otherwise
+exclude: |
+  (?x)(
+    ^bazel-*|
+    ^external/.*
+  )
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-merge-conflict
+  - repo: local
+    hooks:
+      - id: buildifier
+        name: Format Bazel/Starlark files (buildifier)
+        description: Format starlark code with buildifier
+        entry: buildifier
+        language: system
+        types: [bazel]
+      - id: clang-format
+        name: Format C++ files
+        entry: clang-format
+        language: system
+        types_or: [c, c++]
+        args: [-i, -Werror, -fallback-style=none]
+        exclude: ^(tools/conan/conan-index)
+      - id: yamllint
+        name: Lint YAML files
+        description: This hook runs yamllint.
+        entry: yamllint
+        language: python
+        types: [yaml]
+        args: [--format, parsable, --strict, -c, .yamllint.yml]
+        additional_dependencies: []
+      - id: actionlint
+        name: Lint GitHub Workflows
+        description: Runs actionlint to lint GitHub Actions workflow files
+        language: system
+        types: [yaml]
+        files: "^.github/workflows/"
+        entry: env SHELLCHECK_OPTS='--severity=warning --exclude=SC2215' actionlint
+      - id: ruff-check
+        name: ruff check
+        description: "Run 'ruff check'"
+        entry: ruff
+        language: python
+        types_or: [python]
+        args: [check, --force-exclude]
+      - id: ruff-format
+        name: ruff format
+        description: "Run 'ruff format'"
+        entry: ruff
+        language: python
+        types_or: [python]
+        args: [format, --force-exclude]

@@ -1,0 +1,6 @@
+vim
+less
+gdb
+nano
+libarchive-tools
+zsh

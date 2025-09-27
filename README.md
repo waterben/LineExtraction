@@ -19,10 +19,32 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 
 - **`examples/`** - Usage examples and demonstrations
 - **`evaluation/`** - Performance evaluation and benchmarks
+- **`tools/`** - Build tools and utilities:
+  - `cmake/` - CMake modules and configuration files
+  - `scripts/` - Development and setup scripts
 
 ## Quick Start
 
-### Prerequisites (Debian/Ubuntu)
+### Development Environment Setup
+
+#### Option 1: Docker/DevContainer (Recommended)
+
+Use the provided DevContainer configuration with VS Code for a consistent development environment:
+
+- Open the project in VS Code
+- Install the "Dev Containers" extension
+- Reopen in container when prompted
+- See `docker/README.md` for details
+
+#### Option 2: Local Setup
+
+Use the automated setup script for local development:
+
+```bash
+./tools/scripts/setup_local_dev.sh
+```
+
+#### Option 3: Manual Prerequisites (Debian/Ubuntu)
 
 ```bash
 sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev \
@@ -92,6 +114,7 @@ make doc
 ## Dependencies
 
 The build system automatically downloads and builds:
+
 - OpenCV 4.7+
 - Eigen3
 - dlib

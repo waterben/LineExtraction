@@ -1,0 +1,18 @@
+[project]
+name = "line-extraction-deps-env"
+version = "0.1.0"
+requires-python = ">=3.8"
+dependencies = [
+    "debugpy==1.8.14",
+    "gitpython==3.1.43",
+    "jinja2==3.1.6",
+    "lxml==4.9.4",
+    "numpy==1.23.5",
+    "pybind11-stubgen==2.5.4",
+    "pynput==1.8.1",
+    "pyserial==3.5",
+    "pyyaml==6.0.2",
+    "requests>=2.32.4",
+    "urllib3==1.26.6",
+    "xmljson==0.2.1",
+]
