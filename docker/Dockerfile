@@ -36,7 +36,6 @@ RUN <<EOF
   curl -Ls https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64 -o /usr/local/bin/buildifier
   curl -Ls https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 -o /usr/local/bin/bazelisk
   curl -Ls https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz | tar xfz - --strip-components=1 -C /usr/local
-  curl -Ls https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip | bsdtar xf - --strip-components=1 -C /usr/local
   curl -Ls https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz | tar xfz  - -C /usr/local/bin
   curl -Ls https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq
   curl -Ls https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
@@ -45,7 +44,6 @@ RUN <<EOF
   chmod 755 /usr/local/bin/yq
   chmod 755 /usr/local/bin/buildifier
   chmod 755 /usr/local/bin/bazelisk
-  chmod 755 /usr/local/bin/sonar*
   chmod 755 /usr/local/bin/actionlint
   chmod 755 /usr/local/jre/bin/java
   chmod 755 /usr/local/bin/uv
