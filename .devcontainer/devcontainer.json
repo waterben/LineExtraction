@@ -77,6 +77,9 @@
         ]
       },
       "extensions": [
+        "openai.chatgpt",
+        "github.copilot",
+        "github.copilot-chat",
         "augustocdias.tasks-shell-input",
         "BazelBuild.vscode-bazel",
         "cschlosser.doxdocgen",

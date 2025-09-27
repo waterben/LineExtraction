@@ -23,7 +23,6 @@ EOF
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 
 ARG UV_VERSION="0.8.4"
-ARG CLANGD_VERSION="21.1.0"
 ARG PYTHON_DEV_VERSION="3.11.12"
 ARG BUILDIFIER_VERSION="8.2.1"
 ARG BAZELISK_VERSION="1.26.0"
@@ -57,27 +56,28 @@ RUN <<EOF
 EOF
 
 ENV UV_PYTHON_INSTALL_DIR="/opt/python"
-# ENV PYTHON_3_8_INTERPRETER_PATH="/opt/python/cpython-3.8.5-linux-x86_64-gnu/bin/python"
+ENV PYTHON_DEV_INTERPRETER_PATH="/opt/python/cpython-${PYTHON_DEV_VERSION}-linux-x86_64-gnu/bin/python"
+ENV PYTHON_DEV_VENV_PATH="/opt/venv/deps/python"
+ENV PYTHON_3_8_INTERPRETER_PATH="/opt/python/cpython-3.8.5-linux-x86_64-gnu/bin/python"
 ENV PYTHON_3_10_INTERPRETER_PATH="/opt/python/cpython-3.10.11-linux-x86_64-gnu/bin/python"
-# ENV PYTHON_3_8_VENV_PATH="/opt/venv/deps/python3.8"
+ENV PYTHON_3_8_VENV_PATH="/opt/venv/deps/python3.8"
 ENV PYTHON_3_10_VENV_PATH="/opt/venv/deps/python3.10"
-COPY --from=repo_root_context pyproject.toml uv.lock /tmp/
+COPY --from=repo_root_context pyproject.toml /tmp/
 RUN <<EOF
   set -eux
   mkdir -p /opt/python
   mkdir -p /opt/venv
-  # uv python install 3.8.5
+  uv python install 3.8.5
   uv python install 3.10.11
   uv python install ${PYTHON_DEV_VERSION}
 
-  # creating virtual environments
-  # uv venv --python ${PYTHON_3_8_INTERPRETER_PATH} ${PYTHON_3_8_VENV_PATH} --seed
+  # creating virtual environment
+  uv venv --python ${PYTHON_3_8_INTERPRETER_PATH} ${PYTHON_3_8_VENV_PATH} --seed
   uv venv --python ${PYTHON_3_10_INTERPRETER_PATH} ${PYTHON_3_10_VENV_PATH} --seed
 
   # installing dependencies into virtual environments
-  # cd /tmp/ && . ${PYTHON_3_8_VENV_PATH}/bin/activate && uv sync --active --locked && deactivate
-  cd /tmp/ && . ${PYTHON_3_10_VENV_PATH}/bin/activate && uv sync --active --locked && deactivate
-
+  cd /tmp/ && . ${PYTHON_3_8_VENV_PATH}/bin/activate && uv sync --active && deactivate
+  cd /tmp/ && . ${PYTHON_3_10_VENV_PATH}/bin/activate && uv sync --active && deactivate
 
   for cmd in pre-commit rstcheck pymarkdownlnt yamllint docutils; do
     ln -s /usr/local/bin/uvx-wrapper /usr/local/bin/$cmd
@@ -86,16 +86,12 @@ RUN <<EOF
 
   # Set permissions (skip setfacl if not available)
   chmod -R 755 /opt/venv || true
-  # setfacl --recursive -m u::rwx,g::rwx,o::rwx /opt/venv || true
-  # setfacl --recursive --default -m u::rwx,g::rwx,o::rwx /opt/venv || true
 
-  # check if the virtual environments are having packages installed
-  # . ${PYTHON_3_8_VENV_PATH}/bin/activate && pip list | wc -l | awk '$1 < 20 { exit 1 }'
-  . ${PYTHON_3_10_VENV_PATH}/bin/activate && pip list && echo "Package count: $(pip list | wc -l)"
+  # check if the virtual environment has packages installed
+  . ${PYTHON_DEV_VENV_PATH}/bin/activate && pip list && echo "Package count: $(pip list | wc -l)"
 EOF
 
-# ENV PATH="/opt/venv/deps/python3.8/bin:$PATH"
-ENV PATH="/opt/venv/deps/python3.10/bin:$PATH"
+ENV PATH="/opt/venv/deps/python/bin:$PATH"
 CMD ["/bin/bash"]
 
 FROM base AS cicd
@@ -119,6 +115,8 @@ ARG USER=dockeruser
 ARG UID=1000
 ARG GID=1000
 ARG DOCKER_GID=998
+
+ARG CLANGD_VERSION="21.1.0"
 
 # Check if a user with this UID exists, and delete them before readding them later
 RUN getent passwd ${UID} && userdel --remove $(getent passwd ${UID} | cut -d: -f1) || true

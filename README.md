@@ -36,6 +36,27 @@ Use the provided DevContainer configuration with VS Code for a consistent develo
 - Reopen in container when prompted
 - See `docker/README.md` for details
 
+**Python Environment Management in Docker:**
+
+The Docker environment provides multiple Python versions with virtual environments for older versions:
+
+- **Python 3.11** - Native/default system Python (always available)
+- **Python 3.8** - Available via virtual environment
+- **Python 3.10** - Available via virtual environment
+
+```bash
+# Switch to specific Python versions
+source /opt/venv/deps/python3.8/bin/activate    # Activate Python 3.8
+source /opt/venv/deps/python3.10/bin/activate   # Activate Python 3.10
+
+# Return to native Python 3.11 (default)
+deactivate
+
+# Check current Python version and environment status
+python --version
+echo $VIRTUAL_ENV  # Shows active virtual environment (empty if using native Python)
+```
+
 #### Option 2: Local Setup
 
 Use the automated setup script for local development:
