@@ -40,31 +40,30 @@ RUN ["/bin/bash", "-c", "echo 'Installing clangd...' && source /tmp/tools/script
 RUN <<EOF
   set -eux
   # Source tool versions for consistency
-  source /tmp/tools/scripts/tool-versions.sh
-  
+  . /tmp/tools/scripts/tool-versions.sh
+
   echo "Installing buildifier..."
   curl -Ls https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64 -o /usr/local/bin/buildifier
   chmod 755 /usr/local/bin/buildifier
-  
+
   echo "Installing GitHub CLI..."
   curl -Ls https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz | tar xfz - --strip-components=1 -C /usr/local
-  
-  echo "Installing sonar-scanner..."
-  curl -Ls https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip | bsdtar xf - --strip-components=1 -C /usr/local
-  chmod 755 /usr/local/bin/sonar*
-  
+
   echo "Installing actionlint..."
   curl -Ls https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz | tar xfz - -C /usr/local/bin
   chmod 755 /usr/local/bin/actionlint
-  
+
   echo "Installing yq..."
   curl -Ls https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -o /usr/local/bin/yq
   chmod 755 /usr/local/bin/yq
-  
+
   echo "Installing ruff..."
   curl -Ls https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz | tar xfz - --strip-components=1 -C /usr/local/bin
   chmod 755 /usr/local/bin/ruff
-  
+
+  # Copy tool versions to persistent location for later use
+  cp /tmp/tools/scripts/tool-versions.sh /usr/local/bin/
+
   # Clean up installation scripts
   rm -rf /tmp/tools
 EOF
@@ -86,9 +85,11 @@ ENV UV_PYTHON_INSTALL_DIR="/opt/python"
 ENV PYTHON_3_10_INTERPRETER_PATH="/opt/python/cpython-3.10.11-linux-x86_64-gnu/bin/python"
 # ENV PYTHON_3_8_VENV_PATH="/opt/venv/deps/python3.8"
 ENV PYTHON_3_10_VENV_PATH="/opt/venv/deps/python3.10"
-COPY --from=repo_root_context pyproject.toml uv.lock /tmp/
+COPY --from=repo_root_context pyproject.toml /tmp/
 RUN <<EOF
   set -eux
+  # Source tool versions for consistency
+  . /usr/local/bin/tool-versions.sh
   mkdir -p /opt/python
   mkdir -p /opt/venv
   # uv python install 3.8.5
@@ -100,14 +101,14 @@ RUN <<EOF
   uv venv --python ${PYTHON_3_10_INTERPRETER_PATH} ${PYTHON_3_10_VENV_PATH} --seed
 
   # installing dependencies into virtual environments
-  # cd /tmp/ && . ${PYTHON_3_8_VENV_PATH}/bin/activate && uv sync --active --locked && deactivate
-  cd /tmp/ && . ${PYTHON_3_10_VENV_PATH}/bin/activate && uv sync --active --locked && deactivate
+  # cd /tmp/ && . ${PYTHON_3_8_VENV_PATH}/bin/activate && uv sync --active && deactivate
+  cd /tmp/ && . ${PYTHON_3_10_VENV_PATH}/bin/activate && uv sync --active && deactivate
 
 
   for cmd in pre-commit rstcheck pymarkdownlnt yamllint docutils; do
     ln -s /usr/local/bin/uvx-wrapper /usr/local/bin/$cmd
   done
-  rm /tmp/pyproject.toml /tmp/uv.lock
+  rm /tmp/pyproject.toml
 
   # Set permissions (skip setfacl if not available)
   chmod -R 755 /opt/venv || true
@@ -167,9 +168,6 @@ RUN : \
 
 RUN <<EOF
   set -eux
-  # Install clangd using shared script
-  /tmp/tools/install-clangd.sh "/usr/local"
-  
   # Install git prompt script
   curl -Ls https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -o /usr/local/bin/git-prompt.sh
 EOF
