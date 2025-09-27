@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install system packages using the existing Docker package lists
+# Install/remove system packages using the existing Docker package lists
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -17,39 +17,73 @@ writeInfo() {
 
 install_system_packages() {
     writeInfo "Installing system packages..."
-    
+
     # Check if we can use the Docker script
     if [[ -x "${DOCKER_DIR}/scripts/install_apt_packages_from_list" ]]; then
-        # Use the Docker script with sudo if not root
-        if [[ "$(id -u)" -ne 0 ]]; then
-            sudo apt update
-            sudo "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/base/common_packages.txt"
-            sudo "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/devenv/common_packages.txt"
-        else
-            apt update
-            "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/base/common_packages.txt"
-            "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/devenv/common_packages.txt"
-        fi
+        # Use the Docker script
+        apt update
+        "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/base/common_packages.txt"
+        "${DOCKER_DIR}/scripts/install_apt_packages_from_list" -f "${DOCKER_DIR}/devenv/common_packages.txt"
     else
         # Fallback to direct apt install
         writeInfo "Docker script not found, using fallback method..."
-        sudo apt update
-        
+        apt update
+
         # Install base packages
-        sudo apt install -y \
+        apt install -y \
             sudo ca-certificates curl cmake doxygen fontconfig moreutils jq \
             build-essential llvm clang gcc g++ git git-lfs python3 python3-venv \
             clang-format clang-tidy ccache lcov locales zstd libarchive-tools \
             shellcheck acl python3-dev xxd
-        
+
         # Install development packages
-        sudo apt install -y vim less gdb nano libarchive-tools zsh
+        apt install -y vim less gdb nano libarchive-tools zsh
     fi
-    
+
     writeInfo "System packages installed successfully."
+}
+
+remove_system_packages() {
+    writeInfo "Removing system packages..."
+    writeInfo "Note: Only non-essential packages will be removed to avoid system damage."
+
+    # Remove non-essential development packages
+    apt remove --purge -y \
+        cmake doxygen clang-format clang-tidy ccache lcov \
+        shellcheck vim less gdb nano zsh 2>/dev/null || true
+
+    # Clean up
+    apt autoremove -y
+    apt autoclean
+
+    writeInfo "System packages removed successfully."
+}
+
+# Main function
+main() {
+    local remove_mode=false
+
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --remove)
+                remove_mode=true
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    if [[ "$remove_mode" == "true" ]]; then
+        remove_system_packages
+    else
+        install_system_packages
+    fi
 }
 
 # Check if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    install_system_packages "$@"
+    main "$@"
 fi
