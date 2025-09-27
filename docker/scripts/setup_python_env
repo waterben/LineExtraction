@@ -7,6 +7,26 @@
 
 set -euo pipefail
 
+# Error handling functions
+error_exit() {
+    echo "ERROR: $1" >&2
+    echo "Script: ${BASH_SOURCE[1]:-$0}" >&2
+    echo "Line: ${BASH_LINENO[0]}" >&2
+    echo "Function: ${FUNCNAME[1]:-main}" >&2
+    exit 1
+}
+
+log_info() {
+    echo "INFO: $1"
+}
+
+log_error() {
+    echo "ERROR: $1" >&2
+}
+
+# Trap to catch any errors
+trap 'error_exit "An unexpected error occurred"' ERR
+
 # Version and path variables with defaults (can be overridden by caller)
 PYTHON_DEV_VERSION="${PYTHON_DEV_VERSION:-3.11.12}"
 PYTHON_3_8_VERSION="${PYTHON_3_8_VERSION:-3.8.5}"
@@ -32,22 +52,44 @@ export PYTHON_3_8_VENV_PATH
 export PYTHON_3_10_VENV_PATH
 
 setup_python_env() {
-    echo "Setting up Python environment..."
+    log_info "Setting up Python environment..."
+    log_info "Python versions: DEV=$PYTHON_DEV_VERSION, 3.8=$PYTHON_3_8_VERSION, 3.10=$PYTHON_3_10_VERSION"
+
+    # Check if uv is available
+    command -v uv >/dev/null 2>&1 || error_exit "uv is not installed or not in PATH"
+    log_info "Found uv: $(uv --version)"
 
     # Create directories
-    mkdir -p "$UV_PYTHON_INSTALL_DIR"
-    mkdir -p /opt/venv
+    log_info "Creating Python directories..."
+    mkdir -p "$UV_PYTHON_INSTALL_DIR" || error_exit "Failed to create $UV_PYTHON_INSTALL_DIR"
+    mkdir -p /opt/venv || error_exit "Failed to create /opt/venv"
 
     # Install Python versions
-    echo "Installing Python versions..."
-    uv python install "$PYTHON_3_8_VERSION"
-    uv python install "$PYTHON_3_10_VERSION"
-    uv python install "$PYTHON_DEV_VERSION"
+    log_info "Installing Python versions..."
+    if ! uv python install "$PYTHON_3_8_VERSION"; then
+        error_exit "Failed to install Python $PYTHON_3_8_VERSION"
+    fi
+    if ! uv python install "$PYTHON_3_10_VERSION"; then
+        error_exit "Failed to install Python $PYTHON_3_10_VERSION"
+    fi
+    if ! uv python install "$PYTHON_DEV_VERSION"; then
+        error_exit "Failed to install Python $PYTHON_DEV_VERSION"
+    fi
+
+    # Verify Python installations
+    log_info "Verifying Python installations..."
+    [[ -x "$PYTHON_3_8_INTERPRETER_PATH" ]] || error_exit "Python 3.8 interpreter not found at $PYTHON_3_8_INTERPRETER_PATH"
+    [[ -x "$PYTHON_3_10_INTERPRETER_PATH" ]] || error_exit "Python 3.10 interpreter not found at $PYTHON_3_10_INTERPRETER_PATH"
+    [[ -x "$PYTHON_DEV_INTERPRETER_PATH" ]] || error_exit "Python dev interpreter not found at $PYTHON_DEV_INTERPRETER_PATH"
 
     # Create virtual environments
-    echo "Creating virtual environments..."
-    uv venv --python "$PYTHON_3_8_INTERPRETER_PATH" "$PYTHON_3_8_VENV_PATH" --seed
-    uv venv --python "$PYTHON_3_10_INTERPRETER_PATH" "$PYTHON_3_10_VENV_PATH" --seed
+    log_info "Creating virtual environments..."
+    if ! uv venv --python "$PYTHON_3_8_INTERPRETER_PATH" "$PYTHON_3_8_VENV_PATH" --seed; then
+        error_exit "Failed to create Python 3.8 virtual environment at $PYTHON_3_8_VENV_PATH"
+    fi
+    if ! uv venv --python "$PYTHON_3_10_INTERPRETER_PATH" "$PYTHON_3_10_VENV_PATH" --seed; then
+        error_exit "Failed to create Python 3.10 virtual environment at $PYTHON_3_10_VENV_PATH"
+    fi
 
     # Install dependencies into virtual environments if project file exists
     if [[ -f "$PROJECT_FILE_PATH/pyproject.toml" ]]; then
@@ -65,50 +107,87 @@ setup_python_env() {
         fi
 
         if [[ "$need_lock" == "true" ]]; then
-            echo "Creating/updating uv.lock from pyproject.toml..."
+            log_info "Creating/updating uv.lock from pyproject.toml..."
             # Remove corrupted or empty uv.lock file first
             rm -f uv.lock
-            uv lock
+            if ! uv lock; then
+                error_exit "Failed to create uv.lock from pyproject.toml"
+            fi
         else
-            echo "Valid uv.lock found, using existing lock file"
+            log_info "Valid uv.lock found, using existing lock file"
         fi
 
         # Install into Python 3.8 environment
-        . "$PYTHON_3_8_VENV_PATH/bin/activate" && uv sync --active && deactivate
+        log_info "Installing dependencies into Python 3.8 environment..."
+        if ! (source "$PYTHON_3_8_VENV_PATH/bin/activate" && uv sync --active && deactivate); then
+            error_exit "Failed to install dependencies into Python 3.8 environment"
+        fi
 
         # Install into Python 3.10 environment
-        . "$PYTHON_3_10_VENV_PATH/bin/activate" && uv sync --active && deactivate
+        log_info "Installing dependencies into Python 3.10 environment..."
+        if ! (source "$PYTHON_3_10_VENV_PATH/bin/activate" && uv sync --active && deactivate); then
+            error_exit "Failed to install dependencies into Python 3.10 environment"
+        fi
     else
         echo "No pyproject.toml found at $PROJECT_FILE_PATH, skipping dependency installation"
     fi
 
     # Setup uvx wrapper links
     if [[ -f "/usr/local/bin/uvx_wrapper" ]]; then
-        echo "Setting up uvx wrapper links..."
-        for cmd in pre-commit rstcheck pymarkdownlnt yamllint docutils; do
-            ln -s /usr/local/bin/uvx_wrapper /usr/local/bin/$cmd
+        log_info "Setting up uvx wrapper links..."
+        local wrapper_commands=("pre-commit" "rstcheck" "pymarkdownlnt" "yamllint" "docutils")
+        for cmd in "${wrapper_commands[@]}"; do
+            if ! ln -sf /usr/local/bin/uvx_wrapper "/usr/local/bin/$cmd"; then
+                log_error "Failed to create wrapper link for $cmd"
+            else
+                log_info "Created wrapper for $cmd"
+            fi
         done
+    else
+        log_info "uvx_wrapper not found, skipping wrapper setup"
     fi
 
     # Clean up project files if they were copied temporarily
     if [[ "$PROJECT_FILE_PATH" == "/tmp" ]]; then
+        log_info "Cleaning up temporary project files..."
         rm -f /tmp/pyproject.toml /tmp/uv.lock
     fi
 
     # Set permissions (skip setfacl if not available)
-    chmod -R 755 /opt/venv || true
+    log_info "Setting permissions on virtual environments..."
+    if ! chmod -R 755 /opt/venv; then
+        log_error "Warning: Failed to set permissions on /opt/venv"
+    fi
 
-    # Verify environment
-    echo "Verifying Python development environment..."
-    . "$PYTHON_DEV_VENV_PATH/bin/activate" && pip list && echo "Package count: $(pip list | wc -l)"
+    # Verify environments
+    log_info "Verifying Python virtual environments..."
+
+    # Verify Python 3.8 environment
+    log_info "Verifying Python 3.8 environment..."
+    if ! (source "$PYTHON_3_8_VENV_PATH/bin/activate" && pip list && echo "Python 3.8 package count: $(pip list | wc -l)" && deactivate); then
+        error_exit "Failed to verify Python 3.8 environment"
+    fi
+
+    # Verify Python 3.10 environment
+    log_info "Verifying Python 3.10 environment..."
+    if ! (source "$PYTHON_3_10_VENV_PATH/bin/activate" && pip list && echo "Python 3.10 package count: $(pip list | wc -l)" && deactivate); then
+        error_exit "Failed to verify Python 3.10 environment"
+    fi
+
+    log_info "All Python environments verified successfully!"
 
     # Set up PATH for Docker environment by creating an environment file
     if [[ -f /.dockerenv ]]; then
-        echo "Setting up PATH for Docker environment..."
-        echo "export PATH=\"$PYTHON_DEV_VENV_PATH/bin:\$PATH\"" > /etc/environment.d/python-venv.conf || true
+        log_info "Setting up PATH for Docker environment..."
+        if ! echo "export PATH=\"$PYTHON_DEV_VENV_PATH/bin:\$PATH\"" > /etc/environment.d/python-venv.conf 2>/dev/null; then
+            log_error "Warning: Failed to create environment file (may not be supported)"
+        fi
         # Also export for current session
         export PATH="$PYTHON_DEV_VENV_PATH/bin:$PATH"
+        log_info "PATH updated for Docker environment"
     fi
+
+    log_info "Python environment setup completed successfully!"
 }
 
 # Execute if called directly
