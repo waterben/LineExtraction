@@ -62,7 +62,50 @@ setup_python_env() {
     writeInfo "To activate: source ${venv_path}/bin/activate"
 }
 
+remove_python_env() {
+    local venv_path="${1:-.venv}"
+    local project_root="${2:-$(pwd)}"
+    
+    writeInfo "Removing Python environment..."
+    
+    # Change to project root
+    cd "${project_root}"
+    
+    # Remove virtual environment
+    if [[ -d "${venv_path}" ]]; then
+        writeInfo "Removing virtual environment at ${venv_path}..."
+        rm -rf "${venv_path}"
+    fi
+    
+    # Remove uv.lock file
+    if [[ -f "uv.lock" ]]; then
+        writeInfo "Removing uv.lock file..."
+        rm -f uv.lock
+    fi
+    
+    writeInfo "Python environment removed successfully."
+}
+
 # Check if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    setup_python_env "$@"
+    remove_mode=false
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --remove)
+                remove_mode=true
+                shift
+                ;;
+            *)
+                # Pass remaining arguments to the functions
+                break
+                ;;
+        esac
+    done
+    
+    if [[ "$remove_mode" == "true" ]]; then
+        remove_python_env "$@"
+    else
+        setup_python_env "$@"
+    fi
 fi
