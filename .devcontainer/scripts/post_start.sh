@@ -41,7 +41,7 @@ echo 'export GIT_PS1_SHOWUPSTREAM="auto"' >> ~/.vscode_profile
 echo 'export PS1="${COLOR_GREEN}\u@\h${COLOR_END}:${COLOR_BLUE}\w${COLOR_RED}''\$(__git_ps1)''${COLOR_END}\n> "' >> ~/.vscode_profile
 echo '# ccache uses default ~/.ccache directory (mounted as volume)' >> ~/.vscode_profile
 echo '# Set the bash history file to be persistent on volume and ensure it is activated before prompt' >> ~/.vscode_profile
-echo 'export PROMPT_COMMAND="history -a" && export HISTFILE="${HOME}/commandhistory/.bash_history"' >>  ~/.vscode_profile
+echo 'export PROMPT_COMMAND="history -a" && export HISTFILE="${HOME}/.cmd_history/.bash_history"' >>  ~/.vscode_profile
 
 # Enable environment in bashrc
 echo '# BEGIN - Appended via VSCode postStartCommand' >> ~/.bashrc

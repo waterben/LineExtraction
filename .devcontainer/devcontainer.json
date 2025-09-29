@@ -23,7 +23,7 @@
     // owned in entrypoint.sh
     {
       "source": "vscode-devcontainer-${devcontainerId}_bash_history",
-      "target": "/home/${localEnv:USER}/commandhistory",
+      "target": "/home/${localEnv:USER}/.cmd_history",
       "type": "volume"
     },
     // Local time
