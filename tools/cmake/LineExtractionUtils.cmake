@@ -81,6 +81,7 @@ function(le_setup_qt_dependencies)
         return()
     endif()
 
+    # Find Qt5 components with REQUIRED when ENABLE_QT is ON
     find_package(Qt5Core QUIET)
     if(Qt5Core_FOUND)
         message(STATUS "Qt5 found")
@@ -97,6 +98,11 @@ function(le_setup_qt_dependencies)
         set(Qt5Widgets_FOUND ${Qt5Widgets_FOUND} PARENT_SCOPE)
         set(Qt5PrintSupport_FOUND ${Qt5PrintSupport_FOUND} PARENT_SCOPE)
         set(Qt5OpenGL_FOUND ${Qt5OpenGL_FOUND} PARENT_SCOPE)
+
+        # Check if Qt5OpenGL was found and warn if not
+        if(NOT Qt5OpenGL_FOUND)
+            message(WARNING "Qt5OpenGL not found. OpenGL-dependent Qt features may not work.")
+        endif()
 
         if(NOT (Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5PrintSupport_FOUND))
             message(WARNING "Some Qt5 components not found. Qt-dependent features will be disabled.")
@@ -313,7 +319,12 @@ function(le_add_executable target_name)
 
         if(LE_QT_MODULES)
             foreach(module ${LE_QT_MODULES})
-                target_link_libraries(${target_name} Qt5::${module})
+                # Check if the specific Qt5 module target exists before linking
+                if(TARGET Qt5::${module})
+                    target_link_libraries(${target_name} Qt5::${module})
+                else()
+                    message(WARNING "Qt5::${module} target not found for ${target_name}. Skipping...")
+                endif()
             endforeach()
         else()
             # Default Qt modules for typical apps

@@ -21,3 +21,4 @@ mesa-common-dev
 libgl1-mesa-dev
 freeglut3-dev
 qtbase5-dev
+libqt5opengl5-dev

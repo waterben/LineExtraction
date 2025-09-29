@@ -13,7 +13,7 @@ project(LineExtraction LANGUAGES C CXX VERSION 1.0.0)
 # Project Configuration Options
 #===============================================================================
 
-# Configurable environment variables that are stored in CMakeCache. These 
+# Configurable environment variables that are stored in CMakeCache. These
 # variables can be used to adjust the projects build behaviour (e.g. ccmake).
 set(VERBOSE_MAKEFILE ON CACHE BOOL "Overwrite cmake verbose makefile")
 set(BUILD_DEBUG OFF CACHE BOOL "Build in debug mode")
@@ -74,7 +74,7 @@ if(NOT TARGET Eigen3::Eigen)
     )
 endif()
 
-# dlib  
+# dlib
 include(extern_dlib)
 if(NOT TARGET dlib::dlib)
     add_library(dlib::dlib INTERFACE IMPORTED)
@@ -87,7 +87,10 @@ endif()
 # OpenCV
 include(extern_opencv)
 
-# Setup Qt dependencies if enabled
+# Setup Qt dependencies if enabled - do this after OpenCV setup
+if(ENABLE_QT)
+    include(extern_qt)
+endif()
 le_setup_qt_dependencies()
 
 # Setup testing framework
@@ -113,7 +116,7 @@ if(ENABLE_EXAMPLES)
     add_subdirectory("examples")
 endif()
 
-# Applications  
+# Applications
 if(ENABLE_APPS)
     add_subdirectory("apps")
 endif()
@@ -132,8 +135,8 @@ if(ENABLE_DOCS)
     find_package(Doxygen)
     if(DOXYGEN_FOUND)
         configure_file(${PROJECT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-        add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile 
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} 
+        add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                          COMMENT "Creating documentation" VERBATIM)
         install_dir("${CMAKE_CURRENT_BINARY_DIR}/doc/html" "${PROJECT_SOURCE_DIR}/doc" "documentation")
     endif()
