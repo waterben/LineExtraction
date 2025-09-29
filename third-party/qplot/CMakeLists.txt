@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.5...3.27)
 
-add_library(lib_qplot ${LIBRARY_TYPE} src/qcustomplot.cpp src/PlotWindow.cpp src/PlotManager.cpp)
+add_library(lib_qplot ${LIBRARY_TYPE}
+    src/qcustomplot.cpp
+    src/PlotWindow.cpp
+    src/PlotManager.cpp
+    include/qplot/qcustomplot.h
+    include/qplot/PlotWindow.h
+)
 
 set_target_properties(lib_qplot PROPERTIES
     AUTOMOC ON
