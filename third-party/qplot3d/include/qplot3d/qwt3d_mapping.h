@@ -1,2 +1,2 @@
 // file redirection for qt moc
-#include "../src/qplot3d/qwt3d_mapping.h"
+#include "../../src/qwt3d_mapping.h"

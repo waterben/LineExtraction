@@ -6,7 +6,7 @@ add_executable(test_other_houghlines houghlines.cpp)
 target_link_libraries(test_other_houghlines ${OpenCV_LIBS})
 
 add_executable(test_other_dlib test_dlib.cpp)
-target_link_libraries(test_other_dlib dlib::dlib ${OpenCV_LIBS})
+target_link_libraries(test_other_dlib dlib::dlib)
 
 add_executable(test_opencv_features opencv_features.cpp)
-target_link_libraries(test_opencv_features dlib::dlib ${OpenCV_LIBS})
+target_link_libraries(test_opencv_features ${OpenCV_LIBS})

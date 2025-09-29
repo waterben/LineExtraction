@@ -1,2 +1,2 @@
 // file redirection for qt moc
-#include "../src/qplot/qcustomplot.h"
+#include "../../src/qcustomplot.h"

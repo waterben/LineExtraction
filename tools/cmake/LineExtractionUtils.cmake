@@ -8,11 +8,11 @@ function(le_configure_common_settings)
     # Set common properties for all targets in this directory and subdirectories
     set(CMAKE_CXX_STANDARD 17 PARENT_SCOPE)
     set(CMAKE_CXX_STANDARD_REQUIRED ON PARENT_SCOPE)
-    
+
     # Output directories
     set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin/" PARENT_SCOPE)
     set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib/" PARENT_SCOPE)
-    
+
     # Build type specific flags
     if(BUILD_DEBUG)
         set(CMAKE_BUILD_TYPE DEBUG PARENT_SCOPE)
@@ -25,7 +25,7 @@ function(le_configure_common_settings)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -O3 -ffast-math" PARENT_SCOPE)
         endif()
     endif()
-    
+
     # Library type
     if(BUILD_STATIC)
         set(LIBRARY_TYPE STATIC PARENT_SCOPE)
@@ -46,7 +46,7 @@ function(le_setup_core_dependencies)
             INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
         )
     endif()
-    
+
     # dlib
     include(extern_dlib)
     if(NOT TARGET dlib::dlib)
@@ -56,20 +56,20 @@ function(le_setup_core_dependencies)
             INTERFACE_LINK_LIBRARIES "${DLIB_LIBRARY}"
         )
     endif()
-    
+
     # OpenCV
     include(extern_opencv)
-    
+
     # OpenGL/GLUT (optional)
     find_package(GLUT QUIET)
     find_package(OpenGL QUIET)
-    
+
     # LAPACK (optional)
     find_package(LAPACKExtern QUIET)
     if(NOT LAPACK_FOUND)
         find_package(LAPACK QUIET)
     endif()
-    
+
     # Other optional dependencies
     find_package(SUPERLU QUIET)
     find_package(ARPACK QUIET)
@@ -80,18 +80,24 @@ function(le_setup_qt_dependencies)
     if(NOT ENABLE_QT)
         return()
     endif()
-    
+
     find_package(Qt5Core QUIET)
     if(Qt5Core_FOUND)
         message(STATUS "Qt5 found")
-        set(CMAKE_AUTOMOC ON PARENT_SCOPE)
-        set(CMAKE_AUTOUIC ON PARENT_SCOPE)
-        set(CMAKE_INCLUDE_CURRENT_DIR ON PARENT_SCOPE)
-        
+        # Don't set global AUTOMOC - this will be set per target as needed
+
         find_package(Qt5Gui QUIET)
         find_package(Qt5Widgets QUIET)
         find_package(Qt5PrintSupport QUIET)
-        
+        find_package(Qt5OpenGL QUIET)
+
+        # Propagate the FOUND variables to parent scope
+        set(Qt5Core_FOUND ${Qt5Core_FOUND} PARENT_SCOPE)
+        set(Qt5Gui_FOUND ${Qt5Gui_FOUND} PARENT_SCOPE)
+        set(Qt5Widgets_FOUND ${Qt5Widgets_FOUND} PARENT_SCOPE)
+        set(Qt5PrintSupport_FOUND ${Qt5PrintSupport_FOUND} PARENT_SCOPE)
+        set(Qt5OpenGL_FOUND ${Qt5OpenGL_FOUND} PARENT_SCOPE)
+
         if(NOT (Qt5Gui_FOUND AND Qt5Widgets_FOUND AND Qt5PrintSupport_FOUND))
             message(WARNING "Some Qt5 components not found. Qt-dependent features will be disabled.")
             set(ENABLE_QT OFF PARENT_SCOPE)
@@ -107,7 +113,7 @@ function(le_setup_testing)
     if(NOT ENABLE_UNIT_TEST)
         return()
     endif()
-    
+
     find_package(Threads REQUIRED)
     include(extern_gtest)
     # Note: enable_testing() is now called at top level in main CMakeLists.txt
@@ -121,7 +127,7 @@ function(le_add_library target_name)
         "SOURCES;HEADERS;PUBLIC_DEPS;PRIVATE_DEPS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;COMPILE_DEFS;TEST_DEPS;EXCLUDED_SOURCES"  # multi-value args
         ${ARGN}
     )
-    
+
     # Determine library type
     if(LE_HEADER_ONLY)
         set(lib_type INTERFACE)
@@ -130,11 +136,11 @@ function(le_add_library target_name)
     else()
         set(lib_type ${LIBRARY_TYPE})
     endif()
-    
+
     # Auto-detect sources and headers if not provided
     if(NOT LE_SOURCES AND NOT LE_HEADER_ONLY)
         file(GLOB_RECURSE LE_SOURCES "src/*.cpp" "src/*.c")
-        
+
         # Remove excluded sources
         if(LE_EXCLUDED_SOURCES)
             foreach(excluded_file ${LE_EXCLUDED_SOURCES})
@@ -143,11 +149,11 @@ function(le_add_library target_name)
             endforeach()
         endif()
     endif()
-    
+
     if(NOT LE_HEADERS)
         file(GLOB_RECURSE LE_HEADERS "include/*/*.hpp" "include/*/*.h")
     endif()
-    
+
     # Create the library
     if(LE_HEADER_ONLY)
         add_library(${target_name} INTERFACE)
@@ -155,13 +161,13 @@ function(le_add_library target_name)
         add_library(${target_name} ${lib_type} ${LE_SOURCES} ${LE_HEADERS})
         set_target_properties(${target_name} PROPERTIES LINKER_LANGUAGE CXX)
     endif()
-    
+
     # Set include directories
     if(LE_HEADER_ONLY)
         if(LE_PUBLIC_INCLUDES)
             target_include_directories(${target_name} INTERFACE ${LE_PUBLIC_INCLUDES})
         else()
-            target_include_directories(${target_name} INTERFACE 
+            target_include_directories(${target_name} INTERFACE
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                 $<INSTALL_INTERFACE:include>
             )
@@ -170,26 +176,26 @@ function(le_add_library target_name)
         if(LE_PUBLIC_INCLUDES)
             target_include_directories(${target_name} PUBLIC ${LE_PUBLIC_INCLUDES})
         else()
-            target_include_directories(${target_name} PUBLIC 
+            target_include_directories(${target_name} PUBLIC
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                 $<INSTALL_INTERFACE:include>
             )
         endif()
-        
+
         if(LE_PRIVATE_INCLUDES)
             target_include_directories(${target_name} PRIVATE ${LE_PRIVATE_INCLUDES})
         endif()
     endif()
-    
+
     # Link dependencies
     if(LE_PUBLIC_DEPS)
         target_link_libraries(${target_name} PUBLIC ${LE_PUBLIC_DEPS})
     endif()
-    
+
     if(LE_PRIVATE_DEPS AND NOT LE_HEADER_ONLY)
         target_link_libraries(${target_name} PRIVATE ${LE_PRIVATE_DEPS})
     endif()
-    
+
     # Compile definitions
     if(LE_COMPILE_DEFS)
         if(LE_HEADER_ONLY)
@@ -198,10 +204,10 @@ function(le_add_library target_name)
             target_compile_definitions(${target_name} PUBLIC ${LE_COMPILE_DEFS})
         endif()
     endif()
-    
+
     # Auto-generate tests if enabled and tests directory exists
     if((LE_AUTO_TESTS OR ENABLE_UNIT_TEST) AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-        le_add_auto_tests(${target_name} 
+        le_add_auto_tests(${target_name}
             TEST_DEPS ${LE_TEST_DEPS}
             EXCLUDED_SOURCES ${LE_EXCLUDED_SOURCES}
         )
@@ -216,47 +222,47 @@ function(le_add_auto_tests library_target)
         "TEST_DEPS;EXCLUDED_SOURCES"    # multi-value args
         ${ARGN}
     )
-    
+
     # Find all test files
     file(GLOB test_files "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_*.cpp")
-    
+
     # Remove excluded test files if specified
     if(LE_TEST_EXCLUDED_SOURCES)
         foreach(excluded_source ${LE_TEST_EXCLUDED_SOURCES})
             list(FILTER test_files EXCLUDE REGEX ".*${excluded_source}.*")
         endforeach()
     endif()
-    
+
     # Only proceed if we have test files and gtest is available
     if(test_files AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY AND ENABLE_UNIT_TEST)
         foreach(test_file ${test_files})
             # Extract test name from filename
             get_filename_component(test_name_full ${test_file} NAME_WE)
-            
+
             # Create test executable
             add_executable(${test_name_full} ${test_file})
-            
+
             # Set include directories for gtest
             if(GTEST_INCLUDE_DIR)
                 target_include_directories(${test_name_full} PRIVATE ${GTEST_INCLUDE_DIR})
             endif()
-            
+
             # Link to the library being tested
             target_link_libraries(${test_name_full} PRIVATE ${library_target})
-            
+
             # Link to gtest
             target_link_libraries(${test_name_full} PRIVATE ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
-            
+
             # Link to additional test dependencies
             if(LE_TEST_TEST_DEPS)
                 target_link_libraries(${test_name_full} PRIVATE ${LE_TEST_TEST_DEPS})
             endif()
-            
+
             # Add to test suite
             add_test(NAME ${test_name_full} COMMAND ${test_name_full})
-            
+
             # Set test working directory to binary directory
-            set_tests_properties(${test_name_full} PROPERTIES 
+            set_tests_properties(${test_name_full} PROPERTIES
                 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             )
         endforeach()
@@ -273,7 +279,7 @@ function(le_add_executable target_name)
         "SOURCES;HEADERS;DEPS;INCLUDES;COMPILE_DEFS;QT_MODULES"  # multi-value args
         ${ARGN}
     )
-    
+
     # Auto-detect sources if not provided
     if(NOT LE_SOURCES)
         file(GLOB LE_SOURCES "*.cpp" "*.c")
@@ -283,22 +289,28 @@ function(le_add_executable target_name)
             list(APPEND LE_SOURCES ${LE_UI_FILES})
         endif()
     endif()
-    
+
     # Create executable
     add_executable(${target_name} ${LE_SOURCES} ${LE_HEADERS})
-    
+
     # Include directories
     if(LE_INCLUDES)
         target_include_directories(${target_name} PRIVATE ${LE_INCLUDES})
     endif()
-    
+
     # Link dependencies
     if(LE_DEPS)
         target_link_libraries(${target_name} ${LE_DEPS})
     endif()
-    
+
     # Qt setup
     if(LE_QT_APP AND ENABLE_QT AND Qt5Widgets_FOUND)
+        # Enable AUTOMOC/AUTOUIC only for Qt applications
+        set_target_properties(${target_name} PROPERTIES
+            AUTOMOC ON
+            AUTOUIC ON
+        )
+
         if(LE_QT_MODULES)
             foreach(module ${LE_QT_MODULES})
                 target_link_libraries(${target_name} Qt5::${module})
@@ -308,7 +320,7 @@ function(le_add_executable target_name)
             target_link_libraries(${target_name} Qt5::Core Qt5::Gui Qt5::Widgets)
         endif()
     endif()
-    
+
     # Compile definitions
     if(LE_COMPILE_DEFS)
         target_compile_definitions(${target_name} PRIVATE ${LE_COMPILE_DEFS})
@@ -323,7 +335,7 @@ function(le_add_example target_name)
         "SOURCES;DEPS" # multi-value args
         ${ARGN}
     )
-    
+
     # Auto-detect sources if not provided
     if(NOT LE_SOURCES)
         get_filename_component(example_name ${target_name} NAME_WE)
@@ -333,9 +345,9 @@ function(le_add_example target_name)
             file(GLOB LE_SOURCES "*.cpp")
         endif()
     endif()
-    
+
     add_executable(${target_name} ${LE_SOURCES})
-    
+
     if(LE_DEPS)
         target_link_libraries(${target_name} ${LE_DEPS})
     endif()
