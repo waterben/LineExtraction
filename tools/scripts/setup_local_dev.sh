@@ -32,10 +32,9 @@ LineExtraction Local Development Environment Setup
 Usage: $0 [OPTIONS]
 
 OPTIONS:
-    --remove-tools      Remove only development tools and Python environments
-    --remove-packages   Remove only APT packages from Docker configuration
-    --remove, -r        Remove both tools and packages (equivalent to --remove-tools --remove-packages)
-    --help, -h          Show this help message
+    --remove-tools, --remove, -r  Remove only development tools and Python environments
+    --remove-packages             Remove only APT packages from Docker configuration
+    --help, -h                    Show this help message
 
 DESCRIPTION:
     This script sets up (or removes) the development environment for the
@@ -46,12 +45,11 @@ EXAMPLES:
     sudo $0                     # Install development environment
     sudo $0 --remove-tools      # Remove only tools (uv, bazel, clangd, etc.)
     sudo $0 --remove-packages   # Remove only APT packages
-    sudo $0 --remove            # Remove everything (tools + packages)
 
 NOTE:
-    This script installs system-wide packages and tools. Package removal will
-    only remove packages that were specifically listed in the Docker configuration
-    files, not their dependencies.
+    This script installs system-wide packages and tools. Package removal with
+    --remove-packages will only remove common packages, NOT system packages
+    (system_packages.txt) for system stability.
 HELP_EOF
 }
 
@@ -69,7 +67,6 @@ parse_args() {
                 ;;
             --remove|-r)
                 REMOVE_TOOLS_MODE=true
-                REMOVE_PACKAGES_MODE=true
                 shift
                 ;;
             --help|-h)
@@ -140,12 +137,20 @@ install_system_packages() {
     writeInfo "Updating package lists..."
     apt-get update
 
+    # Install packages from base system_packages.txt
+    if [[ -f "$DOCKER_BASE_DIR/system_packages.txt" ]]; then
+        writeInfo "Installing base system packages from Docker configuration..."
+        "$DOCKER_SCRIPTS_DIR/install_apt_packages_from_list" --file "$DOCKER_BASE_DIR/system_packages.txt"
+    else
+        writeError "Docker base system packages file not found: $DOCKER_BASE_DIR/system_packages.txt"
+    fi
+
     # Install packages from base common_packages.txt
     if [[ -f "$DOCKER_BASE_DIR/common_packages.txt" ]]; then
-        writeInfo "Installing base packages from Docker configuration..."
+        writeInfo "Installing base common packages from Docker configuration..."
         "$DOCKER_SCRIPTS_DIR/install_apt_packages_from_list" --file "$DOCKER_BASE_DIR/common_packages.txt"
     else
-        writeError "Docker base packages file not found: $DOCKER_BASE_DIR/common_packages.txt"
+        writeError "Docker base common packages file not found: $DOCKER_BASE_DIR/common_packages.txt"
     fi
 
     # Install packages from devenv common_packages.txt
@@ -392,12 +397,14 @@ remove_system_packages() {
         cat "$file_path" | sed 's/`.*`//g' | tr '\n' ' '
     }
 
-    # Get packages from base configuration
+    # Get packages from base configuration (only common_packages, NOT system_packages)
     local base_packages=""
     if [[ -f "$DOCKER_BASE_DIR/common_packages.txt" ]]; then
         base_packages=$(extract_package_names "$DOCKER_BASE_DIR/common_packages.txt")
-        writeInfo "Base packages to remove: $base_packages"
+        writeInfo "Base common packages to remove: $base_packages"
     fi
+    
+    # Note: system_packages.txt is NOT included in removal for system stability
 
     # Get packages from devenv configuration
     local devenv_packages=""
@@ -417,26 +424,13 @@ remove_system_packages() {
     # Remove packages (only if they are installed)
     writeInfo "Removing APT packages..."
     local packages_to_remove=""
-    local excluded_packages=("sudo" "ca-certificates" "curl" "git")
+    # No explicit exclusions needed since system_packages.txt is not processed for removal
 
     for package in $all_packages; do
         # Skip empty strings
         [[ -z "$package" ]] && continue
 
-        # Check if package is in excluded list
-        local exclude=false
-        for excluded in "${excluded_packages[@]}"; do
-            if [[ "$package" == "$excluded" ]]; then
-                writeInfo "Package $package is excluded from removal for safety."
-                exclude=true
-                break
-            fi
-        done
-
-        # Skip excluded packages
-        if [[ "$exclude" == "true" ]]; then
-            continue
-        fi
+        # All packages in the removal list are safe to remove since system_packages.txt is excluded
 
         # Check if package is installed
         if dpkg -l "$package" >/dev/null 2>&1; then
@@ -560,6 +554,7 @@ main() {
 
         # Verify Docker configuration files exist
         local required_files=(
+            "$DOCKER_BASE_DIR/system_packages.txt"
             "$DOCKER_BASE_DIR/common_packages.txt"
             "$DOCKER_DEVENV_DIR/common_packages.txt"
         )

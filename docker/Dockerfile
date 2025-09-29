@@ -15,6 +15,7 @@ COPY --chmod=755 scripts/install_apt_packages_from_list scripts/install_base_too
 RUN <<EOF
   set -eux
   apt-get update
+  install_apt_packages_from_list --file /tmp/base/system_packages.txt
   install_apt_packages_from_list --file /tmp/base/common_packages.txt
   locale-gen en_US en_US.UTF-8
   update-ca-certificates

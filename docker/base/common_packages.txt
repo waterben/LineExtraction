@@ -1,6 +1,3 @@
-sudo
-ca-certificates
-curl
 cmake
 doxygen
 fontconfig
@@ -11,7 +8,6 @@ llvm
 clang
 gcc
 g++
-git
 ccache
 lcov
 locales

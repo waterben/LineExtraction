@@ -1,0 +1,4 @@
+sudo
+ca-certificates
+curl
+git
