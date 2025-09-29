@@ -23,7 +23,7 @@
     // owned in entrypoint.sh
     {
       "source": "vscode-devcontainer-${devcontainerId}_bash_history",
-      "target": "/home/${localEnv:USER}/commandhistory",
+      "target": "/home/${localEnv:USER}/.cmd_history",
       "type": "volume"
     },
     // Local time
@@ -71,12 +71,15 @@
       "settings": {
         "terminal.integrated.shell.linux": "${localEnv:SHELL}",
         "http.proxyStrictSSL": false,
-        "python.defaultInterpreterPath": "/opt/venv/deps/python3.10/bin/python",
+        "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
         "python.autoComplete.extraPaths": [
-          "/opt/venv/deps/python3.10/lib/python3.10/site-packages"
+          "/opt/venv/deps/python/lib/python3.11/site-packages"
         ]
       },
       "extensions": [
+        "openai.chatgpt",
+        "github.copilot",
+        "github.copilot-chat",
         "augustocdias.tasks-shell-input",
         "BazelBuild.vscode-bazel",
         "cschlosser.doxdocgen",

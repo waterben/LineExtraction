@@ -27,29 +27,14 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 
 ### Development Environment Setup
 
-#### Option 1: Docker/DevContainer (Recommended)
+**Docker/DevContainer (Recommended):** Use VS Code with Dev Containers extension. See [`docker/README.md`](docker/README.md) for complete setup instructions.
 
-Use the provided DevContainer configuration with VS Code for a consistent development environment:
-
-- Open the project in VS Code
-- Install the "Dev Containers" extension
-- Reopen in container when prompted
-- See `docker/README.md` for details
-
-#### Option 2: Local Setup
-
-Use the automated setup script for local development:
-
+**Local Setup:** Use the automated setup script:
 ```bash
-./tools/scripts/setup_local_dev.sh
+sudo ./tools/scripts/setup_local_dev.sh
 ```
 
-#### Option 3: Manual Prerequisites (Debian/Ubuntu)
-
-```bash
-sudo apt install cmake build-essential doxygen libblas-dev liblapack-dev \
-  libsuperlu-dev libarpack2-dev freeglut3-dev qt5-default libgtk2.0-dev libeigen3-dev
-```
+**Manual Setup:** See [`docker/README.md`](docker/README.md) for manual installation steps.
 
 ### Build
 
@@ -90,37 +75,22 @@ ls bin/*_example
 
 ## Build Configuration
 
-Key CMake options:
-
-- `BUILD_DEBUG` - Debug vs Release build (default: OFF)
-- `BUILD_STATIC` - Static vs Shared libraries (default: ON)
-- `ENABLE_UNIT_TEST` - Enable Google Test (default: ON)
-- `ENABLE_QT` - Enable Qt-dependent components (default: ON)
+Key CMake options: `BUILD_DEBUG`, `BUILD_STATIC`, `ENABLE_UNIT_TEST`, `ENABLE_QT`
 
 ```bash
-# Example: Debug build with Qt disabled
-cmake -DBUILD_DEBUG=ON -DENABLE_QT=OFF ..
+# Example: Debug build
+cmake -DBUILD_DEBUG=ON ..
 ```
 
 ## Documentation
 
-Build documentation with Doxygen:
-
 ```bash
-make doc
-# Output in build/doc/html/index.html
+make doc  # Output: build/doc/html/index.html
 ```
 
 ## Dependencies
 
-The build system automatically downloads and builds:
-
-- OpenCV 4.7+
-- Eigen3
-- dlib
-- Google Test (if testing enabled)
-
-For detailed build system usage, see `tools/cmake/LineExtractionUtils.cmake`.
+Automatically managed: OpenCV 4.7+, Eigen3, dlib, Google Test
 
 ## License
 

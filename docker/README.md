@@ -1,96 +1,124 @@
 # Docker and DevContainer Setup
 
-## Docker-based Development (Recommended)
+This directory contains Docker configurations and scripts for setting up consistent development environments. Docker provides isolated, reproducible environments that work identically across different machines and operating systems.
 
-### build_dev_images.sh
+## Docker Development (Recommended)
 
-Create docker image for local usage. You have to be inside the `docker` folder.
-Usage example: `./build_dev_images.sh noble`
+### VS Code DevContainer
 
-Supported Ubuntu versions: `focal`, `jammy`, `noble`
+1. Open project in VS Code
+2. Install "Dev Containers" extension
+3. Reopen in container when prompted
 
-### Dockerfile
-
-Multi-staged dockerfile to create base and devenv image.
-Base images should also be used inside CI.
-
-### devenv customization
-
-Users can customize their specific devenv docker environment by adapting `devenv/custom/entrypoint.sh` or install
-specific debian packages via `devenv/custom/packages.txt` and/or pip packages via `devenv/custom/requirements-pip.txt`.
-Note, that whenever the former files are modified, a docker rebuild needs to be triggered, for instance by deleting the old image
-via `docker rmi ...`.
-
-## Local Development Setup (Without Docker)
-
-If you prefer to work without Docker, you can set up the development environment locally by installing the same packages that are used in the Docker container.
-
-### Ubuntu/Debian Setup
-
-1. **Install system packages from base layer:**
+**Python versions available:**
+- Python 3.11 (default)
+- Python 3.8/3.10 (via virtual environments)
 
 ```bash
-sudo apt update
-sudo apt install sudo ca-certificates curl cmake doxygen fontconfig moreutils jq \
-  build-essential llvm clang gcc g++ git git-lfs python3 python3-venv \
-  clang-format clang-tidy ccache lcov locales zstd libarchive-tools \
-  shellcheck acl python3-dev xxd
+# Switch Python versions
+source /opt/venv/deps/python3.8/bin/activate
+deactivate  # Return to default
 ```
 
-2. **Install additional development packages:**
+### Manual Docker Build
 
 ```bash
-sudo apt install vim less gdb nano zsh
+./build_dev_images.sh <ubuntu_version>  # focal, jammy, noble
 ```
 
-3. **Install UV (Python package manager):**
+### Docker Stages
+
+The Dockerfile uses a multi-stage build:
+
+- **`base`** - Core system packages and development tools
+- **`devenv`** - Additional development environment tools and customizations
+
+Build specific stages:
+```bash
+# Build only base stage
+docker build --target base -t lineextraction:base .
+
+# Build full development environment
+docker build --target devenv -t lineextraction:devenv .
+```
+
+### Customization
+
+Modify files in `devenv/custom/`:
+- `entrypoint.sh` - Custom entrypoint
+- `packages.txt` - Additional packages
+- `requirements-pip.txt` - Python packages
+
+Rebuild after changes: `docker rmi <image_name>`
+
+## Local Development Setup
+
+### Automated Setup (Recommended)
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+sudo ./tools/scripts/setup_local_dev.sh
 ```
 
-4. **Install Bazel:**
+**Options:**
+- `--help` - Show all options
+- `--remove-tools` - Remove development tools
+- `--remove-packages` - Remove APT packages
 
+**Installs:** System packages, development tools (uv, bazel, clangd, gh), Python environment, pre-commit hooks.
+
+### Manual Setup (Ubuntu/Debian)
+
+1. **Install packages:**
+   ```bash
+   sudo apt install cmake build-essential vim gdb nano zsh
+   ```
+
+2. **Install development tools:**
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_base_tools | sudo bash
+   curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_devenv_tools | sudo bash
+   ```
+
+3. **Setup Python environment:**
+   ```bash
+   uv venv .venv && source .venv/bin/activate && uv sync --locked
+   pre-commit install
+   ```
+
+**Next:** See main `README.md` for build instructions.
+
+## Docker Structure
+
+### Dockerfile Architecture
+
+Multi-stage build optimized for development:
+
+1. **Base Stage:** Ubuntu + system packages + core tools
+2. **DevEnv Stage:** Additional development tools + customizations
+
+**Benefits:**
+- Cached layers for faster rebuilds
+- Flexible target selection
+- Consistent tool versions across environments
+
+## Scripts Reference
+
+### Installation Scripts
+
+- **`scripts/install_base_tools`** - Core tools: Bazelisk, UV, GitHub CLI, ruff
+- **`scripts/install_devenv_tools`** - IDE tools: clangd, git-prompt
+- **`scripts/install_apt_packages_from_list`** - APT package installer
+
+### Package Configuration
+
+- **`base/common_packages.txt`** - Base system packages
+- **`devenv/common_packages.txt`** - Development environment packages
+
+### Version Customization
+
+Set environment variables before running scripts:
 ```bash
-curl -Ls https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64 -o /tmp/bazelisk
-sudo mv /tmp/bazelisk /usr/local/bin/bazel
-sudo chmod +x /usr/local/bin/bazel
+export BAZELISK_VERSION="1.25.0"
+export CLANGD_VERSION="20.0.0"
+sudo -E ./scripts/install_base_tools
 ```
-
-5. **Install clangd:**
-
-```bash
-curl -Ls https://github.com/clangd/clangd/releases/download/21.1.0/clangd-linux-21.1.0.zip | sudo bsdtar xf - --strip-components=1 -C /usr/local
-```
-
-6. **Setup Python environment:**
-
-```bash
-# Install Python dependencies
-uv venv .venv
-source .venv/bin/activate
-uv sync --locked
-```
-
-7. **Install pre-commit hooks:**
-
-```bash
-pre-commit install --config .pre-commit-config.yaml
-```
-
-### Build Project
-
-```bash
-# For CMake build (as documented in main README)
-mkdir build && cd build
-cmake ..
-cmake --build . -j$(nproc)
-
-# For Bazel build (if using Bazel)
-bazel build //...
-```
-
-## Package Files
-
-- **base/packages_*.txt** - Packages to be installed during dev container image build in the base layer
-- **devenv/common_packages.txt** - Additional packages for development environment

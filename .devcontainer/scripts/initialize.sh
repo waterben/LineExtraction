@@ -15,7 +15,6 @@ writeWarning() {
 mkdir -p \
     "$HOME/.cache" \
     "$HOME/.ccache" \
-    "$HOME/.conan/data" \
     "$HOME/.ssh"
 
 # Ensure file for local user exists. We will mount file into docker container via -v

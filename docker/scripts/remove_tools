@@ -1,0 +1,219 @@
+#!/bin/bash
+
+# Internal script: Remove all development tools and environments
+# This script removes tools installed by install_base_tools, install_devenv_tools, and setup_python_env
+# Used by both local setup scripts and cleanup processes
+# Not intended for direct user execution
+
+set -euo pipefail
+
+# Error handling functions
+error_exit() {
+    echo "ERROR: $1" >&2
+    echo "Script: ${BASH_SOURCE[1]:-$0}" >&2
+    echo "Line: ${BASH_LINENO[0]}" >&2
+    echo "Function: ${FUNCNAME[1]:-main}" >&2
+    exit 1
+}
+
+log_info() {
+    echo "INFO: $1"
+}
+
+log_warning() {
+    echo "WARNING: $1"
+}
+
+log_error() {
+    echo "ERROR: $1" >&2
+}
+
+# Trap to catch any errors
+trap 'error_exit "An unexpected error occurred"' ERR
+
+# Installation directories (can be overridden by caller)
+INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_BASE_DIR="${INSTALL_BASE_DIR:-/usr/local}"
+
+# Python environment paths (can be overridden by caller)
+UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-/opt/python}"
+PYTHON_DEV_VENV_PATH="${PYTHON_DEV_VENV_PATH:-/opt/venv/deps/python}"
+PYTHON_3_8_VENV_PATH="${PYTHON_3_8_VENV_PATH:-/opt/venv/deps/python3.8}"
+PYTHON_3_10_VENV_PATH="${PYTHON_3_10_VENV_PATH:-/opt/venv/deps/python3.10}"
+
+# Remove Python environments (reverse order of setup_python_env)
+remove_python_env() {
+    log_info "Removing Python environments..."
+
+    # Remove uvx wrapper links
+    log_info "Removing uvx wrapper links..."
+    local wrapper_commands=("pre-commit" "rstcheck" "pymarkdownlnt" "yamllint" "docutils")
+    for cmd in "${wrapper_commands[@]}"; do
+        if [[ -L "$INSTALL_DIR/$cmd" ]] && [[ "$(readlink "$INSTALL_DIR/$cmd")" == "/usr/local/bin/uvx_wrapper" ]]; then
+            rm -f "$INSTALL_DIR/$cmd"
+            log_info "Removed wrapper link for $cmd"
+        fi
+    done
+
+    # Remove virtual environments
+    local venv_paths=("$PYTHON_DEV_VENV_PATH" "$PYTHON_3_8_VENV_PATH" "$PYTHON_3_10_VENV_PATH")
+    for venv_path in "${venv_paths[@]}"; do
+        if [[ -d "$venv_path" ]]; then
+            log_info "Removing virtual environment: $venv_path"
+            rm -rf "$venv_path"
+        fi
+    done
+
+    # Remove /opt/venv directory if empty
+    if [[ -d "/opt/venv" ]] && [[ -z "$(ls -A /opt/venv 2>/dev/null)" ]]; then
+        log_info "Removing empty /opt/venv directory"
+        rmdir /opt/venv
+    fi
+
+    # Remove Python installations
+    if [[ -d "$UV_PYTHON_INSTALL_DIR" ]]; then
+        log_info "Removing Python installations: $UV_PYTHON_INSTALL_DIR"
+        rm -rf "$UV_PYTHON_INSTALL_DIR"
+    fi
+
+    # Remove /opt/python directory if empty
+    if [[ -d "/opt/python" ]] && [[ -z "$(ls -A /opt/python 2>/dev/null)" ]]; then
+        log_info "Removing empty /opt/python directory"
+        rmdir /opt/python
+    fi
+
+    # Remove environment configuration files
+    if [[ -f "/etc/environment.d/python-venv.conf" ]]; then
+        log_info "Removing Python environment configuration"
+        rm -f /etc/environment.d/python-venv.conf
+    fi
+
+    log_info "Python environments removed successfully."
+}
+
+# Remove development environment tools (reverse order of install_devenv_tools)
+remove_devenv_tools() {
+    log_info "Removing development environment tools..."
+
+    # Remove git-prompt.sh
+    if [[ -f "$INSTALL_BASE_DIR/bin/git-prompt.sh" ]]; then
+        log_info "Removing git-prompt.sh"
+        rm -f "$INSTALL_BASE_DIR/bin/git-prompt.sh"
+    fi
+
+    # Remove clangd and related indexing tools
+    log_info "Removing clangd and indexing tools..."
+    local clangd_files=("$INSTALL_BASE_DIR/bin"/clangd*)
+    for file in "${clangd_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            log_info "Removing $(basename "$file")"
+            rm -f "$file"
+        fi
+    done
+
+    # Remove clangd from alternative locations
+    if [[ -f "$INSTALL_DIR/clangd" ]]; then
+        log_info "Removing clangd from $INSTALL_DIR"
+        rm -f "$INSTALL_DIR/clangd"
+    fi
+
+    log_info "Development environment tools removed successfully."
+}
+
+# Remove base development tools (reverse order of install_base_tools)
+remove_base_tools() {
+    log_info "Removing base development tools..."
+
+    # Remove individual tools
+    local tools=("yq" "buildifier" "bazelisk" "bazel" "actionlint" "uv" "uvx" "ruff")
+    for tool in "${tools[@]}"; do
+        if [[ -f "$INSTALL_DIR/$tool" ]]; then
+            log_info "Removing $tool"
+            rm -f "$INSTALL_DIR/$tool"
+        fi
+    done
+
+    # Remove GitHub CLI (installed to /usr/local)
+    log_info "Removing GitHub CLI..."
+    local gh_files=(
+        "/usr/local/bin/gh"
+        "/usr/local/share/man/man1/gh"*
+    )
+    for pattern in "${gh_files[@]}"; do
+        for file in $pattern; do
+            if [[ -f "$file" ]] || [[ -d "$file" ]]; then
+                log_info "Removing GitHub CLI file: $file"
+                rm -rf "$file"
+            fi
+        done
+    done
+
+    # Clean up any remaining GitHub CLI directories
+    if [[ -d "/usr/local/share/man/man1" ]] && [[ -z "$(ls -A /usr/local/share/man/man1 2>/dev/null)" ]]; then
+        rmdir /usr/local/share/man/man1 2>/dev/null || true
+    fi
+
+    log_info "Base development tools removed successfully."
+}
+
+# Remove system environment variables
+remove_system_env() {
+    log_info "Cleaning up system environment variables..."
+
+    # Remove environment variables from /etc/environment
+    if [[ -f "/etc/environment" ]]; then
+        # Create a backup
+        cp /etc/environment /etc/environment.bak.$(date +%Y%m%d_%H%M%S)
+        
+        # Remove our specific environment variables
+        if grep -q "REQUESTS_CA_BUNDLE" /etc/environment; then
+            log_info "Removing REQUESTS_CA_BUNDLE from /etc/environment"
+            sed -i '/^export REQUESTS_CA_BUNDLE=/d' /etc/environment
+        fi
+        
+        if grep -q "BAZELISK_BASE_URL" /etc/environment; then
+            log_info "Removing BAZELISK_BASE_URL from /etc/environment"
+            sed -i '/^export BAZELISK_BASE_URL=/d' /etc/environment
+        fi
+    fi
+
+    log_info "System environment cleanup completed."
+}
+
+# Main removal function
+remove_tools() {
+    log_info "Starting removal of all development tools and environments..."
+    log_info "Removal will be performed in reverse order of installation"
+
+    # Check if running as root
+    if [[ $EUID -ne 0 ]]; then
+        error_exit "This script must be run as root (use sudo)"
+    fi
+
+    # Remove in reverse order of installation:
+    # 1. Python environments (last installed)
+    # 2. Development environment tools
+    # 3. Base development tools
+    # 4. System environment variables
+
+    remove_python_env
+    remove_devenv_tools  
+    remove_base_tools
+    remove_system_env
+
+    log_info ""
+    log_info "=========================================="
+    log_info "All development tools and environments removed successfully!"
+    log_info "=========================================="
+    log_info ""
+    log_info "NOTE: System packages installed via apt are NOT removed for safety."
+    log_info "If you want to remove system packages, please do so manually:"
+    log_info "  - Base packages: see docker/base/common_packages.txt"
+    log_info "  - DevEnv packages: see docker/devenv/common_packages.txt" 
+    log_info ""
+}
+
+# Execute if called directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    remove_tools
+fi

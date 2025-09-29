@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Internal script: Install development environment tools (clangd, clang indexing tools, git-prompt)
+# This script is used by both Dockerfile and local setup scripts
+# Not intended for direct user execution
+
+set -euo pipefail
+
+# Error handling functions
+error_exit() {
+    echo "ERROR: $1" >&2
+    echo "Script: ${BASH_SOURCE[1]:-$0}" >&2
+    echo "Line: ${BASH_LINENO[0]}" >&2
+    echo "Function: ${FUNCNAME[1]:-main}" >&2
+    exit 1
+}
+
+log_info() {
+    echo "INFO: $1"
+}
+
+log_error() {
+    echo "ERROR: $1" >&2
+}
+
+# Trap to catch any errors
+trap 'error_exit "An unexpected error occurred"' ERR
+
+# Version variables (should be set by caller)
+CLANGD_VERSION="${CLANGD_VERSION:-21.1.0}"
+
+# Installation directory (default to /usr/local)
+INSTALL_DIR="${INSTALL_DIR:-/usr/local}"
+
+install_devenv_tools() {
+    log_info "Installing development environment tools..."
+    log_info "Installing clangd and related tools version $CLANGD_VERSION to $INSTALL_DIR"
+
+    # Check if installation directory exists and is writable
+    [[ -d "$INSTALL_DIR" ]] || error_exit "Installation directory $INSTALL_DIR does not exist"
+    [[ -w "$INSTALL_DIR" ]] || error_exit "No write permission to installation directory $INSTALL_DIR"
+
+    # Check if bsdtar is available
+    command -v bsdtar >/dev/null 2>&1 || error_exit "bsdtar is not installed or not in PATH. Install libarchive-tools package."
+
+    # Create bin directory if it doesn't exist
+    mkdir -p "$INSTALL_DIR/bin" || error_exit "Failed to create $INSTALL_DIR/bin directory"
+
+    # Install clangd
+    log_info "Installing clangd $CLANGD_VERSION..."
+    if ! curl -fsSL "https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd-linux-${CLANGD_VERSION}.zip" \
+        | bsdtar xf - --strip-components=1 -C "$INSTALL_DIR"; then
+        error_exit "Failed to download or extract clangd $CLANGD_VERSION"
+    fi
+
+    # Install clangd indexing tools
+    log_info "Installing clangd indexing tools $CLANGD_VERSION..."
+    if ! curl -fsSL "https://github.com/clangd/clangd/releases/download/${CLANGD_VERSION}/clangd_indexing_tools-linux-${CLANGD_VERSION}.zip" \
+        | bsdtar xf - --strip-components=1 -C "$INSTALL_DIR"; then
+        error_exit "Failed to download or extract clangd indexing tools $CLANGD_VERSION"
+    fi
+
+    # Install git-prompt for better shell experience
+    log_info "Installing git-prompt.sh..."
+    if ! curl -fsSL "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh" \
+        -o "$INSTALL_DIR/bin/git-prompt.sh"; then
+        error_exit "Failed to download git-prompt.sh"
+    fi
+
+    # Set permissions
+    log_info "Setting file permissions..."
+    local clangd_files=("$INSTALL_DIR/bin"/clangd*)
+    if [[ ${#clangd_files[@]} -eq 0 ]] || [[ ! -f "${clangd_files[0]}" ]]; then
+        error_exit "No clangd files found after installation"
+    fi
+
+    for file in "${clangd_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            chmod 755 "$file" || error_exit "Failed to set permissions for $file"
+        fi
+    done
+
+    # Verify git-prompt.sh permissions
+    if [[ -f "$INSTALL_DIR/bin/git-prompt.sh" ]]; then
+        chmod 755 "$INSTALL_DIR/bin/git-prompt.sh" || error_exit "Failed to set permissions for git-prompt.sh"
+    fi
+
+    # Verify installation
+    log_info "Verifying clangd installation..."
+    if command -v clangd >/dev/null 2>&1; then
+        log_info "clangd installed successfully: $(clangd --version 2>/dev/null | head -1 || echo 'version check failed')"
+    else
+        error_exit "clangd is not available in PATH after installation"
+    fi
+
+    log_info "Development environment tools installed and verified successfully!"
+}
+
+# Execute if called directly
+install_devenv_tools

@@ -1,0 +1,135 @@
+#!/bin/bash
+
+# Internal script: Install base development tools (buildifier, bazelisk, gh, actionlint, yq, uv, ruff)
+# This script is used by both Dockerfile and local setup scripts
+# Not intended for direct user execution
+
+set -euo pipefail
+
+# Error handling functions
+error_exit() {
+    echo "ERROR: $1" >&2
+    echo "Script: ${BASH_SOURCE[1]:-$0}" >&2
+    echo "Line: ${BASH_LINENO[0]}" >&2
+    echo "Function: ${FUNCNAME[1]:-main}" >&2
+    exit 1
+}
+
+log_info() {
+    echo "INFO: $1"
+}
+
+log_error() {
+    echo "ERROR: $1" >&2
+}
+
+# Trap to catch any errors
+trap 'error_exit "An unexpected error occurred"' ERR
+
+# Version variables with defaults (can be overridden by caller)
+UV_VERSION="${UV_VERSION:-0.8.4}"
+BUILDIFIER_VERSION="${BUILDIFIER_VERSION:-8.2.1}"
+BAZELISK_VERSION="${BAZELISK_VERSION:-1.26.0}"
+GH_VERSION="${GH_VERSION:-2.76.2}"
+ACTIONLINT_VERSION="${ACTIONLINT_VERSION:-1.7.7}"
+YQ_VERSION="${YQ_VERSION:-4.47.1}"
+RUFF_VERSION="${RUFF_VERSION:-0.12.7}"
+
+# Bazelisk configuration
+BAZELISK_BASE_URL="${BAZELISK_BASE_URL:-https://github.com/bazelbuild/bazel/releases/download}"
+export BAZELISK_BASE_URL
+
+# Installation directory (default to /usr/local/bin)
+INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+install_base_tools() {
+    log_info "Installing base development tools to $INSTALL_DIR"
+    log_info "Versions: UV=$UV_VERSION, BUILDIFIER=$BUILDIFIER_VERSION, BAZELISK=$BAZELISK_VERSION"
+    log_info "          GH=$GH_VERSION, ACTIONLINT=$ACTIONLINT_VERSION, YQ=$YQ_VERSION, RUFF=$RUFF_VERSION"
+
+    # Check if installation directory exists and is writable
+    [[ -d "$INSTALL_DIR" ]] || error_exit "Installation directory $INSTALL_DIR does not exist"
+    [[ -w "$INSTALL_DIR" ]] || error_exit "No write permission to installation directory $INSTALL_DIR"
+
+    # Download and install buildifier
+    log_info "Installing buildifier $BUILDIFIER_VERSION..."
+    if ! curl -fsSL "https://github.com/bazelbuild/buildtools/releases/download/v${BUILDIFIER_VERSION}/buildifier-linux-amd64" \
+        -o "$INSTALL_DIR/buildifier"; then
+        error_exit "Failed to download buildifier $BUILDIFIER_VERSION"
+    fi
+
+    # Download and install bazelisk
+    log_info "Installing bazelisk $BAZELISK_VERSION..."
+    if ! curl -fsSL "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64" \
+        -o "$INSTALL_DIR/bazelisk"; then
+        error_exit "Failed to download bazelisk $BAZELISK_VERSION"
+    fi
+
+    # Download and install GitHub CLI
+    log_info "Installing GitHub CLI $GH_VERSION..."
+    if ! curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
+        | tar xfz - --strip-components=1 -C /usr/local; then
+        error_exit "Failed to download or extract GitHub CLI $GH_VERSION"
+    fi
+
+    # Download and install actionlint
+    log_info "Installing actionlint $ACTIONLINT_VERSION..."
+    if ! curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+        | tar xfz - -C "$INSTALL_DIR"; then
+        error_exit "Failed to download or extract actionlint $ACTIONLINT_VERSION"
+    fi
+
+    # Download and install yq
+    log_info "Installing yq $YQ_VERSION..."
+    if ! curl -fsSL "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
+        -o "$INSTALL_DIR/yq"; then
+        error_exit "Failed to download yq $YQ_VERSION"
+    fi
+
+    # Download and install uv
+    log_info "Installing uv $UV_VERSION..."
+    if ! curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-musl.tar.gz" \
+        | tar xfz - --strip-components=1 -C "$INSTALL_DIR"; then
+        error_exit "Failed to download or extract uv $UV_VERSION"
+    fi
+
+    # Download and install ruff
+    log_info "Installing ruff $RUFF_VERSION..."
+    if ! curl -fsSL "https://github.com/astral-sh/ruff/releases/download/${RUFF_VERSION}/ruff-x86_64-unknown-linux-musl.tar.gz" \
+        | tar xfz - --strip-components=1 -C "$INSTALL_DIR"; then
+        error_exit "Failed to download or extract ruff $RUFF_VERSION"
+    fi
+
+    # Create bazel symlink
+    log_info "Creating bazel symlink..."
+    if ! ln -sf "$INSTALL_DIR/bazelisk" "$INSTALL_DIR/bazel"; then
+        error_exit "Failed to create bazel symlink"
+    fi
+
+    # Set permissions
+    log_info "Setting file permissions..."
+    local files=("yq" "buildifier" "bazelisk" "actionlint" "uv" "uvx" "ruff")
+    for file in "${files[@]}"; do
+        if [[ -f "$INSTALL_DIR/$file" ]]; then
+            chmod 755 "$INSTALL_DIR/$file" || error_exit "Failed to set permissions for $file"
+        else
+            log_error "Warning: $file not found at $INSTALL_DIR/$file"
+        fi
+    done
+
+    # Verify installations
+    log_info "Verifying tool installations..."
+    local tools=("yq" "buildifier" "bazel" "actionlint" "uv" "gh" "ruff")
+    for tool in "${tools[@]}"; do
+        if command -v "$tool" >/dev/null 2>&1; then
+            log_info "$tool: $($tool --version 2>/dev/null | head -1 || echo 'installed')"
+        else
+            error_exit "$tool is not available in PATH after installation"
+        fi
+    done
+
+    log_info "All base development tools installed and verified successfully!"
+}
+
+# Execute if called directly
+install_base_tools

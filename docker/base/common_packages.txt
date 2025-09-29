@@ -1,6 +1,3 @@
-sudo
-ca-certificates
-curl
 cmake
 doxygen
 fontconfig
@@ -9,14 +6,8 @@ jq
 build-essential
 llvm
 clang
-gcc               `# C++ compiler`
+gcc
 g++
-git
-git-lfs
-python3
-python3-venv
-clang-format
-clang-tidy
 ccache
 lcov
 locales
@@ -24,5 +15,4 @@ zstd
 libarchive-tools
 shellcheck
 acl
-python3-dev
 xxd
