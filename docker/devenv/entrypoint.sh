@@ -14,7 +14,7 @@ mkdir -p ~/.cmd_history
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 if [[ -d ~/.cache ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.ccache
+    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cache
 fi
 
 if [[ -d ~/.ccache ]]; then
@@ -22,11 +22,15 @@ if [[ -d ~/.ccache ]]; then
 fi
 
 if [[ -d ~/.ssh ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.ccache
+    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.ssh
 fi
 
 if [[ -d ~/.cmd_history ]]; then
     sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cmd_history
+fi
+
+if [[ -d ~/.vscode-server ]]; then
+    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.vscode-server
 fi
 
 touch ~/.cmd_history/.bash_history
