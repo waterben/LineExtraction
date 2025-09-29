@@ -71,9 +71,9 @@
       "settings": {
         "terminal.integrated.shell.linux": "${localEnv:SHELL}",
         "http.proxyStrictSSL": false,
-        "python.defaultInterpreterPath": "/opt/venv/deps/python3.10/bin/python",
+        "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
         "python.autoComplete.extraPaths": [
-          "/opt/venv/deps/python3.10/lib/python3.10/site-packages"
+          "/opt/venv/deps/python/lib/python3.11/site-packages"
         ]
       },
       "extensions": [
