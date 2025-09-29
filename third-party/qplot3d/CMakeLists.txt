@@ -15,9 +15,6 @@ target_include_directories(lib_qplot3d PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-target_include_directories(lib_qplot3d PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
 
 target_link_libraries(lib_qplot3d PUBLIC Qt5::OpenGL Qt5::Widgets Qt5::Gui Qt5::Core GL GLU)
 SET_TARGET_PROPERTIES(lib_qplot3d PROPERTIES LINKER_LANGUAGE CXX)
