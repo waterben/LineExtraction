@@ -16,4 +16,3 @@ libarchive-tools
 shellcheck
 acl
 xxd
-qtbase5-dev

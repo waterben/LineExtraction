@@ -62,8 +62,14 @@ echo $VIRTUAL_ENV  # Shows active virtual environment (empty if using native Pyt
 Use the automated setup script for local development:
 
 ```bash
-./tools/scripts/setup_local_dev.sh
+sudo ./tools/scripts/setup_local_dev.sh
 ```
+
+**Available options:**
+- `sudo ./tools/scripts/setup_local_dev.sh` - Install complete development environment
+- `sudo ./tools/scripts/setup_local_dev.sh --remove-tools` - Remove only development tools
+- `sudo ./tools/scripts/setup_local_dev.sh --remove-packages` - Remove only APT packages
+- `sudo ./tools/scripts/setup_local_dev.sh --help` - Show all options
 
 #### Option 3: Manual Prerequisites (Debian/Ubuntu)
 

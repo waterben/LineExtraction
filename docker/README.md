@@ -1,6 +1,59 @@
 # Docker and DevContainer Setup
 
-This directory contains Docker configurations and scripts for setting up consistent development environments. Docker provides isolated, reproducible environments that work identically across different machines and operating systems.
+This directory contains Docker configurations and scripts1. **Install system packages:**
+
+   ```bash
+   sudo apt update
+   sudo apt install sudo ca-certificates curl git
+   ```
+
+2. **Install development packages:**
+
+   ```bash
+   sudo apt install cmake doxygen fontconfig moreutils jq build-essential llvm clang gcc g++ \
+     ccache lcov locales zstd libarchive-tools shellcheck acl xxd qtbase5-dev
+   ```
+
+3. **Install DevEnv packages:**
+
+   ```bash
+   sudo apt install vim less gdb nano libarchive-tools zsh
+   ```
+
+4. **Install base development tools:**
+
+   ```bash
+   # Download and run the base tools installation script
+   curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_base_tools -o /tmp/install_base_tools
+   chmod +x /tmp/install_base_tools
+   sudo /tmp/install_base_tools
+   rm /tmp/install_base_tools
+   ```
+
+5. **Install development environment tools:**
+
+   ```bash
+   # Download and run the development environment tools installation script
+   curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_devenv_tools -o /tmp/install_devenv_tools
+   chmod +x /tmp/install_devenv_tools
+   sudo /tmp/install_devenv_tools
+   rm /tmp/install_devenv_tools
+   ```
+
+6. **Setup Python environment:**
+
+   ```bash
+   # Install Python dependencies
+   uv venv .venv
+   source .venv/bin/activate
+   uv sync --locked
+   ```
+
+7. **Install pre-commit hooks:**
+
+   ```bash
+   pre-commit install --config .pre-commit-config.yaml
+   ```g up consistent development environments. Docker provides isolated, reproducible environments that work identically across different machines and operating systems.
 
 ## Docker-based Development (Recommended)
 
@@ -44,19 +97,31 @@ docker rmi <image_name>
 
 For developers who prefer working without Docker, this section provides instructions to replicate the Docker environment locally. You'll install the same packages and tools used in the Docker container, providing maximum flexibility and native performance while maintaining consistency with the containerized environment.
 
-### Ubuntu/Debian Setup
+### Automated Setup (Recommended)
 
-Follow these steps to set up your local development environment:
+Use the automated setup script to install all dependencies with a single command:
 
-1. **Install system packages:**
+```bash
+sudo ./tools/scripts/setup_local_dev.sh
+```
 
-   ```bash
-   sudo apt update
-   sudo apt install sudo ca-certificates curl cmake doxygen fontconfig moreutils jq \
-     build-essential llvm clang gcc g++ git git-lfs python3 python3-venv \
-     clang-format clang-tidy ccache lcov locales zstd libarchive-tools \
-     shellcheck acl python3-dev xxd
-   ```
+**Available options:**
+- `sudo ./tools/scripts/setup_local_dev.sh` - Install complete development environment
+- `sudo ./tools/scripts/setup_local_dev.sh --remove-tools` - Remove only development tools
+- `sudo ./tools/scripts/setup_local_dev.sh --remove-packages` - Remove only APT packages
+- `sudo ./tools/scripts/setup_local_dev.sh --help` - Show all options
+
+This script installs:
+- **System packages** from `docker/base/system_packages.txt` (sudo, ca-certificates, curl, git)
+- **Development packages** from `docker/base/common_packages.txt` (cmake, build-essential, etc.)
+- **DevEnv packages** from `docker/devenv/common_packages.txt` (vim, gdb, etc.)
+- **Development tools** (uv, bazel, clangd, GitHub CLI, etc.)
+- **Python environment** with `.venv` and dependencies
+- **Pre-commit hooks**
+
+### Manual Setup (Ubuntu/Debian)
+
+If you prefer manual installation, follow these steps:
 
 2. **Install additional development packages:**
 
