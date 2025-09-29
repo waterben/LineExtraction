@@ -43,10 +43,12 @@ echo '# ccache uses default ~/.ccache directory (mounted as volume)' >> ~/.vscod
 echo '# Set the bash history file to be persistent on volume and ensure it is activated before prompt' >> ~/.vscode_profile
 echo 'export PROMPT_COMMAND="history -a" && export HISTFILE="${HOME}/.cmd_history/.bash_history"' >>  ~/.vscode_profile
 
-# Enable environment in bashrc
-echo '# BEGIN - Appended via VSCode postStartCommand' >> ~/.bashrc
-echo 'source ~/.vscode_profile' >> ~/.bashrc
-echo '# END - Appended via VSCode postStartCommand' >> ~/.bashrc
+# Enable environment in bashrc (only if not already present)
+if ! grep -q "source ~/.vscode_profile" ~/.bashrc; then
+    echo '# BEGIN - Appended via VSCode postStartCommand' >> ~/.bashrc
+    echo 'source ~/.vscode_profile' >> ~/.bashrc
+    echo '# END - Appended via VSCode postStartCommand' >> ~/.bashrc
+fi
 
 
 pre-commit install --config .pre-commit-config.yaml
