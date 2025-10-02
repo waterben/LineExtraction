@@ -1,0 +1,145 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "bazel build //...",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+      },
+      "detail": "Build project using bazel"
+    },
+    {
+      "label": "build & compile commands",
+      "type": "shell",
+      "command": "bazel build //... && ${workspaceFolder}/tools/scripts/generate_compile_commands.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+      },
+      "detail": "Build project using bazel"
+    },
+    {
+      "label": "build-binary-debug",
+      "type": "shell",
+      "command": "bazel build --features=debugging_feature ${input:bazelBinaryTargetsTask}",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+        "close": false
+      },
+      "detail": "Build project using bazel"
+    },
+    {
+      "label": "build-test-debug",
+      "type": "shell",
+      "command": "bazel build --features=debugging_feature ${input:bazelTestTargetsTask}",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+        "close": false
+      },
+      "detail": "Build project using bazel"
+    },
+    {
+      "label": "build-python-debug",
+      "type": "shell",
+      "command": "bazel build --features=debugging_feature ${input:bazelPythonTargetsTask}",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+        "close": false
+      },
+      "detail": "Build project using bazel"
+    },
+    {
+      "label": "build-python-test-debug",
+      "type": "shell",
+      "command": "bazel build --features=debugging_feature ${input:bazelPythonTestTargetsTask}",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+        "close": false
+      },
+      "detail": "Build project using bazel"
+    },
+  ],
+  "inputs": [
+    {
+      "id": "bazelBinaryTargetsTask",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh task cc_binary ",
+        "description": "Please select a build target"
+      }
+    },
+    {
+      "id": "bazelTestTargetsTask",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh task cc_test",
+        "description": "Please select a build target"
+      }
+    },
+    {
+      "id": "bazelPythonTargetsTask",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh task py_binary ",
+        "description": "Please select a build target"
+      }
+    },
+    {
+      "id": "bazelPythonTestTargetsTask",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh task py_test",
+        "description": "Please select a build target"
+      }
+    },
+  ]
+}
