@@ -69,8 +69,8 @@ namespace lsfm {
 //    \ | /
 //  4 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 //
 // The 4 region NMS only uses the positive part
@@ -80,8 +80,8 @@ namespace lsfm {
 //    \ | /
 //  0 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 // gradient to map ids:
 //
@@ -171,7 +171,7 @@ struct EZCMap8 {
       FastZC8<LT,DT>::process(l,low,high,seeds,dmap);
   }*/
 
-  static inline const char type() { return '8'; }
+  static inline char type() { return '8'; }
 };
 
 template <class LT, class DT>
@@ -216,7 +216,7 @@ struct EZCMap4 {
       FastZC4<LT,DT>::process(l,low,high,seeds,dmap);
   }*/
 
-  static inline const char type() { return '4'; }
+  static inline char type() { return '4'; }
 };
 
 template <class LT, class FT, template <class> class NCC, template <class, class> class EM>

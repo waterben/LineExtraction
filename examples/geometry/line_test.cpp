@@ -1,19 +1,19 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <ctime>
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <imgproc/rcmg.hpp>
 #include <geometry/line.hpp>
+#include <imgproc/rcmg.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 
 using namespace std;
 using namespace lsfm;
 
 
-int main(int argc, char** argv)
-{
+int main(int /*argc*/, char** /*argv*/) {
   /*const char* filename = "../../images/office1_low.jpg";
 
   //cv::Mat src = imread(filename, IMREAD_GRAYSCALE);

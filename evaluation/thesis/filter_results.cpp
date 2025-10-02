@@ -6,9 +6,6 @@
 
 
 #define USE_PERIODIC_FFT
-#include <algorithm>
-#include <filesystem>
-#include <cctype>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/laplace.hpp>
 #include <imgproc/pc_lgf.hpp>
@@ -20,6 +17,10 @@
 #include <imgproc/quadratureSF.hpp>
 #include <imgproc/rcmg.hpp>
 #include <imgproc/susan.hpp>
+
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
 
 
 using namespace lsfm;
@@ -192,7 +193,7 @@ void parseFolder(const fs::path& folder, std::vector<fs::path>& files) {
   for_each(fs::directory_iterator(folder), fs::directory_iterator(), [&files](const fs::path& file) {
     if (fs::is_regular_file(file)) {
       std::string ext = file.extension().generic_string();
-      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
+      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
       if (ext == ".jpg" || ext == ".png") {
         files.push_back(file);
       }
@@ -223,7 +224,7 @@ void processPath(std::vector<Entry>& entries, const std::pair<fs::path, std::str
   });
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   std::vector<std::pair<fs::path, std::string>> sets;
   // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
   sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));

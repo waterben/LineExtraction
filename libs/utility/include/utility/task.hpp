@@ -3,12 +3,12 @@
 #ifdef __cplusplus
 
 
-#include <filesystem>
-#include <opencv2/core.hpp>
-#include <utility/string_table.hpp>
-#include <utility/value_manager.hpp>
+#  include <opencv2/core.hpp>
+#  include <utility/string_table.hpp>
+#  include <utility/value_manager.hpp>
 
-#include <memory>
+#  include <filesystem>
+#  include <memory>
 
 
 namespace lsfm {
@@ -32,7 +32,7 @@ struct TaskBase {
   virtual ~TaskBase() {}
 
   virtual void run(const TaskData& data, int loops, bool verbose) = 0;
-  virtual void saveResults(bool verbose) {}
+  virtual void saveResults(bool /*verbose*/) {}
 
   // name of task
   std::string name;
@@ -48,7 +48,7 @@ struct TaskBase {
     return 0;
   }
 
-  virtual void value(const std::string& name, const lsfm::Value& value) {}
+  virtual void value(const std::string& /*name*/, const lsfm::Value& /*value*/) {}
 };
 
 //! Data provider for performance test
@@ -82,8 +82,7 @@ struct FileDataProvider : public DataProviderBase {
   }
 
   void parse(const std::vector<std::filesystem::path>& folders, bool recursive = true) {
-    for_each(folders.begin(), folders.end(),
-             [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
+    for_each(folders.begin(), folders.end(), [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
   }
 
   void parse(const std::filesystem::path& folder, bool recursive = true);

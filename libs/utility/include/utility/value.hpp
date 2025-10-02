@@ -228,7 +228,7 @@ class Value {
         os << getInt64();
         break;
       case Value::BOOL:
-        os << getInt64() ? "true" : "false";
+        os << (getInt64() ? "true" : "false");
         break;
       case Value::STRING:
         os << getChar();

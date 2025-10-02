@@ -217,7 +217,7 @@ struct IndexConvert {
 // specialization for index to index
 template <>
 struct IndexConvert<index_type> {
-  static inline void toPoint(index_type idx, index_type& p, int cols) { p = idx; }
+  static inline void toPoint(index_type idx, index_type& p, int /*cols*/) { p = idx; }
 
   static inline void toPoint(index_type idx, index_type& p, const cv::Mat& /*tmp*/) { p = idx; }
 
@@ -275,7 +275,7 @@ struct IndexConvert<index_type> {
 
   static inline index_type toIndex(const index_type& p, int /*cols*/) { return p; }
 
-  static inline void toIndex(const index_type& p, index_type& idx, const cv::Mat& tmp) { idx = p; }
+  static inline void toIndex(const index_type& p, index_type& idx, const cv::Mat& /*tmp*/) { idx = p; }
 
   static inline index_type toIndex(const index_type& p, const cv::Mat& /*tmp*/) { return p; }
 
@@ -328,7 +328,7 @@ struct IndexConvert<index_type> {
                              const index_type* end,
                              index_type* data,
                              const cv::Mat& mag,
-                             const cv::Mat& dmap = cv::Mat()) {
+                             const cv::Mat& /*dmap*/ = cv::Mat()) {
     for (; beg != end; ++beg, ++data) toPoint(*beg, *data, mag);
   }
 

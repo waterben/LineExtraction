@@ -88,7 +88,7 @@ namespace lsfm {
 //  0 --+-- 0
 //    / | \
 //   /  |  \
-    //  3   2   1
+//  3   2   1
 //
 // gradient to map ids:
 //

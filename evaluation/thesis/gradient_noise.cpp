@@ -1,26 +1,26 @@
-#include <iostream>
-#include <fstream>
-
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <fstream>
+#include <iostream>
+
 #define USE_PERIODIC_FFT
 #include <imgproc/derivative_gradient.hpp>
-#include <imgproc/susan.hpp>
-#include <imgproc/rcmg.hpp>
-#include <imgproc/quadratureG2.hpp>
-#include <imgproc/quadratureS.hpp>
-#include <imgproc/quadratureSF.hpp>
-#include <imgproc/quadratureLGF.hpp>
-#include <imgproc/pc_sqf.hpp>
+#include <imgproc/image_operator.hpp>
+#include <imgproc/laplace.hpp>
 #include <imgproc/pc_lgf.hpp>
 #include <imgproc/pc_matlab.hpp>
-#include <imgproc/laplace.hpp>
-#include <imgproc/image_operator.hpp>
-
-#include <filesystem>
-#include <algorithm>
+#include <imgproc/pc_sqf.hpp>
+#include <imgproc/quadratureG2.hpp>
+#include <imgproc/quadratureLGF.hpp>
+#include <imgproc/quadratureS.hpp>
+#include <imgproc/quadratureSF.hpp>
+#include <imgproc/rcmg.hpp>
+#include <imgproc/susan.hpp>
 #include <utility/format.hpp>
+
+#include <algorithm>
+#include <filesystem>
 
 using namespace lsfm;
 using namespace std;
@@ -29,7 +29,7 @@ namespace fs = std::filesystem;
 constexpr int runs = 1;
 
 constexpr int ENTRY_SQR = 1;
-constexpr int ENTRY_RGB = 2; 
+constexpr int ENTRY_RGB = 2;
 constexpr int ENTRY_NO_3 = 4;
 constexpr int ENTRY_NO_5 = 8;
 
@@ -38,106 +38,93 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-    Entry() {}
+  Entry() {}
 
-    Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, const std::string& w, int f = 0)
-        : filter(a), name(b), what(w), flags(f) {}
-   
-    
-    cv::Ptr<FilterI<uchar>> filter;
-    std::string name, what;
-    int flags;
-
-    Value value(const std::string &name) {
-        return dynamic_cast<ValueManager*>(&(*filter))->value(name);
-    }
-
-    void value(const std::string &name, const Value &v) {
-        dynamic_cast<ValueManager*>(&(*filter))->value(name, v);
-    }
+  Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, const std::string& w, int f = 0)
+      : filter(a), name(b), what(w), flags(f) {}
 
 
-    inline bool rgb() const {
-        return flags & ENTRY_RGB;
-    }
+  cv::Ptr<FilterI<uchar>> filter;
+  std::string name, what;
+  int flags;
 
-    inline bool sqr() const {
-        return flags & ENTRY_SQR;
-    }
+  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
 
-    inline int border() const {
-        if (flags & ENTRY_NO_3)
-            return 2;
-        if (flags & ENTRY_NO_5)
-            return 3;
-        return 0;
-    }
+  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
 
-    inline cv::Mat process(const cv::Mat src) {
-        filter->process(src);
-        return filter->results()[what].data.clone();
-    }
+
+  inline bool rgb() const { return flags & ENTRY_RGB; }
+
+  inline bool sqr() const { return flags & ENTRY_SQR; }
+
+  inline int border() const {
+    if (flags & ENTRY_NO_3) return 2;
+    if (flags & ENTRY_NO_5) return 3;
+    return 0;
+  }
+
+  inline cv::Mat process(const cv::Mat src) {
+    filter->process(src);
+    return filter->results()[what].data.clone();
+  }
 };
 
-void parseFolder(const fs::path &folder, std::vector<fs::path> &files) {
-    fs::directory_iterator end_iter;
-    for_each(fs::directory_iterator(folder), fs::directory_iterator(), [&files](const fs::path& file) {
-        if (fs::is_regular_file(file))
-        {
-            std::string ext = file.extension().generic_string();
-            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
-            if (ext == ".jpg" || ext == ".png") {
-                files.push_back(file);
-            }
-        }
-        if (fs::is_directory(file))
-            parseFolder(file, files);
-    });
+void parseFolder(const fs::path& folder, std::vector<fs::path>& files) {
+  fs::directory_iterator end_iter;
+  for_each(fs::directory_iterator(folder), fs::directory_iterator(), [&files](const fs::path& file) {
+    if (fs::is_regular_file(file)) {
+      std::string ext = file.extension().generic_string();
+      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
+      if (ext == ".jpg" || ext == ".png") {
+        files.push_back(file);
+      }
+    }
+    if (fs::is_directory(file)) parseFolder(file, files);
+  });
 }
 
-double processError(Entry &e, const fs::path& path, int n) {
-    std::cout << "processing noise" << n << " (" << e.name <<")...";
-    std::vector<fs::path> files;
-    parseFolder(path, files);
-    GaussianNoiseOperator op_noise(n);
+double processError(Entry& e, const fs::path& path, int n) {
+  std::cout << "processing noise" << n << " (" << e.name << ")...";
+  std::vector<fs::path> files;
+  parseFolder(path, files);
+  GaussianNoiseOperator op_noise(n);
 
-    double ret = 0;
-    int count = 0;
-    std::for_each(files.begin(), files.end(), [&](const fs::path& file) {
-        cv::Mat rgb = cv::imread(file.generic_string());
-        if (rgb.empty())
-        {
-            cout << "Can not open " << file.generic_string() << endl;
-            return;
-        }
-        
-        cv::Mat src_n, src = rgb, res, res_n;
-        if (!e.rgb()) cv::cvtColor(rgb, src, cv::COLOR_BGR2GRAY);
-        src_n = src.clone();
-        op_noise(src_n);
+  double ret = 0;
+  int count = 0;
+  std::for_each(files.begin(), files.end(), [&](const fs::path& file) {
+    cv::Mat rgb = cv::imread(file.generic_string());
+    if (rgb.empty()) {
+      cout << "Can not open " << file.generic_string() << endl;
+      return;
+    }
 
-        res = e.process(src);
-        res_n = e.process(src_n);
+    cv::Mat src_n, src = rgb, res, res_n;
+    if (!e.rgb()) cv::cvtColor(rgb, src, cv::COLOR_BGR2GRAY);
+    src_n = src.clone();
+    op_noise(src_n);
 
-        if (res.type() != cv::DataType<FT>::type) {
-            res.convertTo(res, cv::DataType<FT>::type);
-            res_n.convertTo(res_n, cv::DataType<FT>::type);
-        }
+    res = e.process(src);
+    res_n = e.process(src_n);
 
-        double vmin, vmax;
-        cv::minMaxIdx(res, &vmin, &vmax);
-        res /= vmax;
-        res_n /= vmax;
+    if (res.type() != cv::DataType<FT>::type) {
+      res.convertTo(res, cv::DataType<FT>::type);
+      res_n.convertTo(res_n, cv::DataType<FT>::type);
+    }
 
-        ret += sum(abs(res - res_n))[0] / res.size().area();
-        ++count;
-    });
-    ret /= count;
-    std::cout << ret << std::endl;
-    return ret;
+    double vmin, vmax;
+    cv::minMaxIdx(res, &vmin, &vmax);
+    res /= vmax;
+    res_n /= vmax;
+
+    ret += sum(abs(res - res_n))[0] / res.size().area();
+    ++count;
+  });
+  ret /= count;
+  std::cout << ret << std::endl;
+  return ret;
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   fs::path path = "../../images/MDB/MiddEval3-Q";
 
   std::vector<Entry> filter;
@@ -219,24 +206,23 @@ int main(int argc, char** argv) {
 
   for (int col = 1; col != 6; ++col) {
     int row = 1;
-    for_each(filter.begin(), filter.end(), [&](Entry& e) {
-      table[row++][col] = utility::format("%.3f", processError(e, path, 10 * col));
-    });
+    for_each(filter.begin(), filter.end(),
+             [&](Entry& e) { table[row++][col] = utility::format("%.3f", processError(e, path, 10 * col)); });
   }
 
-    std::ofstream ofs;
-    ofs.open("noise_error.csv");
+  std::ofstream ofs;
+  ofs.open("noise_error.csv");
 
-    for_each(table.begin(), table.end(), [&](const std::vector<std::string> &col) {
-        for_each(col.begin(), col.end(), [&](const std::string &cell) {
-            std::cout << cell << "\t";
-            ofs << cell << ";";
-        });
-        std::cout << std::endl;
-        ofs << std::endl;
+  for_each(table.begin(), table.end(), [&](const std::vector<std::string>& col) {
+    for_each(col.begin(), col.end(), [&](const std::string& cell) {
+      std::cout << cell << "\t";
+      ofs << cell << ";";
     });
+    std::cout << std::endl;
+    ofs << std::endl;
+  });
 
-    ofs.close();
+  ofs.close();
 
-    return 0;
+  return 0;
 }
