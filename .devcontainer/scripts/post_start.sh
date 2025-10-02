@@ -5,15 +5,16 @@ shopt -s nullglob globstar
 # This script is executed each time the container is successfully started,
 # in order to ensure the environment is properly set up in the container for development
 
-# Use a custom configuration if provided INSTEAD of the default settings for bash
-CUSTOM_CONFIG=.devcontainer/scripts/custom/post_start_custom.sh
-if [ -f "$CUSTOM_CONFIG" ]; then
-   echo "Custom post start settings applied"
-   source "$CUSTOM_CONFIG"
-   exit 0
-fi
+echo "Initialize development folders..."
+# Make sure required folders exist (including cmd_history for consistency)
+mkdir -p ~/.cache ~/.ccache ~/.ssh ~/.cmd_history ~/.vscode-server ~/.vscode-server-insiders
 
-# Otherwise use the default settings for bash in VSCode
+# Fix ownership of created directories if they were created with wrong permissions
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cache ~/.ccache ~/.ssh ~/.cmd_history ~/.vscode-server ~/.vscode-server-insiders 2>/dev/null || true
+
+touch ~/.cmd_history/.bash_history
 
 # Enable history search using page-up and page-down
 echo '$include /etc/inputrc' >  ~/.inputrc
@@ -49,6 +50,5 @@ if ! grep -q "source ~/.vscode_profile" ~/.bashrc; then
     echo 'source ~/.vscode_profile' >> ~/.bashrc
     echo '# END - Appended via VSCode postStartCommand' >> ~/.bashrc
 fi
-
 
 pre-commit install --config .pre-commit-config.yaml

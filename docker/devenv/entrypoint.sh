@@ -1,52 +1,18 @@
 #!/usr/bin/env bash
 
-echo "LineExtraction entrypoint!"
-
-mkdir -p ~/.cache
-mkdir -p ~/.ccache
-mkdir -p ~/.ssh
-
-# Persist bash history between runs
-# https://code.visualstudio.com/remote/advancedcontainers/persist-bash-history
+echo "Initialize command line history..."
+# Create cmd_history directory and setup bash history persistence
 mkdir -p ~/.cmd_history
-
-# Fix ownership of created directories if it was created with wrong permissions
+# Fix ownership if directory was created as root (common with docker volumes)
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
-if [[ -d ~/.cache ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cache
-fi
-
-if [[ -d ~/.ccache ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.ccache
-fi
-
-if [[ -d ~/.ssh ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.ssh
-fi
-
-if [[ -d ~/.cmd_history ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cmd_history
-fi
-
-if [[ -d ~/.vscode-server ]]; then
-    sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.vscode-server
-fi
-
+sudo chown -R "${USER_ID}:${GROUP_ID}" ~/.cmd_history 2>/dev/null || true
 touch ~/.cmd_history/.bash_history
 echo "export HISTFILE=~/.cmd_history/.bash_history" >> ~/.bashrc
 
-echo "Installing pre-commit!"
-# Activate git pre-commit for git commits
+
+echo "Activate git pre-commit for commits..."
 pre-commit install -f
 
-
-# Avoid extension reinstalls on container rebuild
-# https://code.visualstudio.com/docs/remote/containers-advanced#_avoiding-extension-reinstalls-on-container-rebuild
-mkdir -p \
-  ~/.vscode-server/extensions \
-  ~/.vscode-server-insiders/extensions \
-
-. /usr/local/bin/devenv_entrypoint_custom.sh
-
+# Use config from repo
 exec "$@"
