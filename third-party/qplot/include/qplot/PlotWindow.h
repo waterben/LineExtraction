@@ -160,7 +160,7 @@ inline QCPGraph* PlotWindow::plot(
   QCPGraph* graph = qplot->addGraph();
   graph->setPen(pen);
   graph->setBrush(brush);
-  graph->setData(QVector<double>::fromStdVector(dX), QVector<double>::fromStdVector(dY));
+  graph->setData(QVector<double>(dX.begin(), dX.end()), QVector<double>(dY.begin(), dY.end()));
   return graph;
 }
 
@@ -179,7 +179,7 @@ inline QCPGraph* PlotWindow::plot(
   QCPGraph* graph = qplot->addGraph();
   graph->setPen(pen);
   graph->setBrush(brush);
-  graph->setData(QVector<double>::fromStdVector(X), QVector<double>::fromStdVector(Y));
+  graph->setData(QVector<double>(X.begin(), X.end()), QVector<double>(Y.begin(), Y.end()));
   return graph;
 }
 

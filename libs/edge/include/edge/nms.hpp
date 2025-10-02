@@ -44,10 +44,10 @@
 #define _NMS_HPP_
 #ifdef __cplusplus
 
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/interpolate.hpp>
 #  include <edge/hysteresis.hpp>
 #  include <edge/index.hpp>
+#  include <imgproc/gradient.hpp>
+#  include <imgproc/interpolate.hpp>
 #  include <opencv2/core/core.hpp>
 
 #  include <vector>
@@ -76,8 +76,8 @@ namespace lsfm {
 //    \ | /
 //  4 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 //
 // The 4 region NMS only uses the positive part
@@ -87,7 +87,7 @@ namespace lsfm {
 //    \ | /
 //  0 --+-- 0
 //    / | \
-    //   /  |  \
+//   /  |  \
     //  3   2   1
 //
 // gradient to map ids:
@@ -120,7 +120,7 @@ struct EMap8 {
     }
   }
 
-  static inline const char type() { return '8'; }
+  static inline char type() { return '8'; }
 };
 
 template <class DT>
@@ -138,7 +138,7 @@ struct EMap4 {
     }
   }
 
-  static inline const char type() { return '4'; }
+  static inline char type() { return '4'; }
 };
 
 template <class MT>

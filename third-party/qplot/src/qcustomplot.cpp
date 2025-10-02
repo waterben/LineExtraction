@@ -2765,7 +2765,7 @@ Qt::Alignment QCPLayoutInset::insetAlignment(int index) const {
     return mInsetAlignment.at(index);
   else {
     qDebug() << Q_FUNC_INFO << "Invalid element index:" << index;
-    return 0;
+    return Qt::Alignment();
   }
 }
 
@@ -6740,11 +6740,11 @@ QCPItemAnchor::QCPItemAnchor(QCustomPlot* parentPlot, QCPAbstractItem* parentIte
 
 QCPItemAnchor::~QCPItemAnchor() {
   // unregister as parent at children:
-  foreach (QCPItemPosition* child, mChildrenX.toList()) {
+  foreach (QCPItemPosition* child, mChildrenX.values()) {
     if (child->parentAnchorX() == this)
       child->setParentAnchorX(0);  // this acts back on this anchor and child removes itself from mChildrenX
   }
-  foreach (QCPItemPosition* child, mChildrenY.toList()) {
+  foreach (QCPItemPosition* child, mChildrenY.values()) {
     if (child->parentAnchorY() == this)
       child->setParentAnchorY(0);  // this acts back on this anchor and child removes itself from mChildrenY
   }
@@ -6903,11 +6903,11 @@ QCPItemPosition::~QCPItemPosition() {
   // Note: this is done in ~QCPItemAnchor again, but it's important QCPItemPosition does it itself, because only then
   //       the setParentAnchor(0) call the correct QCPItemPosition::pixelPoint function instead of
   //       QCPItemAnchor::pixelPoint
-  foreach (QCPItemPosition* child, mChildrenX.toList()) {
+  foreach (QCPItemPosition* child, mChildrenX.values()) {
     if (child->parentAnchorX() == this)
       child->setParentAnchorX(0);  // this acts back on this anchor and child removes itself from mChildrenX
   }
-  foreach (QCPItemPosition* child, mChildrenY.toList()) {
+  foreach (QCPItemPosition* child, mChildrenY.values()) {
     if (child->parentAnchorY() == this)
       child->setParentAnchorY(0);  // this acts back on this anchor and child removes itself from mChildrenY
   }
@@ -8184,7 +8184,7 @@ QCustomPlot::QCustomPlot(QWidget* parent)
       mAutoAddPlottableToLegend(true),
       mAntialiasedElements(QCP::aeNone),
       mNotAntialiasedElements(QCP::aeNone),
-      mInteractions(0),
+      mInteractions(QCP::Interactions()),
       mSelectionTolerance(8),
       mNoAntialiasingOnDrag(false),
       mBackgroundBrush(Qt::white, Qt::SolidPattern),
@@ -9360,8 +9360,7 @@ void QCustomPlot::replot(QCustomPlot::RefreshPriority refreshPriority) {
   QCPPainter painter;
   painter.begin(&mPaintBuffer);
   if (painter.isActive()) {
-    painter.setRenderHint(
-        QPainter::HighQualityAntialiasing);  // to make Antialiasing look good if using the OpenGL graphicssystem
+    painter.setRenderHint(QPainter::Antialiasing);  // to make Antialiasing look good if using the OpenGL graphicssystem
     if (mBackgroundBrush.style() != Qt::SolidPattern && mBackgroundBrush.style() != Qt::NoBrush)
       painter.fillRect(mViewport, mBackgroundBrush);
     draw(&painter);
@@ -12637,7 +12636,7 @@ void QCPColorScale::setRangeDrag(bool enabled) {
   if (enabled)
     mAxisRect.data()->setRangeDrag(QCPAxis::orientation(mType));
   else
-    mAxisRect.data()->setRangeDrag(0);
+    mAxisRect.data()->setRangeDrag(Qt::Orientations());
 }
 
 /*!
@@ -12655,7 +12654,7 @@ void QCPColorScale::setRangeZoom(bool enabled) {
   if (enabled)
     mAxisRect.data()->setRangeZoom(QCPAxis::orientation(mType));
   else
-    mAxisRect.data()->setRangeZoom(0);
+    mAxisRect.data()->setRangeZoom(Qt::Orientations());
 }
 
 /*!
