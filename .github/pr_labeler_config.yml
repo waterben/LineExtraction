@@ -1,0 +1,15 @@
+# See: https://github.com/actions/labeler
+
+bugfix:
+  - head-branch: ['^bugfix\/']
+
+feature:
+  - head-branch: ['^feature\/']
+
+ci_cd:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**/*', 'docker/**/*']
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md', 'documentation/*']
