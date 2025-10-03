@@ -1,7 +1,7 @@
 #include <eval/cv_data_provider.hpp>
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -11,7 +11,7 @@ void FileCVDataProvider::parse(const fs::path& folder, bool recursive) {
   std::for_each(fs::directory_iterator(folder), fs::directory_iterator(), [&, this](const fs::path& file) {
     if (fs::is_regular_file(file)) {
       std::string ext = file.extension().generic_string();
-      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
+      std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
       if (ext == ".jpg" || ext == ".png") {
         this->files_.push_back(file);
       }

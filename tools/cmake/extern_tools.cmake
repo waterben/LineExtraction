@@ -50,7 +50,7 @@ endfunction()
 #   OUT_SOURCES     List of found source files.
 #   FLAG: RECURSIVE  Search directory recursively
 function( get_sources TARGET_DIR OUT_SOURCES)
-    set( FILE_EXT "cpp" "cc" "c" )   
+    set( FILE_EXT "cpp" "cc" "c" )
     get_files_in_directory( ${TARGET_DIR} "${FILE_EXT}" OUT_FILES "${ARGN}")
     set( ${OUT_SOURCES} ${OUT_FILES} PARENT_SCOPE )
 endfunction()
@@ -84,14 +84,14 @@ endfunction()
 #   OUT_FILES       List of found files that match any of the extensions.
 #   FLAG: RECURSIVE  Search directory recursively
 function( get_files_in_directory TARGET_DIR FILE_EXT OUT_FILES)
-    set( TMP_FILE_LIST "" )   
+    set( TMP_FILE_LIST "" )
     foreach( EXT ${FILE_EXT} )
         if( "RECURSIVE" IN_LIST "${ARGN}")
             file( GLOB_RECURSE FILES "${TARGET_DIR}/*.${EXT}" )
         else()
             file( GLOB FILES "${TARGET_DIR}/*.${EXT}" )
         endif()
-        
+
         foreach( FILE ${FILES} )
             list( APPEND TMP_FILE_LIST ${FILE} )
         endforeach()
@@ -125,13 +125,13 @@ endfunction()
 function( get_dirs TARGET_DIR OUT_DIRS )
     set( TMP_DIR_LIST "" )
     get_dir_items( ${TARGET_DIR} ITEMS )
-    
+
     foreach( ITEM ${ITEMS} )
         if ( IS_DIRECTORY ${ITEM} )
             list( APPEND TMP_DIR_LIST ${ITEM} )
         endif()
     endforeach()
-    
+
     set( ${OUT_DIRS} ${TMP_DIR_LIST} PARENT_SCOPE )
 endfunction()
 
@@ -160,5 +160,3 @@ function( copy_files_glob EXPRESSION TARGET_DIR )
     endif()
     copy_files("${FILES}" ${TARGET_DIR})
 endfunction()
-
-

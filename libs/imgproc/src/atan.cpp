@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "atan.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "atan.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,8 +21,7 @@
 // Arguments    : emxArray_real_T *x
 // Return Type  : void
 //
-void b_atan(emxArray_real_T *x)
-{
+void b_atan(emxArray_real_T* x) {
   int nx;
   int k;
   nx = x->size[0] * x->size[1];

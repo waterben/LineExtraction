@@ -2,15 +2,13 @@
 #define _PERFORMANCE_TEST_HPP_
 #ifdef __cplusplus
 
+#  include <opencv2/core.hpp>
 #  include <utility/performance.hpp>
 
 #  include <iomanip>
 #  include <iostream>
 #  include <map>
 #  include <vector>
-
-
-#  include <opencv2/core.hpp>
 
 // Detect OpenCV CUDA module availability via header presence
 #  if defined(__has_include)

@@ -44,69 +44,54 @@
 #define _LFD_MOTIONDESCRIPTOR_HPP_
 #ifdef __cplusplus
 
-#include <lfd/GenericDescriptor.hpp>
+#  include <lfd/GenericDescriptor.hpp>
 
 namespace lsfm {
 
-    // Left Right Feature Descriptor
-    template<class FT>
-    struct MotionDescritpor {
-        MotionDescritpor() {}
+// Left Right Feature Descriptor
+template <class FT>
+struct MotionDescritpor {
+  MotionDescritpor() {}
 
-        lsfm::Vec2<FT> midPoint;
+  lsfm::Vec2<FT> midPoint;
 
-        inline FT distance(const MotionDescritpor<FT>& rhs) const {
-            //return cv::norm(midPoint - rhs.midPoint);
-            return (midPoint - rhs.midPoint).squaredNorm();
-        }
+  inline FT distance(const MotionDescritpor<FT>& rhs) const {
+    // return cv::norm(midPoint - rhs.midPoint);
+    return (midPoint - rhs.midPoint).squaredNorm();
+  }
 
-        //! compute distance between two descriptors (static version)
-        static inline FT distance(const MotionDescritpor<FT>& lhs, const MotionDescritpor<FT>& rhs) {
-            return cv::norm(lhs.midPoint - rhs.midPoint);
-        }
+  //! compute distance between two descriptors (static version)
+  static inline FT distance(const MotionDescritpor<FT>& lhs, const MotionDescritpor<FT>& rhs) {
+    return cv::norm(lhs.midPoint - rhs.midPoint);
+  }
 
-        static inline int size() {
-            return sizeof(cv::Point_<FT>);
-        }
+  static inline int size() { return sizeof(cv::Point_<FT>); }
 
-        std::string name() const {
-            return "Motion";
-        }
-    };
+  std::string name() const { return "Motion"; }
+};
 
-    // Generic Feature Descriptor creator for gradient
-    template<class FT, class GT = LineSegment<FT>>
-    class FdcMotion : public FdcObj <FT, GT, MotionDescritpor<FT> > {
+// Generic Feature Descriptor creator for gradient
+template <class FT, class GT = LineSegment<FT>>
+class FdcMotion : public FdcObj<FT, GT, MotionDescritpor<FT>> {
+ public:
+  typedef typename FdcObj<FT, GT, MotionDescritpor<FT>>::Ptr FdcPtr;
+  typedef MotionDescritpor<FT> descriptor_type;
 
-    public:
-        typedef typename FdcObj <FT, GT, MotionDescritpor<FT>>::Ptr FdcPtr;
-        typedef MotionDescritpor<FT> descriptor_type;
+  FdcMotion(const MatMap& data = MatMap()) { this->setData(data); }
 
-        FdcMotion(const MatMap& data = MatMap()) {
-            this->setData(data);
-        }
+  static FdcPtr createFdc() { return FdcPtr(new FdcMotion<FT, GT>()); }
 
-        static FdcPtr createFdc() {
-            return FdcPtr(new FdcMotion<FT, GT>());
-        }
+  using FdcObjI<FT, GT, descriptor_type>::create;
 
-        using FdcObjI<FT, GT, descriptor_type>::create;
+  //! create single descriptor from single geometric object
+  virtual void create(const GT& input, descriptor_type& dst) { dst.midPoint = input.centerPoint(); }
 
-        //! create single descriptor from single geometric object
-        virtual void create(const GT& input, descriptor_type& dst) {
-            dst.midPoint = input.centerPoint();
-        }
+  //! get size of single descriptor (cols in cv::Mat)
+  virtual size_t size() const { return static_cast<size_t>(descriptor_type::size()); }
 
-        //! get size of single descriptor (cols in cv::Mat)
-        virtual size_t size() const {
-            return static_cast<size_t>(descriptor_type::size());
-        }
-
-        //! allow to set internal processing data after init
-        virtual void setData(const MatMap& data) {
-        }
-
-    };
-}
+  //! allow to set internal processing data after init
+  virtual void setData(const MatMap& data) {}
+};
+}  // namespace lsfm
 #endif
 #endif

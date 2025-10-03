@@ -9,10 +9,11 @@
  */
 
 #ifndef __RTGETNAN_H__
-#define __RTGETNAN_H__
-#include <stddef.h>
-#include "rtwtypes.h"
-#include "rt_nonfinite.h"
+#  define __RTGETNAN_H__
+#  include "rt_nonfinite.h"
+#  include "rtwtypes.h"
+
+#  include <stddef.h>
 
 extern real_T rtGetNaN(void);
 extern real32_T rtGetNaNF(void);

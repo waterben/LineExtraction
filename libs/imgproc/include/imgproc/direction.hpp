@@ -44,111 +44,98 @@
 #define _DIRECTION_HPP_
 #ifdef __cplusplus
 
-#  include <utility/range.hpp>
 #  include <imgproc/polar.hpp>
 #  include <opencv2/imgproc/imgproc.hpp>
+#  include <utility/range.hpp>
 
 #  include <string>
 
 
 namespace lsfm {
-    
-    //! Precise Direction class
-    //! Use GT to define Derivative/Gradient Type (short, float or double)
-    //! Use DT to define Direction Type (float or double)
-    template<class GT = short, class DT = float>
-    struct Direction  {
 
-        typedef GT grad_type;
-        typedef DT dir_type;
-        typedef Range<DT> DirectionRange;
+//! Precise Direction class
+//! Use GT to define Derivative/Gradient Type (short, float or double)
+//! Use DT to define Direction Type (float or double)
+template <class GT = short, class DT = float>
+struct Direction {
+  typedef GT grad_type;
+  typedef DT dir_type;
+  typedef Range<DT> DirectionRange;
 
-        //! Compute precise direction with atan2.
-        inline static DT process(GT gx, GT gy) {
-            return std::atan2(static_cast<DT>(gy), static_cast<DT>(gx));
-        }
+  //! Compute precise direction with atan2.
+  inline static DT process(GT gx, GT gy) { return std::atan2(static_cast<DT>(gy), static_cast<DT>(gx)); }
 
-        //! Compute precise direction.
-        inline static void process(const GT* gx, const GT* gy, DT* dir, size_t size) {
-            for (size_t i = 0; i != size; ++i)
-                dir[i] = Direction<GT, DT>::process(gx[i], gy[i]);
-        }
+  //! Compute precise direction.
+  inline static void process(const GT* gx, const GT* gy, DT* dir, size_t size) {
+    for (size_t i = 0; i != size; ++i) dir[i] = Direction<GT, DT>::process(gx[i], gy[i]);
+  }
 
-        //! Compute precise direction.
-        inline static void process(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& dir) {
-            CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
-                gx.rows == gy.rows && gx.cols == gy.cols);
-            dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
-            Direction<GT,DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows*gx.cols*gx.channels());
-        }
+  //! Compute precise direction.
+  inline static void process(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& dir) {
+    CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
+              gx.rows == gy.rows && gx.cols == gy.cols);
+    dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
+    Direction<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows * gx.cols * gx.channels());
+  }
 
-        //! Get direction range (-PI,PI)
-        inline static const DirectionRange& range() {
-            static DirectionRange r(static_cast<DT>(-CV_PI), static_cast<DT>(CV_PI));
-            return r;
-        }
+  //! Get direction range (-PI,PI)
+  inline static const DirectionRange& range() {
+    static DirectionRange r(static_cast<DT>(-CV_PI), static_cast<DT>(CV_PI));
+    return r;
+  }
 
-        //! Get name of direction method
-        inline static const std::string name() {
-            return "dir";
-        }
-
-    };
-    
-
-    //! Fast Direction class
-    //! Use GT to define Derivative/Gradient Type (short, float or double)
-    //! Use DT to define Direction Type (float or double)
-    template<class GT = short, class DT = float>
-    struct FastDirection {
-
-        typedef GT grad_type;
-        typedef DT dir_type;
-        typedef Range<DT> DirectionRange;
+  //! Get name of direction method
+  inline static const std::string name() { return "dir"; }
+};
 
 
-        //! Compute fast direction with fastAtan2.
-        inline static DT process(GT gx, GT gy) {
-            return cv::fastAtan2(static_cast<float>(gy), static_cast<float>(gx));
-        }
+//! Fast Direction class
+//! Use GT to define Derivative/Gradient Type (short, float or double)
+//! Use DT to define Direction Type (float or double)
+template <class GT = short, class DT = float>
+struct FastDirection {
+  typedef GT grad_type;
+  typedef DT dir_type;
+  typedef Range<DT> DirectionRange;
 
-        //! Compute fast direction.
-        inline static void process(const GT* gx, const GT* gy, DT* dir, size_t size) {
-            for (size_t i = 0; i != size; ++i)
-                dir[i] = FastDirection<GT,DT>::process(gx[i], gy[i]);
-        }
 
-#if (CV_MAJOR_VERSION < 3)
+  //! Compute fast direction with fastAtan2.
+  inline static DT process(GT gx, GT gy) { return cv::fastAtan2(static_cast<float>(gy), static_cast<float>(gx)); }
 
-        inline static void process(const float* gx, const float* gy, float* dir, size_t size) {
-            cv::fastAtan2(gy, gx, dir, static_cast<int>(size), true);
-        }
-#endif
+  //! Compute fast direction.
+  inline static void process(const GT* gx, const GT* gy, DT* dir, size_t size) {
+    for (size_t i = 0; i != size; ++i) dir[i] = FastDirection<GT, DT>::process(gx[i], gy[i]);
+  }
 
-        //! process direction using cv::Mat objects
-        inline static void process(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& dir) {
-            CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
-                gx.rows == gy.rows && gx.cols == gy.cols);
-			int type = gx.type() & CV_MAT_DEPTH_MASK;
-			if ((type == CV_32F || type == CV_64F) && type == cv::DataType<DT>::type)
-				cv::phase(gx, gy, dir, true);
-			else {
-				dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
-				FastDirection<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows*gx.cols*gx.channels());
-			}
-        }
+#  if (CV_MAJOR_VERSION < 3)
 
-        //! get direction range (0,360)
-        inline static const DirectionRange& range()  {
-            static DirectionRange r(0, 360);
-            return r;
-        }
+  inline static void process(const float* gx, const float* gy, float* dir, size_t size) {
+    cv::fastAtan2(gy, gx, dir, static_cast<int>(size), true);
+  }
+#  endif
 
-        //! get name of direction method
-        inline static const std::string name() {
-            return "fdir";
-        }
-    };
-}
+  //! process direction using cv::Mat objects
+  inline static void process(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& dir) {
+    CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
+              gx.rows == gy.rows && gx.cols == gy.cols);
+    int type = gx.type() & CV_MAT_DEPTH_MASK;
+    if ((type == CV_32F || type == CV_64F) && type == cv::DataType<DT>::type)
+      cv::phase(gx, gy, dir, true);
+    else {
+      dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
+      FastDirection<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows * gx.cols * gx.channels());
+    }
+  }
+
+  //! get direction range (0,360)
+  inline static const DirectionRange& range() {
+    static DirectionRange r(0, 360);
+    return r;
+  }
+
+  //! get name of direction method
+  inline static const std::string name() { return "fdir"; }
+};
+}  // namespace lsfm
 #endif
 #endif

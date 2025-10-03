@@ -44,174 +44,161 @@
 #define _DERIVATIVE_GRADIENT_HPP_
 #ifdef __cplusplus
 
-#include <imgproc/gradient.hpp>
+#  include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
-    //! Derivative Gradient
-    //! Use IT to define Image Type (8Bit, 16Bit, 32Bit, or floating type float or double)
-    //! Use GT to define Derivative/Gradient Type (short, float or double)
-    //! Use MT to define Magnitude Type (int, float or double)
-    //! Use DT to define Direction Type (float or double)
-    //! For 8 Bit images use GT = short, for 16 Bit images float.
-    //! For images with floating values, use IT and GT = image floating type (float or double)
-    template<class IT = uchar, class GT = short, class MT = int, class DT = float, template<class, class> class GO = SobelDerivative, template<class, class> class MO = Magnitude, template<class, class> class DO = Direction>
-    class DerivativeGradient : public Gradient<IT,GT,MT,DT> {
-        GO<IT,GT> derivative_;
+//! Derivative Gradient
+//! Use IT to define Image Type (8Bit, 16Bit, 32Bit, or floating type float or double)
+//! Use GT to define Derivative/Gradient Type (short, float or double)
+//! Use MT to define Magnitude Type (int, float or double)
+//! Use DT to define Direction Type (float or double)
+//! For 8 Bit images use GT = short, for 16 Bit images float.
+//! For images with floating values, use IT and GT = image floating type (float or double)
+template <class IT = uchar,
+          class GT = short,
+          class MT = int,
+          class DT = float,
+          template <class, class> class GO = SobelDerivative,
+          template <class, class> class MO = Magnitude,
+          template <class, class> class DO = Direction>
+class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
+  GO<IT, GT> derivative_;
 
-        mutable cv::Mat_<GT> gx_, gy_;
-        mutable cv::Mat_<MT> mag_;
-        mutable cv::Mat_<DT> dir_;
+  mutable cv::Mat_<GT> gx_, gy_;
+  mutable cv::Mat_<MT> mag_;
+  mutable cv::Mat_<DT> dir_;
 
-        mutable bool mag_done_, dir_done_;
+  mutable bool mag_done_, dir_done_;
 
-    public:
-        typedef IT img_type;
-        typedef GT grad_type;
-        typedef MT mag_type;
-        typedef DT dir_type;
-        typedef Range<IT> IntensityRange;
-        typedef Range<GT> GradientRange;
-        typedef Range<MT> MagnitudeRange;
-        typedef Range<DT> DirectionRange;
+ public:
+  typedef IT img_type;
+  typedef GT grad_type;
+  typedef MT mag_type;
+  typedef DT dir_type;
+  typedef Range<IT> IntensityRange;
+  typedef Range<GT> GradientRange;
+  typedef Range<MT> MagnitudeRange;
+  typedef Range<DT> DirectionRange;
 
-        DerivativeGradient(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max()) :
-            Gradient<IT,GT,MT,DT>(int_lower,int_upper), mag_done_(false), dir_done_(false) {
-            this->addManager(derivative_);
-        }
+  DerivativeGradient(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max())
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+    this->addManager(derivative_);
+  }
 
-        DerivativeGradient(const ValueManager::NameValueVector &options, IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max()) :
-            Gradient<IT,GT,MT,DT>(int_lower,int_upper), mag_done_(false), dir_done_(false) {
-            this->addManager(derivative_);
-            this->value(options);
-        }
+  DerivativeGradient(const ValueManager::NameValueVector& options,
+                     IT int_lower = std::numeric_limits<IT>::lowest(),
+                     IT int_upper = std::numeric_limits<IT>::max())
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+    this->addManager(derivative_);
+    this->value(options);
+  }
 
-        DerivativeGradient(ValueManager::InitializerList options, IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max()) :
-            Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
-            this->addManager(derivative_);
-            this->value(options);
-        }
+  DerivativeGradient(ValueManager::InitializerList options,
+                     IT int_lower = std::numeric_limits<IT>::lowest(),
+                     IT int_upper = std::numeric_limits<IT>::max())
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+    this->addManager(derivative_);
+    this->value(options);
+  }
 
-        //! process gradient
-        void process(const cv::Mat& img) {
-            mag_done_ = false;
-            dir_done_ = false;
+  //! process gradient
+  void process(const cv::Mat& img) {
+    mag_done_ = false;
+    dir_done_ = false;
 
-            derivative_.process(img, this->gx_, this->gy_);
-        }
+    derivative_.process(img, this->gx_, this->gy_);
+  }
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) {
-            process(img);
-            directionals(gx, gy);
-        }
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) {
+    process(img);
+    directionals(gx, gy);
+  }
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
-            process(img);
-            directionals(gx, gy);
-            mag = magnitude();
-        }
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
+    process(img);
+    directionals(gx, gy);
+    mag = magnitude();
+  }
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
-            process(img);
-            directionals(gx, gy);
-            mag = magnitude();
-            dir = direction();
-        }
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
+    process(img);
+    directionals(gx, gy);
+    mag = magnitude();
+    dir = direction();
+  }
 
-        //! get x,y derivatives
-        void directionals(cv::Mat& gx, cv::Mat& gy) const {
-            gx = gx_; gy = gy_;
-        }
+  //! get x,y derivatives
+  void directionals(cv::Mat& gx, cv::Mat& gy) const {
+    gx = gx_;
+    gy = gy_;
+  }
 
-        //! get x derivative
-        cv::Mat gx() const {
-            return gx_;
-        }
+  //! get x derivative
+  cv::Mat gx() const { return gx_; }
 
-        //! get y derivative
-        cv::Mat gy() const {
-            return gy_;
-        }
+  //! get y derivative
+  cv::Mat gy() const { return gy_; }
 
-		GradientRange gradientRange() const {
-			GT val = this->intRange_.upper*derivative_.max().max_1st;
-			return GradientRange(-val, val);
-		}
+  GradientRange gradientRange() const {
+    GT val = this->intRange_.upper * derivative_.max().max_1st;
+    return GradientRange(-val, val);
+  }
 
-        //! test if magnitude is computed
-        inline bool isMagnitudeDone() const {
-            return mag_done_;
-        }
+  //! test if magnitude is computed
+  inline bool isMagnitudeDone() const { return mag_done_; }
 
-        //! get magnitude
-        cv::Mat magnitude() const {
-            if (!mag_done_) {
-                MO<GT,MT>::process(gx_, gy_, mag_);
-                mag_done_ = true;
-            }
-            return mag_;
-        }
+  //! get magnitude
+  cv::Mat magnitude() const {
+    if (!mag_done_) {
+      MO<GT, MT>::process(gx_, gy_, mag_);
+      mag_done_ = true;
+    }
+    return mag_;
+  }
 
-        //! test if direction is computed
-        inline bool isDirectionDone() const {
-            return dir_done_;
-        }
+  //! test if direction is computed
+  inline bool isDirectionDone() const { return dir_done_; }
 
-        //! get direction
-        cv::Mat direction() const {
-            if (!dir_done_) {
-                DO<GT,DT>::process(gx_, gy_, dir_);
-                dir_done_ = true;
-            }
-            return dir_;
-        }
+  //! get direction
+  cv::Mat direction() const {
+    if (!dir_done_) {
+      DO<GT, DT>::process(gx_, gy_, dir_);
+      dir_done_ = true;
+    }
+    return dir_;
+  }
 
-        //! get direction range ([-PI,PI], [0,2PI] or [0,360])
-        DirectionRange directionRange() const {
-            return DO<GT, DT>::range();
-        }
+  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  DirectionRange directionRange() const { return DO<GT, DT>::range(); }
 
-        MagnitudeRange magnitudeRange() const {
-            return Range<MT>(0, magnitudeMaxStep(this->intRange_.upper));
-        }
+  MagnitudeRange magnitudeRange() const { return Range<MT>(0, magnitudeMaxStep(this->intRange_.upper)); }
 
-		MT magnitudeThreshold(double val) const {
-			return static_cast<MT>(magnitudeRange().upper * MO<GT,MT>::singled(val));
-		}
+  MT magnitudeThreshold(double val) const { return static_cast<MT>(magnitudeRange().upper * MO<GT, MT>::singled(val)); }
 
-        //! get maximum magnitude step for intensity step
-        MT magnitudeMaxStep(IT intensity = 1) const {
-            return MO<GT, MT>::max(derivativeMax(), intensity);
-        }
+  //! get maximum magnitude step for intensity step
+  MT magnitudeMaxStep(IT intensity = 1) const { return MO<GT, MT>::max(derivativeMax(), intensity); }
 
-        //! compute single value magnitude
-        MT magnitudeSingle(MT val) const {
-            return static_cast<MT>(MO<GT, MT>::singled(val));
-        }
+  //! compute single value magnitude
+  MT magnitudeSingle(MT val) const { return static_cast<MT>(MO<GT, MT>::singled(val)); }
 
-        DerivativeMax<GT> derivativeMax() const {
-            return derivative_.max();
-        }
+  DerivativeMax<GT> derivativeMax() const { return derivative_.max(); }
 
-        //! get name of gradient operator
-        inline std::string name() const {
-            return "derivative_" + derivative_.name();
-        }
+  //! get name of gradient operator
+  inline std::string name() const { return "derivative_" + derivative_.name(); }
 
-		NormType normType() const {
-			return MO<GT, MT>::normType();
-		}
+  NormType normType() const { return MO<GT, MT>::normType(); }
 
-        using ValueManager::values;
-        using ValueManager::valuePair;
-        using ValueManager::value;
-        using Gradient<IT,GT,MT,DT>::intensityRange;
-        using Gradient<IT,GT,MT,DT>::results;
-    };
+  using ValueManager::value;
+  using ValueManager::valuePair;
+  using ValueManager::values;
+  using Gradient<IT, GT, MT, DT>::intensityRange;
+  using Gradient<IT, GT, MT, DT>::results;
+};
 
-}
+}  // namespace lsfm
 #endif
 #endif

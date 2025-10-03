@@ -9,11 +9,12 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "median.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
+#include "phasecong.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -21,15 +22,14 @@
 // Arguments    : const emxArray_real_T *x
 // Return Type  : double
 //
-double median(const emxArray_real_T *x)
-{
+double median(const emxArray_real_T* x) {
   double y;
-  emxArray_int32_T *idx;
+  emxArray_int32_T* idx;
   int i;
   int midm1;
   unsigned int unnamed_idx_0;
   int k;
-  emxArray_int32_T *iwork;
+  emxArray_int32_T* iwork;
   int n;
   boolean_T p;
   int i2;
@@ -48,7 +48,7 @@ double median(const emxArray_real_T *x)
     unnamed_idx_0 = (unsigned int)x->size[0];
     i = idx->size[0];
     idx->size[0] = (int)unnamed_idx_0;
-    emxEnsureCapacity((emxArray__common *)idx, i, (int)sizeof(int));
+    emxEnsureCapacity((emxArray__common*)idx, i, (int)sizeof(int));
     k = (int)unnamed_idx_0;
     for (i = 0; i < k; i++) {
       idx->data[i] = 0;
@@ -58,7 +58,7 @@ double median(const emxArray_real_T *x)
     n = x->size[0] + 1;
     i = iwork->size[0];
     iwork->size[0] = (int)unnamed_idx_0;
-    emxEnsureCapacity((emxArray__common *)iwork, i, (int)sizeof(int));
+    emxEnsureCapacity((emxArray__common*)iwork, i, (int)sizeof(int));
     for (k = 1; k <= n - 2; k += 2) {
       if ((x->data[k - 1] <= x->data[k]) || rtIsNaN(x->data[k])) {
         p = true;
@@ -94,8 +94,7 @@ double median(const emxArray_real_T *x)
         k = 0;
         kEnd = qEnd - j;
         while (k + 1 <= kEnd) {
-          if ((x->data[idx->data[b_p - 1] - 1] <= x->data[idx->data[q] - 1]) ||
-              rtIsNaN(x->data[idx->data[q] - 1])) {
+          if ((x->data[idx->data[b_p - 1] - 1] <= x->data[idx->data[q] - 1]) || rtIsNaN(x->data[idx->data[q] - 1])) {
             p = true;
           } else {
             p = false;
@@ -140,14 +139,12 @@ double median(const emxArray_real_T *x)
     if (rtIsNaN(x->data[idx->data[idx->size[0] - 1] - 1])) {
       y = x->data[idx->data[idx->size[0] - 1] - 1];
     } else if (midm1 << 1 == x->size[0]) {
-      if (((x->data[idx->data[midm1 - 1] - 1] < 0.0) && (x->data[idx->data[midm1]
-            - 1] >= 0.0)) || rtIsInf(x->data[idx->data[midm1 - 1] - 1]) ||
-          rtIsInf(x->data[idx->data[midm1] - 1])) {
-        y = (x->data[idx->data[midm1 - 1] - 1] + x->data[idx->data[midm1] - 1]) /
-          2.0;
+      if (((x->data[idx->data[midm1 - 1] - 1] < 0.0) && (x->data[idx->data[midm1] - 1] >= 0.0)) ||
+          rtIsInf(x->data[idx->data[midm1 - 1] - 1]) || rtIsInf(x->data[idx->data[midm1] - 1])) {
+        y = (x->data[idx->data[midm1 - 1] - 1] + x->data[idx->data[midm1] - 1]) / 2.0;
       } else {
-        y = x->data[idx->data[midm1 - 1] - 1] + (x->data[idx->data[midm1] - 1] -
-          x->data[idx->data[midm1 - 1] - 1]) / 2.0;
+        y = x->data[idx->data[midm1 - 1] - 1] +
+            (x->data[idx->data[midm1] - 1] - x->data[idx->data[midm1 - 1] - 1]) / 2.0;
       }
     } else {
       y = x->data[idx->data[midm1] - 1];

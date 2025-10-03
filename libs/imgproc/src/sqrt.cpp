@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "sqrt.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "sqrt.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,8 +21,7 @@
 // Arguments    : emxArray_real_T *x
 // Return Type  : void
 //
-void b_sqrt(emxArray_real_T *x)
-{
+void b_sqrt(emxArray_real_T* x) {
   int nx;
   int k;
   nx = x->size[0] * x->size[1];

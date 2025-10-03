@@ -9,4 +9,3 @@ endif (POLICY CMP0020)
 add_executable(test_enrichments enrichments.cpp enrichmentmainwindow.cpp main.cpp enrichmentmainwindowbase.ui)
 qt5_use_modules(test_enrichments Core Gui Widgets OpenGL)
 target_link_libraries(test_enrichments lib_qplot3d ${OPENGL_LIBRARIES})
-

@@ -1,23 +1,22 @@
-#include <gtest/gtest.h>
-#include <imgproc/quadratureG2.hpp>
-#include <imgproc/pc_sqf.hpp>
 #include <imgproc/gradient_adapter.hpp>
+#include <imgproc/pc_sqf.hpp>
+#include <imgproc/quadratureG2.hpp>
 
-static cv::Mat makeSinus(int rows=32, int cols=32, double period=8.0)
-{
+#include <gtest/gtest.h>
+
+static cv::Mat makeSinus(int rows = 32, int cols = 32, double period = 8.0) {
   cv::Mat img(rows, cols, CV_8U);
-  for (int r=0;r<rows;++r) {
-    for (int c=0;c<cols;++c) {
-      double v = 128.0 + 127.0*std::sin(2.0*CV_PI * c / period);
-      img.at<uchar>(r,c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
+  for (int r = 0; r < rows; ++r) {
+    for (int c = 0; c < cols; ++c) {
+      double v = 128.0 + 127.0 * std::sin(2.0 * CV_PI * c / period);
+      img.at<uchar>(r, c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
     }
   }
   return img;
 }
 
-TEST(QuadratureG2Test, Smoke)
-{
-  using Quad = lsfm::QuadratureG2<uchar,float>;
+TEST(QuadratureG2Test, Smoke) {
+  using Quad = lsfm::QuadratureG2<uchar, float>;
   Quad q(9, 0.782f);
   auto img = makeSinus();
   q.process(img);
@@ -58,9 +57,8 @@ TEST(QuadratureG2Test, Smoke)
   EXPECT_EQ(q.normType(), lsfm::NormType::NORM_L2);
 }
 
-TEST(GradientAdapterTest, OddAndEnergyAdapters)
-{
-  using Quad = lsfm::QuadratureG2<uchar,float>;
+TEST(GradientAdapterTest, OddAndEnergyAdapters) {
+  using Quad = lsfm::QuadratureG2<uchar, float>;
   lsfm::GradientOdd<Quad> g_odd;
   lsfm::GradientEnergy<Quad> g_en;
   auto img = makeSinus();
@@ -74,9 +72,8 @@ TEST(GradientAdapterTest, OddAndEnergyAdapters)
   EXPECT_EQ(m2.type(), CV_32F);
 }
 
-TEST(GradientAdapterTest, PhaseCongruencyAdapter)
-{
-  using PC = lsfm::PCSqf<uchar,float>;
+TEST(GradientAdapterTest, PhaseCongruencyAdapter) {
+  using PC = lsfm::PCSqf<uchar, float>;
   lsfm::GradientPC<PC> g_pc;
   auto img = makeSinus();
   g_pc.process(img);
@@ -87,10 +84,9 @@ TEST(GradientAdapterTest, PhaseCongruencyAdapter)
   EXPECT_GE(mr.upper, mr.lower);
 }
 
-TEST(PhaseCongruencyTest, PCSqfSmoke)
-{
-  using PC = lsfm::PCSqf<uchar,float>;
-  PC pc(1.0f, 2.0f, 1.0f, 2); // fewer scales to be fast
+TEST(PhaseCongruencyTest, PCSqfSmoke) {
+  using PC = lsfm::PCSqf<uchar, float>;
+  PC pc(1.0f, 2.0f, 1.0f, 2);  // fewer scales to be fast
   auto img = makeSinus();
   pc.process(img);
   auto pcmap = pc.phaseCongruency();

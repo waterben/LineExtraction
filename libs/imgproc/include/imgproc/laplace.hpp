@@ -44,8 +44,8 @@
 #define _LAPLACE_HPP_
 #ifdef __cplusplus
 
-#  include <imgproc/filter.hpp>
 #  include "opencv2/imgproc/imgproc.hpp"
+#  include <imgproc/filter.hpp>
 
 
 namespace lsfm {

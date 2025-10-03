@@ -44,10 +44,10 @@
 #define _NMS_HPP_
 #ifdef __cplusplus
 
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/interpolate.hpp>
 #  include <edge/hysteresis.hpp>
 #  include <edge/index.hpp>
+#  include <imgproc/gradient.hpp>
+#  include <imgproc/interpolate.hpp>
 #  include <opencv2/core/core.hpp>
 
 #  include <vector>

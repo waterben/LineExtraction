@@ -1,7 +1,7 @@
 # -Try to find SuperLU
 #
 #
-# The following are set after configuration is done: 
+# The following are set after configuration is done:
 #  SUPERLU_FOUND
 #  SUPERLU_LIBRARIES
 
@@ -27,7 +27,7 @@ ELSE(WIN32)
 SET (SUPERLU_NAME superlu)
 ENDIF(WIN32)
 
-FIND_LIBRARY(SUPERLU_LIBRARIES 
+FIND_LIBRARY(SUPERLU_LIBRARIES
   NAMES ${SUPERLU_NAME}
   PATHS ${SUPERLU_DIR}
 )

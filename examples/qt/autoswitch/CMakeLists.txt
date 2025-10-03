@@ -9,4 +9,3 @@ endif (POLICY CMP0020)
 add_executable(test_autoswitch autoswitch.cpp)
 qt5_use_modules(test_autoswitch Core Gui Widgets OpenGL)
 target_link_libraries(test_autoswitch lib_qplot3d ${OPENGL_LIBRARIES})
-

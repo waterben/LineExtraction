@@ -44,173 +44,165 @@
 #define _PHASE_CONGRUENCY_HPP_
 #ifdef __cplusplus
 
-#include <imgproc/quadrature.hpp>
+#  include <imgproc/quadrature.hpp>
 
 namespace lsfm {
 
-    //! Phase Congruency base class (quadrature extension)
-    //! Use ET to define energy type (int, float or double)
-    template<class ET>
-    class PhaseCongruencyI {
-        PhaseCongruencyI(const PhaseCongruencyI&);
+//! Phase Congruency base class (quadrature extension)
+//! Use ET to define energy type (int, float or double)
+template <class ET>
+class PhaseCongruencyI {
+  PhaseCongruencyI(const PhaseCongruencyI&);
 
-    protected:
-        PhaseCongruencyI() {}
+ protected:
+  PhaseCongruencyI() {}
 
-    public:
-        typedef ET energy_type;
-        typedef Range<ET> EnergyRange;
+ public:
+  typedef ET energy_type;
+  typedef Range<ET> EnergyRange;
 
-        virtual ~PhaseCongruencyI() {}
+  virtual ~PhaseCongruencyI() {}
 
-        //! get phase congruency
-        virtual cv::Mat phaseCongruency() const = 0;
+  //! get phase congruency
+  virtual cv::Mat phaseCongruency() const = 0;
 
-        //! get phase congruency range
-        virtual EnergyRange phaseCongruencyRange() const {
-            return EnergyRange(0, 1);
-        }
+  //! get phase congruency range
+  virtual EnergyRange phaseCongruencyRange() const { return EnergyRange(0, 1); }
+};
 
-    };
+//! phase congruency base class helper
+template <class IT, class GT, class MT, class ET, class DT>
+class PhaseCongruency : public PhaseCongruencyI<ET>, public QuadratureI<IT, GT, MT, ET, DT> {
+  PhaseCongruency();
+  PhaseCongruency(const PhaseCongruency&);
 
-    //! phase congruency base class helper
-    template<class IT, class GT, class MT, class ET, class DT>
-    class PhaseCongruency : public PhaseCongruencyI<ET>, public QuadratureI<IT, GT, MT, ET, DT>{
-        PhaseCongruency();
-        PhaseCongruency(const PhaseCongruency&);
-    protected:
-        Range<IT> intRange_;
+ protected:
+  Range<IT> intRange_;
 
-        PhaseCongruency(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
-            if (intRange_.lower > intRange_.upper)
-                intRange_.swap();
-        }
+  PhaseCongruency(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
+    if (intRange_.lower > intRange_.upper) intRange_.swap();
+  }
 
-    public:
-        typedef IT img_type;
-        typedef GT grad_type;
-        typedef MT mag_type;
-        typedef ET energy_type;
-        typedef DT dir_type;
-        typedef DT phase_type;
+ public:
+  typedef IT img_type;
+  typedef GT grad_type;
+  typedef MT mag_type;
+  typedef ET energy_type;
+  typedef DT dir_type;
+  typedef DT phase_type;
 
-        typedef Range<IT> IntensityRange;
-        typedef Range<GT> GradientRange;
-        typedef Range<MT> MagnitudeRange;
-        typedef Range<ET> EnergyRange;
-        typedef Range<DT> DirectionRange;
-        typedef Range<DT> PhaseRange;
+  typedef Range<IT> IntensityRange;
+  typedef Range<GT> GradientRange;
+  typedef Range<MT> MagnitudeRange;
+  typedef Range<ET> EnergyRange;
+  typedef Range<DT> DirectionRange;
+  typedef Range<DT> PhaseRange;
 
 
-        //! get image intensity range (for single channel)
-        IntensityRange intensityRange() const {
-            return intRange_;
-        }
+  //! get image intensity range (for single channel)
+  IntensityRange intensityRange() const { return intRange_; }
 
-        //! generic interface to get processed data
-        virtual FilterResults results() const {
-            FilterResults ret;
-            ret["even"] = FilterData(this->even(), this->evenRange());
-            ret["oddx"] = FilterData(this->oddx(), this->oddGradRange());
-            ret["oddy"] = FilterData(this->oddy(), this->oddGradRange());
-            ret["odd"] = FilterData(this->odd(), this->oddRange());
-            ret["dir"] = FilterData(this->direction(), this->directionRange());
-            ret["energy"] = FilterData(this->energy(), this->energyRange());
-            ret["phase"] = FilterData(this->phase(), this->phaseRange());
-            ret["pc"] = FilterData(this->phaseCongruency(), this->phaseCongruencyRange());
-            return ret;
-        }
-    };
+  //! generic interface to get processed data
+  virtual FilterResults results() const {
+    FilterResults ret;
+    ret["even"] = FilterData(this->even(), this->evenRange());
+    ret["oddx"] = FilterData(this->oddx(), this->oddGradRange());
+    ret["oddy"] = FilterData(this->oddy(), this->oddGradRange());
+    ret["odd"] = FilterData(this->odd(), this->oddRange());
+    ret["dir"] = FilterData(this->direction(), this->directionRange());
+    ret["energy"] = FilterData(this->energy(), this->energyRange());
+    ret["phase"] = FilterData(this->phase(), this->phaseRange());
+    ret["pc"] = FilterData(this->phaseCongruency(), this->phaseCongruencyRange());
+    return ret;
+  }
+};
 
 
-    //! Phase Congruency laplace base class (local energy)
-    //! Use ET to define energy type (int, float or double)
-    template<class ET>
-    class PhaseCongruencyLaplaceI  {
-        PhaseCongruencyLaplaceI(const PhaseCongruencyLaplaceI&);
+//! Phase Congruency laplace base class (local energy)
+//! Use ET to define energy type (int, float or double)
+template <class ET>
+class PhaseCongruencyLaplaceI {
+  PhaseCongruencyLaplaceI(const PhaseCongruencyLaplaceI&);
 
-    protected:
-        PhaseCongruencyLaplaceI() {}
+ protected:
+  PhaseCongruencyLaplaceI() {}
 
-    public:
-        typedef ET energy_type;
+ public:
+  typedef ET energy_type;
 
-        typedef Range<ET> EnergyRange;
+  typedef Range<ET> EnergyRange;
 
-        virtual ~PhaseCongruencyLaplaceI() {}
+  virtual ~PhaseCongruencyLaplaceI() {}
 
-        //! get single pc laplace responses
-        virtual void pcLaplace(cv::Mat &lx, cv::Mat &ly) const = 0;
+  //! get single pc laplace responses
+  virtual void pcLaplace(cv::Mat& lx, cv::Mat& ly) const = 0;
 
-        //! get x response of pc laplace filter
-        virtual cv::Mat pclx() const {
-            cv::Mat lx, ly;
-            pcLaplace(lx, ly);
-            return lx;
-        }
+  //! get x response of pc laplace filter
+  virtual cv::Mat pclx() const {
+    cv::Mat lx, ly;
+    pcLaplace(lx, ly);
+    return lx;
+  }
 
-        //! get x response of pc laplace filter
-        virtual cv::Mat pcly() const {
-            cv::Mat lx, ly;
-            pcLaplace(lx, ly);
-            return ly;
-        }
+  //! get x response of pc laplace filter
+  virtual cv::Mat pcly() const {
+    cv::Mat lx, ly;
+    pcLaplace(lx, ly);
+    return ly;
+  }
 
-        //! get phase congruency laplace range
-        virtual EnergyRange pcLaplaceRange() const = 0;
+  //! get phase congruency laplace range
+  virtual EnergyRange pcLaplaceRange() const = 0;
+};
 
-    };
+//! Quadrature base class helper
+template <class IT, class GT, class MT, class ET, class DT>
+class PhaseCongruencyLaplace : public PhaseCongruencyLaplaceI<ET>, public QuadratureI<IT, GT, MT, ET, DT> {
+  PhaseCongruencyLaplace();
+  PhaseCongruencyLaplace(const PhaseCongruencyLaplace&);
 
-    //! Quadrature base class helper
-    template<class IT, class GT, class MT, class ET, class DT>
-    class PhaseCongruencyLaplace : public PhaseCongruencyLaplaceI<ET>, public QuadratureI<IT, GT, MT, ET, DT> {
-        PhaseCongruencyLaplace();
-        PhaseCongruencyLaplace(const PhaseCongruencyLaplace&);
-    protected:
-        Range<IT> intRange_;
+ protected:
+  Range<IT> intRange_;
 
-        PhaseCongruencyLaplace(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
-            if (intRange_.lower > intRange_.upper)
-                intRange_.swap();
-        }
+  PhaseCongruencyLaplace(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
+    if (intRange_.lower > intRange_.upper) intRange_.swap();
+  }
 
-    public:
-        typedef IT img_type;
-        typedef GT grad_type;
-        typedef MT mag_type;
-        typedef ET energy_type;
-        typedef DT dir_type;
-        typedef DT phase_type;
+ public:
+  typedef IT img_type;
+  typedef GT grad_type;
+  typedef MT mag_type;
+  typedef ET energy_type;
+  typedef DT dir_type;
+  typedef DT phase_type;
 
-        typedef Range<IT> IntensityRange;
-        typedef Range<GT> GradientRange;
-        typedef Range<MT> MagnitudeRange;
-        typedef Range<ET> EnergyRange;
-        typedef Range<DT> DirectionRange;
-        typedef Range<DT> PhaseRange;
+  typedef Range<IT> IntensityRange;
+  typedef Range<GT> GradientRange;
+  typedef Range<MT> MagnitudeRange;
+  typedef Range<ET> EnergyRange;
+  typedef Range<DT> DirectionRange;
+  typedef Range<DT> PhaseRange;
 
 
-        //! get image intensity range (for single channel)
-        IntensityRange intensityRange() const {
-            return intRange_;
-        }
+  //! get image intensity range (for single channel)
+  IntensityRange intensityRange() const { return intRange_; }
 
-        //! generic interface to get processed data
-        virtual FilterResults results() const {
-            FilterResults ret;
-            ret["even"] = FilterData(this->even(), this->evenRange());
-            ret["oddx"] = FilterData(this->oddx(), this->oddGradRange());
-            ret["oddy"] = FilterData(this->oddy(), this->oddGradRange());
-            ret["odd"] = FilterData(this->odd(), this->oddRange());
-            ret["dir"] = FilterData(this->direction(), this->directionRange());
-            ret["energy"] = FilterData(this->energy(), this->energyRange());
-            ret["phase"] = FilterData(this->phase(), this->phaseRange());
-            ret["pclx"] = FilterData(this->pclx(), this->pcLaplaceRange());
-            ret["pcly"] = FilterData(this->pcly(), this->pcLaplaceRange());
-            return ret;
-        }
-    };
+  //! generic interface to get processed data
+  virtual FilterResults results() const {
+    FilterResults ret;
+    ret["even"] = FilterData(this->even(), this->evenRange());
+    ret["oddx"] = FilterData(this->oddx(), this->oddGradRange());
+    ret["oddy"] = FilterData(this->oddy(), this->oddGradRange());
+    ret["odd"] = FilterData(this->odd(), this->oddRange());
+    ret["dir"] = FilterData(this->direction(), this->directionRange());
+    ret["energy"] = FilterData(this->energy(), this->energyRange());
+    ret["phase"] = FilterData(this->phase(), this->phaseRange());
+    ret["pclx"] = FilterData(this->pclx(), this->pcLaplaceRange());
+    ret["pcly"] = FilterData(this->pcly(), this->pcLaplaceRange());
+    return ret;
+  }
+};
 
-}
+}  // namespace lsfm
 #endif
 #endif

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <filesystem>
 #include <eval/data_provider.hpp>
 #include <opencv2/opencv.hpp>
+
+#include <filesystem>
 
 namespace lsfm {
 
@@ -29,8 +30,7 @@ struct FileCVDataProvider : public CVDataProvider {
   virtual ~FileCVDataProvider() = default;
 
   void parse(const std::vector<std::filesystem::path>& folders, bool recursive = true) {
-    for_each(folders.begin(), folders.end(),
-             [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
+    for_each(folders.begin(), folders.end(), [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
   }
 
   void parse(const std::filesystem::path& folder, bool recursive = true);

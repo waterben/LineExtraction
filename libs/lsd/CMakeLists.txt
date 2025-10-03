@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.5...3.27)
 le_add_library(lib_lsd
     AUTO_TESTS
     # Use automatic source detection from src/ directory
-    PUBLIC_DEPS 
+    PUBLIC_DEPS
         lib_imgproc
         lib_edge
         lib_geometry

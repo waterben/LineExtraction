@@ -25,7 +25,7 @@ macro(gtest3_extern quiet)
         string(FIND ${GTEST_LIBRARY} "/" index REVERSE)
         if (NOT (${index} EQUAL -1))
             string(SUBSTRING ${GTEST_LIBRARY} 0 ${index} GTEST_LIBRARY_DIR)
-        endif()   
+        endif()
         set(GTEST_LIBRARIES "${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY}")
     endif()
 endmacro()
@@ -39,7 +39,7 @@ macro(gtest3_repo extern_path)
         LOG_CONFIGURE ON
         CONF_ONLY ON
     )
-    
+
     copy_files_glob("${extern_path}/managed_gtest/src/managed_gtest-build/libgtest*" "${extern_path}/managed_gtest/src/managed_gtest/lib")
     gtest3_extern(FALSE PATH "${extern_path}/managed_gtest/src/managed_gtest")
 endmacro()
@@ -75,4 +75,3 @@ endif()
 
 set(GTEST_INCLUDE_DIRS "${GTEST_INCLUDE_DIR}")
 set(GTEST_LIBRARY_DIRS "${GTEST_LIBRARY_DIR}")
-

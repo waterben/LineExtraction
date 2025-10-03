@@ -96,7 +96,7 @@ ELSE (WIN32)
   )
 
   # On Unix OpenGL most certainly always requires X11.
-  # Feel free to tighten up these conditions if you don't 
+  # Feel free to tighten up these conditions if you don't
   # think this is always true.
 
   IF (OPENGL_gl_LIBRARY)
@@ -139,7 +139,7 @@ IF(OPENGL_INCLUDE_DIR)
 
     SET( OPENGL_FOUND "YES" )
 
-    # The following deprecated settings are for backwards 
+    # The following deprecated settings are for backwards
     # compatibility with CMake1.4
 
     SET (OPENGL_LIBRARY ${OPENGL_LIBRARIES})
@@ -151,7 +151,7 @@ IF(OPENGL_INCLUDE_DIR)
 
 ENDIF(OPENGL_INCLUDE_DIR)
 
-# On OSX, OpenGL is always there - this will need refining for those 
+# On OSX, OpenGL is always there - this will need refining for those
 # using OpenGL with X11
 
 IF (APPLE)

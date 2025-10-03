@@ -43,91 +43,94 @@
 #define _LD_BASE_HPP_
 #ifdef __cplusplus
 
-#include <geometry/line.hpp>
-#include <utility/value_manager.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/types_c.h>
+#  include <geometry/line.hpp>
+#  include <opencv2/imgproc/imgproc.hpp>
+#  include <opencv2/imgproc/types_c.h>
+#  include <utility/value_manager.hpp>
 
 namespace lsfm {
 
-    struct DataDescriptorEntry {
-        DataDescriptorEntry(const std::string &n = std::string(), const std::string d = std::string())
-            : name(n), description(d) {}
+struct DataDescriptorEntry {
+  DataDescriptorEntry(const std::string& n = std::string(), const std::string d = std::string())
+      : name(n), description(d) {}
 
-        std::string name;
-        std::string description;
-    };
+  std::string name;
+  std::string description;
+};
 
-    typedef std::vector<DataDescriptorEntry> DataDescriptor;
+typedef std::vector<DataDescriptorEntry> DataDescriptor;
 
-    //! line detector base class
-    template<class FT, template<class> class LPT = Vec2>
-    class LdBase: public ValueManager
-    {
-    public:
-        typedef FT float_type;
-        typedef LPT<FT> line_point;
-        template<class A>
-        using line_point_template = LPT<A>;
-        
-        typedef lsfm::Line<FT, LPT> Line;
-        typedef std::vector<Line> LineVector;
-        typedef std::vector<cv::Mat> ImageData;
-        
-        virtual ~LdBase() {}
+//! line detector base class
+template <class FT, template <class> class LPT = Vec2>
+class LdBase : public ValueManager {
+ public:
+  typedef FT float_type;
+  typedef LPT<FT> line_point;
+  template <class A>
+  using line_point_template = LPT<A>;
 
-        //! Detect lines in the input image.
-        //! @param image      Input image. Possible image types depends on implementation.
-        //!                  8Bit single channel should work with all variants
-        virtual void detect(const cv::Mat& image) = 0;
+  typedef lsfm::Line<FT, LPT> Line;
+  typedef std::vector<Line> LineVector;
+  typedef std::vector<cv::Mat> ImageData;
 
-        // interface helpers
-        inline void detect(const cv::Mat& image, LineVector& l) { detect(image); l = lines(); }
-        inline void detect(const cv::Mat& image, LineVector& l, ImageData& id) { detect(image); l = lines(); id = imageData(); }
+  virtual ~LdBase() {}
 
-        //! Get detected lines as line vector.
-        virtual const LineVector& lines() const { return lines_; }
+  //! Detect lines in the input image.
+  //! @param image      Input image. Possible image types depends on implementation.
+  //!                  8Bit single channel should work with all variants
+  virtual void detect(const cv::Mat& image) = 0;
 
-        //! Get image data description. For every layer in image data, a DataDescriptorEntry is defined, giving the name
-        //! and a description for the layer
-        //! @return Image data descriptor
-        virtual const DataDescriptor& imageDataDescriptor() const {
-            static DataDescriptor id;
-            return id;
-        }
+  // interface helpers
+  inline void detect(const cv::Mat& image, LineVector& l) {
+    detect(image);
+    l = lines();
+  }
+  inline void detect(const cv::Mat& image, LineVector& l, ImageData& id) {
+    detect(image);
+    l = lines();
+    id = imageData();
+  }
+
+  //! Get detected lines as line vector.
+  virtual const LineVector& lines() const { return lines_; }
+
+  //! Get image data description. For every layer in image data, a DataDescriptorEntry is defined, giving the name
+  //! and a description for the layer
+  //! @return Image data descriptor
+  virtual const DataDescriptor& imageDataDescriptor() const {
+    static DataDescriptor id;
+    return id;
+  }
 
 
-        //! Return additional image data as mat
-        //! @return: A vector of cv::Mat with additinal image data like gradient
-        //!          magnitude or gradient direction. Every layer entry in the vector represents one image
-        //!          data source (as cv::Mat). Use imageDataDescriptor to get informations of the provided data and
-        //!          data order that is included within the image_data vector.
-        virtual const ImageData& imageData() const {
-            static ImageData id;
-            return id;
-        }
+  //! Return additional image data as mat
+  //! @return: A vector of cv::Mat with additinal image data like gradient
+  //!          magnitude or gradient direction. Every layer entry in the vector represents one image
+  //!          data source (as cv::Mat). Use imageDataDescriptor to get informations of the provided data and
+  //!          data order that is included within the image_data vector.
+  virtual const ImageData& imageData() const {
+    static ImageData id;
+    return id;
+  }
 
-        //! get single image data by name
-        const cv::Mat imageData(const std::string& name) const {
-            const DataDescriptor& data = imageDataDescriptor();
-            typename DataDescriptor::const_iterator f = find_if(data.begin(), data.end(), [&name](const DataDescriptorEntry& e) {
-                return (e.name == name);
-            });
-            return f != data.end() ? imageData()[f-data.begin()] : cv::Mat();
-        }
+  //! get single image data by name
+  const cv::Mat imageData(const std::string& name) const {
+    const DataDescriptor& data = imageDataDescriptor();
+    typename DataDescriptor::const_iterator f =
+        find_if(data.begin(), data.end(), [&name](const DataDescriptorEntry& e) { return (e.name == name); });
+    return f != data.end() ? imageData()[f - data.begin()] : cv::Mat();
+  }
 
-    protected:
-        LdBase() {}
+ protected:
+  LdBase() {}
 
-        mutable LineVector lines_;
-        //int flags_;
+  mutable LineVector lines_;
+  // int flags_;
 
-        //! helper that should be used to clear internal data
-        virtual void clearData() {
-            lines_.clear();
-        }
-    };
- 
-}
+  //! helper that should be used to clear internal data
+  virtual void clearData() { lines_.clear(); }
+};
+
+}  // namespace lsfm
 #endif
 #endif

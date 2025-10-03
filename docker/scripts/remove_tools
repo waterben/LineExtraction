@@ -164,13 +164,13 @@ remove_system_env() {
     if [[ -f "/etc/environment" ]]; then
         # Create a backup
         cp /etc/environment /etc/environment.bak.$(date +%Y%m%d_%H%M%S)
-        
+
         # Remove our specific environment variables
         if grep -q "REQUESTS_CA_BUNDLE" /etc/environment; then
             log_info "Removing REQUESTS_CA_BUNDLE from /etc/environment"
             sed -i '/^export REQUESTS_CA_BUNDLE=/d' /etc/environment
         fi
-        
+
         if grep -q "BAZELISK_BASE_URL" /etc/environment; then
             log_info "Removing BAZELISK_BASE_URL from /etc/environment"
             sed -i '/^export BAZELISK_BASE_URL=/d' /etc/environment
@@ -197,7 +197,7 @@ remove_tools() {
     # 4. System environment variables
 
     remove_python_env
-    remove_devenv_tools  
+    remove_devenv_tools
     remove_base_tools
     remove_system_env
 
@@ -209,7 +209,7 @@ remove_tools() {
     log_info "NOTE: System packages installed via apt are NOT removed for safety."
     log_info "If you want to remove system packages, please do so manually:"
     log_info "  - Base packages: see docker/base/common_packages.txt"
-    log_info "  - DevEnv packages: see docker/devenv/common_packages.txt" 
+    log_info "  - DevEnv packages: see docker/devenv/common_packages.txt"
     log_info ""
 }
 

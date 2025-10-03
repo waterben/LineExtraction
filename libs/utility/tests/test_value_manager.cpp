@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include <utility/value_manager.hpp>
+
+#include <gtest/gtest.h>
 
 using lsfm::Value;
 using lsfm::ValueManager;
@@ -10,20 +11,25 @@ struct MyVM : public ValueManager {
   bool beta{false};
 
   MyVM() {
-    add("alpha", [this](const Value& v) {
-      if (&v != &Value::NAV()) alpha = v.get<int>();
-      return Value(alpha);
-    }, "alpha parameter");
-    add("beta", [this](const Value& v) {
-      if (&v != &Value::NAV()) beta = v.get<bool>();
-      return Value(beta);
-    }, "beta flag");
+    add(
+        "alpha",
+        [this](const Value& v) {
+          if (&v != &Value::NAV()) alpha = v.get<int>();
+          return Value(alpha);
+        },
+        "alpha parameter");
+    add(
+        "beta",
+        [this](const Value& v) {
+          if (&v != &Value::NAV()) beta = v.get<bool>();
+          return Value(beta);
+        },
+        "beta flag");
   }
 };
 }  // namespace
 
-TEST(ValueManagerTest, ListAndGet)
-{
+TEST(ValueManagerTest, ListAndGet) {
   MyVM vm;
   auto vals = vm.values();
   ASSERT_EQ(vals.size(), 2u);
@@ -31,8 +37,7 @@ TEST(ValueManagerTest, ListAndGet)
   EXPECT_EQ(vm.value("beta").get<bool>(), false);
 }
 
-TEST(ValueManagerTest, SetByNameAndIndex)
-{
+TEST(ValueManagerTest, SetByNameAndIndex) {
   MyVM vm;
   vm.value("alpha", Value(5));
   EXPECT_EQ(vm.value("alpha").get<int>(), 5);
@@ -42,11 +47,9 @@ TEST(ValueManagerTest, SetByNameAndIndex)
   EXPECT_TRUE(vm.value("beta").get<bool>());
 }
 
-TEST(ValueManagerTest, SetByInitializerList)
-{
+TEST(ValueManagerTest, SetByInitializerList) {
   MyVM vm;
-  vm.value({ {"alpha", 3}, {"beta", true} });
+  vm.value({{"alpha", 3}, {"beta", true}});
   EXPECT_EQ(vm.value("alpha").get<int>(), 3);
   EXPECT_TRUE(vm.value("beta").get<bool>());
 }
-

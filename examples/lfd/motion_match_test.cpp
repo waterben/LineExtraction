@@ -15,7 +15,6 @@
 #include <string>
 
 
-
 using namespace std;
 using namespace lsfm;
 using namespace cv;

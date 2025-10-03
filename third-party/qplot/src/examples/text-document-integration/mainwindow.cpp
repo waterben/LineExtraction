@@ -24,45 +24,38 @@
 ****************************************************************************/
 
 #include "mainwindow.h"
+
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-  QMainWindow(parent),
-  ui(new Ui::MainWindow)
-{
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   connect(ui->cbUseCurrentSize, SIGNAL(toggled(bool)), ui->sbWidth, SLOT(setDisabled(bool)));
   connect(ui->cbUseCurrentSize, SIGNAL(toggled(bool)), ui->sbHeight, SLOT(setDisabled(bool)));
-  
+
   ui->plot->axisRect()->setMinimumSize(300, 180);
   setupPlot();
-  
+
   // register the plot document object (only needed once, no matter how many plots will be in the QTextDocument):
-  QCPDocumentObject *plotObjectHandler = new QCPDocumentObject(this);
+  QCPDocumentObject* plotObjectHandler = new QCPDocumentObject(this);
   ui->textEdit->document()->documentLayout()->registerHandler(QCPDocumentObject::PlotTextFormat, plotObjectHandler);
 }
 
-MainWindow::~MainWindow()
-{
-  delete ui;
-}
+MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::setupPlot()
-{
+void MainWindow::setupPlot() {
   // The following plot setup is taken from the sine demo:
   // add two new graphs and set their look:
   ui->plot->addGraph();
-  ui->plot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
-  ui->plot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+  ui->plot->graph(0)->setPen(QPen(Qt::blue));                   // line color blue for first graph
+  ui->plot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20)));  // first graph will be filled with translucent blue
   ui->plot->addGraph();
-  ui->plot->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
+  ui->plot->graph(1)->setPen(QPen(Qt::red));  // line color red for second graph
   // generate some points of data (y0 for first, y1 for second graph):
   QVector<double> x(250), y0(250), y1(250);
-  for (int i=0; i<250; ++i)
-  {
+  for (int i = 0; i < 250; ++i) {
     x[i] = i;
-    y0[i] = qExp(-i/150.0)*qCos(i/10.0); // exponentially decaying cosine
-    y1[i] = qExp(-i/150.0); // exponential envelope
+    y0[i] = qExp(-i / 150.0) * qCos(i / 10.0);  // exponentially decaying cosine
+    y1[i] = qExp(-i / 150.0);                   // exponential envelope
   }
   // configure right and top axis to show ticks but no labels:
   // (see QCPAxisRect::setupFullAxesBox for a quicker method to do this)
@@ -85,25 +78,23 @@ void MainWindow::setupPlot()
   ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 }
 
-void MainWindow::on_actionInsert_Plot_triggered()
-{
+void MainWindow::on_actionInsert_Plot_triggered() {
   QTextCursor cursor = ui->textEdit->textCursor();
-  
+
   // insert the current plot at the cursor position. QCPDocumentObject::generatePlotFormat creates a
   // vectorized snapshot of the passed plot (with the specified width and height) which gets inserted
   // into the text document.
   double width = ui->cbUseCurrentSize->isChecked() ? 0 : ui->sbWidth->value();
   double height = ui->cbUseCurrentSize->isChecked() ? 0 : ui->sbHeight->value();
-  cursor.insertText(QString(QChar::ObjectReplacementCharacter), QCPDocumentObject::generatePlotFormat(ui->plot, width, height));
-  
+  cursor.insertText(QString(QChar::ObjectReplacementCharacter),
+                    QCPDocumentObject::generatePlotFormat(ui->plot, width, height));
+
   ui->textEdit->setTextCursor(cursor);
 }
 
-void MainWindow::on_actionSave_Document_triggered()
-{
+void MainWindow::on_actionSave_Document_triggered() {
   QString fileName = QFileDialog::getSaveFileName(this, "Save document...", qApp->applicationDirPath(), "*.pdf");
-  if (!fileName.isEmpty())
-  {
+  if (!fileName.isEmpty()) {
     QPrinter printer;
     printer.setFullPage(true);
     printer.setPaperSize(QPrinter::A4);
@@ -113,9 +104,3 @@ void MainWindow::on_actionSave_Document_triggered()
     ui->textEdit->document()->print(&printer);
   }
 }
-
-
-
-
-
-

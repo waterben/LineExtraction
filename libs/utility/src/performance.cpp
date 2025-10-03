@@ -1,6 +1,6 @@
-#include <utility/format.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
+#include <utility/format.hpp>
 #include <utility/performance.hpp>
 
 #include <iostream>

@@ -44,9 +44,9 @@
 #define _DERIVATIVE_HPP_
 #ifdef __cplusplus
 
-#  include <utility/value_manager.hpp>
 #  include <imgproc/gaussian.hpp>
 #  include <opencv2/imgproc/imgproc.hpp>
+#  include <utility/value_manager.hpp>
 
 
 namespace lsfm {

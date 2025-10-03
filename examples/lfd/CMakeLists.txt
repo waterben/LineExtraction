@@ -19,5 +19,3 @@ target_link_libraries(test_lfd_generic lib_lfd lib_lsd ${OpenCV_LIBS})
 
 # add_executable(test_lfd_motion_match motion_match_test.cpp)
 # target_link_libraries(test_lfd_motion_match lib_lsd ${OpenCV_LIBS})
-
-

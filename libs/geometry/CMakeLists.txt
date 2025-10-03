@@ -5,7 +5,7 @@ le_add_library(lib_geometry
     AUTO_TESTS
 #    EXCLUDED_SOURCES
 #        render_gl.cpp
-    PUBLIC_DEPS 
+    PUBLIC_DEPS
         lib_utility
         ${OpenCV_LIBS}
         Eigen3::Eigen

@@ -9,17 +9,18 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "fft2.h"
-#include "logGaborFilter_emxutil.h"
+
 #include "ifft2.h"
 #include "ipermute.h"
+#include "logGaborFilter.h"
+#include "logGaborFilter_emxutil.h"
 #include "logGaborFilter_rtwutil.h"
+#include "phasecong.h"
+#include "rt_nonfinite.h"
 
 // Function Declarations
-static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y);
+static void eml_fft(const emxArray_real_T* x, int n, emxArray_creal_T* y);
 
 // Function Definitions
 
@@ -29,8 +30,7 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y);
 //                emxArray_creal_T *y
 // Return Type  : void
 //
-static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
-{
+static void eml_fft(const emxArray_real_T* x, int n, emxArray_creal_T* y) {
   int sz[2];
   int ihi;
   int nd2;
@@ -38,14 +38,14 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
   int i2;
   int minval;
   int ixDelta;
-  emxArray_real_T *costab1q;
+  emxArray_real_T* costab1q;
   int nRowsD2;
   int nRowsD4;
   int lastChan;
   double e;
   int k;
-  emxArray_real_T *costab;
-  emxArray_real_T *sintab;
+  emxArray_real_T* costab;
+  emxArray_real_T* sintab;
   int ix;
   int chanStart;
   int i;
@@ -62,10 +62,10 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
   ihi = y->size[0] * y->size[1];
   y->size[0] = n;
   y->size[1] = sz[1];
-  emxEnsureCapacity((emxArray__common *)y, ihi, (int)sizeof(creal_T));
+  emxEnsureCapacity((emxArray__common*)y, ihi, (int)sizeof(creal_T));
   if (n > x->size[0]) {
     ihi = y->size[0] * y->size[1];
-    emxEnsureCapacity((emxArray__common *)y, ihi, (int)sizeof(creal_T));
+    emxEnsureCapacity((emxArray__common*)y, ihi, (int)sizeof(creal_T));
     nd2 = y->size[1];
     for (ihi = 0; ihi < nd2; ihi++) {
       n2 = y->size[0];
@@ -99,7 +99,7 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
     ihi = costab1q->size[0] * costab1q->size[1];
     costab1q->size[0] = 1;
     costab1q->size[1] = nRowsD4 + 1;
-    emxEnsureCapacity((emxArray__common *)costab1q, ihi, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)costab1q, ihi, (int)sizeof(double));
     costab1q->data[0] = 1.0;
     nd2 = nRowsD4 / 2;
     for (k = 1; k <= nd2; k++) {
@@ -118,11 +118,11 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
     ihi = costab->size[0] * costab->size[1];
     costab->size[0] = 1;
     costab->size[1] = n2 + 1;
-    emxEnsureCapacity((emxArray__common *)costab, ihi, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)costab, ihi, (int)sizeof(double));
     ihi = sintab->size[0] * sintab->size[1];
     sintab->size[0] = 1;
     sintab->size[1] = n2 + 1;
-    emxEnsureCapacity((emxArray__common *)sintab, ihi, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)sintab, ihi, (int)sizeof(double));
     costab->data[0] = 1.0;
     sintab->data[0] = 0.0;
     for (k = 1; k <= nd2; k++) {
@@ -226,26 +226,25 @@ static void eml_fft(const emxArray_real_T *x, int n, emxArray_creal_T *y)
 //                emxArray_creal_T *f
 // Return Type  : void
 //
-void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
-{
-  emxArray_real_T *b_x;
+void fft2(const emxArray_real_T* x, emxArray_creal_T* f) {
+  emxArray_real_T* b_x;
   int iheight;
   int sz_idx_0;
   int ju;
   int n;
-  emxArray_creal_T *y;
-  emxArray_creal_T *b_y1;
+  emxArray_creal_T* y;
+  emxArray_creal_T* b_y1;
   int n1;
   int minval;
   int ixDelta;
-  emxArray_real_T *costab1q;
+  emxArray_real_T* costab1q;
   int nRowsD2;
   int nRowsD4;
   int lastChan;
   double e;
   int k;
-  emxArray_real_T *costab;
-  emxArray_real_T *sintab;
+  emxArray_real_T* costab;
+  emxArray_real_T* sintab;
   int ix;
   int chanStart;
   int i;
@@ -259,7 +258,7 @@ void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
   iheight = b_x->size[0] * b_x->size[1];
   b_x->size[0] = x->size[1];
   b_x->size[1] = x->size[0];
-  emxEnsureCapacity((emxArray__common *)b_x, iheight, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)b_x, iheight, (int)sizeof(double));
   sz_idx_0 = x->size[0];
   for (iheight = 0; iheight < sz_idx_0; iheight++) {
     ju = x->size[1];
@@ -277,7 +276,7 @@ void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
   iheight = f->size[0] * f->size[1];
   f->size[0] = sz_idx_0;
   f->size[1] = y->size[1];
-  emxEnsureCapacity((emxArray__common *)f, iheight, (int)sizeof(creal_T));
+  emxEnsureCapacity((emxArray__common*)f, iheight, (int)sizeof(creal_T));
   emxFree_real_T(&b_x);
   emxFree_creal_T(&b_y1);
   if ((y->size[0] == 0) || (y->size[1] == 0)) {
@@ -299,7 +298,7 @@ void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
     iheight = costab1q->size[0] * costab1q->size[1];
     costab1q->size[0] = 1;
     costab1q->size[1] = nRowsD4 + 1;
-    emxEnsureCapacity((emxArray__common *)costab1q, iheight, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)costab1q, iheight, (int)sizeof(double));
     costab1q->data[0] = 1.0;
     sz_idx_0 = nRowsD4 / 2;
     for (k = 1; k <= sz_idx_0; k++) {
@@ -318,11 +317,11 @@ void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
     iheight = costab->size[0] * costab->size[1];
     costab->size[0] = 1;
     costab->size[1] = sz_idx_0 + 1;
-    emxEnsureCapacity((emxArray__common *)costab, iheight, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)costab, iheight, (int)sizeof(double));
     iheight = sintab->size[0] * sintab->size[1];
     sintab->size[0] = 1;
     sintab->size[1] = sz_idx_0 + 1;
-    emxEnsureCapacity((emxArray__common *)sintab, iheight, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)sintab, iheight, (int)sizeof(double));
     costab->data[0] = 1.0;
     sintab->data[0] = 0.0;
     for (k = 1; k <= n; k++) {
@@ -393,10 +392,8 @@ void fft2(const emxArray_real_T *x, emxArray_creal_T *f)
           i = istart;
           n = istart + iheight;
           while (i < n) {
-            temp_re = e * f->data[i + sz_idx_0].re - twid_im * f->data[i +
-              sz_idx_0].im;
-            temp_im = e * f->data[i + sz_idx_0].im + twid_im * f->data[i +
-              sz_idx_0].re;
+            temp_re = e * f->data[i + sz_idx_0].re - twid_im * f->data[i + sz_idx_0].im;
+            temp_im = e * f->data[i + sz_idx_0].im + twid_im * f->data[i + sz_idx_0].re;
             f->data[i + sz_idx_0].re = f->data[i].re - temp_re;
             f->data[i + sz_idx_0].im = f->data[i].im - temp_im;
             f->data[i].re += temp_re;

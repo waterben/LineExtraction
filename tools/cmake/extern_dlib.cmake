@@ -23,7 +23,7 @@ macro(dlib_extern quiet)
         string(FIND ${DLIB_LIBRARY} "/" index REVERSE)
         if (NOT (${index} EQUAL -1))
             string(SUBSTRING ${DLIB_LIBRARY} 0 ${index} DLIB_LIBRARY_DIRS)
-        endif()   
+        endif()
     endif()
 endmacro()
 
@@ -73,5 +73,3 @@ endif()
 
 set(DLIB_INCLUDE_DIR "${DLIB_INCLUDE_DIRS}")
 set(DLIB_LIBRARY_DIR "${DLIB_LIBRARY_DIRS}")
-
-

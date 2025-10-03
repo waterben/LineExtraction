@@ -1,12 +1,12 @@
-#include <gtest/gtest.h>
-#include <utility/range.hpp>
 #include <utility/limit.hpp>
+#include <utility/range.hpp>
 
-using lsfm::Range;
+#include <gtest/gtest.h>
+
 using lsfm::LIMITS;
+using lsfm::Range;
 
-TEST(RangeTest, SizeAndSwap)
-{
+TEST(RangeTest, SizeAndSwap) {
   Range<int> r(2, 10);
   EXPECT_EQ(r.size(), 8);
   r.swap();
@@ -15,10 +15,8 @@ TEST(RangeTest, SizeAndSwap)
   EXPECT_EQ(r.size(), 8);
 }
 
-TEST(LimitsTest, TauAndEps)
-{
+TEST(LimitsTest, TauAndEps) {
   EXPECT_FLOAT_EQ(LIMITS<float>::tau(), std::numeric_limits<float>::epsilon());
   EXPECT_DOUBLE_EQ(LIMITS<double>::eps(), std::numeric_limits<double>::epsilon());
   EXPECT_DOUBLE_EQ(LIMITS<double>::min(), std::numeric_limits<double>::min());
 }
-

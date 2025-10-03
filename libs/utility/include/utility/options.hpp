@@ -13,11 +13,11 @@
 ///  - No automatic help generation (but descriptions are stored)
 #pragma once
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 namespace utility {
 
@@ -49,10 +49,7 @@ class Options {
   /// @param short_name Optional short name (single character) or '\0'.
   /// @param description Human-readable description.
   /// @param target Reference to a bool to set true when the switch appears.
-  void add_switch(const std::string& long_name,
-                  char short_name,
-                  const std::string& description,
-                  bool& target);
+  void add_switch(const std::string& long_name, char short_name, const std::string& description, bool& target);
 
   /// @brief Parse argv for registered options.
   /// @param argc Argument count.
@@ -93,11 +90,16 @@ class Options {
         def_value = std::move(def);
       }
     }
-    void set_from_string(const std::string& value) const override { target = value; const_cast<StringEntry*>(this)->seen = true; }
+    void set_from_string(const std::string& value) const override {
+      target = value;
+      const_cast<StringEntry*>(this)->seen = true;
+    }
     void set_switch() const override { throw options_error("Option --" + long_name + " expects a value"); }
     bool is_required() const override { return required; }
     bool has_default() const override { return has_def; }
-    void apply_default() const override { if (has_def) target = def_value; }
+    void apply_default() const override {
+      if (has_def) target = def_value;
+    }
     bool expects_value() const override { return true; }
   };
 
@@ -108,8 +110,14 @@ class Options {
       short_name = short_n;
       description = std::move(desc);
     }
-    void set_from_string(const std::string&) const override { target = true; const_cast<SwitchEntry*>(this)->seen = true; }
-    void set_switch() const override { target = true; const_cast<SwitchEntry*>(this)->seen = true; }
+    void set_from_string(const std::string&) const override {
+      target = true;
+      const_cast<SwitchEntry*>(this)->seen = true;
+    }
+    void set_switch() const override {
+      target = true;
+      const_cast<SwitchEntry*>(this)->seen = true;
+    }
     bool is_required() const override { return false; }
     bool has_default() const override { return false; }
     void apply_default() const override {}

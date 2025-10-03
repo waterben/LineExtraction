@@ -67,7 +67,7 @@ struct PerformanceTaskDefault : public PerformanceTaskBase {
   virtual ~PerformanceTaskDefault() {}
 
   virtual void run(const TaskData& data, int loops, bool verbose);
-  virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose){};
+  virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {};
 };
 
 //! full performance test based on performance tasks and data providers

@@ -9,11 +9,12 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "ipermute.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
+#include "phasecong.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -22,8 +23,7 @@
 //                emxArray_creal_T *a
 // Return Type  : void
 //
-void ipermute(const emxArray_creal_T *b, emxArray_creal_T *a)
-{
+void ipermute(const emxArray_creal_T* b, emxArray_creal_T* a) {
   int i6;
   int loop_ub;
   int b_loop_ub;
@@ -31,7 +31,7 @@ void ipermute(const emxArray_creal_T *b, emxArray_creal_T *a)
   i6 = a->size[0] * a->size[1];
   a->size[0] = b->size[1];
   a->size[1] = b->size[0];
-  emxEnsureCapacity((emxArray__common *)a, i6, (int)sizeof(creal_T));
+  emxEnsureCapacity((emxArray__common*)a, i6, (int)sizeof(creal_T));
   loop_ub = b->size[0];
   for (i6 = 0; i6 < loop_ub; i6++) {
     b_loop_ub = b->size[1];

@@ -123,8 +123,7 @@ class ValueManager {
   NameValuePair valuePair(size_t idx) const {
     if (idx > values_.size()) return NameValuePair();
     ValueMap::const_iterator f = values_.begin();
-    for (size_t i = 0; i != idx; ++i, ++f)
-      ;
+    for (size_t i = 0; i != idx; ++i, ++f);
     return NameValuePair(f->first, f->second.func(Value::NAV()), f->second.description);
   }
 
@@ -140,8 +139,7 @@ class ValueManager {
   Value value(size_t idx) const {
     if (idx > values_.size()) return Value();
     ValueMap::const_iterator f = values_.begin();
-    for (size_t i = 0; i != idx; ++i, ++f)
-      ;
+    for (size_t i = 0; i != idx; ++i, ++f);
     return f->second.func(Value::NAV());
   }
 
@@ -156,8 +154,7 @@ class ValueManager {
   inline void value(size_t idx, const Value& value) {
     if (idx > values_.size()) return;
     ValueMap::iterator f = values_.begin();
-    for (size_t i = 0; i != idx; ++i, ++f)
-      ;
+    for (size_t i = 0; i != idx; ++i, ++f);
     f->second.func(value);
   }
 

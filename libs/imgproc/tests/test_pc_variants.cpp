@@ -1,21 +1,21 @@
-#include <gtest/gtest.h>
 #include <imgproc/pc_lgf.hpp>
 #include <imgproc/pc_matlab.hpp>
 
-static cv::Mat makeSin2D(int rows=32, int cols=32, double period=8.0)
-{
+#include <gtest/gtest.h>
+
+static cv::Mat makeSin2D(int rows = 32, int cols = 32, double period = 8.0) {
   cv::Mat img(rows, cols, CV_8U);
-  for (int r=0;r<rows;++r) for (int c=0;c<cols;++c) {
-    double v = 128.0 + 127.0*std::sin(2.0*CV_PI * (r+c) / (2*period));
-    img.at<uchar>(r,c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
-  }
+  for (int r = 0; r < rows; ++r)
+    for (int c = 0; c < cols; ++c) {
+      double v = 128.0 + 127.0 * std::sin(2.0 * CV_PI * (r + c) / (2 * period));
+      img.at<uchar>(r, c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
+    }
   return img;
 }
 
-TEST(PCVariantsTest, PCLgf)
-{
-  using PC = lsfm::PCLgf<uchar,float>;
-  PC pc(2, 3.0f, 2.0f, 0.55f); // fewer Scales
+TEST(PCVariantsTest, PCLgf) {
+  using PC = lsfm::PCLgf<uchar, float>;
+  PC pc(2, 3.0f, 2.0f, 0.55f);  // fewer Scales
   auto img = makeSin2D();
   pc.process(img);
   auto e = pc.even();
@@ -35,10 +35,9 @@ TEST(PCVariantsTest, PCLgf)
   EXPECT_LE(maxv, 1.0);
 }
 
-TEST(PCVariantsTest, PCMatlab)
-{
+TEST(PCVariantsTest, PCMatlab) {
   using PC = lsfm::PCMatlab<uchar>;
-  PC pc(2, 3, 2.1, 0.55); // fewer Scales
+  PC pc(2, 3, 2.1, 0.55);  // fewer Scales
   auto img = makeSin2D();
   pc.process(img);
   auto e = pc.even();
@@ -53,4 +52,3 @@ TEST(PCVariantsTest, PCMatlab)
   auto pcmap = pc.phaseCongruency();
   ASSERT_FALSE(pcmap.empty());
 }
-

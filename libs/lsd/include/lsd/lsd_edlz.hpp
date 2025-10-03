@@ -43,194 +43,202 @@
 #define _EDLZ_LSD_HPP_
 #ifdef __cplusplus
 
-#include <lsd/lsd_base.hpp>
-#include <lsd/impl/lsd_edlz.hpp>
+#  include <lsd/impl/lsd_edlz.hpp>
+#  include <lsd/lsd_base.hpp>
 
 class EDLineDetector;
 
 namespace lsfm {
 
-    template<class FT, template<class> class LPT = Vec2>
-    class LsdEDLZ : public LsdBase<FT,LPT> {
-        EDLineDetector *edl;
-        typename LsdBase<FT,LPT>::ImageData imageData_;
+template <class FT, template <class> class LPT = Vec2>
+class LsdEDLZ : public LsdBase<FT, LPT> {
+  EDLineDetector* edl;
+  typename LsdBase<FT, LPT>::ImageData imageData_;
 
-        //LsdEDLZ& operator= (const LsdEDLZ&); // to quiet MSVC
-        void init() {
-            edl = new EDLineDetector;
+  // LsdEDLZ& operator= (const LsdEDLZ&); // to quiet MSVC
+  void init() {
+    edl = new EDLineDetector;
 
-            this->add("grad_th", std::bind(&LsdEDLZ<FT, LPT>::valueGradientThreshold, this, std::placeholders::_1),
-                "Gradient threshold.");
-            this->add("anchor_th", std::bind(&LsdEDLZ<FT, LPT>::valueAnchorThreshold, this, std::placeholders::_1),
-                "Anchor threshold.");
-            this->add("scan_int", std::bind(&LsdEDLZ<FT, LPT>::valueScanIntervals, this, std::placeholders::_1),
-                "Scan intervals.");
-            this->add("min_len", std::bind(&LsdEDLZ<FT, LPT>::valueMinLength, this, std::placeholders::_1),
-                "Minimal line length.");
-            this->add("fit_error", std::bind(&LsdEDLZ<FT, LPT>::valueFitError, this, std::placeholders::_1),
-                "Line fit error in pixel.");
-            this->add("validate", std::bind(&LsdEDLZ<FT, LPT>::valueValidate, this, std::placeholders::_1),
-                "Validate line using nfa.");
-        }
+    this->add("grad_th", std::bind(&LsdEDLZ<FT, LPT>::valueGradientThreshold, this, std::placeholders::_1),
+              "Gradient threshold.");
+    this->add("anchor_th", std::bind(&LsdEDLZ<FT, LPT>::valueAnchorThreshold, this, std::placeholders::_1),
+              "Anchor threshold.");
+    this->add("scan_int", std::bind(&LsdEDLZ<FT, LPT>::valueScanIntervals, this, std::placeholders::_1),
+              "Scan intervals.");
+    this->add("min_len", std::bind(&LsdEDLZ<FT, LPT>::valueMinLength, this, std::placeholders::_1),
+              "Minimal line length.");
+    this->add("fit_error", std::bind(&LsdEDLZ<FT, LPT>::valueFitError, this, std::placeholders::_1),
+              "Line fit error in pixel.");
+    this->add("validate", std::bind(&LsdEDLZ<FT, LPT>::valueValidate, this, std::placeholders::_1),
+              "Validate line using nfa.");
+  }
 
-        using LsdBase<FT,LPT>::endPoints_;
-        using LsdBase<FT,LPT>::lineSegments_;
-    public:
+  using LsdBase<FT, LPT>::endPoints_;
+  using LsdBase<FT, LPT>::lineSegments_;
 
-        typedef FT float_type;
-        typedef LPT<FT> line_point;
-        typedef typename LsdBase<FT, LPT>::Line Line;
-        typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-        typedef typename LsdBase<FT,LPT>::LineSegment LineSegment;
-        typedef typename LsdBase<FT,LPT>::LineSegmentVector LineSegmentVector;
-        typedef typename LsdBase<FT,LPT>::ImageData ImageData;
+ public:
+  typedef FT float_type;
+  typedef LPT<FT> line_point;
+  typedef typename LsdBase<FT, LPT>::Line Line;
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
 
-        //! Create a LsdEDLZ object
-        LsdEDLZ(FT gradientThreshold = 10, FT anchorThreshold = 2, int scanIntervals = 2, int minLineLen = 15, FT lineFitErrThreshold = 2, bool validate = false) {
-            init();
-            EDLineParam p;
-            p.gradientThreshold = static_cast<float>(gradientThreshold);
-            p.anchorThreshold = static_cast<float>(anchorThreshold);
-            p.scanIntervals = scanIntervals;
-            p.minLineLen = minLineLen;
-            p.lineFitErrThreshold = static_cast<double>(lineFitErrThreshold);
-            p.validate = validate;
-            edl->setParams(p);
-        }
+  //! Create a LsdEDLZ object
+  LsdEDLZ(FT gradientThreshold = 10,
+          FT anchorThreshold = 2,
+          int scanIntervals = 2,
+          int minLineLen = 15,
+          FT lineFitErrThreshold = 2,
+          bool validate = false) {
+    init();
+    EDLineParam p;
+    p.gradientThreshold = static_cast<float>(gradientThreshold);
+    p.anchorThreshold = static_cast<float>(anchorThreshold);
+    p.scanIntervals = scanIntervals;
+    p.minLineLen = minLineLen;
+    p.lineFitErrThreshold = static_cast<double>(lineFitErrThreshold);
+    p.validate = validate;
+    edl->setParams(p);
+  }
 
-        LsdEDLZ(ValueManager::InitializerList options) {
-            init();
-            this->value(options);
-        }
+  LsdEDLZ(ValueManager::InitializerList options) {
+    init();
+    this->value(options);
+  }
 
-        LsdEDLZ(const ValueManager::NameValueVector &options) {
-            init();
-            this->value(options);
-        }
+  LsdEDLZ(const ValueManager::NameValueVector& options) {
+    init();
+    this->value(options);
+  }
 
-        ~LsdEDLZ() {
-            delete edl;
-        }
+  ~LsdEDLZ() { delete edl; }
 
-        Value valueGradientThreshold(const Value &t = Value::NAV()) { if (t.type()) gradientThreshold(t.get<FT>()); return gradientThreshold(); }
+  Value valueGradientThreshold(const Value& t = Value::NAV()) {
+    if (t.type()) gradientThreshold(t.get<FT>());
+    return gradientThreshold();
+  }
 
-        FT gradientThreshold() const {
-            return static_cast<FT>(edl->getParams().gradientThreshold);
-        }
+  FT gradientThreshold() const { return static_cast<FT>(edl->getParams().gradientThreshold); }
 
-        void gradientThreshold(FT t) {
-            EDLineParam p = edl->getParams();
-            p.gradientThreshold = static_cast<float>(t);
-            edl->setParams(p);
-        }
+  void gradientThreshold(FT t) {
+    EDLineParam p = edl->getParams();
+    p.gradientThreshold = static_cast<float>(t);
+    edl->setParams(p);
+  }
 
-        Value valueAnchorThreshold(const Value &t = Value::NAV()) { if (t.type()) anchorThreshold(t.get<FT>()); return anchorThreshold(); }
+  Value valueAnchorThreshold(const Value& t = Value::NAV()) {
+    if (t.type()) anchorThreshold(t.get<FT>());
+    return anchorThreshold();
+  }
 
-        FT anchorThreshold() const {
-            return static_cast<FT>(edl->getParams().anchorThreshold);
-        }
+  FT anchorThreshold() const { return static_cast<FT>(edl->getParams().anchorThreshold); }
 
-        void anchorThreshold(FT t) {
-            EDLineParam p = edl->getParams();
-            p.anchorThreshold = static_cast<float>(t);
-            edl->setParams(p);
-        }
+  void anchorThreshold(FT t) {
+    EDLineParam p = edl->getParams();
+    p.anchorThreshold = static_cast<float>(t);
+    edl->setParams(p);
+  }
 
-        Value valueFitError(const Value &e = Value::NAV()) { if (e.type()) fitError(e.get<FT>()); return fitError(); }
+  Value valueFitError(const Value& e = Value::NAV()) {
+    if (e.type()) fitError(e.get<FT>());
+    return fitError();
+  }
 
-        FT fitError() const {
-            return static_cast<FT>(edl->getParams().lineFitErrThreshold);
-        }
+  FT fitError() const { return static_cast<FT>(edl->getParams().lineFitErrThreshold); }
 
-        void fitError(FT e) {
-            EDLineParam p = edl->getParams();
-            p.lineFitErrThreshold = static_cast<float>(e);
-            edl->setParams(p);
-        }
+  void fitError(FT e) {
+    EDLineParam p = edl->getParams();
+    p.lineFitErrThreshold = static_cast<float>(e);
+    edl->setParams(p);
+  }
 
-        Value valueScanIntervals(const Value &si = Value::NAV()) { if (si.type()) scanIntervals(si.getInt()); return scanIntervals(); }
+  Value valueScanIntervals(const Value& si = Value::NAV()) {
+    if (si.type()) scanIntervals(si.getInt());
+    return scanIntervals();
+  }
 
-        int scanIntervals() const {
-            return edl->getParams().scanIntervals;
-        }
+  int scanIntervals() const { return edl->getParams().scanIntervals; }
 
-        void scanIntervals(int si) {
-            EDLineParam p = edl->getParams();
-            p.scanIntervals = si;
-            edl->setParams(p);
-        }
+  void scanIntervals(int si) {
+    EDLineParam p = edl->getParams();
+    p.scanIntervals = si;
+    edl->setParams(p);
+  }
 
-        Value valueMinLength(const Value &ml = Value::NAV()) { if (ml.type()) minLength(ml.getInt()); return minLength(); }
+  Value valueMinLength(const Value& ml = Value::NAV()) {
+    if (ml.type()) minLength(ml.getInt());
+    return minLength();
+  }
 
-        int minLength() const {
-            return edl->getParams().minLineLen;
-        }
+  int minLength() const { return edl->getParams().minLineLen; }
 
-        void minLength(int ml) {
-            EDLineParam p = edl->getParams();
-            p.minLineLen = ml;
-            edl->setParams(p);
-        }
+  void minLength(int ml) {
+    EDLineParam p = edl->getParams();
+    p.minLineLen = ml;
+    edl->setParams(p);
+  }
 
-        Value valueValidate(const Value &v = Value::NAV()) { if (v.type()) validate(v.getInt() != 0); return validate() ? 1 : 0; }
+  Value valueValidate(const Value& v = Value::NAV()) {
+    if (v.type()) validate(v.getInt() != 0);
+    return validate() ? 1 : 0;
+  }
 
-        bool validate() const {
-            return edl->getParams().validate;
-        }
+  bool validate() const { return edl->getParams().validate; }
 
-        void validate(bool v) {
-            EDLineParam p = edl->getParams();
-            p.validate = v;
-            edl->setParams(p);
-        }
+  void validate(bool v) {
+    EDLineParam p = edl->getParams();
+    p.validate = v;
+    edl->setParams(p);
+  }
 
-        using LsdBase<FT,LPT>::detect;
-        using LsdBase<FT,LPT>::lines;
-        using LsdBase<FT,LPT>::endPoints;
-        using LsdBase<FT,LPT>::imageDataDescriptor;
-        using LsdBase<FT,LPT>::imageData;
+  using LsdBase<FT, LPT>::detect;
+  using LsdBase<FT, LPT>::lines;
+  using LsdBase<FT, LPT>::endPoints;
+  using LsdBase<FT, LPT>::imageDataDescriptor;
+  using LsdBase<FT, LPT>::imageData;
 
-        virtual void detect(const cv::Mat& image) final {
-            cv::Mat img = image;
-            CV_Assert(!img.empty());
+  virtual void detect(const cv::Mat& image) final {
+    cv::Mat img = image;
+    CV_Assert(!img.empty());
 
-            if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
+    if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
 
-            this->clearData();
-            imageData_.clear();
+    this->clearData();
+    imageData_.clear();
 
-            if (edl->EDline(img)) {
-                lineSegments_.reserve(edl->lineEndpoints_.size());
-                for_each(edl->lineEndpoints_.begin(), edl->lineEndpoints_.end(), [&](const std::array<float, 4>& p) {
-                    lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(p[0]), static_cast<FT>(p[1])), LPT<FT>(static_cast<FT>(p[2]), static_cast<FT>(p[3]))));
-                });
+    if (edl->EDline(img)) {
+      lineSegments_.reserve(edl->lineEndpoints_.size());
+      for_each(edl->lineEndpoints_.begin(), edl->lineEndpoints_.end(), [&](const std::array<float, 4>& p) {
+        lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(p[0]), static_cast<FT>(p[1])),
+                                            LPT<FT>(static_cast<FT>(p[2]), static_cast<FT>(p[3]))));
+      });
 
-                imageData_.push_back(edl->dxImg_);
-                imageData_.push_back(edl->dyImg_);
-                imageData_.push_back(edl->gImgWO_);
-                imageData_.push_back(edl->gImg_);
-                imageData_.push_back(edl->dirImg_);
-                imageData_.push_back(edl->edgeImage_);
-            }
-        }
+      imageData_.push_back(edl->dxImg_);
+      imageData_.push_back(edl->dyImg_);
+      imageData_.push_back(edl->gImgWO_);
+      imageData_.push_back(edl->gImg_);
+      imageData_.push_back(edl->dirImg_);
+      imageData_.push_back(edl->edgeImage_);
+    }
+  }
 
-        virtual const DataDescriptor& imageDataDescriptor() const final {
-            static DataDescriptor dsc;
-            if (dsc.empty()) {
-                dsc.push_back(DataDescriptorEntry("gx", "Gradient in x direction"));
-                dsc.push_back(DataDescriptorEntry("gy", "Gradient in y direction"));
-                dsc.push_back(DataDescriptorEntry("mag", "Gradient magnitude"));
-                dsc.push_back(DataDescriptorEntry("th_mag", "Gradient magnitude with threshold"));
-                dsc.push_back(DataDescriptorEntry("dir_map", "Direction map"));
-                dsc.push_back(DataDescriptorEntry("edge_map", "Edge map"));
-            }
-            return dsc;
-        }
+  virtual const DataDescriptor& imageDataDescriptor() const final {
+    static DataDescriptor dsc;
+    if (dsc.empty()) {
+      dsc.push_back(DataDescriptorEntry("gx", "Gradient in x direction"));
+      dsc.push_back(DataDescriptorEntry("gy", "Gradient in y direction"));
+      dsc.push_back(DataDescriptorEntry("mag", "Gradient magnitude"));
+      dsc.push_back(DataDescriptorEntry("th_mag", "Gradient magnitude with threshold"));
+      dsc.push_back(DataDescriptorEntry("dir_map", "Direction map"));
+      dsc.push_back(DataDescriptorEntry("edge_map", "Edge map"));
+    }
+    return dsc;
+  }
 
-        virtual const ImageData& imageData() const final {
-            return imageData_;
-        }
-    };
-}
+  virtual const ImageData& imageData() const final { return imageData_; }
+};
+}  // namespace lsfm
 #endif
 #endif

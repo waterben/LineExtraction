@@ -1,9 +1,10 @@
 #include "performance_test.hpp"
-#include <filesystem>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
-#include <imgproc/derivative_gradient.hpp>
 #include <eval/results.hpp>
+#include <imgproc/derivative_gradient.hpp>
+
+#include <filesystem>
 
 
 using namespace lsfm;

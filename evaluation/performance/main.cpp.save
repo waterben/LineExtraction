@@ -198,9 +198,8 @@ int main(int argc, char** argv)
     });
 
     std::cout << "Total time for performance tests: " << static_cast<double>((cv::getTickCount() - start)) / cv::getTickFrequency() << "s" << std::endl;
-    
+
     char c;
     std::cin >> c;
     return 0;
 }
-

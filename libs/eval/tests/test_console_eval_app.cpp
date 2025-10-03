@@ -1,6 +1,7 @@
-#include <gtest/gtest.h>
-#include <utility/console_app.hpp>
 #include <eval/eval_app.hpp>
+#include <utility/console_app.hpp>
+
+#include <gtest/gtest.h>
 
 namespace {
 struct DummyConsole : public lsfm::ConsoleApp {
@@ -12,10 +13,9 @@ struct DummyEval : public lsfm::EvalApp {
   using EvalApp::EvalApp;
   void runEval() override {}
 };
-}
+}  // namespace
 
-TEST(ConsoleAppTest, RunsAndParses)
-{
+TEST(ConsoleAppTest, RunsAndParses) {
   DummyConsole app("dummy");
   const char* argv1[] = {"dummy"};
   int rc = static_cast<lsfm::ConsoleAppInterface&>(app).run(1, const_cast<char**>(argv1));
@@ -27,24 +27,25 @@ TEST(ConsoleAppTest, RunsAndParses)
 }
 
 #if GTEST_HAS_DEATH_TEST
-TEST(ConsoleAppTest, HelpAndVersionExit)
-{
+TEST(ConsoleAppTest, HelpAndVersionExit) {
   DummyConsole app("dummy", "desc", "9.9.9");
   const char* argv1[] = {"dummy", "--help"};
-  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(2, const_cast<char**>(argv1)), ::testing::ExitedWithCode(0), "");
+  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(2, const_cast<char**>(argv1)),
+              ::testing::ExitedWithCode(0), "");
 
   const char* argv2[] = {"dummy", "--version"};
-  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(2, const_cast<char**>(argv2)), ::testing::ExitedWithCode(0), "");
+  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(2, const_cast<char**>(argv2)),
+              ::testing::ExitedWithCode(0), "");
 }
 #endif
 
-TEST(EvalAppTest, RequiresInputAndRuns)
-{
+TEST(EvalAppTest, RequiresInputAndRuns) {
   DummyEval app("eval");
   // missing required input should exit with code 1 via ConsoleApp::parseArgs
 #if GTEST_HAS_DEATH_TEST
   const char* argv_bad[] = {"eval"};
-  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(1, const_cast<char**>(argv_bad)), ::testing::ExitedWithCode(1), "");
+  EXPECT_EXIT(static_cast<lsfm::ConsoleAppInterface&>(app).run(1, const_cast<char**>(argv_bad)),
+              ::testing::ExitedWithCode(1), "");
 #endif
   // valid input provided
   const char* argv_ok[] = {"eval", "--input", "file"};

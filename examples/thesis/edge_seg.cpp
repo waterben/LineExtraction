@@ -1,11 +1,12 @@
-#include <filesystem>
+#include <edge/draw.hpp>
 #include <edge/nfa.hpp>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
-#include <edge/draw.hpp>
+#include <eval/eval_app.hpp>
 #include <geometry/draw.hpp>
 #include <imgproc/derivative_gradient.hpp>
-#include <eval/eval_app.hpp>
+
+#include <filesystem>
 
 
 #define EDGE_THICK_CHECK
