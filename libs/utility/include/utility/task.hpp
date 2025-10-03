@@ -73,11 +73,11 @@ typedef std::vector<DataProviderPtr> DataProviderList;
 struct FileDataProvider : public DataProviderBase {
   FileDataProvider(std::string& name) : DataProviderBase(name) {}
   FileDataProvider(const std::filesystem::path& p, const std::string& name, bool recursive = true)
-      : DataProviderBase(name), pos_(0) {
+      : DataProviderBase(name) {
     parse(p, recursive);
   }
   FileDataProvider(const std::vector<std::filesystem::path>& f, const std::string& name, bool recursive = true)
-      : DataProviderBase(name), pos_(0) {
+      : DataProviderBase(name) {
     parse(f, recursive);
   }
 
@@ -99,14 +99,14 @@ struct FileDataProvider : public DataProviderBase {
   }
 
  private:
-  size_t pos_;
-  std::vector<std::filesystem::path> files_;
+  size_t pos_{0};
+  std::vector<std::filesystem::path> files_{};
 };
 
 //! Task loader
 struct TaskLoader {
   TaskLoader(const std::string& n = std::string()) : name(n) {}
-  virtual ~TaskLoader() {}
+  virtual ~TaskLoader() = default;
 
   std::string name;
 

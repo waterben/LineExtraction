@@ -44,6 +44,7 @@
 #ifdef __cplusplus
 
 #  include <algorithm>
+#  include <utility>
 #  include <vector>
 
 namespace lsfm {
@@ -51,17 +52,14 @@ namespace lsfm {
 class OptionManager {
  public:
   struct OptionEntry {
-    OptionEntry(std::string n = std::string(),
-                double v = 0,
-                std::string t = std::string(),
-                std::string d = std::string())
-        : name(n), value(v), type(t), description(d) {}
+    std::string name{};
+    double value{0.0};
+    std::string type{};
+    std::string description{};
 
-    std::string name;
-    double value;
-
-    std::string type;
-    std::string description;
+    OptionEntry() = default;
+    OptionEntry(std::string n, double v, std::string t, std::string d)
+        : name(std::move(n)), value(v), type(std::move(t)), description(std::move(d)) {}
 
 
     template <typename T>
@@ -109,9 +107,12 @@ class OptionManager {
     for_each(options.begin(), options.end(), [this](const OptionEntry& e) { setOption(e.name, e.value); });
   }
 
+  virtual ~OptionManager() = default;
+
  protected:
   OptionManager(const OptionVector& opv = OptionVector()) : options_(opv) {}
-  OptionVector options_;
+
+  OptionVector options_{};
   // default: do nothing
   virtual void setOptionImpl(const std::string& /*name*/, double /*value*/) {};
 };

@@ -9,10 +9,13 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_emxutil.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_emxutil.h"
+#include "rt_nonfinite.h"
+
+#include <cstddef>
 
 // Function Definitions
 
@@ -22,11 +25,10 @@
 //                int elementSize
 // Return Type  : void
 //
-void emxEnsureCapacity(emxArray__common *emxArray, int oldNumel, int elementSize)
-{
+void emxEnsureCapacity(emxArray__common* emxArray, int oldNumel, int elementSize) {
   int newNumel;
   int i;
-  void *newData;
+  void* newData;
   newNumel = 1;
   for (i = 0; i < emxArray->numDimensions; i++) {
     newNumel *= emxArray->size[i];
@@ -60,16 +62,15 @@ void emxEnsureCapacity(emxArray__common *emxArray, int oldNumel, int elementSize
 // Arguments    : emxArray_creal_T **pEmxArray
 // Return Type  : void
 //
-void emxFree_creal_T(emxArray_creal_T **pEmxArray)
-{
-  if (*pEmxArray != (emxArray_creal_T *)NULL) {
-    if (((*pEmxArray)->data != (creal_T *)NULL) && (*pEmxArray)->canFreeData) {
-      free((void *)(*pEmxArray)->data);
+void emxFree_creal_T(emxArray_creal_T** pEmxArray) {
+  if (*pEmxArray != (emxArray_creal_T*)NULL) {
+    if (((*pEmxArray)->data != (creal_T*)NULL) && (*pEmxArray)->canFreeData) {
+      free((void*)(*pEmxArray)->data);
     }
 
-    free((void *)(*pEmxArray)->size);
-    free((void *)*pEmxArray);
-    *pEmxArray = (emxArray_creal_T *)NULL;
+    free((void*)(*pEmxArray)->size);
+    free((void*)*pEmxArray);
+    *pEmxArray = (emxArray_creal_T*)NULL;
   }
 }
 
@@ -77,16 +78,15 @@ void emxFree_creal_T(emxArray_creal_T **pEmxArray)
 // Arguments    : emxArray_int32_T **pEmxArray
 // Return Type  : void
 //
-void emxFree_int32_T(emxArray_int32_T **pEmxArray)
-{
-  if (*pEmxArray != (emxArray_int32_T *)NULL) {
-    if (((*pEmxArray)->data != (int *)NULL) && (*pEmxArray)->canFreeData) {
-      free((void *)(*pEmxArray)->data);
+void emxFree_int32_T(emxArray_int32_T** pEmxArray) {
+  if (*pEmxArray != (emxArray_int32_T*)NULL) {
+    if (((*pEmxArray)->data != (int*)NULL) && (*pEmxArray)->canFreeData) {
+      free((void*)(*pEmxArray)->data);
     }
 
-    free((void *)(*pEmxArray)->size);
-    free((void *)*pEmxArray);
-    *pEmxArray = (emxArray_int32_T *)NULL;
+    free((void*)(*pEmxArray)->size);
+    free((void*)*pEmxArray);
+    *pEmxArray = (emxArray_int32_T*)NULL;
   }
 }
 
@@ -94,16 +94,15 @@ void emxFree_int32_T(emxArray_int32_T **pEmxArray)
 // Arguments    : emxArray_real_T **pEmxArray
 // Return Type  : void
 //
-void emxFree_real_T(emxArray_real_T **pEmxArray)
-{
-  if (*pEmxArray != (emxArray_real_T *)NULL) {
-    if (((*pEmxArray)->data != (double *)NULL) && (*pEmxArray)->canFreeData) {
-      free((void *)(*pEmxArray)->data);
+void emxFree_real_T(emxArray_real_T** pEmxArray) {
+  if (*pEmxArray != (emxArray_real_T*)NULL) {
+    if (((*pEmxArray)->data != (double*)NULL) && (*pEmxArray)->canFreeData) {
+      free((void*)(*pEmxArray)->data);
     }
 
-    free((void *)(*pEmxArray)->size);
-    free((void *)*pEmxArray);
-    *pEmxArray = (emxArray_real_T *)NULL;
+    free((void*)(*pEmxArray)->size);
+    free((void*)*pEmxArray);
+    *pEmxArray = (emxArray_real_T*)NULL;
   }
 }
 
@@ -112,15 +111,15 @@ void emxFree_real_T(emxArray_real_T **pEmxArray)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
-{
-  emxArray_creal_T *emxArray;
+void emxInit_creal_T(emxArray_creal_T** pEmxArray, int numDimensions) {
+  emxArray_creal_T* emxArray;
   int i;
-  *pEmxArray = (emxArray_creal_T *)malloc(sizeof(emxArray_creal_T));
+  *pEmxArray = (emxArray_creal_T*)malloc(sizeof(emxArray_creal_T));
   emxArray = *pEmxArray;
-  emxArray->data = (creal_T *)NULL;
+  emxArray->data = (creal_T*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int *)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -133,15 +132,15 @@ void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions)
-{
-  emxArray_int32_T *emxArray;
+void emxInit_int32_T(emxArray_int32_T** pEmxArray, int numDimensions) {
+  emxArray_int32_T* emxArray;
   int i;
-  *pEmxArray = (emxArray_int32_T *)malloc(sizeof(emxArray_int32_T));
+  *pEmxArray = (emxArray_int32_T*)malloc(sizeof(emxArray_int32_T));
   emxArray = *pEmxArray;
-  emxArray->data = (int *)NULL;
+  emxArray->data = (int*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int *)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -154,15 +153,15 @@ void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions)
-{
-  emxArray_real_T *emxArray;
+void emxInit_real_T(emxArray_real_T** pEmxArray, int numDimensions) {
+  emxArray_real_T* emxArray;
   int i;
-  *pEmxArray = (emxArray_real_T *)malloc(sizeof(emxArray_real_T));
+  *pEmxArray = (emxArray_real_T*)malloc(sizeof(emxArray_real_T));
   emxArray = *pEmxArray;
-  emxArray->data = (double *)NULL;
+  emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int *)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -175,15 +174,15 @@ void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInit_real_T1(emxArray_real_T **pEmxArray, int numDimensions)
-{
-  emxArray_real_T *emxArray;
+void emxInit_real_T1(emxArray_real_T** pEmxArray, int numDimensions) {
+  emxArray_real_T* emxArray;
   int i;
-  *pEmxArray = (emxArray_real_T *)malloc(sizeof(emxArray_real_T));
+  *pEmxArray = (emxArray_real_T*)malloc(sizeof(emxArray_real_T));
   emxArray = *pEmxArray;
-  emxArray->data = (double *)NULL;
+  emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int *)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -196,15 +195,15 @@ void emxInit_real_T1(emxArray_real_T **pEmxArray, int numDimensions)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInit_real_T2(emxArray_real_T **pEmxArray, int numDimensions)
-{
-  emxArray_real_T *emxArray;
+void emxInit_real_T2(emxArray_real_T** pEmxArray, int numDimensions) {
+  emxArray_real_T* emxArray;
   int i;
-  *pEmxArray = (emxArray_real_T *)malloc(sizeof(emxArray_real_T));
+  *pEmxArray = (emxArray_real_T*)malloc(sizeof(emxArray_real_T));
   emxArray = *pEmxArray;
-  emxArray->data = (double *)NULL;
+  emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int *)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {

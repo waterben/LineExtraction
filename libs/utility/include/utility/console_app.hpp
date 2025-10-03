@@ -11,6 +11,7 @@ namespace lsfm {
 class ConsoleApp : public ConsoleAppInterface {
  public:
   using ConsoleAppInterface::ConsoleAppInterface;
+  ~ConsoleApp() override = default;
 
  protected:
   /// @brief Define default parse arguments via utility::Options
@@ -22,7 +23,7 @@ class ConsoleApp : public ConsoleAppInterface {
   virtual std::string usage() const { return name() + " [options]"; }
 
   /// Options parser
-  utility::Options opts_;
+  utility::Options opts_{};
   bool help_ = false;
   bool version_flag_ = false;
 
