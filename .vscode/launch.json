@@ -6,11 +6,35 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
-            "preLaunchTask": "build-conan-cmake",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.vscode/conan_debug.env",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug CMake Binary 2",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
@@ -103,31 +127,19 @@
         },
         {
             "name": "Debug python target",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/${input:bazelPythonTargets}",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bazel-bin/",
-            "environment": [],
-            "externalConsole": false,
-            "sourceFileMap": {
-                "/proc/self/cwd": "${workspaceFolder}"
-            }
         },
         {
             "name": "Debug python test target",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/${input:bazelPythonTestTargets}",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bazel-bin/",
-            "environment": [],
-            "externalConsole": false,
-            "sourceFileMap": {
-                "/proc/self/cwd": "${workspaceFolder}"
-            }
         },
         {
             "name": "Python: Current File",
@@ -170,7 +182,7 @@
             "type": "command",
             "command": "shellCommand.execute",
             "args": {
-                "command": "cd ${workspaceFolder}/build/Debug/bin && bash ${workspaceFolder}/.vscode/find_debug_executables.sh",
+                "command": "bash -lc \"if [ ! -d '${workspaceFolder}/build/Debug/bin' ]; then >&2 echo 'build/Debug/bin not found. Run the configure/build task first.'; exit 1; fi; cd '${workspaceFolder}/build/Debug/bin' && bash '${workspaceFolder}/.vscode/find_debug_executables.sh' | sed 's#^\\./##'\"",
                 "description": "Please select a launch target"
             }
         },

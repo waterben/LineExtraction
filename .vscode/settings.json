@@ -74,4 +74,7 @@
     ]
   },
   "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
+  "cmake.buildBeforeRun": false
 }

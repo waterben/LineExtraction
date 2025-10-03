@@ -2,6 +2,69 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "configure-cmake-debug",
+      "type": "shell",
+      "command": "cmake -S ${workspaceFolder} -B ${workspaceFolder}/build/Debug -DCMAKE_BUILD_TYPE=Debug",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+      },
+      "detail": "Configure CMake project for Debug builds"
+    },
+    {
+      "label": "build-cmake-debug-run",
+      "type": "shell",
+      "command": "cmake --build ${workspaceFolder}/build/Debug --config Debug --target ${input:cmakeBuildTarget}",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+      },
+      "detail": "Build CMake Debug target"
+    },
+    {
+      "label": "build-cmake-debug",
+      "type": "shell",
+      "command": "echo \"configure-cmake-debug && build-cmake-debug-run\"",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "configure-cmake-debug",
+        "build-cmake-debug-run"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+      },
+      "problemMatcher": [],
+      "detail": "Configure and build CMake Debug target"
+    },
+    {
       "label": "build",
       "type": "shell",
       "command": "bazel build //...",
@@ -105,6 +168,12 @@
     },
   ],
   "inputs": [
+    {
+      "id": "cmakeBuildTarget",
+      "type": "promptString",
+      "description": "CMake target to build (use 'all' for the default target)",
+      "default": "all"
+    },
     {
       "id": "bazelBinaryTargetsTask",
       "type": "command",
