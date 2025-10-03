@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,16 +17,17 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "filtergrid.h"
-#include "lowpassfilter.h"
-#include "sqrt.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
-#include "power.h"
+#include "lowpassfilter.h"
 #include "meshgrid.h"
 #include "mod.h"
+#include "phasecong.h"
+#include "power.h"
+#include "rt_nonfinite.h"
+#include "sqrt.h"
 
 // Function Definitions
 
@@ -31,10 +40,8 @@
 //                emxArray_real_T *u2
 // Return Type  : void
 //
-void filtergrid(double rows, double cols, emxArray_real_T *radius,
-                emxArray_real_T *u1, emxArray_real_T *u2)
-{
-  emxArray_real_T *u1range;
+void filtergrid(double rows, double cols, emxArray_real_T* radius, emxArray_real_T* u1, emxArray_real_T* u2) {
+  emxArray_real_T* u1range;
   double anew;
   double y;
   int n;
@@ -45,8 +52,8 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
   double absb;
   int k;
   int nm1d2;
-  emxArray_real_T *u2range;
-  emxArray_real_T *r1;
+  emxArray_real_T* u2range;
+  emxArray_real_T* r1;
 
   //  FILTERGRID Generates grid for constructing frequency domain filters
   //
@@ -69,11 +76,11 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
   //  The University of Western Australia
   //  peter.kovesi at uwa edu au
   //
-  //  Permission is hereby granted, free of charge, to any person obtaining a copy 
-  //  of this software and associated documentation files (the "Software"), to deal 
+  //  Permission is hereby granted, free of charge, to any person obtaining a copy
+  //  of this software and associated documentation files (the "Software"), to deal
   //  in the Software without restriction, subject to the following conditions:
   //
-  //  The above copyright notice and this permission notice shall be included in  
+  //  The above copyright notice and this permission notice shall be included in
   //  all copies or substantial portions of the Software.
   //
   //  The Software is provided "as is", without warranty of any kind.
@@ -127,7 +134,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
     k = u1range->size[0] * u1range->size[1];
     u1range->size[0] = 1;
     u1range->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)u1range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u1range, k, (int)sizeof(double));
     if (n > 0) {
       u1range->data[0] = anew;
       if (n > 1) {
@@ -150,7 +157,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
 
     k = u1range->size[0] * u1range->size[1];
     u1range->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)u1range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u1range, k, (int)sizeof(double));
     nm1d2 = u1range->size[0];
     k = u1range->size[1];
     nm1d2 *= k;
@@ -201,7 +208,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
     k = u1range->size[0] * u1range->size[1];
     u1range->size[0] = 1;
     u1range->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)u1range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u1range, k, (int)sizeof(double));
     if (n > 0) {
       u1range->data[0] = anew;
       if (n > 1) {
@@ -224,7 +231,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
 
     k = u1range->size[0] * u1range->size[1];
     u1range->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)u1range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u1range, k, (int)sizeof(double));
     nm1d2 = u1range->size[0];
     k = u1range->size[1];
     nm1d2 *= k;
@@ -277,7 +284,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
     k = u2range->size[0] * u2range->size[1];
     u2range->size[0] = 1;
     u2range->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)u2range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u2range, k, (int)sizeof(double));
     if (n > 0) {
       u2range->data[0] = anew;
       if (n > 1) {
@@ -300,7 +307,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
 
     k = u2range->size[0] * u2range->size[1];
     u2range->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)u2range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u2range, k, (int)sizeof(double));
     nm1d2 = u2range->size[0];
     k = u2range->size[1];
     nm1d2 *= k;
@@ -351,7 +358,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
     k = u2range->size[0] * u2range->size[1];
     u2range->size[0] = 1;
     u2range->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)u2range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u2range, k, (int)sizeof(double));
     if (n > 0) {
       u2range->data[0] = anew;
       if (n > 1) {
@@ -374,7 +381,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
 
     k = u2range->size[0] * u2range->size[1];
     u2range->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)u2range, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)u2range, k, (int)sizeof(double));
     nm1d2 = u2range->size[0];
     k = u2range->size[1];
     nm1d2 *= k;
@@ -404,7 +411,7 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
   power(u1, radius);
   power(u2, r1);
   k = radius->size[0] * radius->size[1];
-  emxEnsureCapacity((emxArray__common *)radius, k, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)radius, k, (int)sizeof(double));
   nm1d2 = radius->size[0];
   k = radius->size[1];
   nm1d2 *= k;
@@ -421,3 +428,9 @@ void filtergrid(double rows, double cols, emxArray_real_T *radius,
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

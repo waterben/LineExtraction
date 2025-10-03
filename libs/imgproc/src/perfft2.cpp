@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,15 +17,16 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "perfft2.h"
-#include "logGaborFilter_emxutil.h"
-#include "fft2.h"
-#include "rdivide.h"
+
 #include "cos.h"
+#include "fft2.h"
+#include "logGaborFilter.h"
+#include "logGaborFilter_emxutil.h"
 #include "meshgrid.h"
+#include "phasecong.h"
+#include "rdivide.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -26,27 +35,26 @@
 //                emxArray_creal_T *P
 // Return Type  : void
 //
-void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
-{
+void perfft2(const emxArray_real_T* im, emxArray_creal_T* P) {
   unsigned int uv2[2];
   int i5;
-  emxArray_real_T *s;
+  emxArray_real_T* s;
   int cdiff;
   int nm1d2;
-  emxArray_real_T *b_s;
+  emxArray_real_T* b_s;
   int ndbl;
-  emxArray_real_T *c_s;
-  emxArray_real_T *d_s;
+  emxArray_real_T* c_s;
+  emxArray_real_T* d_s;
   int apnd;
-  emxArray_real_T *y;
-  emxArray_real_T *b_y;
-  emxArray_real_T *r7;
-  emxArray_real_T *r8;
-  emxArray_real_T *cx;
-  emxArray_real_T *cy;
-  emxArray_creal_T *r9;
-  emxArray_real_T *r10;
-  emxArray_creal_T *S;
+  emxArray_real_T* y;
+  emxArray_real_T* b_y;
+  emxArray_real_T* r7;
+  emxArray_real_T* r8;
+  emxArray_real_T* cx;
+  emxArray_real_T* cy;
+  emxArray_creal_T* r9;
+  emxArray_real_T* r10;
+  emxArray_creal_T* S;
 
   //  PERFFT2  2D Fourier transform of Moisan's periodic image component
   //
@@ -62,32 +70,32 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   //  into two components
   //         im = p + s
   //  where s is the 'smooth' component with mean 0 and p is the 'periodic'
-  //  component which has no sharp discontinuities when one moves cyclically across 
+  //  component which has no sharp discontinuities when one moves cyclically across
   //  the image boundaries.
   //
-  //  This wonderful decomposition is very useful when one wants to obtain an FFT of 
-  //  an image with minimal artifacts introduced from the boundary discontinuities. 
-  //  The image p gathers most of the image information but avoids periodization 
+  //  This wonderful decomposition is very useful when one wants to obtain an FFT of
+  //  an image with minimal artifacts introduced from the boundary discontinuities.
+  //  The image p gathers most of the image information but avoids periodization
   //  artifacts.
   //
   //  The typical use of this function is to obtain a 'periodic only' fft of an
   //  image
   //    >>  P = perfft2(im);
   //
-  //  Displaying the amplitude spectrum of P will yield a clean spectrum without the 
-  //  typical vertical-horizontal 'cross' arising from the image boundaries that you 
+  //  Displaying the amplitude spectrum of P will yield a clean spectrum without the
+  //  typical vertical-horizontal 'cross' arising from the image boundaries that you
   //  would normally see.
   //
   //  Note if you are using the function to perform filtering in the frequency
-  //  domain you may want to retain s (the smooth component in the spatial domain) 
+  //  domain you may want to retain s (the smooth component in the spatial domain)
   //  and add it back to the filtered result at the end.
   //
-  //  The computational cost of obtaining the 'periodic only' FFT involves taking an 
+  //  The computational cost of obtaining the 'periodic only' FFT involves taking an
   //  additional FFT.
   //
   //
   //  Reference:
-  //  This code is adapted from Lionel Moisan's Scilab function 'perdecomp.sci'  
+  //  This code is adapted from Lionel Moisan's Scilab function 'perdecomp.sci'
   //  "Periodic plus Smooth Image Decomposition" 07/2012 available at
   //
   //    http://www.mi.parisdescartes.fr/~moisan/p+s
@@ -110,7 +118,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = s->size[0] * s->size[1];
   s->size[0] = (int)uv2[0];
   s->size[1] = (int)uv2[1];
-  emxEnsureCapacity((emxArray__common *)s, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)s, i5, (int)sizeof(double));
   cdiff = (int)uv2[0] * (int)uv2[1];
   for (i5 = 0; i5 < cdiff; i5++) {
     s->data[i5] = 0.0;
@@ -119,8 +127,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   cdiff = im->size[1] - 1;
   nm1d2 = im->size[0];
   for (i5 = 0; i5 <= cdiff; i5++) {
-    s->data[s->size[0] * i5] = im->data[im->size[0] * i5] - im->data[(nm1d2 +
-      im->size[0] * i5) - 1];
+    s->data[s->size[0] * i5] = im->data[im->size[0] * i5] - im->data[(nm1d2 + im->size[0] * i5) - 1];
   }
 
   emxInit_real_T(&b_s, 2);
@@ -129,7 +136,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = b_s->size[0] * b_s->size[1];
   b_s->size[0] = 1;
   b_s->size[1] = cdiff;
-  emxEnsureCapacity((emxArray__common *)b_s, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)b_s, i5, (int)sizeof(double));
   for (i5 = 0; i5 < cdiff; i5++) {
     b_s->data[b_s->size[0] * i5] = -s->data[s->size[0] * i5];
   }
@@ -145,10 +152,9 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   nm1d2 = im->size[1];
   i5 = c_s->size[0];
   c_s->size[0] = cdiff;
-  emxEnsureCapacity((emxArray__common *)c_s, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)c_s, i5, (int)sizeof(double));
   for (i5 = 0; i5 < cdiff; i5++) {
-    c_s->data[i5] = (s->data[i5] + im->data[i5]) - im->data[i5 + im->size[0] *
-      (nm1d2 - 1)];
+    c_s->data[i5] = (s->data[i5] + im->data[i5]) - im->data[i5 + im->size[0] * (nm1d2 - 1)];
   }
 
   cdiff = c_s->size[0];
@@ -164,10 +170,9 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   apnd = s->size[1] - 1;
   i5 = d_s->size[0];
   d_s->size[0] = cdiff;
-  emxEnsureCapacity((emxArray__common *)d_s, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)d_s, i5, (int)sizeof(double));
   for (i5 = 0; i5 < cdiff; i5++) {
-    d_s->data[i5] = (s->data[i5 + s->size[0] * ndbl] - im->data[i5]) + im->
-      data[i5 + im->size[0] * (nm1d2 - 1)];
+    d_s->data[i5] = (s->data[i5 + s->size[0] * ndbl] - im->data[i5]) + im->data[i5 + im->size[0] * (nm1d2 - 1)];
   }
 
   cdiff = d_s->size[0];
@@ -178,7 +183,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   emxFree_real_T(&d_s);
 
   //  Generate grid upon which to compute the filter for the boundary image in
-  //  the frequency domain.  Note that cos() is cyclic hence the grid values can 
+  //  the frequency domain.  Note that cos() is cyclic hence the grid values can
   //  range from 0 .. 2*pi rather than 0 .. pi and then pi .. 0
   if (im->size[1] - 1 < 0) {
     ndbl = 0;
@@ -187,8 +192,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
     ndbl = (int)floor(((double)im->size[1] - 1.0) + 0.5);
     apnd = ndbl;
     cdiff = (ndbl - im->size[1]) + 1;
-    if (fabs((double)cdiff) < 4.4408920985006262E-16 * fabs((double)im->size[1]
-         - 1.0)) {
+    if (fabs((double)cdiff) < 4.4408920985006262E-16 * fabs((double)im->size[1] - 1.0)) {
       ndbl++;
       apnd = im->size[1] - 1;
     } else if (cdiff > 0) {
@@ -202,7 +206,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = y->size[0] * y->size[1];
   y->size[0] = 1;
   y->size[1] = ndbl;
-  emxEnsureCapacity((emxArray__common *)y, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)y, i5, (int)sizeof(double));
   if (ndbl > 0) {
     y->data[0] = 0.0;
     if (ndbl > 1) {
@@ -230,8 +234,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
     ndbl = (int)floor(((double)im->size[0] - 1.0) + 0.5);
     apnd = ndbl;
     cdiff = (ndbl - im->size[0]) + 1;
-    if (fabs((double)cdiff) < 4.4408920985006262E-16 * fabs((double)im->size[0]
-         - 1.0)) {
+    if (fabs((double)cdiff) < 4.4408920985006262E-16 * fabs((double)im->size[0] - 1.0)) {
       ndbl++;
       apnd = im->size[0] - 1;
     } else if (cdiff > 0) {
@@ -245,7 +248,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = b_y->size[0] * b_y->size[1];
   b_y->size[0] = 1;
   b_y->size[1] = ndbl;
-  emxEnsureCapacity((emxArray__common *)b_y, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)b_y, i5, (int)sizeof(double));
   if (ndbl > 0) {
     b_y->data[0] = 0.0;
     if (ndbl > 1) {
@@ -270,7 +273,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = r7->size[0] * r7->size[1];
   r7->size[0] = 1;
   r7->size[1] = y->size[1];
-  emxEnsureCapacity((emxArray__common *)r7, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)r7, i5, (int)sizeof(double));
   nm1d2 = im->size[1];
   cdiff = y->size[0] * y->size[1];
   for (i5 = 0; i5 < cdiff; i5++) {
@@ -282,7 +285,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = r8->size[0] * r8->size[1];
   r8->size[0] = 1;
   r8->size[1] = b_y->size[1];
-  emxEnsureCapacity((emxArray__common *)r8, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)r8, i5, (int)sizeof(double));
   nm1d2 = im->size[0];
   cdiff = b_y->size[0] * b_y->size[1];
   for (i5 = 0; i5 < cdiff; i5++) {
@@ -303,7 +306,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   i5 = r10->size[0] * r10->size[1];
   r10->size[0] = cx->size[0];
   r10->size[1] = cx->size[1];
-  emxEnsureCapacity((emxArray__common *)r10, i5, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)r10, i5, (int)sizeof(double));
   cdiff = cx->size[0] * cx->size[1];
   emxFree_real_T(&r8);
   emxFree_real_T(&r7);
@@ -324,7 +327,7 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
   //  Enforce 0 mean
   fft2(im, P);
   i5 = P->size[0] * P->size[1];
-  emxEnsureCapacity((emxArray__common *)P, i5, (int)sizeof(creal_T));
+  emxEnsureCapacity((emxArray__common*)P, i5, (int)sizeof(creal_T));
   cdiff = P->size[0];
   nm1d2 = P->size[1];
   cdiff *= nm1d2;
@@ -345,3 +348,9 @@ void perfft2(const emxArray_real_T *im, emxArray_creal_T *P)
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

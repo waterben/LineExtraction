@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 /*
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -13,28 +21,23 @@
  *       MATLAB for code generation function to initialize non-finite, NaN
  */
 #include "rtGetNaN.h"
-#define NumBitsPerChar                 8U
+#define NumBitsPerChar 8U
 
 /* Function: rtGetNaN ==================================================
  * Abstract:
  * Initialize rtNaN needed by the generated code.
  * NaN is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetNaN(void)
-{
+real_T rtGetNaN(void) {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T nan = 0.0;
   if (bitsPerReal == 32U) {
     nan = rtGetNaNF();
   } else {
     uint16_T one = 1U;
-    enum {
-      LittleEndian,
-      BigEndian
-    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    enum { LittleEndian, BigEndian } machByteOrder = (*((uint8_T*)&one) == 1U) ? LittleEndian : BigEndian;
     switch (machByteOrder) {
-     case LittleEndian:
-      {
+      case LittleEndian: {
         union {
           LittleEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -46,8 +49,7 @@ real_T rtGetNaN(void)
         break;
       }
 
-     case BigEndian:
-      {
+      case BigEndian: {
         union {
           BigEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -69,24 +71,18 @@ real_T rtGetNaN(void)
  * Initialize rtNaNF needed by the generated code.
  * NaN is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetNaNF(void)
-{
-  IEEESingle nanF = { { 0 } };
+real32_T rtGetNaNF(void) {
+  IEEESingle nanF = {{0}};
 
   uint16_T one = 1U;
-  enum {
-    LittleEndian,
-    BigEndian
-  } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+  enum { LittleEndian, BigEndian } machByteOrder = (*((uint8_T*)&one) == 1U) ? LittleEndian : BigEndian;
   switch (machByteOrder) {
-   case LittleEndian:
-    {
+    case LittleEndian: {
       nanF.wordL.wordLuint = 0xFFC00000U;
       break;
     }
 
-   case BigEndian:
-    {
+    case BigEndian: {
       nanF.wordL.wordLuint = 0x7FFFFFFFU;
       break;
     }
@@ -100,3 +96,9 @@ real32_T rtGetNaNF(void)
  *
  * [EOF]
  */
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

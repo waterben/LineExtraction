@@ -539,7 +539,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
 
             if ((x * x + y * y) > (0.16 * n * n)) {
               do_symmetry = 0;
-              float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
+              float z = (x == 0) ? 1000000.0f : static_cast<float>(y) / static_cast<float>(x);
               if (z < 0) {
                 z = -z;
                 w = -1;
@@ -603,7 +603,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             y += c;
             w += c;
 
-            float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
+            float z = (y == 0) ? 1000000.0f : static_cast<float>(x) / static_cast<float>(y);
             if (z < 0.25) { /* vertical */
               dy[pos] = 0;
               dx[pos] = 1;
@@ -827,7 +827,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
 
             if ((x * x + y * y) > (0.81 * n * n)) {
               do_symmetry = 0;
-              float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
+              float z = (x == 0) ? 1000000.0f : static_cast<float>(y) / static_cast<float>(x);
               if (z < 0) {
                 z = -z;
                 w = -1;
@@ -998,7 +998,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             y += 9 * c;
             w += 3 * c;
 
-            float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
+            float z = (y == 0) ? 1000000.0f : static_cast<float>(x) / static_cast<float>(y);
             if (z < 0.25) { /* vertical */
               dy[pos] = 0;
               dx[pos] = 1;

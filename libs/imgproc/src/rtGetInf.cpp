@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 /*
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -13,28 +21,23 @@
  *       MATLAB for code generation function to initialize non-finite, Inf and MinusInf
  */
 #include "rtGetInf.h"
-#define NumBitsPerChar                 8U
+#define NumBitsPerChar 8U
 
 /* Function: rtGetInf ==================================================
  * Abstract:
  * Initialize rtInf needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetInf(void)
-{
+real_T rtGetInf(void) {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T inf = 0.0;
   if (bitsPerReal == 32U) {
     inf = rtGetInfF();
   } else {
     uint16_T one = 1U;
-    enum {
-      LittleEndian,
-      BigEndian
-    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    enum { LittleEndian, BigEndian } machByteOrder = (*((uint8_T*)&one) == 1U) ? LittleEndian : BigEndian;
     switch (machByteOrder) {
-     case LittleEndian:
-      {
+      case LittleEndian: {
         union {
           LittleEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -46,8 +49,7 @@ real_T rtGetInf(void)
         break;
       }
 
-     case BigEndian:
-      {
+      case BigEndian: {
         union {
           BigEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -69,8 +71,7 @@ real_T rtGetInf(void)
  * Initialize rtInfF needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetInfF(void)
-{
+real32_T rtGetInfF(void) {
   IEEESingle infF;
   infF.wordL.wordLuint = 0x7F800000U;
   return infF.wordL.wordLreal;
@@ -81,21 +82,16 @@ real32_T rtGetInfF(void)
  * Initialize rtMinusInf needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetMinusInf(void)
-{
+real_T rtGetMinusInf(void) {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T minf = 0.0;
   if (bitsPerReal == 32U) {
     minf = rtGetMinusInfF();
   } else {
     uint16_T one = 1U;
-    enum {
-      LittleEndian,
-      BigEndian
-    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    enum { LittleEndian, BigEndian } machByteOrder = (*((uint8_T*)&one) == 1U) ? LittleEndian : BigEndian;
     switch (machByteOrder) {
-     case LittleEndian:
-      {
+      case LittleEndian: {
         union {
           LittleEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -107,8 +103,7 @@ real_T rtGetMinusInf(void)
         break;
       }
 
-     case BigEndian:
-      {
+      case BigEndian: {
         union {
           BigEndianIEEEDouble bitVal;
           real_T fltVal;
@@ -130,8 +125,7 @@ real_T rtGetMinusInf(void)
  * Initialize rtMinusInfF needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetMinusInfF(void)
-{
+real32_T rtGetMinusInfF(void) {
   IEEESingle minfF;
   minfF.wordL.wordLuint = 0xFF800000U;
   return minfF.wordL.wordLreal;
@@ -142,3 +136,9 @@ real32_T rtGetMinusInfF(void)
  *
  * [EOF]
  */
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

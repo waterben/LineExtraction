@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 /*
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -14,8 +22,9 @@
  *      (Inf, NaN and -Inf).
  */
 #include "rt_nonfinite.h"
-#include "rtGetNaN.h"
+
 #include "rtGetInf.h"
+#include "rtGetNaN.h"
 
 real_T rtInf;
 real_T rtMinusInf;
@@ -29,9 +38,8 @@ real32_T rtNaNF;
  * Initialize the rtInf, rtMinusInf, and rtNaN needed by the
  * generated code. NaN is initialized as non-signaling. Assumes IEEE.
  */
-void rt_InitInfAndNaN(size_t realSize)
-{
-  (void) (realSize);
+void rt_InitInfAndNaN(size_t realSize) {
+  (void)(realSize);
   rtNaN = rtGetNaN();
   rtNaNF = rtGetNaNF();
   rtInf = rtGetInf();
@@ -44,56 +52,44 @@ void rt_InitInfAndNaN(size_t realSize)
  * Abstract:
  * Test if value is infinite
  */
-boolean_T rtIsInf(real_T value)
-{
-  return ((value==rtInf || value==rtMinusInf) ? 1U : 0U);
-}
+boolean_T rtIsInf(real_T value) { return ((value == rtInf || value == rtMinusInf) ? 1U : 0U); }
 
 /* Function: rtIsInfF =================================================
  * Abstract:
  * Test if single-precision value is infinite
  */
-boolean_T rtIsInfF(real32_T value)
-{
-  return(((value)==rtInfF || (value)==rtMinusInfF) ? 1U : 0U);
-}
+boolean_T rtIsInfF(real32_T value) { return (((value) == rtInfF || (value) == rtMinusInfF) ? 1U : 0U); }
 
 /* Function: rtIsNaN ==================================================
  * Abstract:
  * Test if value is not a number
  */
-boolean_T rtIsNaN(real_T value)
-{
-
+boolean_T rtIsNaN(real_T value) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
 
-  return _isnan(value)? TRUE:FALSE;
+  return _isnan(value) ? TRUE : FALSE;
 
 #else
 
-  return (value!=value)? 1U:0U;
+  return (value != value) ? 1U : 0U;
 
 #endif
-
 }
 
 /* Function: rtIsNaNF =================================================
  * Abstract:
  * Test if single-precision value is not a number
  */
-boolean_T rtIsNaNF(real32_T value)
-{
-
+boolean_T rtIsNaNF(real32_T value) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
 
-  return _isnan((real_T)value)? true:false;
+  return _isnan((real_T)value) ? true : false;
 
 #else
 
-  return (value!=value)? 1U:0U;
+  return (value != value) ? 1U : 0U;
 
 #endif
-
 }
 
 /*
@@ -101,3 +97,9 @@ boolean_T rtIsNaNF(real32_T value)
  *
  * [EOF]
  */
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

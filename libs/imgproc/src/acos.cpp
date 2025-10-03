@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,10 +17,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "acos.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "acos.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,8 +29,7 @@
 // Arguments    : emxArray_real_T *x
 // Return Type  : void
 //
-void b_acos(emxArray_real_T *x)
-{
+void b_acos(emxArray_real_T* x) {
   int nx;
   int k;
   nx = x->size[0] * x->size[1];
@@ -35,3 +43,9 @@ void b_acos(emxArray_real_T *x)
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,10 +17,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_initialize.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_initialize.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,13 +29,16 @@
 // Arguments    : void
 // Return Type  : void
 //
-void logGaborFilter_initialize()
-{
-  rt_InitInfAndNaN(8U);
-}
+void logGaborFilter_initialize() { rt_InitInfAndNaN(8U); }
 
 //
 // File trailer for logGaborFilter_initialize.cpp
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

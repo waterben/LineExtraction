@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,10 +17,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_rtwutil.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_rtwutil.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -21,8 +30,7 @@
 //                int denominator
 // Return Type  : int
 //
-int div_s32(int numerator, int denominator)
-{
+int div_s32(int numerator, int denominator) {
   int quotient;
   unsigned int absNumerator;
   unsigned int absDenominator;
@@ -63,8 +71,7 @@ int div_s32(int numerator, int denominator)
 //                double u1
 // Return Type  : double
 //
-double rt_powd_snf(double u0, double u1)
-{
+double rt_powd_snf(double u0, double u1) {
   double y;
   double d0;
   double d1;
@@ -114,3 +121,9 @@ double rt_powd_snf(double u0, double u1)
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

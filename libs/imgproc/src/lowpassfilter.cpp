@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,17 +17,18 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "lowpassfilter.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
-#include "rdivide.h"
-#include "sqrt.h"
-#include "power.h"
+#include "logGaborFilter_rtwutil.h"
 #include "meshgrid.h"
 #include "mod.h"
-#include "logGaborFilter_rtwutil.h"
+#include "phasecong.h"
+#include "power.h"
+#include "rdivide.h"
+#include "rt_nonfinite.h"
+#include "sqrt.h"
 
 // Function Definitions
 
@@ -28,8 +37,7 @@
 //                int dim
 // Return Type  : void
 //
-void eml_ifftshift(emxArray_real_T *x, int dim)
-{
+void eml_ifftshift(emxArray_real_T* x, int dim) {
   int vlend2;
   int vstride;
   int k;
@@ -159,9 +167,8 @@ void eml_ifftshift(emxArray_real_T *x, int dim)
 //                emxArray_real_T *f
 // Return Type  : void
 //
-void lowpassfilter(const double sze[2], emxArray_real_T *f)
-{
-  emxArray_real_T *xrange;
+void lowpassfilter(const double sze[2], emxArray_real_T* f) {
+  emxArray_real_T* xrange;
   double anew;
   double y;
   int n;
@@ -172,12 +179,12 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   double absb;
   int k;
   int nm1d2;
-  emxArray_real_T *yrange;
-  emxArray_real_T *radius;
-  emxArray_real_T *x;
-  emxArray_real_T *b_y;
+  emxArray_real_T* yrange;
+  emxArray_real_T* radius;
+  emxArray_real_T* x;
+  emxArray_real_T* b_y;
   unsigned int uv1[2];
-  emxArray_real_T *r2;
+  emxArray_real_T* r2;
 
   //  LOWPASSFILTER - Constructs a low-pass butterworth filter.
   //
@@ -188,7 +195,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   //         cutoff is the cutoff frequency of the filter 0 - 0.5
   //         n      is the order of the filter, the higher n is the sharper
   //                the transition is. (n must be an integer >= 1).
-  //                Note that n is doubled so that it is always an even integer. 
+  //                Note that n is doubled so that it is always an even integer.
   //
   //                       1
   //       f =    --------------------
@@ -204,11 +211,11 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   //  The University of Western Australia
   //  http://www.csse.uwa.edu.au/
   //
-  //  Permission is hereby granted, free of charge, to any person obtaining a copy 
-  //  of this software and associated documentation files (the "Software"), to deal 
+  //  Permission is hereby granted, free of charge, to any person obtaining a copy
+  //  of this software and associated documentation files (the "Software"), to deal
   //  in the Software without restriction, subject to the following conditions:
   //
-  //  The above copyright notice and this permission notice shall be included in  
+  //  The above copyright notice and this permission notice shall be included in
   //  all copies or substantial portions of the Software.
   //
   //  The Software is provided "as is", without warranty of any kind.
@@ -262,7 +269,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
     k = xrange->size[0] * xrange->size[1];
     xrange->size[0] = 1;
     xrange->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)xrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)xrange, k, (int)sizeof(double));
     if (n > 0) {
       xrange->data[0] = anew;
       if (n > 1) {
@@ -285,7 +292,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
 
     k = xrange->size[0] * xrange->size[1];
     xrange->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)xrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)xrange, k, (int)sizeof(double));
     nm1d2 = xrange->size[0];
     k = xrange->size[1];
     nm1d2 *= k;
@@ -336,7 +343,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
     k = xrange->size[0] * xrange->size[1];
     xrange->size[0] = 1;
     xrange->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)xrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)xrange, k, (int)sizeof(double));
     if (n > 0) {
       xrange->data[0] = anew;
       if (n > 1) {
@@ -359,7 +366,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
 
     k = xrange->size[0] * xrange->size[1];
     xrange->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)xrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)xrange, k, (int)sizeof(double));
     nm1d2 = xrange->size[0];
     k = xrange->size[1];
     nm1d2 *= k;
@@ -412,7 +419,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
     k = yrange->size[0] * yrange->size[1];
     yrange->size[0] = 1;
     yrange->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)yrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)yrange, k, (int)sizeof(double));
     if (n > 0) {
       yrange->data[0] = anew;
       if (n > 1) {
@@ -435,7 +442,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
 
     k = yrange->size[0] * yrange->size[1];
     yrange->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)yrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)yrange, k, (int)sizeof(double));
     nm1d2 = yrange->size[0];
     k = yrange->size[1];
     nm1d2 *= k;
@@ -486,7 +493,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
     k = yrange->size[0] * yrange->size[1];
     yrange->size[0] = 1;
     yrange->size[1] = n;
-    emxEnsureCapacity((emxArray__common *)yrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)yrange, k, (int)sizeof(double));
     if (n > 0) {
       yrange->data[0] = anew;
       if (n > 1) {
@@ -509,7 +516,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
 
     k = yrange->size[0] * yrange->size[1];
     yrange->size[0] = 1;
-    emxEnsureCapacity((emxArray__common *)yrange, k, (int)sizeof(double));
+    emxEnsureCapacity((emxArray__common*)yrange, k, (int)sizeof(double));
     nm1d2 = yrange->size[0];
     k = yrange->size[1];
     nm1d2 *= k;
@@ -525,7 +532,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   power(x, radius);
   power(b_y, x);
   k = radius->size[0] * radius->size[1];
-  emxEnsureCapacity((emxArray__common *)radius, k, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)radius, k, (int)sizeof(double));
   nm1d2 = radius->size[0];
   k = radius->size[1];
   nm1d2 *= k;
@@ -547,7 +554,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   k = b_y->size[0] * b_y->size[1];
   b_y->size[0] = (int)uv1[0];
   b_y->size[1] = (int)uv1[1];
-  emxEnsureCapacity((emxArray__common *)b_y, k, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)b_y, k, (int)sizeof(double));
   n = x->size[0] * x->size[1];
   for (k = 0; k + 1 <= n; k++) {
     b_y->data[k] = rt_powd_snf(x->data[k], 30.0);
@@ -558,7 +565,7 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
   k = r2->size[0] * r2->size[1];
   r2->size[0] = b_y->size[0];
   r2->size[1] = b_y->size[1];
-  emxEnsureCapacity((emxArray__common *)r2, k, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)r2, k, (int)sizeof(double));
   nm1d2 = b_y->size[0] * b_y->size[1];
   for (k = 0; k < nm1d2; k++) {
     r2->data[k] = 1.0 + b_y->data[k];
@@ -579,3 +586,9 @@ void lowpassfilter(const double sze[2], emxArray_real_T *f)
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,10 +17,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "mod.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "mod.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,13 +29,16 @@
 // Arguments    : double x
 // Return Type  : double
 //
-double b_mod(double x)
-{
-  return x - floor(x / 2.0) * 2.0;
-}
+double b_mod(double x) { return x - floor(x / 2.0) * 2.0; }
 
 //
 // File trailer for mod.cpp
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

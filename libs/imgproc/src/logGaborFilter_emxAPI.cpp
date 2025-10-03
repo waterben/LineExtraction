@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -9,11 +17,12 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "logGaborFilter_emxAPI.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
+#include "phasecong.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -22,9 +31,8 @@
 //                int *size
 // Return Type  : emxArray_creal_T *
 //
-emxArray_creal_T *emxCreateND_creal_T(int numDimensions, int *size)
-{
-  emxArray_creal_T *emx;
+emxArray_creal_T* emxCreateND_creal_T(int numDimensions, int* size) {
+  emxArray_creal_T* emx;
   int numEl;
   int i;
   emxInit_creal_T(&emx, numDimensions);
@@ -34,7 +42,7 @@ emxArray_creal_T *emxCreateND_creal_T(int numDimensions, int *size)
     emx->size[i] = size[i];
   }
 
-  emx->data = (creal_T *)calloc((unsigned int)numEl, sizeof(creal_T));
+  emx->data = (creal_T*)calloc((unsigned int)numEl, sizeof(creal_T));
   emx->numDimensions = numDimensions;
   emx->allocatedSize = numEl;
   return emx;
@@ -45,9 +53,8 @@ emxArray_creal_T *emxCreateND_creal_T(int numDimensions, int *size)
 //                int *size
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
-{
-  emxArray_real_T *emx;
+emxArray_real_T* emxCreateND_real_T(int numDimensions, int* size) {
+  emxArray_real_T* emx;
   int numEl;
   int i;
   emxInit_real_T2(&emx, numDimensions);
@@ -57,7 +64,7 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
     emx->size[i] = size[i];
   }
 
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (double*)calloc((unsigned int)numEl, sizeof(double));
   emx->numDimensions = numDimensions;
   emx->allocatedSize = numEl;
   return emx;
@@ -69,10 +76,8 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
 //                int *size
 // Return Type  : emxArray_creal_T *
 //
-emxArray_creal_T *emxCreateWrapperND_creal_T(creal_T *data, int numDimensions,
-  int *size)
-{
-  emxArray_creal_T *emx;
+emxArray_creal_T* emxCreateWrapperND_creal_T(creal_T* data, int numDimensions, int* size) {
+  emxArray_creal_T* emx;
   int numEl;
   int i;
   emxInit_creal_T(&emx, numDimensions);
@@ -95,10 +100,8 @@ emxArray_creal_T *emxCreateWrapperND_creal_T(creal_T *data, int numDimensions,
 //                int *size
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions, int *
-  size)
-{
-  emxArray_real_T *emx;
+emxArray_real_T* emxCreateWrapperND_real_T(double* data, int numDimensions, int* size) {
+  emxArray_real_T* emx;
   int numEl;
   int i;
   emxInit_real_T2(&emx, numDimensions);
@@ -121,9 +124,8 @@ emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions, int 
 //                int cols
 // Return Type  : emxArray_creal_T *
 //
-emxArray_creal_T *emxCreateWrapper_creal_T(creal_T *data, int rows, int cols)
-{
-  emxArray_creal_T *emx;
+emxArray_creal_T* emxCreateWrapper_creal_T(creal_T* data, int rows, int cols) {
+  emxArray_creal_T* emx;
   int size[2];
   int numEl;
   int i;
@@ -149,9 +151,8 @@ emxArray_creal_T *emxCreateWrapper_creal_T(creal_T *data, int rows, int cols)
 //                int cols
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreateWrapper_real_T(double *data, int rows, int cols)
-{
-  emxArray_real_T *emx;
+emxArray_real_T* emxCreateWrapper_real_T(double* data, int rows, int cols) {
+  emxArray_real_T* emx;
   int size[2];
   int numEl;
   int i;
@@ -176,9 +177,8 @@ emxArray_real_T *emxCreateWrapper_real_T(double *data, int rows, int cols)
 //                int cols
 // Return Type  : emxArray_creal_T *
 //
-emxArray_creal_T *emxCreate_creal_T(int rows, int cols)
-{
-  emxArray_creal_T *emx;
+emxArray_creal_T* emxCreate_creal_T(int rows, int cols) {
+  emxArray_creal_T* emx;
   int size[2];
   int numEl;
   int i;
@@ -191,7 +191,7 @@ emxArray_creal_T *emxCreate_creal_T(int rows, int cols)
     emx->size[i] = size[i];
   }
 
-  emx->data = (creal_T *)calloc((unsigned int)numEl, sizeof(creal_T));
+  emx->data = (creal_T*)calloc((unsigned int)numEl, sizeof(creal_T));
   emx->numDimensions = 2;
   emx->allocatedSize = numEl;
   return emx;
@@ -202,9 +202,8 @@ emxArray_creal_T *emxCreate_creal_T(int rows, int cols)
 //                int cols
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreate_real_T(int rows, int cols)
-{
-  emxArray_real_T *emx;
+emxArray_real_T* emxCreate_real_T(int rows, int cols) {
+  emxArray_real_T* emx;
   int size[2];
   int numEl;
   int i;
@@ -217,7 +216,7 @@ emxArray_real_T *emxCreate_real_T(int rows, int cols)
     emx->size[i] = size[i];
   }
 
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (double*)calloc((unsigned int)numEl, sizeof(double));
   emx->numDimensions = 2;
   emx->allocatedSize = numEl;
   return emx;
@@ -227,27 +226,20 @@ emxArray_real_T *emxCreate_real_T(int rows, int cols)
 // Arguments    : emxArray_creal_T *emxArray
 // Return Type  : void
 //
-void emxDestroyArray_creal_T(emxArray_creal_T *emxArray)
-{
-  emxFree_creal_T(&emxArray);
-}
+void emxDestroyArray_creal_T(emxArray_creal_T* emxArray) { emxFree_creal_T(&emxArray); }
 
 //
 // Arguments    : emxArray_real_T *emxArray
 // Return Type  : void
 //
-void emxDestroyArray_real_T(emxArray_real_T *emxArray)
-{
-  emxFree_real_T(&emxArray);
-}
+void emxDestroyArray_real_T(emxArray_real_T* emxArray) { emxFree_real_T(&emxArray); }
 
 //
 // Arguments    : emxArray_creal_T **pEmxArray
 //                int numDimensions
 // Return Type  : void
 //
-void emxInitArray_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
-{
+void emxInitArray_creal_T(emxArray_creal_T** pEmxArray, int numDimensions) {
   emxInit_creal_T(pEmxArray, numDimensions);
 }
 
@@ -256,13 +248,16 @@ void emxInitArray_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
 //                int numDimensions
 // Return Type  : void
 //
-void emxInitArray_real_T(emxArray_real_T **pEmxArray, int numDimensions)
-{
-  emxInit_real_T2(pEmxArray, numDimensions);
-}
+void emxInitArray_real_T(emxArray_real_T** pEmxArray, int numDimensions) { emxInit_real_T2(pEmxArray, numDimensions); }
 
 //
 // File trailer for logGaborFilter_emxAPI.cpp
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
