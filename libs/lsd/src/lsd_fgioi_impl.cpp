@@ -97,11 +97,12 @@
 #include <lsd/impl/lsd_fgioi.hpp>
 
 #include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 /** ln(10) */
 #ifndef M_LN10
@@ -167,8 +168,8 @@ static inline size_t pixel_index(const point& p, unsigned int stride) { return p
 /** Fatal error, print a message to standard-error output and exit.
  */
 static void error(char* msg) {
-  fprintf(stderr, "LSD Error: %s\n", msg);
-  exit(EXIT_FAILURE);
+  std::fprintf(stderr, "LSD Error: %s\n", msg);
+  std::exit(EXIT_FAILURE);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -254,8 +255,8 @@ typedef struct ntuple_list_s {
  */
 static void free_ntuple_list(ntuple_list in) {
   if (in == NULL || in->values == NULL) error("free_ntuple_list: invalid n-tuple input.");
-  free((void*)in->values);
-  free((void*)in);
+  std::free(in->values);
+  std::free(in);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -269,7 +270,7 @@ static ntuple_list new_ntuple_list(unsigned int dim) {
   if (dim == 0) error("new_ntuple_list: 'dim' must be positive.");
 
   /* get memory for list structure */
-  n_tuple = (ntuple_list)malloc(sizeof(struct ntuple_list_s));
+  n_tuple = static_cast<ntuple_list>(std::malloc(sizeof(struct ntuple_list_s)));
   if (n_tuple == NULL) error("not enough memory.");
 
   /* initialize list */
@@ -278,7 +279,7 @@ static ntuple_list new_ntuple_list(unsigned int dim) {
   n_tuple->dim = dim;
 
   /* get memory for tuples */
-  n_tuple->values = (double*)malloc(dim * n_tuple->max_size * sizeof(double));
+  n_tuple->values = static_cast<double*>(std::malloc(dim * n_tuple->max_size * sizeof(double)));
   if (n_tuple->values == NULL) error("not enough memory.");
 
   return n_tuple;
@@ -296,7 +297,8 @@ static void enlarge_ntuple_list(ntuple_list n_tuple) {
   n_tuple->max_size *= 2;
 
   /* realloc memory */
-  n_tuple->values = (double*)realloc((void*)n_tuple->values, n_tuple->dim * n_tuple->max_size * sizeof(double));
+  n_tuple->values =
+      static_cast<double*>(std::realloc(n_tuple->values, n_tuple->dim * n_tuple->max_size * sizeof(double)));
   if (n_tuple->values == NULL) error("not enough memory.");
 }
 
@@ -349,8 +351,8 @@ typedef struct image_char_s {
  */
 static void free_image_char(image_char i) {
   if (i == NULL || i->data == NULL) error("free_image_char: invalid input image.");
-  free((void*)i->data);
-  free((void*)i);
+  std::free(i->data);
+  std::free(i);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -363,9 +365,9 @@ static image_char new_image_char(unsigned int xsize, unsigned int ysize) {
   if (xsize == 0 || ysize == 0) error("new_image_char: invalid image size.");
 
   /* get memory */
-  image = (image_char)malloc(sizeof(struct image_char_s));
+  image = static_cast<image_char>(std::malloc(sizeof(struct image_char_s)));
   if (image == NULL) error("not enough memory.");
-  image->data = (unsigned char*)calloc((size_t)(xsize * ysize), sizeof(unsigned char));
+  image->data = static_cast<unsigned char*>(std::calloc(static_cast<size_t>(xsize * ysize), sizeof(unsigned char)));
   if (image->data == NULL) error("not enough memory.");
 
   /* set image size */
@@ -417,9 +419,9 @@ static image_int new_image_int(unsigned int xsize, unsigned int ysize) {
   if (xsize == 0 || ysize == 0) error("new_image_int: invalid image size.");
 
   /* get memory */
-  image = (image_int)malloc(sizeof(struct image_int_s));
+  image = static_cast<image_int>(std::malloc(sizeof(struct image_int_s)));
   if (image == NULL) error("not enough memory.");
-  image->data = (int*)calloc((size_t)(xsize * ysize), sizeof(int));
+  image->data = static_cast<int*>(std::calloc(static_cast<size_t>(xsize * ysize), sizeof(int)));
   if (image->data == NULL) error("not enough memory.");
 
   /* set image size */
@@ -463,8 +465,8 @@ typedef struct image_double_s {
  */
 static void free_image_double(image_double i) {
   if (i == NULL || i->data == NULL) error("free_image_double: invalid input image.");
-  free((void*)i->data);
-  free((void*)i);
+  std::free(i->data);
+  std::free(i);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -477,9 +479,9 @@ static image_double new_image_double(unsigned int xsize, unsigned int ysize) {
   if (xsize == 0 || ysize == 0) error("new_image_double: invalid image size.");
 
   /* get memory */
-  image = (image_double)malloc(sizeof(struct image_double_s));
+  image = static_cast<image_double>(std::malloc(sizeof(struct image_double_s)));
   if (image == NULL) error("not enough memory.");
-  image->data = (double*)calloc((size_t)(xsize * ysize), sizeof(double));
+  image->data = static_cast<double*>(std::calloc(static_cast<size_t>(xsize * ysize), sizeof(double)));
   if (image->data == NULL) error("not enough memory.");
 
   /* set image size */
@@ -501,7 +503,7 @@ static image_double new_image_double_ptr(unsigned int xsize, unsigned int ysize,
   if (data == NULL) error("new_image_double_ptr: NULL data pointer.");
 
   /* get memory */
-  image = (image_double)malloc(sizeof(struct image_double_s));
+  image = static_cast<image_double>(std::malloc(sizeof(struct image_double_s)));
   if (image == NULL) error("not enough memory.");
 
   /* set image */
@@ -759,10 +761,10 @@ static image_double ll_angle(image_double in,
   *modgrad = new_image_double(in->xsize, in->ysize);
 
   /* get memory for "ordered" list of pixels */
-  list = (struct coorlist*)calloc((size_t)(n * p), sizeof(struct coorlist));
+  list = static_cast<struct coorlist*>(std::calloc(static_cast<size_t>(n * p), sizeof(struct coorlist)));
   *mem_p = (void*)list;
-  range_l_s = (struct coorlist**)calloc((size_t)n_bins, sizeof(struct coorlist*));
-  range_l_e = (struct coorlist**)calloc((size_t)n_bins, sizeof(struct coorlist*));
+  range_l_s = static_cast<struct coorlist**>(std::calloc(static_cast<size_t>(n_bins), sizeof(struct coorlist*)));
+  range_l_e = static_cast<struct coorlist**>(std::calloc(static_cast<size_t>(n_bins), sizeof(struct coorlist*)));
   if (list == NULL || range_l_s == NULL || range_l_e == NULL) error("not enough memory.");
   for (i = 0; i < n_bins; i++) range_l_s[i] = range_l_e[i] = NULL;
 
@@ -845,8 +847,8 @@ static image_double ll_angle(image_double in,
   *list_p = start;
 
   /* free memory */
-  free((void*)range_l_s);
-  free((void*)range_l_e);
+  std::free(range_l_s);
+  std::free(range_l_e);
 
   return g;
 }
@@ -1254,7 +1256,7 @@ static double inter_hi(double x, double x1, double y1, double x2, double y2) {
  */
 static void ri_del(rect_iter* iter) {
   if (iter == NULL) error("ri_del: NULL iterator.");
-  free((void*)iter);
+  std::free(iter);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1354,7 +1356,7 @@ static rect_iter* ri_ini(struct rect* r) {
   if (r == NULL) error("ri_ini: invalid rectangle.");
 
   /* get memory */
-  i = (rect_iter*)malloc(sizeof(rect_iter));
+  i = static_cast<rect_iter*>(std::malloc(sizeof(rect_iter)));
   if (i == NULL) error("ri_ini: Not enough memory.");
 
   /* build list of rectangle corners ordered
@@ -2014,7 +2016,7 @@ double* LineSegmentDetection(int* n_out,
   if (reg_img != NULL && reg_x != NULL && reg_y != NULL) /* save region data */
     region = new_image_int_ini(angles->xsize, angles->ysize, 0);
   used = new_image_char_ini(xsize, ysize, NOTUSED);
-  reg = (struct point*)calloc((size_t)(xsize * ysize), sizeof(struct point));
+  reg = static_cast<struct point*>(std::calloc(static_cast<size_t>(xsize * ysize), sizeof(struct point)));
   if (reg == NULL) error("not enough memory!");
 
 
@@ -2081,14 +2083,14 @@ double* LineSegmentDetection(int* n_out,
 
 
   /* free memory */
-  free((void*)image); /* only the double_image structure should be freed,
+  std::free(image); /* only the double_image structure should be freed,
                          the data pointer was provided to this functions
                          and should not be destroyed.                 */
   free_image_double(angles);
   free_image_double(modgrad);
   free_image_char(used);
-  free((void*)reg);
-  free((void*)mem_p);
+  std::free(reg);
+  std::free(mem_p);
 
   /* return the result */
   if (reg_img != NULL && reg_x != NULL && reg_y != NULL) {
@@ -2102,13 +2104,13 @@ double* LineSegmentDetection(int* n_out,
     /* free the 'region' structure.
        we cannot use the function 'free_image_int' because we need to keep
        the memory with the image data to be returned by this function. */
-    free((void*)region);
+    std::free(region);
   }
   if (out->size > (unsigned int)INT_MAX) error("too many detections to fit in an INT.");
   *n_out = (int)(out->size);
 
   return_value = out->values;
-  free((void*)out); /* only the 'ntuple_list' structure must be freed,
+  std::free(out); /* only the 'ntuple_list' structure must be freed,
                        but the 'values' pointer must be keep to return
                        as a result. */
 
