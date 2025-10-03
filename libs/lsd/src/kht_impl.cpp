@@ -35,6 +35,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <memory.h>
 
@@ -873,9 +874,7 @@ class visited_map_t {
   }
 };
 
-inline int compare_bins(const bin_t* bin1, const bin_t* bin2) {
-  return (bin1->votes < bin2->votes) ? 1 : ((bin1->votes > bin2->votes) ? -1 : 0);
-}
+inline bool compare_bins(const bin_t& bin1, const bin_t& bin2) { return bin1.votes > bin2.votes; }
 
 // Computes the convolution of the given cell with a (discrete) 3x3 Gaussian kernel.
 inline int convolution(const int** bins, const int rho_index, const int theta_index) {
@@ -929,7 +928,8 @@ void peak_detection(lines_list_t& lines, const accumulator_t& accumulator) {
   }
 
   // Sort the list in descending order according to the result of the convolution.
-  std::qsort(used_bins.items(), used_bins_count, sizeof(bin_t), (int (*)(const void*, const void*))compare_bins);
+  bin_t* const used_bins_begin = used_bins.items();
+  std::sort(used_bins_begin, used_bins_begin + static_cast<std::ptrdiff_t>(used_bins_count), compare_bins);
 
   // Use a sweep plane that visits each cell of the list.
   static visited_map_t visited;

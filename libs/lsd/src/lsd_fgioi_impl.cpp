@@ -540,7 +540,7 @@ static void gaussian_kernel(ntuple_list kernel, double sigma, double mean) {
   if (kernel->max_size < 1) enlarge_ntuple_list(kernel);
   kernel->size = 1;
   for (i = 0; i < kernel->dim; i++) {
-    val = ((double)i - mean) / sigma;
+    val = (static_cast<double>(i) - mean) / sigma;
     kernel->values[i] = exp(-0.5 * val * val);
     sum += kernel->values[i];
   }
@@ -601,10 +601,10 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
   if (sigma_scale <= 0.0) error("gaussian_sampler: 'sigma_scale' must be positive.");
 
   /* compute new image size and get memory for images */
-  if (in->xsize * scale > (double)UINT_MAX || in->ysize * scale > (double)UINT_MAX)
+  if (in->xsize * scale > static_cast<double>(UINT_MAX) || in->ysize * scale > static_cast<double>(UINT_MAX))
     error("gaussian_sampler: the output image size exceeds the handled size.");
-  N = (unsigned int)ceil(in->xsize * scale);
-  M = (unsigned int)ceil(in->ysize * scale);
+  N = static_cast<unsigned int>(ceil(in->xsize * scale));
+  M = static_cast<unsigned int>(ceil(in->ysize * scale));
   aux = new_image_double(N, in->ysize);
   out = new_image_double(N, M);
 
@@ -619,14 +619,14 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
        x = sigma * sqrt( 2 * prec * ln(10) ).
    */
   prec = 3.0;
-  h = (unsigned int)ceil(sigma * sqrt(2.0 * prec * log(10.0)));
+  h = static_cast<unsigned int>(ceil(sigma * sqrt(2.0 * prec * log(10.0))));
   n = 1 + 2 * h; /* kernel size */
   kernel = new_ntuple_list(n);
   const int radius = static_cast<int>(h);
 
   /* auxiliary double image size variables */
-  double_x_size = (int)(2 * in->xsize);
-  double_y_size = (int)(2 * in->ysize);
+  double_x_size = static_cast<int>(2 * in->xsize);
+  double_y_size = static_cast<int>(2 * in->ysize);
 
   /* First subsampling: x axis */
   for (x = 0; x < aux->xsize; x++) {
@@ -635,11 +635,11 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
        xx  is the corresponding x-value in the original size image.
        xc  is the integer value, the pixel coordinate of xx.
      */
-    xx = (double)x / scale;
+    xx = static_cast<double>(x) / scale;
     /* coordinate (0.0,0.0) is in the center of pixel (0,0),
        so the pixel with xc=0 get the values of xx from -0.5 to 0.5 */
-    xc = (int)floor(xx + 0.5);
-    gaussian_kernel(kernel, sigma, (double)h + xx - (double)xc);
+    xc = static_cast<int>(floor(xx + 0.5));
+    gaussian_kernel(kernel, sigma, static_cast<double>(h) + xx - static_cast<double>(xc));
     /* the kernel must be computed for each x because the fine
        offset xx-xc is different in each case */
 
@@ -651,7 +651,7 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
         /* symmetry boundary condition */
         while (j < 0) j += double_x_size;
         while (j >= double_x_size) j -= double_x_size;
-        if (j >= (int)in->xsize) j = double_x_size - 1 - j;
+        if (j >= static_cast<int>(in->xsize)) j = double_x_size - 1 - j;
 
         const size_t src_idx = pixel_index(j, static_cast<int>(y), in->xsize);
         sum += in->data[src_idx] * kernel->values[i];
@@ -668,11 +668,11 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
        yy  is the corresponding x-value in the original size image.
        yc  is the integer value, the pixel coordinate of xx.
      */
-    yy = (double)y / scale;
+    yy = static_cast<double>(y) / scale;
     /* coordinate (0.0,0.0) is in the center of pixel (0,0),
        so the pixel with yc=0 get the values of yy from -0.5 to 0.5 */
-    yc = (int)floor(yy + 0.5);
-    gaussian_kernel(kernel, sigma, (double)h + yy - (double)yc);
+    yc = static_cast<int>(floor(yy + 0.5));
+    gaussian_kernel(kernel, sigma, static_cast<double>(h) + yy - static_cast<double>(yc));
     /* the kernel must be computed for each y because the fine
        offset yy-yc is different in each case */
 
@@ -684,7 +684,7 @@ static image_double gaussian_sampler(image_double in, double scale, double sigma
         /* symmetry boundary condition */
         while (j < 0) j += double_y_size;
         while (j >= double_y_size) j -= double_y_size;
-        if (j >= (int)in->ysize) j = double_y_size - 1 - j;
+        if (j >= static_cast<int>(in->ysize)) j = double_y_size - 1 - j;
 
         const size_t aux_src_idx = pixel_index(static_cast<int>(x), j, aux->xsize);
         sum += aux->data[aux_src_idx] * kernel->values[i];
@@ -762,7 +762,7 @@ static image_double ll_angle(image_double in,
 
   /* get memory for "ordered" list of pixels */
   list = static_cast<struct coorlist*>(std::calloc(static_cast<size_t>(n * p), sizeof(struct coorlist)));
-  *mem_p = (void*)list;
+  *mem_p = static_cast<void*>(list);
   range_l_s = static_cast<struct coorlist**>(std::calloc(static_cast<size_t>(n_bins), sizeof(struct coorlist*)));
   range_l_e = static_cast<struct coorlist**>(std::calloc(static_cast<size_t>(n_bins), sizeof(struct coorlist*)));
   if (list == NULL || range_l_s == NULL || range_l_e == NULL) error("not enough memory.");
@@ -815,7 +815,7 @@ static image_double ll_angle(image_double in,
       norm = (*modgrad)->data[y * p + x];
 
       /* store the point in the right bin according to its norm */
-      i = (unsigned int)(norm * (double)n_bins / max_grad);
+      i = static_cast<unsigned int>(norm * static_cast<double>(n_bins) / max_grad);
       if (i >= n_bins) i = n_bins - 1;
       if (range_l_e[i] == NULL)
         range_l_s[i] = range_l_e[i] = list + list_count++;
@@ -823,8 +823,8 @@ static image_double ll_angle(image_double in,
         range_l_e[i]->next = list + list_count;
         range_l_e[i] = list + list_count++;
       }
-      range_l_e[i]->x = (int)x;
-      range_l_e[i]->y = (int)y;
+      range_l_e[i]->x = static_cast<int>(x);
+      range_l_e[i]->y = static_cast<int>(y);
       range_l_e[i]->next = NULL;
     }
 
@@ -861,7 +861,8 @@ static int isaligned(int x, int y, image_double angles, double theta, double pre
 
   /* check parameters */
   if (angles == NULL || angles->data == NULL) error("isaligned: invalid image 'angles'.");
-  if (x < 0 || y < 0 || x >= (int)angles->xsize || y >= (int)angles->ysize) error("isaligned: (x,y) out of the image.");
+  if (x < 0 || y < 0 || x >= static_cast<int>(angles->xsize) || y >= static_cast<int>(angles->ysize))
+    error("isaligned: (x,y) out of the image.");
   if (prec < 0.0) error("isaligned: 'prec' must be positive.");
 
   /* angle at pixel (x,y) */
@@ -946,8 +947,8 @@ static double log_gamma_lanczos(double x) {
   int n;
 
   for (n = 0; n < 7; n++) {
-    a -= log(x + (double)n);
-    b += q[n] * pow(x, (double)n);
+    a -= log(x + static_cast<double>(n));
+    b += q[n] * pow(x, static_cast<double>(n));
   }
   return a + log(b);
 }
@@ -1039,7 +1040,7 @@ static double nfa(int n, int k, double p, double logNT) {
 
   /* trivial cases */
   if (n == 0 || k == 0) return -logNT;
-  if (n == k) return -logNT - (double)n * log10(p);
+  if (n == k) return -logNT - static_cast<double>(n) * log10(p);
 
   /* probability term */
   p_term = p / (1.0 - p);
@@ -1052,15 +1053,16 @@ static double nfa(int n, int k, double p, double logNT) {
        bincoef(n,k) = gamma(n+1) / ( gamma(k+1) * gamma(n-k+1) ).
      We use this to compute the first term. Actually the log of it.
    */
-  log1term = log_gamma((double)n + 1.0) - log_gamma((double)k + 1.0) - log_gamma((double)(n - k) + 1.0) +
-             (double)k * log(p) + (double)(n - k) * log(1.0 - p);
+  log1term = log_gamma(static_cast<double>(n) + 1.0) - log_gamma(static_cast<double>(k) + 1.0) -
+             log_gamma(static_cast<double>(n - k) + 1.0) + static_cast<double>(k) * log(p) +
+             static_cast<double>(n - k) * log(1.0 - p);
   term = exp(log1term);
 
   /* in some cases no more computations are needed */
   if (double_equal(term, 0.0)) /* the first term is almost zero */
   {
-    if ((double)k > (double)n * p)       /* at begin or end of the tail?  */
-      return -log1term / M_LN10 - logNT; /* end: use just the first term  */
+    if (static_cast<double>(k) > static_cast<double>(n) * p) /* at begin or end of the tail?  */
+      return -log1term / M_LN10 - logNT;                     /* end: use just the first term  */
     else
       return -logNT; /* begin: the tail is roughly 1  */
   }
@@ -1081,8 +1083,9 @@ static double nfa(int n, int k, double p, double logNT) {
        because divisions are expensive.
        p/(1-p) is computed only once and stored in 'p_term'.
      */
-    bin_term =
-        (double)(n - i + 1) * (i < TABSIZE ? (inv[i] != 0.0 ? inv[i] : (inv[i] = 1.0 / (double)i)) : 1.0 / (double)i);
+    bin_term = static_cast<double>(n - i + 1) *
+               (i < TABSIZE ? (inv[i] != 0.0 ? inv[i] : (inv[i] = 1.0 / static_cast<double>(i)))
+                            : 1.0 / static_cast<double>(i));
 
     mult_term = bin_term * p_term;
     term *= mult_term;
@@ -1092,7 +1095,7 @@ static double nfa(int n, int k, double p, double logNT) {
          Then, the error on the binomial tail when truncated at
          the i term can be bounded by a geometric series of form
          term_i * sum mult_term_i^j.                            */
-      err = term * ((1.0 - pow(mult_term, (double)(n - i + 1))) / (1.0 - mult_term) - 1.0);
+      err = term * ((1.0 - pow(mult_term, static_cast<double>(n - i + 1))) / (1.0 - mult_term) - 1.0);
 
       /* One wants an error at most of tolerance*final_result, or:
          tolerance * abs(-log10(bin_tail)-logNT).
@@ -1271,7 +1274,7 @@ static int ri_end(rect_iter* i) {
   /* if the current x value is larger than the largest
      x value in the rectangle (vx[2]), we know the full
      exploration of the rectangle is finished. */
-  return (double)(i->x) > i->vx[2];
+  return static_cast<double>(i->x) > i->vx[2];
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1290,7 +1293,7 @@ static void ri_inc(rect_iter* i) {
   /* if the end of the current 'column' is reached,
      and it is not the end of exploration,
      advance to the next 'column' */
-  while ((double)(i->y) > i->ye && !ri_end(i)) {
+  while (static_cast<double>(i->y) > i->ye && !ri_end(i)) {
     /* increase x, next 'column' */
     i->x++;
 
@@ -1312,10 +1315,10 @@ static void ri_inc(rect_iter* i) {
        or last 'columns') then we pick the lower value of the side
        by using 'inter_low'.
      */
-    if ((double)i->x < i->vx[3])
-      i->ys = inter_low((double)i->x, i->vx[0], i->vy[0], i->vx[3], i->vy[3]);
+    if (static_cast<double>(i->x) < i->vx[3])
+      i->ys = inter_low(static_cast<double>(i->x), i->vx[0], i->vy[0], i->vx[3], i->vy[3]);
     else
-      i->ys = inter_low((double)i->x, i->vx[3], i->vy[3], i->vx[2], i->vy[2]);
+      i->ys = inter_low(static_cast<double>(i->x), i->vx[3], i->vy[3], i->vx[2], i->vy[2]);
 
     /* update upper y limit (end) for the new 'column'.
 
@@ -1332,13 +1335,13 @@ static void ri_inc(rect_iter* i) {
        or last 'columns') then we pick the lower value of the side
        by using 'inter_low'.
      */
-    if ((double)i->x < i->vx[1])
-      i->ye = inter_hi((double)i->x, i->vx[0], i->vy[0], i->vx[1], i->vy[1]);
+    if (static_cast<double>(i->x) < i->vx[1])
+      i->ye = inter_hi(static_cast<double>(i->x), i->vx[0], i->vy[0], i->vx[1], i->vy[1]);
     else
-      i->ye = inter_hi((double)i->x, i->vx[1], i->vy[1], i->vx[2], i->vy[2]);
+      i->ye = inter_hi(static_cast<double>(i->x), i->vx[1], i->vy[1], i->vx[2], i->vy[2]);
 
     /* new y */
-    i->y = (int)ceil(i->ys);
+    i->y = static_cast<int>(ceil(i->ys));
   }
 }
 
@@ -1407,8 +1410,8 @@ static rect_iter* ri_ini(struct rect* r) {
      one, so 'ri_inc' (that will increase x by one) will advance to
      the first 'column'.
    */
-  i->x = (int)ceil(i->vx[0]) - 1;
-  i->y = (int)ceil(i->vy[0]);
+  i->x = static_cast<int>(ceil(i->vx[0])) - 1;
+  i->y = static_cast<int>(ceil(i->vy[0]));
   i->ys = i->ye = -DBL_MAX;
 
   /* advance to the first pixel */
@@ -1431,7 +1434,7 @@ static double rect_nfa(struct rect* rec, image_double angles, double logNT) {
 
   /* compute the total number of pixels and of aligned points in 'rec' */
   for (i = ri_ini(rec); !ri_end(i); ri_inc(i)) /* rectangle iterator */
-    if (i->x >= 0 && i->y >= 0 && i->x < (int)angles->xsize && i->y < (int)angles->ysize) {
+    if (i->x >= 0 && i->y >= 0 && i->x < static_cast<int>(angles->xsize) && i->y < static_cast<int>(angles->ysize)) {
       ++pts;                                                           /* total number of pixels counter */
       if (isaligned(i->x, i->y, angles, rec->theta, rec->prec)) ++alg; /* aligned points counter */
     }
@@ -1520,9 +1523,9 @@ static double get_theta(
   for (i = 0; i < reg_size; i++) {
     const size_t idx = pixel_index(reg[i], modgrad->xsize);
     weight = modgrad->data[idx];
-    Ixx += ((double)reg[i].y - y) * ((double)reg[i].y - y) * weight;
-    Iyy += ((double)reg[i].x - x) * ((double)reg[i].x - x) * weight;
-    Ixy -= ((double)reg[i].x - x) * ((double)reg[i].y - y) * weight;
+    Ixx += (static_cast<double>(reg[i].y) - y) * (static_cast<double>(reg[i].y) - y) * weight;
+    Iyy += (static_cast<double>(reg[i].x) - x) * (static_cast<double>(reg[i].x) - x) * weight;
+    Ixy -= (static_cast<double>(reg[i].x) - x) * (static_cast<double>(reg[i].y) - y) * weight;
   }
   if (double_equal(Ixx, 0.0) && double_equal(Iyy, 0.0) && double_equal(Ixy, 0.0))
     error("get_theta: null inertia matrix.");
@@ -1568,8 +1571,8 @@ static void region2rect(
   for (i = 0; i < reg_size; i++) {
     const size_t idx = pixel_index(reg[i], modgrad->xsize);
     weight = modgrad->data[idx];
-    x += (double)reg[i].x * weight;
-    y += (double)reg[i].y * weight;
+    x += static_cast<double>(reg[i].x) * weight;
+    y += static_cast<double>(reg[i].y) * weight;
     sum += weight;
   }
   if (sum <= 0.0) error("region2rect: weights sum equal to zero.");
@@ -1595,8 +1598,8 @@ static void region2rect(
   dy = sin(theta);
   l_min = l_max = w_min = w_max = 0.0;
   for (i = 0; i < reg_size; i++) {
-    l = ((double)reg[i].x - x) * dx + ((double)reg[i].y - y) * dy;
-    w = -((double)reg[i].x - x) * dy + ((double)reg[i].y - y) * dx;
+    l = (static_cast<double>(reg[i].x) - x) * dx + (static_cast<double>(reg[i].y) - y) * dy;
+    w = -(static_cast<double>(reg[i].x) - x) * dy + (static_cast<double>(reg[i].y) - y) * dx;
 
     if (l > l_max) l_max = l;
     if (l < l_min) l_min = l;
@@ -1644,7 +1647,7 @@ static void region_grow(int x,
   int xx, yy, i;
 
   /* check parameters */
-  if (x < 0 || y < 0 || x >= (int)angles->xsize || y >= (int)angles->ysize)
+  if (x < 0 || y < 0 || x >= static_cast<int>(angles->xsize) || y >= static_cast<int>(angles->ysize))
     error("region_grow: (x,y) out of the image.");
   if (angles == NULL || angles->data == NULL) error("region_grow: invalid image 'angles'.");
   if (reg == NULL) error("region_grow: invalid 'reg'.");
@@ -1666,7 +1669,7 @@ static void region_grow(int x,
   for (i = 0; i < *reg_size; i++)
     for (xx = reg[i].x - 1; xx <= reg[i].x + 1; xx++)
       for (yy = reg[i].y - 1; yy <= reg[i].y + 1; yy++)
-        if (xx >= 0 && yy >= 0 && xx < (int)used->xsize && yy < (int)used->ysize &&
+        if (xx >= 0 && yy >= 0 && xx < static_cast<int>(used->xsize) && yy < static_cast<int>(used->ysize) &&
             used->data[pixel_index(xx, yy, used->xsize)] != USED && isaligned(xx, yy, angles, *reg_angle, prec)) {
           /* add point */
           const size_t used_idx = pixel_index(xx, yy, used->xsize);
@@ -1807,14 +1810,14 @@ static int reduce_region_radius(struct point* reg,
   if (angles == NULL || angles->data == NULL) error("reduce_region_radius: invalid image 'angles'.");
 
   /* compute region points density */
-  density = (double)*reg_size / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
+  density = static_cast<double>(*reg_size) / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
 
   /* if the density criterion is satisfied there is nothing to do */
   if (density >= density_th) return TRUE;
 
   /* compute region's radius */
-  xc = (double)reg[0].x;
-  yc = (double)reg[0].y;
+  xc = static_cast<double>(reg[0].x);
+  yc = static_cast<double>(reg[0].y);
   rad1 = dist(xc, yc, rec->x1, rec->y1);
   rad2 = dist(xc, yc, rec->x2, rec->y2);
   rad = rad1 > rad2 ? rad1 : rad2;
@@ -1825,7 +1828,7 @@ static int reduce_region_radius(struct point* reg,
 
     /* remove points from the region and update 'used' map */
     for (i = 0; i < *reg_size; i++)
-      if (dist(xc, yc, (double)reg[i].x, (double)reg[i].y) > rad) {
+      if (dist(xc, yc, static_cast<double>(reg[i].x), static_cast<double>(reg[i].y)) > rad) {
         /* point not kept, mark it as NOTUSED */
         const size_t used_idx = pixel_index(reg[i], used->xsize);
         used->data[used_idx] = NOTUSED;
@@ -1844,7 +1847,7 @@ static int reduce_region_radius(struct point* reg,
     region2rect(reg, *reg_size, modgrad, reg_angle, prec, p, rec);
 
     /* re-compute region points density */
-    density = (double)*reg_size / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
+    density = static_cast<double>(*reg_size) / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
   }
 
   /* if this point is reached, the density criterion is satisfied */
@@ -1883,7 +1886,7 @@ static int refine(struct point* reg,
   if (angles == NULL || angles->data == NULL) error("refine: invalid image 'angles'.");
 
   /* compute region points density */
-  density = (double)*reg_size / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
+  density = static_cast<double>(*reg_size) / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
 
   /* if the density criterion is satisfied there is nothing to do */
   if (density >= density_th) return TRUE;
@@ -1891,14 +1894,14 @@ static int refine(struct point* reg,
   /*------ First try: reduce angle tolerance ------*/
 
   /* compute the new mean angle and tolerance */
-  xc = (double)reg[0].x;
-  yc = (double)reg[0].y;
+  xc = static_cast<double>(reg[0].x);
+  yc = static_cast<double>(reg[0].y);
   ang_c = angles->data[pixel_index(reg[0], angles->xsize)];
   sum = s_sum = 0.0;
   n = 0;
   for (i = 0; i < *reg_size; i++) {
     used->data[pixel_index(reg[i], used->xsize)] = NOTUSED;
-    if (dist(xc, yc, (double)reg[i].x, (double)reg[i].y) < rec->width) {
+    if (dist(xc, yc, static_cast<double>(reg[i].x), static_cast<double>(reg[i].y)) < rec->width) {
       angle = angles->data[pixel_index(reg[i], angles->xsize)];
       ang_d = angle_diff_signed(angle, ang_c);
       sum += ang_d;
@@ -1906,8 +1909,8 @@ static int refine(struct point* reg,
       ++n;
     }
   }
-  mean_angle = sum / (double)n;
-  tau = 2.0 * sqrt((s_sum - 2.0 * mean_angle * sum) / (double)n + mean_angle * mean_angle); /* 2 * standard deviation */
+  mean_angle = sum / static_cast<double>(n);
+  tau = 2.0 * sqrt((s_sum - 2.0 * mean_angle * sum) / static_cast<double>(n) + mean_angle * mean_angle);
 
   /* find a new region from the same starting point and new angle tolerance */
   region_grow(reg[0].x, reg[0].y, angles, reg, reg_size, &reg_angle, used, tau);
@@ -1919,7 +1922,7 @@ static int refine(struct point* reg,
   region2rect(reg, *reg_size, modgrad, reg_angle, prec, p, rec);
 
   /* re-compute region points density */
-  density = (double)*reg_size / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
+  density = static_cast<double>(*reg_size) / (dist(rec->x1, rec->y1, rec->x2, rec->y2) * rec->width);
 
   /*------ Second try: reduce region radius ------*/
   if (density < density_th)
@@ -1984,13 +1987,13 @@ double* LineSegmentDetection(int* n_out,
 
 
   /* load and scale image (if necessary) and compute angle at each pixel */
-  image = new_image_double_ptr((unsigned int)X, (unsigned int)Y, img);
+  image = new_image_double_ptr(static_cast<unsigned int>(X), static_cast<unsigned int>(Y), img);
   if (scale != 1.0) {
     scaled_image = gaussian_sampler(image, scale, sigma_scale);
-    angles = ll_angle(scaled_image, rho, &list_p, &mem_p, &modgrad, (unsigned int)n_bins);
+    angles = ll_angle(scaled_image, rho, &list_p, &mem_p, &modgrad, static_cast<unsigned int>(n_bins));
     free_image_double(scaled_image);
   } else
-    angles = ll_angle(image, rho, &list_p, &mem_p, &modgrad, (unsigned int)n_bins);
+    angles = ll_angle(image, rho, &list_p, &mem_p, &modgrad, static_cast<unsigned int>(n_bins));
   xsize = angles->xsize;
   ysize = angles->ysize;
 
@@ -2007,8 +2010,8 @@ double* LineSegmentDetection(int* n_out,
      whose logarithm value is
        log10(11) + 5/2 * (log10(X) + log10(Y)).
   */
-  logNT = 5.0 * (log10((double)xsize) + log10((double)ysize)) / 2.0 + log10(11.0);
-  min_reg_size = (int)(-logNT / log10(p)); /* minimal number of points in region
+  logNT = 5.0 * (log10(static_cast<double>(xsize)) + log10(static_cast<double>(ysize))) / 2.0 + log10(11.0);
+  min_reg_size = static_cast<int>(-logNT / log10(p)); /* minimal number of points in region
                                               that can give a meaningful event */
 
 
@@ -2096,18 +2099,18 @@ double* LineSegmentDetection(int* n_out,
   if (reg_img != NULL && reg_x != NULL && reg_y != NULL) {
     if (region == NULL) error("'region' should be a valid image.");
     *reg_img = region->data;
-    if (region->xsize > (unsigned int)INT_MAX || region->xsize > (unsigned int)INT_MAX)
+    if (region->xsize > static_cast<unsigned int>(INT_MAX) || region->ysize > static_cast<unsigned int>(INT_MAX))
       error("region image to big to fit in INT sizes.");
-    *reg_x = (int)(region->xsize);
-    *reg_y = (int)(region->ysize);
+    *reg_x = static_cast<int>(region->xsize);
+    *reg_y = static_cast<int>(region->ysize);
 
     /* free the 'region' structure.
        we cannot use the function 'free_image_int' because we need to keep
        the memory with the image data to be returned by this function. */
     std::free(region);
   }
-  if (out->size > (unsigned int)INT_MAX) error("too many detections to fit in an INT.");
-  *n_out = (int)(out->size);
+  if (out->size > static_cast<unsigned int>(INT_MAX)) error("too many detections to fit in an INT.");
+  *n_out = static_cast<int>(out->size);
 
   return_value = out->values;
   std::free(out); /* only the 'ntuple_list' structure must be freed,
