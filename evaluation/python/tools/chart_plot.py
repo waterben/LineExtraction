@@ -7,7 +7,12 @@ import csv
 
 
 def parse_chart_xml(
-    chart_file, default_chart_title, default_category_title, default_values_title, override_title, verbose
+    chart_file,
+    default_chart_title,
+    default_category_title,
+    default_values_title,
+    override_title,
+    verbose,
 ):
     """Parse the chart.xml file and extract data dynamically."""
     tree = ET.parse(chart_file)
@@ -21,15 +26,29 @@ def parse_chart_xml(
     else:
         # Extract chart title
         title_element = root.find(".//c:title//c:tx//c:rich//c:p//c:r//c:t", ns)
-        chart_title = title_element.text if title_element is not None else default_chart_title
+        chart_title = (
+            title_element.text if title_element is not None else default_chart_title
+        )
 
         # Extract category axis title
-        category_title_element = root.find(".//c:catAx//c:title//c:tx//c:rich//c:p//c:r//c:t", ns)
-        category_title = category_title_element.text if category_title_element is not None else default_category_title
+        category_title_element = root.find(
+            ".//c:catAx//c:title//c:tx//c:rich//c:p//c:r//c:t", ns
+        )
+        category_title = (
+            category_title_element.text
+            if category_title_element is not None
+            else default_category_title
+        )
 
         # Extract values axis title
-        values_title_element = root.find(".//c:valAx//c:title//c:tx//c:rich//c:p//c:r//c:t", ns)
-        values_title = values_title_element.text if values_title_element is not None else default_values_title
+        values_title_element = root.find(
+            ".//c:valAx//c:title//c:tx//c:rich//c:p//c:r//c:t", ns
+        )
+        values_title = (
+            values_title_element.text
+            if values_title_element is not None
+            else default_values_title
+        )
 
     # Extract categories (X-axis labels), ensuring uniqueness
     categories = []
@@ -44,8 +63,12 @@ def parse_chart_xml(
     series_names = []
     for series in root.findall(".//c:ser", ns):
         # Series name
-        series_name_element = series.find(".//c:tx//c:strRef//c:strCache//c:pt//c:v", ns)
-        series_name = series_name_element.text if series_name_element is not None else "Series"
+        series_name_element = series.find(
+            ".//c:tx//c:strRef//c:strCache//c:pt//c:v", ns
+        )
+        series_name = (
+            series_name_element.text if series_name_element is not None else "Series"
+        )
 
         # Extract data points
         values = []
@@ -69,7 +92,13 @@ def parse_chart_xml(
 
 
 def parse_csv(
-    csv_file, separator, default_chart_title, default_category_title, default_values_title, override_title, verbose
+    csv_file,
+    separator,
+    default_chart_title,
+    default_category_title,
+    default_values_title,
+    override_title,
+    verbose,
 ):
     """Parse the CSV file and extract data."""
     df = pd.read_csv(csv_file, sep=separator)
@@ -77,12 +106,18 @@ def parse_csv(
     if override_title:
         category_title = default_category_title
     else:
-        category_title = df.columns[0] if df.columns[0].strip() else default_category_title
+        category_title = (
+            df.columns[0] if df.columns[0].strip() else default_category_title
+        )
 
     categories = df.iloc[:, 0].tolist()
 
-    series_names = df.columns[1:].tolist()  # Extract series names from first row (excluding first column)
-    data_series = {series_names[i]: df.iloc[0:, i + 1].tolist() for i in range(len(series_names))}  # Map names to data
+    series_names = df.columns[
+        1:
+    ].tolist()  # Extract series names from first row (excluding first column)
+    data_series = {
+        series_names[i]: df.iloc[0:, i + 1].tolist() for i in range(len(series_names))
+    }  # Map names to data
 
     if verbose:
         print(f"Extracted chart title: {default_chart_title}")
@@ -93,11 +128,16 @@ def parse_csv(
         print("Extracted series:")
         print(series_names)
 
-    return default_chart_title, category_title, default_values_title, categories, data_series
+    return (
+        default_chart_title,
+        category_title,
+        default_values_title,
+        categories,
+        data_series,
+    )
 
 
 def generate_csv(output_csv, category_title, categories, data_series, separator=","):
-
     with open(output_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f, delimiter=separator)
 
@@ -111,7 +151,14 @@ def generate_csv(output_csv, category_title, categories, data_series, separator=
 
 
 def generate_bar_chart(
-    chart_title, category_title, values_title, categories, data_series, output_file, as_line=None, show_plot=False
+    chart_title,
+    category_title,
+    values_title,
+    categories,
+    data_series,
+    output_file,
+    as_line=None,
+    show_plot=False,
 ):
     """Generate the chart and save it as a PDF."""
     df = pd.DataFrame(data_series, index=categories)
@@ -124,8 +171,17 @@ def generate_bar_chart(
 
     # Plot specified series as a line if given
     if as_line and as_line in df.columns:
-        line_color = colors(len(df_without_line.columns) % 10)  # Ensure a distinct color for the line
-        plt.plot(df.index, df[as_line], linestyle="-", linewidth=2, label=as_line, color=line_color)
+        line_color = colors(
+            len(df_without_line.columns) % 10
+        )  # Ensure a distinct color for the line
+        plt.plot(
+            df.index,
+            df[as_line],
+            linestyle="-",
+            linewidth=2,
+            label=as_line,
+            color=line_color,
+        )
 
     plt.title(chart_title, fontsize=14, fontweight="bold")
     plt.xlabel(category_title, fontsize=12, fontweight="bold")
@@ -140,7 +196,13 @@ def generate_bar_chart(
 
 
 def generate_line_chart(
-    chart_title, category_title, values_title, categories, data_series, output_file, show_plot=False
+    chart_title,
+    category_title,
+    values_title,
+    categories,
+    data_series,
+    output_file,
+    show_plot=False,
 ):
     """Generate the chart and save it as a PDF."""
     df = pd.DataFrame(data_series, index=categories)
@@ -192,13 +254,26 @@ def main(
         if verbose:
             print("CSV file detected. Parsing file...")
         chart_title, category_title, values_title, categories, data_series = parse_csv(
-            input_file, separator, chart_title, category_title, values_title, override_title, verbose
+            input_file,
+            separator,
+            chart_title,
+            category_title,
+            values_title,
+            override_title,
+            verbose,
         )
     elif in_file_extension == ".xml":
         if verbose:
             print("XML file detected. Parsing file...")
-        chart_title, category_title, values_title, categories, data_series = parse_chart_xml(
-            input_file, chart_title, category_title, values_title, override_title, verbose
+        chart_title, category_title, values_title, categories, data_series = (
+            parse_chart_xml(
+                input_file,
+                chart_title,
+                category_title,
+                values_title,
+                override_title,
+                verbose,
+            )
         )
     else:
         raise ValueError("Unsupported file format. Please provide a .csv or .xml file.")
@@ -209,36 +284,73 @@ def main(
             if verbose:
                 print("Generate bar chart...")
             generate_bar_chart(
-                chart_title, category_title, values_title, categories, data_series, output_file, as_line, show_plot
+                chart_title,
+                category_title,
+                values_title,
+                categories,
+                data_series,
+                output_file,
+                as_line,
+                show_plot,
             )
         elif mode == "line":
             if verbose:
                 print("Generate line chart...")
             generate_line_chart(
-                chart_title, category_title, values_title, categories, data_series, output_file, show_plot
+                chart_title,
+                category_title,
+                values_title,
+                categories,
+                data_series,
+                output_file,
+                show_plot,
             )
         else:
-            raise ValueError("Unsupported chart plot mode. Please provide a valid mode (bar, line).")
+            raise ValueError(
+                "Unsupported chart plot mode. Please provide a valid mode (bar, line)."
+            )
     elif out_file_extension == ".csv":
         if verbose:
             print("Save as CSV...")
         generate_csv(output_file, category_title, categories, data_series, separator)
     else:
-        raise ValueError("Unsupported output format. Please provide a .csv or .pdf file.")
+        raise ValueError(
+            "Unsupported output format. Please provide a .csv or .pdf file."
+        )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert Word Chart XML or CSV to PDF Chart or XML to CSV.")
+    parser = argparse.ArgumentParser(
+        description="Convert Word Chart XML or CSV to PDF Chart or XML to CSV."
+    )
     parser.add_argument("input_file", help="Path to chart.xml or CSV file")
     parser.add_argument("output_file", help="Path to output PDF or CSV file")
     parser.add_argument("--chart_title", help="Title of the chart", default="Chart")
-    parser.add_argument("--category_title", help="Title of the category axis", default="Categories")
-    parser.add_argument("--values_title", help="Title of the values axis", default="Values")
-    parser.add_argument("--override_title", help="Force override extracted titles by passed in titles", default=None)
-    parser.add_argument("--mode", help="Chart mode: line or bar (default is bar)", default="bar")
-    parser.add_argument("--as_line", help="Series name to be drawn as a line instead of bars", default=None)
-    parser.add_argument("--separator", help="CSV separator (default is ',')", default=",")
-    parser.add_argument("--show_plot", help="Show generated plot on screen", default=False)
+    parser.add_argument(
+        "--category_title", help="Title of the category axis", default="Categories"
+    )
+    parser.add_argument(
+        "--values_title", help="Title of the values axis", default="Values"
+    )
+    parser.add_argument(
+        "--override_title",
+        help="Force override extracted titles by passed in titles",
+        default=None,
+    )
+    parser.add_argument(
+        "--mode", help="Chart mode: line or bar (default is bar)", default="bar"
+    )
+    parser.add_argument(
+        "--as_line",
+        help="Series name to be drawn as a line instead of bars",
+        default=None,
+    )
+    parser.add_argument(
+        "--separator", help="CSV separator (default is ',')", default=","
+    )
+    parser.add_argument(
+        "--show_plot", help="Show generated plot on screen", default=False
+    )
     parser.add_argument("--verbose", help="Verbose mode", default=False)
 
     args = parser.parse_args()

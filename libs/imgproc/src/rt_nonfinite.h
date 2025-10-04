@@ -8,14 +8,14 @@
  * C/C++ source code generated on  : 27-Jan-2016 06:44:05
  */
 
-#ifndef __RT_NONFINITE_H__
-#define __RT_NONFINITE_H__
+#pragma once
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
-#include <float.h>
+#  include <float.h>
 #endif
 
-#include <stddef.h>
 #include "rtwtypes.h"
+
+#include <stddef.h>
 
 extern real_T rtInf;
 extern real_T rtMinusInf;
@@ -49,7 +49,6 @@ typedef struct {
   } wordL;
 } IEEESingle;
 
-#endif
 
 /*
  * File trailer for rt_nonfinite.h

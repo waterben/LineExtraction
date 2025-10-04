@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_initialize.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_initialize.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,10 +21,7 @@
 // Arguments    : void
 // Return Type  : void
 //
-void logGaborFilter_initialize()
-{
-  rt_InitInfAndNaN(8U);
-}
+void logGaborFilter_initialize() { rt_InitInfAndNaN(8U); }
 
 //
 // File trailer for logGaborFilter_initialize.cpp

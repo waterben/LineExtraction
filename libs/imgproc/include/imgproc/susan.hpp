@@ -285,533 +285,739 @@ between "versions 1" and the combined program, version 2.
 
 /* ********** Optional settings */
 
-#ifndef _SUSAN_GRADIENT_HPP_
-#define _SUSAN_GRADIENT_HPP_
-#ifdef __cplusplus
+#pragma once
 
 #include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
-    template<class GT = short, class MT = short, class DT = float, class DO = Direction<GT,DT>>
-    class SusanGradient : public Gradient<uchar, GT, MT, DT> {
+template <class GT = short, class MT = short, class DT = float, class DO = Direction<GT, DT>>
+class SusanGradient : public Gradient<uchar, GT, MT, DT> {
+  // Thresholds for brightness and distance
+  MT bt_, max_no_;
 
-        // Thresholds for brightness and distance
-        MT bt_, max_no_;
+  bool small_kernel_;
+  mutable bool dir_done_;
 
-        bool small_kernel_;
-        mutable bool dir_done_;
+  // LUT
+  uchar bp_[516];
 
-        // LUT
-        uchar bp_[516];
-
-        cv::Mat_<MT> mag_;
-        cv::Mat_<GT> dx_, dy_;
-        mutable cv::Mat_<DT> dir_;
+  cv::Mat_<MT> mag_;
+  cv::Mat_<GT> dx_, dy_;
+  mutable cv::Mat_<DT> dir_;
 
 
-        void initLut(){
-            uchar *bp = bp_ + 258;
+  void initLut() {
+    uchar* bp = bp_ + 258;
 
-            for (int i = -256; i < 257; ++i){
-                double temp = static_cast<double>(i) / static_cast<double>(bt_);
+    for (int i = -256; i < 257; ++i) {
+      double temp = static_cast<double>(i) / static_cast<double>(bt_);
 
-                temp = temp*temp*temp*temp*temp*temp;
-                bp[i] = static_cast<uchar>(100 * std::exp(-temp));
+      temp = temp * temp * temp * temp * temp * temp;
+      bp[i] = static_cast<uchar>(100 * std::exp(-temp));
+    }
+  }
+
+
+ public:
+  typedef uchar img_type;
+  typedef MT mag_type;
+  typedef GT grad_type;
+  typedef DT dir_type;
+
+  typedef Range<GT> GradientRange;
+  typedef Range<MT> MagnitudeRange;
+  typedef Range<DT> DirectionRange;
+
+
+  //! SUSAN Gradient Constructor
+  //! PARAMETERS:
+  //! bt to define the brightness threshold [0-256]?
+  //! three_by_three to use the small kernel, default:false
+  SusanGradient(MT bt = 20,
+                bool small_kernel = false,
+                MT max_no = 2650,
+                uchar int_lower = std::numeric_limits<uchar>::lowest(),
+                uchar int_upper = std::numeric_limits<uchar>::max())
+      : Gradient<uchar, GT, MT, dir_type>(int_lower, int_upper), bt_(bt), small_kernel_(small_kernel), max_no_(max_no) {
+    this->add("grad_brightness_th",
+              std::bind(&SusanGradient<GT, MT, DT, DO>::brightnessTh, this, std::placeholders::_1),
+              "Brightness threshold [0-256].");
+    // this->add("distance_th", std::bind(&SusanGradient<GT,MT,DT,DO>::distanceTh,this,std::placeholders::_1),"Distance
+    // threshold [0-256]."); this->add("form",
+    // std::bind(&SusanGradient<GT,MT,DT,DO>::form,this,std::placeholders::_1),"form of the LUT [2,6].");
+    this->add("grad_small_kernel", std::bind(&SusanGradient<GT, MT, DT, DO>::smallKernel, this, std::placeholders::_1),
+              "Use small kernel size.");
+    this->add("grad_max_no", std::bind(&SusanGradient<GT, MT, DT, DO>::maxNo, this, std::placeholders::_1),
+              "Maximum number for edges (2650).");
+
+    initLut();
+  }
+
+  Value brightnessTh(const Value& bt = Value::NAV()) {
+    if (bt.type()) {
+      bt_ = bt;
+      initLut();
+    }
+    return bt_;
+  }
+  // Value distanceTh(const Value &dt = Value::NAV()) { if (dt.type()) dt_ = dt; return dt_;}
+  // Value form(const Value &fo = Value::NAV()) { if (fo.type()) {form_ = static_cast<ushort>(fo.getInt()); initLut(); }
+  // return form_;}
+  Value smallKernel(const Value& sk = Value::NAV()) {
+    if (sk.type()) small_kernel_ = sk;
+    return small_kernel_;
+  }
+  Value maxNo(const Value& mn = Value::NAV()) {
+    if (mn.type()) max_no_ = mn;
+    return max_no_;
+  }
+
+  //! process gradient
+  inline void process(const cv::Mat& img) {
+    dx_.create(img.rows, img.cols);
+    dx_.setTo(0);
+    dy_.create(img.rows, img.cols);
+    dy_.setTo(0);
+    mag_.create(img.rows, img.cols);
+    mag_.setTo(0);
+
+    dir_done_ = false;
+
+    if (small_kernel_)
+      susan_edges_small(img);
+    else
+      susan_edges(img);
+  }
+
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) {
+    process(img);
+    directionals(gx, gy);
+  }
+
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
+    process(img);
+    directionals(gx, gy);
+    mag = magnitude();
+  }
+
+  //! process gradient and get results
+  inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
+    process(img);
+    directionals(gx, gy);
+    mag = magnitude();
+    dir = direction();
+  }
+
+  //! get x,y derivatives
+  void directionals(cv::Mat& gx, cv::Mat& gy) const {
+    gx = dx_;
+    gy = dy_;
+  }
+
+  //! get x derivative
+  cv::Mat gx() const { return dx_; }
+
+  //! get y derivative
+  cv::Mat gy() const { return dy_; }
+
+  //! get magnitude
+  cv::Mat magnitude() const { return mag_; }
+
+  //! test if direction is computed
+  inline bool isDirectionDone() const { return dir_done_; }
+
+  //! get direction
+  cv::Mat direction() const {
+    if (!dir_done_) {
+      DO::process(dx_, dy_, dir_);
+      dir_done_ = true;
+    }
+    return dir_;
+  }
+
+  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  DirectionRange directionRange() const { return DO::range(); }
+
+  MagnitudeRange magnitudeRange() const {
+    return MagnitudeRange(0, small_kernel_ ? static_cast<int>(max_no_ * 0.277) : max_no_);
+  }
+
+  GradientRange gradientRange() const {
+    GT val = small_kernel_ ? 6 * this->intensityRange().upper : 26 * this->intensityRange().upper;
+    return GradientRange(-val, val);
+  }
+
+
+  //! get name of gradient operator
+  inline std::string name() const { return "susan"; }
+
+ private:
+  void susan_edges_small(const cv::Mat& img) {
+    int x_size = img.cols, y_size = img.rows;
+    const uchar* in = img.ptr<uchar>();
+    MT* r = &mag_(0);
+    GT* dx = &dx_(0);
+    GT* dy = &dy_(0);
+
+    int i, j, pos;
+    MT m, n;
+    GT x, y, w = 0;
+    uchar c, do_symmetry;
+    const uchar* p;
+    const uchar* cp;
+    const uchar* bp = bp_ + 256;
+
+    MT max_no = static_cast<MT>(max_no_ * 0.277);
+
+    for (i = 1; i < y_size - 1; ++i)
+      for (j = 1; j < x_size - 1; ++j) {
+        n = 100;
+        pos = i * x_size + j;
+        p = in + (i - 1) * x_size + j - 1;
+        cp = bp + in[pos];
+
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 2;
+
+        n += *(cp - *p);
+        p += 2;
+        n += *(cp - *p);
+        p += x_size - 2;
+
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+
+        if (n <= max_no) r[pos] = max_no - n;
+      }
+
+    for (i = 2; i < y_size - 2; ++i)
+      for (j = 2; j < x_size - 2; ++j) {
+        pos = i * x_size + j;
+        if (r[pos] > 0) {
+          m = r[pos];
+          n = max_no - m;
+          cp = bp + in[pos];
+
+          if (n > 250) {
+            p = in + (i - 1) * x_size + j - 1;
+            x = 0;
+            y = 0;
+
+            c = *(cp - *p++);
+            x -= c;
+            y -= c;
+            c = *(cp - *p++);
+            y -= c;
+            c = *(cp - *p);
+            x += c;
+            y -= c;
+            p += x_size - 2;
+
+            c = *(cp - *p);
+            x -= c;
+            p += 2;
+            c = *(cp - *p);
+            x += c;
+            p += x_size - 2;
+
+            c = *(cp - *p++);
+            x -= c;
+            y += c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p);
+            x += c;
+            y += c;
+
+            if ((x * x + y * y) > (0.16 * n * n)) {
+              do_symmetry = 0;
+              float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
+              if (z < 0) {
+                z = -z;
+                w = -1;
+              } else
+                w = 1;
+              if (z < 0.25) { /* vert_edge */
+                dy[pos] = 0;
+                dx[pos] = 1;
+              } else {
+                if (z > 4.0) { /* hor_edge */
+                  dy[pos] = 1;
+                  dx[pos] = 0;
+                } else { /* diag_edge */
+                  if (w > 0) {
+                    dy[pos] = 1;
+                    dx[pos] = 1;
+                  } else {
+                    dy[pos] = -1;
+                    dx[pos] = 1;
+                  }
+                }
+              }
+
+            } else
+              do_symmetry = 1;
+          } else
+            do_symmetry = 1;
+
+          if (do_symmetry == 1) {
+            p = in + (i - 1) * x_size + j - 1;
+            x = 0;
+            y = 0;
+
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w += c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p);
+            x += c;
+            y += c;
+            w -= c;
+            p += x_size - 2;
+
+            c = *(cp - *p);
+            x += c;
+            p += 2;
+            c = *(cp - *p);
+            x += c;
+            p += x_size - 2;
+
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w -= c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p);
+            x += c;
+            y += c;
+            w += c;
+
+            float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
+            if (z < 0.25) { /* vertical */
+              dy[pos] = 0;
+              dx[pos] = 1;
+            } else {
+              if (z > 4.0) { /* horizontal */
+                dy[pos] = 1;
+                dx[pos] = 0;
+              } else { /* diagonal */
+                if (w > 0) {
+                  dy[pos] = -1;
+                  dx[pos] = 1;
+                } else {
+                  dy[pos] = 1;
+                  dx[pos] = 1;
+                }
+              }
             }
+          }
         }
+      }
+  }
+
+  void susan_edges(const cv::Mat& img) {
+    int x_size = img.cols, y_size = img.rows;
+    const uchar* in = img.ptr<uchar>();
+    MT* r = &mag_(0);
+    GT* dx = &dx_(0);
+    GT* dy = &dy_(0);
+
+    int i, j, pos;
+    MT m, n;
+    GT x, y, w = 0;
+    uchar c, do_symmetry;
+    const uchar* p;
+    const uchar* cp;
+    const uchar* bp = bp_ + 256;
 
 
-	public:
-        typedef uchar img_type;
-        typedef MT mag_type;
-        typedef GT grad_type;
-        typedef DT dir_type;
+    for (i = 3; i < y_size - 3; ++i)
+      for (j = 3; j < x_size - 3; ++j) {
+        pos = i * x_size + j;
+        n = 100;
+        p = in + (i - 3) * x_size + j - 1;
+        cp = bp + in[pos];
 
-        typedef Range<GT> GradientRange;
-        typedef Range<MT> MagnitudeRange;
-        typedef Range<DT> DirectionRange;
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 3;
 
-		
-		//! SUSAN Gradient Constructor
-		//! PARAMETERS:
-        //! bt to define the brightness threshold [0-256]?
-        //! three_by_three to use the small kernel, default:false
-        SusanGradient(MT bt = 20, bool small_kernel = false, MT max_no = 2650,
-                      uchar int_lower = std::numeric_limits<uchar>::lowest(), uchar int_upper = std::numeric_limits<uchar>::max()) :
-            Gradient<uchar, GT, MT, dir_type>(int_lower, int_upper), bt_(bt), small_kernel_(small_kernel), max_no_(max_no) {
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 5;
 
-            this->add("grad_brightness_th", std::bind(&SusanGradient<GT,MT,DT,DO>::brightnessTh,this,std::placeholders::_1),"Brightness threshold [0-256].");
-            //this->add("distance_th", std::bind(&SusanGradient<GT,MT,DT,DO>::distanceTh,this,std::placeholders::_1),"Distance threshold [0-256].");
-            //this->add("form", std::bind(&SusanGradient<GT,MT,DT,DO>::form,this,std::placeholders::_1),"form of the LUT [2,6].");
-            this->add("grad_small_kernel", std::bind(&SusanGradient<GT,MT,DT,DO>::smallKernel,this,std::placeholders::_1),"Use small kernel size.");
-            this->add("grad_max_no", std::bind(&SusanGradient<GT,MT,DT,DO>::maxNo,this,std::placeholders::_1),"Maximum number for edges (2650).");
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 6;
 
-            initLut();
-        }
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += 2;
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 6;
 
-        Value brightnessTh(const Value &bt = Value::NAV()) { if (bt.type()) {bt_ = bt; initLut(); } return bt_;}
-        //Value distanceTh(const Value &dt = Value::NAV()) { if (dt.type()) dt_ = dt; return dt_;}
-        //Value form(const Value &fo = Value::NAV()) { if (fo.type()) {form_ = static_cast<ushort>(fo.getInt()); initLut(); }  return form_;}
-        Value smallKernel(const Value &sk = Value::NAV()) { if (sk.type()) small_kernel_ = sk; return small_kernel_;}
-        Value maxNo(const Value &mn = Value::NAV()) { if (mn.type()) max_no_ = mn; return max_no_;}
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 5;
 
-		//! process gradient
-        inline void process(const cv::Mat& img) {
-            dx_.create(img.rows,img.cols);
-            dx_.setTo(0);
-            dy_.create(img.rows,img.cols);
-            dy_.setTo(0);
-            mag_.create(img.rows,img.cols);
-            mag_.setTo(0);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
+        p += x_size - 3;
 
-            dir_done_ = false;
+        n += *(cp - *p++);
+        n += *(cp - *p++);
+        n += *(cp - *p);
 
-            if (small_kernel_)
-                susan_edges_small(img);
-            else
-                susan_edges(img);
-        }
+        if (n <= max_no_) r[pos] = max_no_ - n;
+      }
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) {
-            process(img);
-            directionals(gx, gy);
-        }
+    for (i = 4; i < y_size - 4; ++i)
+      for (j = 4; j < x_size - 4; ++j) {
+        pos = i * x_size + j;
+        if (r[pos] > 0) {
+          m = r[pos];
+          n = max_no_ - m;
+          cp = bp + in[pos];
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
-            process(img);
-            directionals(gx, gy);
-            mag = magnitude();
-        }
+          if (n > 600) {
+            p = in + (i - 3) * x_size + j - 1;
+            x = 0;
+            y = 0;
 
-        //! process gradient and get results
-        inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
-            process(img);
-            directionals(gx, gy);
-            mag = magnitude();
-            dir = direction();
-        }
+            c = *(cp - *p++);
+            x -= c;
+            y -= 3 * c;
+            c = *(cp - *p++);
+            y -= 3 * c;
+            c = *(cp - *p);
+            x += c;
+            y -= 3 * c;
+            p += x_size - 3;
 
-        //! get x,y derivatives
-        void directionals(cv::Mat& gx, cv::Mat& gy) const {
-            gx = dx_; gy = dy_;
-        }
+            c = *(cp - *p++);
+            x -= 2 * c;
+            y -= 2 * c;
+            c = *(cp - *p++);
+            x -= c;
+            y -= 2 * c;
+            c = *(cp - *p++);
+            y -= 2 * c;
+            c = *(cp - *p++);
+            x += c;
+            y -= 2 * c;
+            c = *(cp - *p);
+            x += 2 * c;
+            y -= 2 * c;
+            p += x_size - 5;
 
-        //! get x derivative
-        cv::Mat gx() const {
-            return dx_;
-        }
+            c = *(cp - *p++);
+            x -= 3 * c;
+            y -= c;
+            c = *(cp - *p++);
+            x -= 2 * c;
+            y -= c;
+            c = *(cp - *p++);
+            x -= c;
+            y -= c;
+            c = *(cp - *p++);
+            y -= c;
+            c = *(cp - *p++);
+            x += c;
+            y -= c;
+            c = *(cp - *p++);
+            x += 2 * c;
+            y -= c;
+            c = *(cp - *p);
+            x += 3 * c;
+            y -= c;
+            p += x_size - 6;
 
-        //! get y derivative
-        cv::Mat gy() const {
-            return dy_;
-        }
+            c = *(cp - *p++);
+            x -= 3 * c;
+            c = *(cp - *p++);
+            x -= 2 * c;
+            c = *(cp - *p);
+            x -= c;
+            p += 2;
+            c = *(cp - *p++);
+            x += c;
+            c = *(cp - *p++);
+            x += 2 * c;
+            c = *(cp - *p);
+            x += 3 * c;
+            p += x_size - 6;
 
-        //! get magnitude
-        cv::Mat magnitude() const {
-            return mag_;
-        }
+            c = *(cp - *p++);
+            x -= 3 * c;
+            y += c;
+            c = *(cp - *p++);
+            x -= 2 * c;
+            y += c;
+            c = *(cp - *p++);
+            x -= c;
+            y += c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            c = *(cp - *p++);
+            x += 2 * c;
+            y += c;
+            c = *(cp - *p);
+            x += 3 * c;
+            y += c;
+            p += x_size - 5;
 
-        //! test if direction is computed
-        inline bool isDirectionDone() const {
-            return dir_done_;
-        }
+            c = *(cp - *p++);
+            x -= 2 * c;
+            y += 2 * c;
+            c = *(cp - *p++);
+            x -= c;
+            y += 2 * c;
+            c = *(cp - *p++);
+            y += 2 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += 2 * c;
+            c = *(cp - *p);
+            x += 2 * c;
+            y += 2 * c;
+            p += x_size - 3;
 
-        //! get direction
-        cv::Mat direction() const {
-            if (!dir_done_) {
-                DO::process(dx_, dy_, dir_);
-                dir_done_ = true;
+            c = *(cp - *p++);
+            x -= c;
+            y += 3 * c;
+            c = *(cp - *p++);
+            y += 3 * c;
+            c = *(cp - *p);
+            x += c;
+            y += 3 * c;
+
+            if ((x * x + y * y) > (0.81 * n * n)) {
+              do_symmetry = 0;
+              float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
+              if (z < 0) {
+                z = -z;
+                w = -1;
+              } else
+                w = 1;
+              if (z < 0.25) { /* vert_edge */
+                dy[pos] = 0;
+                dx[pos] = 1;
+              } else {
+                if (z > 4.0) { /* hor_edge */
+                  dy[pos] = 1;
+                  dx[pos] = 0;
+                } else { /* diag_edge */
+                  if (w > 0) {
+                    dy[pos] = 1;
+                    dx[pos] = 1;
+                  } else {
+                    dy[pos] = -1;
+                    dx[pos] = 1;
+                  }
+                }
+              }
+
+              // dy[pos] = sqrt(x); dx[pos] = sqrt(y);
+
+            } else
+              do_symmetry = 1;
+          } else
+            do_symmetry = 1;
+
+          if (do_symmetry == 1) {
+            p = in + (i - 3) * x_size + j - 1;
+            x = 0;
+            y = 0;
+            w = 0;
+
+            c = *(cp - *p++);
+            x += c;
+            y += 9 * c;
+            w += 3 * c;
+            c = *(cp - *p++);
+            y += 9 * c;
+            c = *(cp - *p);
+            x += c;
+            y += 9 * c;
+            w -= 3 * c;
+            p += x_size - 3;
+
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += 4 * c;
+            w += 4 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += 4 * c;
+            w += 2 * c;
+            c = *(cp - *p++);
+            y += 4 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += 4 * c;
+            w -= 2 * c;
+            c = *(cp - *p);
+            x += 4 * c;
+            y += 4 * c;
+            w -= 4 * c;
+            p += x_size - 5;
+
+            c = *(cp - *p++);
+            x += 9 * c;
+            y += c;
+            w += 3 * c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += c;
+            w += 2 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w += c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w -= c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += c;
+            w -= 2 * c;
+            c = *(cp - *p);
+            x += 9 * c;
+            y += c;
+            w -= 3 * c;
+            p += x_size - 6;
+
+            c = *(cp - *p++);
+            x += 9 * c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            c = *(cp - *p);
+            x += c;
+            p += 2;
+            c = *(cp - *p++);
+            x += c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            c = *(cp - *p);
+            x += 9 * c;
+            p += x_size - 6;
+
+            c = *(cp - *p++);
+            x += 9 * c;
+            y += c;
+            w -= 3 * c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += c;
+            w -= 2 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w -= c;
+            c = *(cp - *p++);
+            y += c;
+            c = *(cp - *p++);
+            x += c;
+            y += c;
+            w += c;
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += c;
+            w += 2 * c;
+            c = *(cp - *p);
+            x += 9 * c;
+            y += c;
+            w += 3 * c;
+            p += x_size - 5;
+
+            c = *(cp - *p++);
+            x += 4 * c;
+            y += 4 * c;
+            w -= 4 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += 4 * c;
+            w -= 2 * c;
+            c = *(cp - *p++);
+            y += 4 * c;
+            c = *(cp - *p++);
+            x += c;
+            y += 4 * c;
+            w += 2 * c;
+            c = *(cp - *p);
+            x += 4 * c;
+            y += 4 * c;
+            w += 4 * c;
+            p += x_size - 3;
+
+            c = *(cp - *p++);
+            x += c;
+            y += 9 * c;
+            w -= 3 * c;
+            c = *(cp - *p++);
+            y += 9 * c;
+            c = *(cp - *p);
+            x += c;
+            y += 9 * c;
+            w += 3 * c;
+
+            float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
+            if (z < 0.25) { /* vertical */
+              dy[pos] = 0;
+              dx[pos] = 1;
+            } else {
+              if (z > 4.0) { /* horizontal */
+                dy[pos] = 1;
+                dx[pos] = 0;
+              } else { /* diagonal */
+                if (w > 0) {
+                  dy[pos] = -1;
+                  dx[pos] = 1;
+                } else {
+                  dy[pos] = 1;
+                  dx[pos] = 1;
+                }
+              }
             }
-            return dir_;
+            // dy[pos] = (w > 0) ? -sqrt(x) : sqrt(x); dx[pos] = sqrt(y);
+          }
         }
-
-        //! get direction range ([-PI,PI], [0,2PI] or [0,360])
-         DirectionRange directionRange() const {
-            return DO::range();
-        }
-
-        MagnitudeRange magnitudeRange() const {
-            return MagnitudeRange(0,small_kernel_ ? static_cast<int>(max_no_ * 0.277) : max_no_);
-        }
-
-		GradientRange gradientRange() const {
-            GT val = small_kernel_ ? 6 * this->intensityRange().upper : 26 * this->intensityRange().upper;
-			return GradientRange(-val,val);
-		}
-
-
-        //! get name of gradient operator
-        inline std::string name() const {
-            return "susan";
-        }
-
-	private:
-
-        void susan_edges_small(const cv::Mat& img) {
-            int x_size = img.cols, y_size = img.rows;
-            const uchar *in = img.ptr<uchar>();
-            MT *r = &mag_(0);
-            GT *dx = &dx_(0);
-            GT *dy = &dy_(0);
-
-            int  i, j, pos;
-            MT m, n;
-			GT x, y, w = 0;
-            uchar c, do_symmetry;
-            const uchar *p;
-            const uchar *cp;
-            const uchar *bp = bp_ + 256;
-
-            MT max_no = static_cast<MT>(max_no_ * 0.277);
-
-            for (i=1;i<y_size-1;++i)
-                for (j=1;j<x_size-1;++j)
-                {
-                    n=100;
-                    pos = i*x_size + j;
-                    p=in + (i-1)*x_size + j - 1;
-                    cp=bp + in[pos];
-
-                    n+=*(cp-*p++);
-                    n+=*(cp-*p++);
-                    n+=*(cp-*p);
-                    p+=x_size-2;
-
-                    n+=*(cp-*p);
-                    p+=2;
-                    n+=*(cp-*p);
-                    p+=x_size-2;
-
-                    n+=*(cp-*p++);
-                    n+=*(cp-*p++);
-                    n+=*(cp-*p);
-
-                    if (n<=max_no)
-                        r[pos] = max_no - n;
-                }
-
-            for (i=2;i<y_size-2;++i)
-                for (j=2;j<x_size-2;++j)
-                {
-                    pos = i*x_size+j;
-                    if (r[pos]>0)
-                    {
-                        m=r[pos];
-                        n=max_no - m;
-                        cp=bp + in[pos];
-
-                        if (n>250)
-                        {
-                            p=in + (i-1)*x_size + j - 1;
-                            x=0;y=0;
-
-                            c=*(cp-*p++);x-=c;y-=c;
-                            c=*(cp-*p++);y-=c;
-                            c=*(cp-*p);x+=c;y-=c;
-                            p+=x_size-2;
-
-                            c=*(cp-*p);x-=c;
-                            p+=2;
-                            c=*(cp-*p);x+=c;
-                            p+=x_size-2;
-
-                            c=*(cp-*p++);x-=c;y+=c;
-                            c=*(cp-*p++);y+=c;
-                            c=*(cp-*p);x+=c;y+=c;
-
-                            if ((x*x + y*y) > (0.16*n*n))
-                            {
-                                do_symmetry=0;
-								float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
-								if (z < 0) { z = -z; w = -1; }
-								else w = 1;
-								if (z < 0.25) { /* vert_edge */ dy[pos] = 0; dx[pos] = 1; }
-								else {
-									if (z > 4.0) { /* hor_edge */ dy[pos] = 1; dx[pos] = 0; }
-									else { /* diag_edge */ if (w>0) { dy[pos] = 1; dx[pos] = 1; }
-									    else { dy[pos] = -1; dx[pos] = 1; }
-									}
-								}
-
-                            }
-                            else
-                                do_symmetry=1;
-                        }
-                        else
-                            do_symmetry=1;
-
-                        if (do_symmetry==1)
-                        {
-                            p=in + (i-1)*x_size + j - 1;
-                            x=0; y=0;
-
-                            c=*(cp-*p++);x+=c;y+=c;w+=c;
-							c=*(cp-*p++);y+=c;
-							c=*(cp-*p);x+=c;y+=c;w-=c;
-							p+=x_size-2; 
-
-							c=*(cp-*p);x+=c;
-							p+=2;
-							c=*(cp-*p);x+=c;
-							p+=x_size-2;
-
-							c=*(cp-*p++);x+=c;y+=c;w-=c;
-							c=*(cp-*p++);y+=c;
-							c=*(cp-*p);x+=c;y+=c;w+=c;
-
-							float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
-							if (z < 0.25) { /* vertical */ dy[pos] = 0; dx[pos] = 1; }
-							else {
-								if (z > 4.0) { /* horizontal */ dy[pos] = 1; dx[pos] = 0; }
-								    else { /* diagonal */ if (w>0) { dy[pos] = -1; dx[pos] = 1; }
-								else { dy[pos] = 1; dx[pos] = 1; }
-								}
-							}
-                        }
-                    }
-                }
-        }
-
-        void susan_edges(const cv::Mat& img) {
-            int x_size = img.cols, y_size = img.rows;
-            const uchar *in = img.ptr<uchar>();
-            MT *r = &mag_(0);
-            GT *dx = &dx_(0);
-            GT *dy = &dy_(0);
-
-            int  i, j, pos;
-            MT m, n;
-            GT x, y, w = 0;
-            uchar c, do_symmetry;
-            const uchar *p;
-            const uchar *cp;
-            const uchar *bp = bp_ + 256;
-
-
-            for (i = 3; i<y_size - 3; ++i)
-                for (j = 3; j<x_size - 3; ++j)
-                {
-                    pos = i*x_size + j;
-                    n = 100;
-                    p = in + (i - 3)*x_size + j - 1;
-                    cp = bp + in[pos];
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 3;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 5;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 6;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += 2;
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 6;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 5;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-                    p += x_size - 3;
-
-                    n += *(cp - *p++);
-                    n += *(cp - *p++);
-                    n += *(cp - *p);
-
-                    if (n <= max_no_)
-                        r[pos] = max_no_ - n;
-                }
-
-            for (i = 4; i<y_size - 4; ++i)
-                for (j = 4; j<x_size - 4; ++j)
-                {
-                    pos = i*x_size + j;
-                    if (r[pos]>0)
-                    {
-                        m = r[pos];
-                        n = max_no_ - m;
-                        cp = bp + in[pos];
-
-                        if (n>600)
-                        {
-                            p = in + (i - 3)*x_size + j - 1;
-                            x = 0; y = 0;
-
-                            c = *(cp - *p++); x -= c; y -= 3 * c;
-                            c = *(cp - *p++); y -= 3 * c;
-                            c = *(cp - *p); x += c; y -= 3 * c;
-                            p += x_size - 3;
-
-                            c = *(cp - *p++); x -= 2 * c; y -= 2 * c;
-                            c = *(cp - *p++); x -= c; y -= 2 * c;
-                            c = *(cp - *p++); y -= 2 * c;
-                            c = *(cp - *p++); x += c; y -= 2 * c;
-                            c = *(cp - *p); x += 2 * c; y -= 2 * c;
-                            p += x_size - 5;
-
-                            c = *(cp - *p++); x -= 3 * c; y -= c;
-                            c = *(cp - *p++); x -= 2 * c; y -= c;
-                            c = *(cp - *p++); x -= c; y -= c;
-                            c = *(cp - *p++); y -= c;
-                            c = *(cp - *p++); x += c; y -= c;
-                            c = *(cp - *p++); x += 2 * c; y -= c;
-                            c = *(cp - *p); x += 3 * c; y -= c;
-                            p += x_size - 6;
-
-                            c = *(cp - *p++); x -= 3 * c;
-                            c = *(cp - *p++); x -= 2 * c;
-                            c = *(cp - *p); x -= c;
-                            p += 2;
-                            c = *(cp - *p++); x += c;
-                            c = *(cp - *p++); x += 2 * c;
-                            c = *(cp - *p); x += 3 * c;
-                            p += x_size - 6;
-
-                            c = *(cp - *p++); x -= 3 * c; y += c;
-                            c = *(cp - *p++); x -= 2 * c; y += c;
-                            c = *(cp - *p++); x -= c; y += c;
-                            c = *(cp - *p++); y += c;
-                            c = *(cp - *p++); x += c; y += c;
-                            c = *(cp - *p++); x += 2 * c; y += c;
-                            c = *(cp - *p); x += 3 * c; y += c;
-                            p += x_size - 5;
-
-                            c = *(cp - *p++); x -= 2 * c; y += 2 * c;
-                            c = *(cp - *p++); x -= c; y += 2 * c;
-                            c = *(cp - *p++); y += 2 * c;
-                            c = *(cp - *p++); x += c; y += 2 * c;
-                            c = *(cp - *p); x += 2 * c; y += 2 * c;
-                            p += x_size - 3;
-
-                            c = *(cp - *p++); x -= c; y += 3 * c;
-                            c = *(cp - *p++); y += 3 * c;
-                            c = *(cp - *p); x += c; y += 3 * c;
-
-                            if ((x*x + y*y) > (0.81*n*n))
-                            {
-                                do_symmetry = 0;
-								float z = (x == 0) ? 1000000.0f : ((float)y) / ((float)x);
-								if (z < 0) { z = -z; w = -1; }
-								else w = 1;
-								if (z < 0.25) { /* vert_edge */ dy[pos] = 0; dx[pos] = 1; }
-								else {
-									if (z > 4.0) { /* hor_edge */ dy[pos] = 1; dx[pos] = 0; }
-									else { /* diag_edge */ if (w>0) { dy[pos] = 1; dx[pos] = 1; }
-									    else { dy[pos] = -1; dx[pos] = 1; }
-									}
-								}
-
-                                //dy[pos] = sqrt(x); dx[pos] = sqrt(y);
-
-                            }
-                            else
-                                do_symmetry = 1;
-                        }
-                        else
-                            do_symmetry = 1;
-
-                        if (do_symmetry == 1)
-                        {
-                            p = in + (i - 3)*x_size + j - 1;
-                            x = 0; y = 0; w = 0;
-
-                            c = *(cp - *p++); x += c; y += 9 * c; w += 3 * c;
-                            c = *(cp - *p++); y += 9 * c;
-                            c = *(cp - *p); x += c; y += 9 * c; w -= 3 * c;
-                            p += x_size - 3;
-
-                            c = *(cp - *p++); x += 4 * c; y += 4 * c; w += 4 * c;
-                            c = *(cp - *p++); x += c; y += 4 * c; w += 2 * c;
-                            c = *(cp - *p++); y += 4 * c;
-                            c = *(cp - *p++); x += c; y += 4 * c; w -= 2 * c;
-                            c = *(cp - *p); x += 4 * c; y += 4 * c; w -= 4 * c;
-                            p += x_size - 5;
-
-                            c = *(cp - *p++); x += 9 * c; y += c; w += 3 * c;
-                            c = *(cp - *p++); x += 4 * c; y += c; w += 2 * c;
-                            c = *(cp - *p++); x += c; y += c; w += c;
-                            c = *(cp - *p++); y += c;
-                            c = *(cp - *p++); x += c; y += c; w -= c;
-                            c = *(cp - *p++); x += 4 * c; y += c; w -= 2 * c;
-                            c = *(cp - *p); x += 9 * c; y += c; w -= 3 * c;
-                            p += x_size - 6;
-
-                            c = *(cp - *p++); x += 9 * c;
-                            c = *(cp - *p++); x += 4 * c;
-                            c = *(cp - *p); x += c;
-                            p += 2;
-                            c = *(cp - *p++); x += c;
-                            c = *(cp - *p++); x += 4 * c;
-                            c = *(cp - *p); x += 9 * c;
-                            p += x_size - 6;
-
-                            c = *(cp - *p++); x += 9 * c; y += c; w -= 3 * c;
-                            c = *(cp - *p++); x += 4 * c; y += c; w -= 2 * c;
-                            c = *(cp - *p++); x += c; y += c; w -= c;
-                            c = *(cp - *p++); y += c;
-                            c = *(cp - *p++); x += c; y += c; w += c;
-                            c = *(cp - *p++); x += 4 * c; y += c; w += 2 * c;
-                            c = *(cp - *p); x += 9 * c; y += c; w += 3 * c;
-                            p += x_size - 5;
-
-                            c = *(cp - *p++); x += 4 * c; y += 4 * c; w -= 4 * c;
-                            c = *(cp - *p++); x += c; y += 4 * c; w -= 2 * c;
-                            c = *(cp - *p++); y += 4 * c;
-                            c = *(cp - *p++); x += c; y += 4 * c; w += 2 * c;
-                            c = *(cp - *p); x += 4 * c; y += 4 * c; w += 4 * c;
-                            p += x_size - 3;
-
-                            c = *(cp - *p++); x += c; y += 9 * c; w -= 3 * c;
-                            c = *(cp - *p++); y += 9 * c;
-                            c = *(cp - *p); x += c; y += 9 * c; w += 3 * c;
-
-							float z = (y == 0) ? 1000000.0f : ((float)x) / ((float)y);
-							if (z < 0.25) { /* vertical */ dy[pos] = 0; dx[pos] = 1; }
-							else {
-								if (z > 4.0) { /* horizontal */ dy[pos] = 1; dx[pos] = 0; }
-								else { /* diagonal */ if (w>0) { dy[pos] = -1; dx[pos] = 1; }
-								    else { dy[pos] = 1; dx[pos] = 1; }
-								}
-							}
-                            //dy[pos] = (w > 0) ? -sqrt(x) : sqrt(x); dx[pos] = sqrt(y);
-
-                        }
-                    }
-                }
-        }
-	};
-}
-
-#endif
-#endif
+      }
+  }
+};
+}  // namespace lsfm

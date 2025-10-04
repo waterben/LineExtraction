@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_rtwutil.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_rtwutil.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -21,8 +22,7 @@
 //                int denominator
 // Return Type  : int
 //
-int div_s32(int numerator, int denominator)
-{
+int div_s32(int numerator, int denominator) {
   int quotient;
   unsigned int absNumerator;
   unsigned int absDenominator;
@@ -63,8 +63,7 @@ int div_s32(int numerator, int denominator)
 //                double u1
 // Return Type  : double
 //
-double rt_powd_snf(double u0, double u1)
-{
+double rt_powd_snf(double u0, double u1) {
   double y;
   double d0;
   double d1;

@@ -10,4 +10,3 @@ add_executable(test_mesh designerworkaround.cpp lightingdlg.cpp
 main.cpp mesh.cpp mesh2mainwindow.cpp lightingdlgbase.ui mesh2mainwindowbase.ui)
 qt5_use_modules(test_mesh Core Gui Widgets OpenGL)
 target_link_libraries(test_mesh lib_qplot3d ${OPENGL_LIBRARIES})
-

@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "mod.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "mod.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,10 +21,7 @@
 // Arguments    : double x
 // Return Type  : double
 //
-double b_mod(double x)
-{
-  return x - floor(x / 2.0) * 2.0;
-}
+double b_mod(double x) { return x - floor(x / 2.0) * 2.0; }
 
 //
 // File trailer for mod.cpp

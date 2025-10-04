@@ -40,62 +40,57 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _FILTER_HPP_
-#define _FILTER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <utility/range.hpp>
-#  include <utility/value_manager.hpp>
-#  include <opencv2/core/core.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/range.hpp>
+#include <utility/value_manager.hpp>
 
-#  include <map>
+#include <map>
 
 
 namespace lsfm {
-    struct FilterData {
-        FilterData(const cv::Mat &d = cv::Mat(), double lower = 0, double upper = 0) : data(d), range(lower, upper) {}
+struct FilterData {
+  FilterData(const cv::Mat& d = cv::Mat(), double lower = 0, double upper = 0) : data(d), range(lower, upper) {}
 
-        template<class FT>
-        FilterData(const cv::Mat &d, const Range<FT>& r) :
-            data(d), range(static_cast<double>(r.lower), static_cast<double>(r.upper)) {}
-        
+  template <class FT>
+  FilterData(const cv::Mat& d, const Range<FT>& r)
+      : data(d), range(static_cast<double>(r.lower), static_cast<double>(r.upper)) {}
 
-        cv::Mat data;
-        Range<double> range;
-    };
 
-    typedef std::map<std::string, FilterData> FilterResults;
-    typedef std::pair<std::string, FilterData> FilterResult;
+  cv::Mat data;
+  Range<double> range;
+};
 
-    //! Basic filter interface
-    //! Use IT to define Image type (8Bit, 16Bit, 32Bit, or floating type float or double)
-    template<class IT>
-    class FilterI : public ValueManager {
-        FilterI(const FilterI&);
+typedef std::map<std::string, FilterData> FilterResults;
+typedef std::pair<std::string, FilterData> FilterResult;
 
-    protected:
-        FilterI() {}
+//! Basic filter interface
+//! Use IT to define Image type (8Bit, 16Bit, 32Bit, or floating type float or double)
+template <class IT>
+class FilterI : public ValueManager {
+  FilterI(const FilterI&);
 
-    public:
-        typedef IT img_type;
-                
-        typedef Range<IT> IntensityRange;
+ protected:
+  FilterI() {}
 
-        virtual ~FilterI() {}
-        
-        //! get image intensity range (for single channel)
-        virtual IntensityRange intensityRange() const = 0;
+ public:
+  typedef IT img_type;
 
-        //! process filter
-        virtual void process(const cv::Mat& img) = 0;
+  typedef Range<IT> IntensityRange;
 
-        //! generic interface to get processed data
-        virtual FilterResults results() const = 0;
+  virtual ~FilterI() {}
 
-        //! get name of filter
-        virtual std::string name() const = 0;
+  //! get image intensity range (for single channel)
+  virtual IntensityRange intensityRange() const = 0;
 
-    };
-}
-#endif
-#endif
+  //! process filter
+  virtual void process(const cv::Mat& img) = 0;
+
+  //! generic interface to get processed data
+  virtual FilterResults results() const = 0;
+
+  //! get name of filter
+  virtual std::string name() const = 0;
+};
+}  // namespace lsfm

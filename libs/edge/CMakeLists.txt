@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.5...3.27)
 # Edge depends on both imgproc and geometry
 le_add_library(lib_edge
     AUTO_TESTS
-    PUBLIC_DEPS 
+    PUBLIC_DEPS
         lib_imgproc
         lib_geometry
         ${OpenCV_LIBS}

@@ -14,7 +14,7 @@ void ConsoleApp::defineArgs() {
 void ConsoleApp::parseArgs(int argc, char** argv) {
   try {
     auto rest = opts_.parse(argc, argv);
-    (void)rest; // unused positionals for now
+    (void)rest;  // unused positionals for now
   } catch (const utility::options_error& e) {
     std::cerr << "Error: " << e.what() << std::endl;
     std::exit(1);

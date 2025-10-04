@@ -1,13 +1,11 @@
-#ifndef _TASK_HPP_
-#define _TASK_HPP_
-#ifdef __cplusplus
+#pragma once
 
 
-#include <filesystem>
 #include <opencv2/core.hpp>
 #include <utility/string_table.hpp>
 #include <utility/value_manager.hpp>
 
+#include <filesystem>
 #include <memory>
 
 
@@ -82,8 +80,7 @@ struct FileDataProvider : public DataProviderBase {
   }
 
   void parse(const std::vector<std::filesystem::path>& folders, bool recursive = true) {
-    for_each(folders.begin(), folders.end(),
-             [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
+    for_each(folders.begin(), folders.end(), [&, this](const std::filesystem::path& f) { this->parse(f, recursive); });
   }
 
   void parse(const std::filesystem::path& folder, bool recursive = true);
@@ -120,5 +117,3 @@ struct TaskLoader {
 
 typedef std::shared_ptr<TaskLoader> TaskLoaderPtr;
 }  // namespace lsfm
-#endif
-#endif

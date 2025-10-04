@@ -1,6 +1,6 @@
-#include <filesystem>
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
+#include <eval/eval_app.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/rcmg.hpp>
@@ -10,9 +10,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
 
-#include <eval/eval_app.hpp>
-
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>

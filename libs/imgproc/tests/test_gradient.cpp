@@ -1,17 +1,13 @@
-#include <gtest/gtest.h>
 #include <imgproc/derivative_gradient.hpp>
+
+#include <gtest/gtest.h>
 
 // Use float for magnitude type (MT) so cv::sqrt/cv::pow paths accept depth
 using Grad = lsfm::DerivativeGradient<uchar, short, float, float>;
 
-static cv::Mat makeImg()
-{
-  return (cv::Mat_<uchar>(2,3) << 0, 50, 100,
-                                  150, 200, 250);
-}
+static cv::Mat makeImg() { return (cv::Mat_<uchar>(2, 3) << 0, 50, 100, 150, 200, 250); }
 
-TEST(GradientTest, ProcessAndAccessors)
-{
+TEST(GradientTest, ProcessAndAccessors) {
   Grad g;
   cv::Mat gx, gy, mag, dir;
   g.process(makeImg(), gx, gy, mag, dir);

@@ -3,12 +3,10 @@
  */
 #include <geometry/render_gl.hpp>
 #ifdef WIN32
-#include <windows.h>
+#  include <windows.h>
 #endif
-#include <GL/glut.h>
 #include <GL/gl.h>
+#include <GL/glut.h>
 
 
-int main(int argc, char** argv) {
-    lsfm::testRenderingTR();
-}
+int main(int argc, char** argv) { lsfm::testRenderingTR(); }

@@ -1,7 +1,7 @@
 # -Try to find Lapack
 #
 #
-# The following are set after configuration is done: 
+# The following are set after configuration is done:
 #  BLAS_FOUND
 #  BLAS_LIBRARIES
 
@@ -27,7 +27,7 @@ ELSE(WIN32)
 SET (BLAS_NAME blas)
 ENDIF(WIN32)
 
-FIND_LIBRARY(BLAS_LIBRARIES 
+FIND_LIBRARY(BLAS_LIBRARIES
   NAMES ${BLAS_NAME}
   PATHS ${BLAS_DIR}
 )

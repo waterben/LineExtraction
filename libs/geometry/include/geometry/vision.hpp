@@ -40,27 +40,23 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GEOMETRY_VISION_HPP_
-#define _GEOMETRY_VISION_HPP_
-#ifdef __cplusplus
+#pragma once
 
 #include <geometry/base.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-//#include <ceres/jet.h>
+// #include <ceres/jet.h>
 
 
 namespace lsfm {
-    //! decompose camera projection matrix
-    template<class FT>
-    inline void decomposeProjectionMatrix(const Matx34<FT>& proj, Matx33<FT> &cam, Vec3<FT> &trans, Matx33<FT> &rot) {
-        cv::Vec<FT,4> tmp;
-        cv::decomposeProjectionMatrix(cv::Mat(3,4,cv::DataType<FT>::type,const_cast<FT*>(&proj[0])),
-                                      cv::Mat(3,3,cv::DataType<FT>::type,&cam[0]),
-                                      cv::Mat(3,3,cv::DataType<FT>::type,&rot[0]),tmp);
-        rot.transposeInPlace();
-        trans = Vec3<FT>(tmp[0]/tmp[3],tmp[1]/tmp[3],tmp[2]/tmp[3]);
-    }
-
+//! decompose camera projection matrix
+template <class FT>
+inline void decomposeProjectionMatrix(const Matx34<FT>& proj, Matx33<FT>& cam, Vec3<FT>& trans, Matx33<FT>& rot) {
+  cv::Vec<FT, 4> tmp;
+  cv::decomposeProjectionMatrix(cv::Mat(3, 4, cv::DataType<FT>::type, const_cast<FT*>(&proj[0])),
+                                cv::Mat(3, 3, cv::DataType<FT>::type, &cam[0]),
+                                cv::Mat(3, 3, cv::DataType<FT>::type, &rot[0]), tmp);
+  rot.transposeInPlace();
+  trans = Vec3<FT>(tmp[0] / tmp[3], tmp[1] / tmp[3], tmp[2] / tmp[3]);
 }
-#endif
-#endif
+
+}  // namespace lsfm

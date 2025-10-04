@@ -1,5 +1,4 @@
-#ifndef __DRAWABLE_H__
-#define __DRAWABLE_H__
+#pragma once
 
 
 #include "qwt3d_global.h"
@@ -57,5 +56,3 @@ class QWT3D_EXPORT Drawable {
 };
 
 }  // namespace Qwt3D
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __openglhelper_2003_06_06_15_49__
-#define __openglhelper_2003_06_06_15_49__
+#pragma once
 
 #include "qglobal.h"
 #include <GL/glu.h>
@@ -105,5 +104,3 @@ inline bool World2ViewPort(double& winx, double& winy, double& winz, double objx
 #endif  // QWT3D_NOT_FOR_DOXYGEN
 
 }  // namespace Qwt3D
-
-#endif

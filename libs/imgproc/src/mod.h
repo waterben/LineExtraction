@@ -7,22 +7,21 @@
 // MATLAB Coder version            : 3.0
 // C/C++ source code generated on  : 27-Jan-2016 06:44:05
 //
-#ifndef __MOD_H__
-#define __MOD_H__
+#pragma once
 
 // Include Files
+#include "logGaborFilter_types.h"
+#include "rt_nonfinite.h"
+#include "rtwtypes.h"
+
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rt_nonfinite.h"
-#include "rtwtypes.h"
-#include "logGaborFilter_types.h"
 
 // Function Declarations
 extern double b_mod(double x);
 
-#endif
 
 //
 // File trailer for mod.h

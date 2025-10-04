@@ -21,7 +21,7 @@ endmacro()
 
 macro(boost_repo extern_path)
     set( Boost_Bootstrap_Command )
-    string(REPLACE "." "_" version_underscore ${BoostVersion})    
+    string(REPLACE "." "_" version_underscore ${BoostVersion})
 
     if( UNIX )
         set( Boost_url "http://sourceforge.net/projects/boost/files/boost/${BoostVersion}/boost_${version_underscore}.tar.gz")
@@ -37,7 +37,7 @@ macro(boost_repo extern_path)
         set(Boost_address_model 64)
     else()
         set(Boost_address_model 32)
-    endif()    
+    endif()
 
     if (${BoostToolSet} STREQUAL Auto)
         set(boost_toolset "")
@@ -52,7 +52,7 @@ macro(boost_repo extern_path)
     endif()
 
     if (${BoostStaticRuntime})
-        set(linking_runtime "static")	
+        set(linking_runtime "static")
     else()
         set(linking_runtime "shared")
     endif()
@@ -80,7 +80,7 @@ macro(boost_repo extern_path)
     #message(STATUS "${Boost_b2_Command} install -j8 --prefix=${extern_path}/managed_boost/boost_install ${with_components} --disable-icu threading=${thread_mode} address-model=${Boost_address_model} link=${linking} runtime-link=${linking_runtime} variant=${build_mode} ${boost_toolset}")
     IncludeExternalProject( managed_boost ${extern_path}
         #PREFIX "${extern_path}/managed_boost"
-        BUILD_IN_SOURCE 1        
+        BUILD_IN_SOURCE 1
         URL ${Boost_url}
         #GIT_REPOSITORY https://github.com/boostorg/boost.git
         #GIT_TAG "boost-${version}"
@@ -129,7 +129,7 @@ if(index EQUAL -1)
 endif()
 
 if (${BoostDetectionMode} STREQUAL System)
-    set( Boost_NO_SYSTEM_PATHS OFF)    
+    set( Boost_NO_SYSTEM_PATHS OFF)
     find_package(Boost ${BoostVersion} REQUIRED COMPONENTS ${BoostComponents})
 elseif  (${BoostDetectionMode} STREQUAL Extern)
     set( Boost_NO_SYSTEM_PATHS ON)
@@ -154,10 +154,8 @@ else ()
     endif()
     if (NOT ${Boost_FOUND})
          message(FATAL_ERROR "Failed to detect boost!")
-    endif()        
+    endif()
 endif()
 
-set(Boost_INCLUDE_DIR "${Boost_INCLUDE_DIRS}")        
+set(Boost_INCLUDE_DIR "${Boost_INCLUDE_DIRS}")
 set(Boost_LIBRARY_DIR "${Boost_LIBRARY_DIRS}")
-
-

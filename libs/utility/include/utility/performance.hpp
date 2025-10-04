@@ -1,8 +1,6 @@
-#ifndef _PERFORMANCE_HPP_
-#define _PERFORMANCE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <utility/task.hpp>
+#include <utility/task.hpp>
 
 namespace lsfm {
 
@@ -67,7 +65,7 @@ struct PerformanceTaskDefault : public PerformanceTaskBase {
   virtual ~PerformanceTaskDefault() {}
 
   virtual void run(const TaskData& data, int loops, bool verbose);
-  virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose){};
+  virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {};
 };
 
 //! full performance test based on performance tasks and data providers
@@ -110,6 +108,3 @@ struct PerformanceTest : public TaskLoader {
 
 typedef std::shared_ptr<PerformanceTest> PerformanceTestPtr;
 }  // namespace lsfm
-
-#endif
-#endif

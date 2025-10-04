@@ -3,19 +3,18 @@
 #include <lfd/FeatureMatcher.hpp>
 #include <lfd/GlobalRotationFilter.hpp>
 #include <lfd/PairwiseLineMatcher.hpp>
+#include <lfd/lineMatching.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/line_descriptor/descriptor.hpp>
 #include <opencv2/opencv.hpp>
-#include <lfd/lineMatching.hpp>
 
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <string>
-
 
 
 using namespace std;

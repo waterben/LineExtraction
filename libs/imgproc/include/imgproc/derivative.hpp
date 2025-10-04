@@ -40,13 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _DERIVATIVE_HPP_
-#define _DERIVATIVE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <utility/value_manager.hpp>
-#  include <imgproc/gaussian.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
+#include <imgproc/gaussian.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/value_manager.hpp>
 
 
 namespace lsfm {
@@ -369,5 +367,3 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   std::string name() const { return "gauss"; }
 };
 }  // namespace lsfm
-#endif
-#endif

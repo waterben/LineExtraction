@@ -1,58 +1,55 @@
-#include <iostream>
-
+#include <geometry/draw.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <geometry/draw.hpp>
+#include <iostream>
 #define GRADIENT_MAX_CHECK
 #define EDGE_THICK_CHECK
-#include <lsd/lsd_el.hpp>
-#include <lsd/lsd_ep.hpp>
-#include <edge/edge_simple.hpp>
 #include <edge/edge_drawing.hpp>
 #include <edge/edge_pattern.hpp>
+#include <edge/edge_simple.hpp>
+#include <lsd/lsd_el.hpp>
+#include <lsd/lsd_ep.hpp>
 
 
 using namespace lsfm;
 using namespace std;
 
-template<class FT>
+template <class FT>
 struct Entry {
-    Entry(const cv::Ptr<LsdBase<FT>>& a = cv::Ptr<LsdBase<FT>>(), const std::string& b = std::string(), double c = 0)
-        : lsd(a), name(b), time(c) {}
-    
-    cv::Ptr<LsdBase<FT>> lsd;
-    std::string name;
-    double time;
+  Entry(const cv::Ptr<LsdBase<FT>>& a = cv::Ptr<LsdBase<FT>>(), const std::string& b = std::string(), double c = 0)
+      : lsd(a), name(b), time(c) {}
+
+  cv::Ptr<LsdBase<FT>> lsd;
+  std::string name;
+  double time;
 };
 
-static void help()
-{
+static void help() {
   cout << "\nThis program demonstrates lsd.\n"
           "Usage:\n"
           "./test_lsd <image_name>, Default is ../images/office1_low.jpg\n"
        << endl;
 }
 
-template<typename FT>
-void showData(const cv::Mat &src, const Entry<FT>& e) {
-    std::cout << e.name << ": " << e.time << " ms" << std::endl;
+template <typename FT>
+void showData(const cv::Mat& src, const Entry<FT>& e) {
+  std::cout << e.name << ": " << e.time << " ms" << std::endl;
 
-    cv::Mat img;
-    cvtColor(src, img, CV_GRAY2BGR);
+  cv::Mat img;
+  cvtColor(src, img, CV_GRAY2BGR);
 
-    cv::RNG rng(cv::getTickCount());
-    
-    for_each(e.lsd->lineSegments().begin(), e.lsd->lineSegments().end(), [&](const LineSegment<FT> &l) {
-        cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-        cv::Scalar scolor(color[0], color[1], color[2]);
-        line(img, l, scolor,1,8,10.0,3.0);
-        //Vec2<FT> p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
-        //line(img, p1, p2, cv::Scalar(0, 0, 255));
+  cv::RNG rng(cv::getTickCount());
 
-    });
-    cv::imshow(e.name, img);
-    cv::waitKey(1);
+  for_each(e.lsd->lineSegments().begin(), e.lsd->lineSegments().end(), [&](const LineSegment<FT>& l) {
+    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Scalar scolor(color[0], color[1], color[2]);
+    line(img, l, scolor, 1, 8, 10.0, 3.0);
+    // Vec2<FT> p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
+    // line(img, p1, p2, cv::Scalar(0, 0, 255));
+  });
+  cv::imshow(e.name, img);
+  cv::waitKey(1);
 }
 
 int main(int argc, char** argv) {

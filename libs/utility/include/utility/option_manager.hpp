@@ -39,86 +39,81 @@
 //
 //M*/
 
-#ifndef _OPTION_MANAGER_HPP_
-#define _OPTION_MANAGER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <vector>
 #include <algorithm>
+#include <string>
+#include <vector>
+
 
 namespace lsfm {
 
-    class OptionManager
-    {
-    public:
-        struct OptionEntry {
-            OptionEntry(std::string n = std::string(), double v = 0,
-                std::string t = std::string(), std::string d = std::string())
-                : name(n), value(v), type(t), description(d) {}
+class OptionManager {
+ public:
+  struct OptionEntry {
+    OptionEntry(std::string n = std::string(),
+                double v = 0,
+                std::string t = std::string(),
+                std::string d = std::string())
+        : name(n), value(v), type(t), description(d) {}
 
-            std::string name;
-            double value;
+    std::string name;
+    double value;
 
-            std::string type;
-            std::string description;
-
-
-            template<typename T> T get() const {
-                return static_cast<T>(value);
-            }
-
-            template<typename T> void set(T val) {
-                value = static_cast<double>(val);
-            }
-        };
-
-        typedef std::vector<OptionEntry> OptionVector;
-
-        /**
-        * Get list of all options
-        */
-        inline const OptionVector& getOptions() const { return options_; }
-
-        /**
-        * Get option entry by name
-        */
-        OptionEntry getOption(const std::string &name) const {
-            OptionVector::const_iterator f = std::find_if(options_.begin(), options_.end(), [&name](const OptionEntry& e) {
-                return (e.name == name);
-            });
-            return f != options_.end() ? *f : OptionEntry();
-        }
+    std::string type;
+    std::string description;
 
 
-        /**
-        * Set single option by name and value
-        */
-        inline void setOption(const std::string &name, double value) {
-            setOptionImpl(name, value);
-        }
+    template <typename T>
+    T get() const {
+      return static_cast<T>(value);
+    }
 
-        /**
-        * Set single option by option entry
-        */
-        inline void setOption(const OptionEntry &option) {
-            setOption(option.name, option.value);
-        }
+    template <typename T>
+    void set(T val) {
+      value = static_cast<double>(val);
+    }
+  };
 
-        /**
-        * Set multiple options by OptionVector
-        */
-        inline void setOptions(const OptionVector &options) {
-            for_each(options.begin(), options.end(), [this](const OptionEntry& e) {
-                setOption(e.name, e.value);
-            });
-        }
-    protected:
-        OptionManager(const OptionVector &opv = OptionVector()) : options_(opv) {}
-        OptionVector options_;
-        // default: do nothing
-        virtual void setOptionImpl(const std::string &name, double value) {};
-    };
+  typedef std::vector<OptionEntry> OptionVector;
 
-}
-#endif
-#endif
+  /**
+   * Get list of all options
+   */
+  inline const OptionVector& getOptions() const { return options_; }
+
+  /**
+   * Get option entry by name
+   */
+  OptionEntry getOption(const std::string& name) const {
+    OptionVector::const_iterator f =
+        std::find_if(options_.begin(), options_.end(), [&name](const OptionEntry& e) { return (e.name == name); });
+    return f != options_.end() ? *f : OptionEntry();
+  }
+
+
+  /**
+   * Set single option by name and value
+   */
+  inline void setOption(const std::string& name, double value) { setOptionImpl(name, value); }
+
+  /**
+   * Set single option by option entry
+   */
+  inline void setOption(const OptionEntry& option) { setOption(option.name, option.value); }
+
+  /**
+   * Set multiple options by OptionVector
+   */
+  inline void setOptions(const OptionVector& options) {
+    for_each(options.begin(), options.end(), [this](const OptionEntry& e) { setOption(e.name, e.value); });
+  }
+
+ protected:
+  OptionManager(const OptionVector& opv = OptionVector()) : options_(opv) {}
+  OptionVector options_;
+  // default: do nothing
+  virtual void setOptionImpl(const std::string& name, double value) {};
+};
+
+}  // namespace lsfm

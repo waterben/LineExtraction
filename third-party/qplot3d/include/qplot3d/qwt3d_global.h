@@ -1,5 +1,4 @@
-#ifndef QWT3D_GLOBAL_H
-#define QWT3D_GLOBAL_H
+#pragma once
 
 #include <qglobal.h>
 
@@ -49,7 +48,4 @@
 
 #ifndef QWT3D_EXPORT
 #  define QWT3D_EXPORT
-#endif
-
-
 #endif

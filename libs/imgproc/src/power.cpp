@@ -9,11 +9,12 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "logGaborFilter.h"
-#include "phasecong.h"
 #include "power.h"
+
+#include "logGaborFilter.h"
 #include "logGaborFilter_emxutil.h"
+#include "phasecong.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -22,8 +23,7 @@
 //                emxArray_real_T *y
 // Return Type  : void
 //
-void power(const emxArray_real_T *a, emxArray_real_T *y)
-{
+void power(const emxArray_real_T* a, emxArray_real_T* y) {
   unsigned int uv0[2];
   int n;
   int k;
@@ -34,7 +34,7 @@ void power(const emxArray_real_T *a, emxArray_real_T *y)
   n = y->size[0] * y->size[1];
   y->size[0] = (int)uv0[0];
   y->size[1] = (int)uv0[1];
-  emxEnsureCapacity((emxArray__common *)y, n, (int)sizeof(double));
+  emxEnsureCapacity((emxArray__common*)y, n, (int)sizeof(double));
   n = a->size[0] * a->size[1];
   for (k = 0; k + 1 <= n; k++) {
     y->data[k] = a->data[k] * a->data[k];

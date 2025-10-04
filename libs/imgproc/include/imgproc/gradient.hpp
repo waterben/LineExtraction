@@ -40,14 +40,12 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GRADIENT_HPP_
-#define _GRADIENT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/derivative.hpp>
-#  include <imgproc/direction.hpp>
-#  include <imgproc/filter.hpp>
-#  include <imgproc/magnitude.hpp>
+#include <imgproc/derivative.hpp>
+#include <imgproc/direction.hpp>
+#include <imgproc/filter.hpp>
+#include <imgproc/magnitude.hpp>
 
 
 namespace lsfm {
@@ -197,5 +195,3 @@ class Gradient : public GradientI<IT, GT, MT, DT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

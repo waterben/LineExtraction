@@ -1,10 +1,10 @@
-#include <gtest/gtest.h>
 #include <utility/options.hpp>
+
+#include <gtest/gtest.h>
 
 using utility::Options;
 
-TEST(OptionsTest, ParseLongAndShort)
-{
+TEST(OptionsTest, ParseLongAndShort) {
   std::string input;
   bool verbose = false;
   Options opts;
@@ -18,8 +18,7 @@ TEST(OptionsTest, ParseLongAndShort)
   EXPECT_TRUE(rest.empty());
 }
 
-TEST(OptionsTest, EqualsSyntaxAndDefaults)
-{
+TEST(OptionsTest, EqualsSyntaxAndDefaults) {
   std::string out = "default.txt";
   bool flag = false;
   Options opts;
@@ -35,12 +34,10 @@ TEST(OptionsTest, EqualsSyntaxAndDefaults)
   EXPECT_EQ(out, std::string("result.bin"));
 }
 
-TEST(OptionsTest, MissingRequiredThrows)
-{
+TEST(OptionsTest, MissingRequiredThrows) {
   std::string in;
   Options opts;
   opts.add_string("input", 'i', "Input file", in, true);
   const char* argv[] = {"app"};
   EXPECT_THROW(opts.parse(1, const_cast<char**>(argv)), utility::options_error);
 }
-

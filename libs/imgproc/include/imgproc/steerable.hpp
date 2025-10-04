@@ -40,76 +40,70 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _STEERABLE_HPP_
-#define _STEERABLE_HPP_
-#ifdef __cplusplus
+#pragma once
 
 #include <imgproc/gaussian.hpp>
 
 namespace lsfm {
 
-    template<class FT>
-    cv::Mat_<FT> SteerGaussianD1(FT angle, int size = 5, FT range = 3) {
-        cv::Mat_<FT> g = gaussian<FT>(size,range);
-        cv::Mat_<FT> gd1 = gaussianD1<FT>(size,range);
+template <class FT>
+cv::Mat_<FT> SteerGaussianD1(FT angle, int size = 5, FT range = 3) {
+  cv::Mat_<FT> g = gaussian<FT>(size, range);
+  cv::Mat_<FT> gd1 = gaussianD1<FT>(size, range);
 
-        return cos(-angle) * (g.t() * gd1) + sin(-angle) * (gd1.t() * g);
-    }
-
-    template<class FT>
-    cv::Mat_<FT> SteerGaussianD1(double angle, const cv::Mat &Ik0, const cv::Mat &Ik1) {
-        cv::Mat_<FT> k0, k1;
-
-        if (cv::DataType<FT>::type() != Ik0.type())
-            Ik0.convertTo(k0,cv::DataType<FT>::type());
-        else
-            k0 = Ik0;
-
-        if (cv::DataType<FT>::type() != Ik1.type())
-            Ik1.convertTo(k0,cv::DataType<FT>::type());
-        else
-            k1 = Ik1;
-
-        return cos(angle) * k0 + sin(angle) * k1;
-    }
-
-    template<class FT>
-    cv::Mat_<FT> SteerGaussianD2(FT angle, int size = 5, FT range = 3) {
-        cv::Mat_<FT> g = gaussian<FT>(size,range);
-        cv::Mat_<FT> gd1 = gaussianD1<FT>(size,range);
-        cv::Mat_<FT> gd2 = gaussianD2<FT>(size,range);
-
-        FT c = cos(angle), s = sin(angle);
-
-        return (c * c) * (g.t() * gd2) + (s * s) * (gd2.t() * g) + (c * s * -2) * (gd1.t() * gd1);
-
-    }
-
-    template<class FT>
-    cv::Mat_<FT> SteerGaussianD2(double angle, const cv::Mat &Ik0, const cv::Mat &Ik1, const cv::Mat &Ik2) {
-        cv::Mat_<FT> k0, k1, k2;
-
-        if (cv::DataType<FT>::type() != Ik0.type())
-            Ik0.convertTo(k0,cv::DataType<FT>::type());
-        else
-            k0 = Ik0;
-
-        if (cv::DataType<FT>::type() != Ik1.type())
-            Ik1.convertTo(k1,cv::DataType<FT>::type());
-        else
-            k1 = Ik1;
-        if (cv::DataType<FT>::type() != Ik2.type())
-            Ik2.convertTo(k2,cv::DataType<FT>::type());
-        else
-            k2 = Ik2;
-
-        FT c = cos(angle), s = sin(angle);
-
-        return (c * c) * k0 + (s * s) * k2 + (c * s * -2) * k1;
-    }
-
-
-
+  return cos(-angle) * (g.t() * gd1) + sin(-angle) * (gd1.t() * g);
 }
-#endif
-#endif
+
+template <class FT>
+cv::Mat_<FT> SteerGaussianD1(double angle, const cv::Mat& Ik0, const cv::Mat& Ik1) {
+  cv::Mat_<FT> k0, k1;
+
+  if (cv::DataType<FT>::type() != Ik0.type())
+    Ik0.convertTo(k0, cv::DataType<FT>::type());
+  else
+    k0 = Ik0;
+
+  if (cv::DataType<FT>::type() != Ik1.type())
+    Ik1.convertTo(k0, cv::DataType<FT>::type());
+  else
+    k1 = Ik1;
+
+  return cos(angle) * k0 + sin(angle) * k1;
+}
+
+template <class FT>
+cv::Mat_<FT> SteerGaussianD2(FT angle, int size = 5, FT range = 3) {
+  cv::Mat_<FT> g = gaussian<FT>(size, range);
+  cv::Mat_<FT> gd1 = gaussianD1<FT>(size, range);
+  cv::Mat_<FT> gd2 = gaussianD2<FT>(size, range);
+
+  FT c = cos(angle), s = sin(angle);
+
+  return (c * c) * (g.t() * gd2) + (s * s) * (gd2.t() * g) + (c * s * -2) * (gd1.t() * gd1);
+}
+
+template <class FT>
+cv::Mat_<FT> SteerGaussianD2(double angle, const cv::Mat& Ik0, const cv::Mat& Ik1, const cv::Mat& Ik2) {
+  cv::Mat_<FT> k0, k1, k2;
+
+  if (cv::DataType<FT>::type() != Ik0.type())
+    Ik0.convertTo(k0, cv::DataType<FT>::type());
+  else
+    k0 = Ik0;
+
+  if (cv::DataType<FT>::type() != Ik1.type())
+    Ik1.convertTo(k1, cv::DataType<FT>::type());
+  else
+    k1 = Ik1;
+  if (cv::DataType<FT>::type() != Ik2.type())
+    Ik2.convertTo(k2, cv::DataType<FT>::type());
+  else
+    k2 = Ik2;
+
+  FT c = cos(angle), s = sin(angle);
+
+  return (c * c) * k0 + (s * s) * k2 + (c * s * -2) * k1;
+}
+
+
+}  // namespace lsfm

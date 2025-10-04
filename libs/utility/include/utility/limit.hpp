@@ -40,28 +40,24 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef __LIMIT_HPP_
-#define __LIMIT_HPP_
-#ifdef __cplusplus
+#pragma once
 
 #include <limits>
 
 namespace lsfm {
-   
-template<class FT>
+
+template <class FT>
 struct LIMITS {
-    static inline FT tau() { return static_cast<FT>(1.0E-7); }
-    static inline FT min() { return std::numeric_limits<FT>::min(); }
-    static inline FT eps() { return std::numeric_limits<FT>::epsilon(); }
+  static inline FT tau() { return static_cast<FT>(1.0E-7); }
+  static inline FT min() { return std::numeric_limits<FT>::min(); }
+  static inline FT eps() { return std::numeric_limits<FT>::epsilon(); }
 };
 
-template<>
+template <>
 struct LIMITS<float> {
-    static inline float tau() { return std::numeric_limits<float>::epsilon(); } // float eps is not < 1E-5
-    static inline float min() { return std::numeric_limits<float>::min(); }
-    static inline float eps() { return std::numeric_limits<float>::epsilon(); }
+  static inline float tau() { return std::numeric_limits<float>::epsilon(); }  // float eps is not < 1E-5
+  static inline float min() { return std::numeric_limits<float>::min(); }
+  static inline float eps() { return std::numeric_limits<float>::epsilon(); }
 };
 
-}
-#endif
-#endif
+}  // namespace lsfm

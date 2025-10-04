@@ -18,4 +18,3 @@ HEADERS  += mainwindow.h \
          ../../qcustomplot.h
 
 FORMS    += mainwindow.ui
-

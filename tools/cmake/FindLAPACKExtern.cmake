@@ -1,7 +1,7 @@
 # -Try to find Lapack
 #
 #
-# The following are set after configuration is done: 
+# The following are set after configuration is done:
 #  LAPACK_FOUND
 #  LAPACK_LIBRARIES
 
@@ -35,7 +35,7 @@ ELSE(WIN32)
 SET (LAPACK_NAME lapack)
 ENDIF(WIN32)
 
-FIND_LIBRARY(LAPACK_LIBRARIES 
+FIND_LIBRARY(LAPACK_LIBRARIES
   NAMES ${LAPACK_NAME}
   PATHS ${LAPACK_DIR}
 )

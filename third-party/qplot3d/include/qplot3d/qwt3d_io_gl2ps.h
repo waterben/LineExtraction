@@ -1,5 +1,4 @@
-#ifndef qwt3d_io_gl2ps_h__2004_05_07_01_16_begin_guarded_code
-#define qwt3d_io_gl2ps_h__2004_05_07_01_16_begin_guarded_code
+#pragma once
 
 #include "qwt3d_io.h"
 #include "qwt3d_types.h"
@@ -83,5 +82,3 @@ void setDevicePolygonOffset(GLfloat factor, GLfloat units);
 
 
 }  // namespace Qwt3D
-
-#endif /* include guarded */

@@ -40,37 +40,34 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _EDGE_DRAW_HPP_
-#define _EDGE_DRAW_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <opencv2/opencv.hpp>
+#include <edge/edge_segment.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
-#include <edge/edge_segment.hpp>
+#include <opencv2/opencv.hpp>
 #include <utility/range.hpp>
 
 namespace lsfm {
 
-    // Draw functions for edge-specific types
-    inline void drawSegment(cv::Mat& img, const EdgeSegment& seg, const IndexVector& points, const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
-        if (img.channels() == 1)
-            cv::cvtColor(img,img,CV_GRAY2RGB);
-        cv::Vec3b *pimg = img.ptr<cv::Vec3b>();
-        for (size_t i = seg.begin(); i != seg.end(); ++i) {
-            pimg[points[i]] = color;
-        }
-    }
-
-    inline void drawSegment(cv::Mat& img, const EdgeSegmentVector& segs, const IndexVector& points, const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
-        if (img.channels() == 1)
-            cv::cvtColor(img,img,CV_GRAY2RGB);
-        for_each(segs.begin(),segs.end(),[&](const EdgeSegment& seg) {
-            drawSegment(img,seg,points,color);
-        });
-    }
-
+// Draw functions for edge-specific types
+inline void drawSegment(cv::Mat& img,
+                        const EdgeSegment& seg,
+                        const IndexVector& points,
+                        const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
+  if (img.channels() == 1) cv::cvtColor(img, img, CV_GRAY2RGB);
+  cv::Vec3b* pimg = img.ptr<cv::Vec3b>();
+  for (size_t i = seg.begin(); i != seg.end(); ++i) {
+    pimg[points[i]] = color;
+  }
 }
 
-#endif
-#endif
+inline void drawSegment(cv::Mat& img,
+                        const EdgeSegmentVector& segs,
+                        const IndexVector& points,
+                        const cv::Vec3b& color = cv::Vec3b(0, 0, 255)) {
+  if (img.channels() == 1) cv::cvtColor(img, img, CV_GRAY2RGB);
+  for_each(segs.begin(), segs.end(), [&](const EdgeSegment& seg) { drawSegment(img, seg, points, color); });
+}
+
+}  // namespace lsfm

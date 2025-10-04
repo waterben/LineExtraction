@@ -1,24 +1,23 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
-#include <QMainWindow>
-#include <QInputDialog>
 #include "../../qcustomplot.h"
+
+#include <QInputDialog>
+#include <QMainWindow>
 
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
   Q_OBJECT
-  
-public:
-  explicit MainWindow(QWidget *parent = 0);
+
+ public:
+  explicit MainWindow(QWidget* parent = 0);
   ~MainWindow();
-  
-private slots:
-  void titleDoubleClick(QMouseEvent *event, QCPPlotTitle *title);
+
+ private slots:
+  void titleDoubleClick(QMouseEvent* event, QCPPlotTitle* title);
   void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
   void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
   void selectionChanged();
@@ -29,10 +28,8 @@ private slots:
   void removeAllGraphs();
   void contextMenuRequest(QPoint pos);
   void moveLegend();
-  void graphClicked(QCPAbstractPlottable *plottable);
-  
-private:
-  Ui::MainWindow *ui;
-};
+  void graphClicked(QCPAbstractPlottable* plottable);
 
-#endif // MAINWINDOW_H
+ private:
+  Ui::MainWindow* ui;
+};

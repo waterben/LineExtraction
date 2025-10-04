@@ -23,8 +23,7 @@
 **          Version: 1.3.0                                                **
 ****************************************************************************/
 
-#ifndef QCUSTOMPLOT_H
-#define QCUSTOMPLOT_H
+#pragma once
 
 #include <QCache>
 #include <QDateTime>
@@ -3999,5 +3998,3 @@ class QCP_LIB_DECL QCPItemBracket : public QCPAbstractItem {
   // non-virtual methods:
   QPen mainPen() const;
 };
-
-#endif  // QCUSTOMPLOT_H

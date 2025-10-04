@@ -1,5 +1,4 @@
-#ifndef __HELPER_H__
-#define __HELPER_H__
+#pragma once
 
 #include <algorithm>
 #include <float.h>
@@ -22,5 +21,3 @@ inline int roundi(double d) { return (d > 0) ? int(d + 0.5) : int(d - 0.5); }
 
 
 }  // namespace Qwt3D
-
-#endif

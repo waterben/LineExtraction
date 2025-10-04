@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _HYSTERESIS_HPP_
-#define _HYSTERESIS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/index.hpp>
-#  include <opencv2/core/core.hpp>
+#include <edge/index.hpp>
+#include <opencv2/core/core.hpp>
 
 
 namespace lsfm {
@@ -203,5 +201,3 @@ inline cv::Mat hysteresis_binary_const(const cv::Mat& dmap, const IndexVector& e
 }
 
 }  // namespace lsfm
-#endif
-#endif

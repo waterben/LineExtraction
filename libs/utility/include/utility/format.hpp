@@ -74,7 +74,8 @@ std::size_t parse_spec(const std::string& fmt, std::size_t pos, bool& zero_pad, 
 void format_impl(std::string& out, const std::string& fmt, std::size_t start);
 
 template <typename T, typename... Rest>
-inline void format_impl(std::string& out, const std::string& fmt, std::size_t start, const T& value, const Rest&... rest) {
+inline void format_impl(
+    std::string& out, const std::string& fmt, std::size_t start, const T& value, const Rest&... rest) {
   std::size_t i = start;
   while (i < fmt.size()) {
     if (fmt[i] == '%') {

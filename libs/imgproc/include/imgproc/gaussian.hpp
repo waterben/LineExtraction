@@ -40,106 +40,97 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GAUSSIAN_HPP_
-#define _GAUSSIAN_HPP_
-#ifdef __cplusplus
+#pragma once
+
+#include <opencv2/core/core.hpp>
 
 #include <cmath>
-#include <opencv2/core/core.hpp>
 
 namespace lsfm {
 
-    //! compute gaussian with sigma = 1 and no normalization
-    //! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-    //! @param range value range for gaussain -> instead if changing sigma, use range to define
-    //!        gaussian curve. Large range corresponds to small sigma
-    template<class FT>
-    cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
-        // size have to be odd and in sane range
-        if (size < 3)
-            size = 3;
-        if (size % 2 == 0)
-            ++size;
+//! compute gaussian with sigma = 1 and no normalization
+//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
+//! @param range value range for gaussain -> instead if changing sigma, use range to define
+//!        gaussian curve. Large range corresponds to small sigma
+template <class FT>
+cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
+  // size have to be odd and in sane range
+  if (size < 3) size = 3;
+  if (size % 2 == 0) ++size;
 
-        int s2 = (size - 1) / 2;
+  int s2 = (size - 1) / 2;
 
-        FT step = range / s2;
+  FT step = range / s2;
 
-        cv::Mat_<FT> g(1,size,cv::DataType<FT>::type);
+  cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
 
-        FT *pg = &g(s2);
-        pg[0] = std::exp(FT(0));
+  FT* pg = &g(s2);
+  pg[0] = std::exp(FT(0));
 
-        for (int i = 1; i <= s2; ++i) {
-            FT x = i*step;
-            pg[-i] = pg[i] = std::exp(-x*x/2);
-        }
+  for (int i = 1; i <= s2; ++i) {
+    FT x = i * step;
+    pg[-i] = pg[i] = std::exp(-x * x / 2);
+  }
 
-        return g;
-    }
-
-    //! compute first derivtive of gaussian with sigma = 1 and no normalization
-    //! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-    //! @param range value range for gaussain -> instead if changing sigma, use range to define
-    //!        gaussian curve. Large range corresponds to small sigma
-    template<class FT>
-    cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
-        // size have to be odd and in sane range
-        if (size < 3)
-            size = 3;
-        if (size % 2 == 0)
-            ++size;
-
-        int s2 = (size - 1) / 2;
-
-        FT step = range / s2;
-
-        cv::Mat_<FT> g(1,size,cv::DataType<FT>::type);
-
-        FT *pg = &g(s2);
-        pg[0] = 0;
-
-        for (int i = 1; i <= s2; ++i) {
-            FT x = i*step;
-            x *= std::exp(-x*x/2);
-            pg[-i] = -x;
-            pg[i] = x;
-        }
-
-        return g;
-    }
-
-
-    //! compute second derivtive of gaussian with sigma = 1 and no normalization
-    //! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-    //! @param range value range for gaussain -> instead if changing sigma, use range to define
-    //!        gaussian curve. Large range corresponds to small sigma
-    template<class FT>
-    cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
-        // size have to be odd and in sane range
-        if (size < 3)
-            size = 3;
-        if (size % 2 == 0)
-            ++size;
-
-        int s2 = (size - 1) / 2;
-
-        FT step = range / s2;
-
-        cv::Mat_<FT> g(1,size,cv::DataType<FT>::type);
-
-        FT *pg = &g(s2);
-        pg[0] = -std::exp(FT(0));
-
-        for (int i = 1; i <= s2; ++i) {
-            FT x2 = i*step;
-            x2 *= x2;
-            pg[-i] = pg[i] = (x2-1)*std::exp(-x2/2);
-        }
-
-        return g;
-    }
-
+  return g;
 }
-#endif
-#endif
+
+//! compute first derivtive of gaussian with sigma = 1 and no normalization
+//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
+//! @param range value range for gaussain -> instead if changing sigma, use range to define
+//!        gaussian curve. Large range corresponds to small sigma
+template <class FT>
+cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
+  // size have to be odd and in sane range
+  if (size < 3) size = 3;
+  if (size % 2 == 0) ++size;
+
+  int s2 = (size - 1) / 2;
+
+  FT step = range / s2;
+
+  cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
+
+  FT* pg = &g(s2);
+  pg[0] = 0;
+
+  for (int i = 1; i <= s2; ++i) {
+    FT x = i * step;
+    x *= std::exp(-x * x / 2);
+    pg[-i] = -x;
+    pg[i] = x;
+  }
+
+  return g;
+}
+
+
+//! compute second derivtive of gaussian with sigma = 1 and no normalization
+//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
+//! @param range value range for gaussain -> instead if changing sigma, use range to define
+//!        gaussian curve. Large range corresponds to small sigma
+template <class FT>
+cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
+  // size have to be odd and in sane range
+  if (size < 3) size = 3;
+  if (size % 2 == 0) ++size;
+
+  int s2 = (size - 1) / 2;
+
+  FT step = range / s2;
+
+  cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
+
+  FT* pg = &g(s2);
+  pg[0] = -std::exp(FT(0));
+
+  for (int i = 1; i <= s2; ++i) {
+    FT x2 = i * step;
+    x2 *= x2;
+    pg[-i] = pg[i] = (x2 - 1) * std::exp(-x2 / 2);
+  }
+
+  return g;
+}
+
+}  // namespace lsfm

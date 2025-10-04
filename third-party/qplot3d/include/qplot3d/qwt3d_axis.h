@@ -1,5 +1,4 @@
-#ifndef __AXIS_H__
-#define __AXIS_H__
+#pragma once
 
 #include "qwt3d_autoptr.h"
 #include "qwt3d_autoscaler.h"
@@ -138,5 +137,3 @@ class QWT3D_EXPORT Axis : public Drawable {
 };
 
 }  // namespace Qwt3D
-
-#endif

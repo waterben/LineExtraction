@@ -9,10 +9,11 @@
 //
 
 // Include Files
-#include "rt_nonfinite.h"
+#include "logGaborFilter_terminate.h"
+
 #include "logGaborFilter.h"
 #include "phasecong.h"
-#include "logGaborFilter_terminate.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -20,8 +21,7 @@
 // Arguments    : void
 // Return Type  : void
 //
-void logGaborFilter_terminate()
-{
+void logGaborFilter_terminate() {
   // (no terminate code required)
 }
 

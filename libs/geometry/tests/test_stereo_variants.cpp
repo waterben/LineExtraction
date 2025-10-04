@@ -1,32 +1,27 @@
 // Verify triangulation via StereoCV, StereoPlane, and Stereo (2P) agree
-#include <gtest/gtest.h>
-
-#include <geometry/cameracv.hpp>
 #include <geometry/camera.hpp>
+#include <geometry/cameracv.hpp>
 #include <geometry/stereocv.hpp>
 
+#include <gtest/gtest.h>
+
 using FT = float;
+using lsfm::Line;
+using lsfm::Line3;
 using lsfm::Vec2;
 using lsfm::Vec3;
-using lsfm::Line3;
-using lsfm::Line;
 using CamP = lsfm::CameraPluecker<FT>;
 using CamCV = lsfm::CameraCV<FT>;
 using Cam2P = lsfm::Camera2P<FT>;
 
-static std::vector<Vec3<FT>> makeCube()
-{
-  return {
-    {-1, 1, 1}, { 1, 1, 1}, { 1,-1, 1}, {-1,-1, 1},
-    {-1, 1,-1}, { 1, 1,-1}, { 1,-1,-1}, {-1,-1,-1}
-  };
+static std::vector<Vec3<FT>> makeCube() {
+  return {{-1, 1, 1}, {1, 1, 1}, {1, -1, 1}, {-1, -1, 1}, {-1, 1, -1}, {1, 1, -1}, {1, -1, -1}, {-1, -1, -1}};
 }
 
-TEST(StereoVariantsTest, TriangulatePointsAgree)
-{
-  Vec3<FT> originL(-1,0,10), originR(1,0,10);
+TEST(StereoVariantsTest, TriangulatePointsAgree) {
+  Vec3<FT> originL(-1, 0, 10), originR(1, 0, 10);
   Vec3<FT> orientation(3.14159265f, 0, 0);
-  FT fov = static_cast<FT>(50.0/180.0 * 3.14159265);
+  FT fov = static_cast<FT>(50.0 / 180.0 * 3.14159265);
   Vec2<FT> size(800, 400);
 
   CamP camLP(fov, size, originL, orientation);
@@ -56,7 +51,7 @@ TEST(StereoVariantsTest, TriangulatePointsAgree)
   ASSERT_EQ(tCV.size(), verts.size());
   ASSERT_EQ(tP.size(), verts.size());
   ASSERT_EQ(t2P.size(), verts.size());
-  for (size_t i=0;i<verts.size();++i) {
+  for (size_t i = 0; i < verts.size(); ++i) {
     // Original points are in camera space; expect consistency up to small error
     EXPECT_NEAR(tP[i].x(), tCV[i].x(), 1e-2f);
     EXPECT_NEAR(tP[i].y(), tCV[i].y(), 1e-2f);
@@ -66,4 +61,3 @@ TEST(StereoVariantsTest, TriangulatePointsAgree)
     EXPECT_NEAR(tP[i].z(), t2P[i].z(), 2e-1f);
   }
 }
-

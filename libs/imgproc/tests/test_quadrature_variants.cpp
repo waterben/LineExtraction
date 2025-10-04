@@ -1,23 +1,22 @@
-#include <gtest/gtest.h>
+#include <imgproc/quadratureLGF.hpp>
 #include <imgproc/quadratureS.hpp>
 #include <imgproc/quadratureSF.hpp>
-#include <imgproc/quadratureLGF.hpp>
 
-static cv::Mat makeSinus(int rows=32, int cols=32, double period=8.0)
-{
+#include <gtest/gtest.h>
+
+static cv::Mat makeSinus(int rows = 32, int cols = 32, double period = 8.0) {
   cv::Mat img(rows, cols, CV_8U);
-  for (int r=0;r<rows;++r) {
-    for (int c=0;c<cols;++c) {
-      double v = 128.0 + 127.0*std::sin(2.0*CV_PI * c / period);
-      img.at<uchar>(r,c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
+  for (int r = 0; r < rows; ++r) {
+    for (int c = 0; c < cols; ++c) {
+      double v = 128.0 + 127.0 * std::sin(2.0 * CV_PI * c / period);
+      img.at<uchar>(r, c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
     }
   }
   return img;
 }
 
 template <typename Q>
-static void quadSmoke()
-{
+static void quadSmoke() {
   Q q;
   auto img = makeSinus();
   q.process(img);
@@ -44,18 +43,8 @@ static void quadSmoke()
   EXPECT_GT(enr.upper, 0.0f);
 }
 
-TEST(QuadratureVariantsTest, QuadratureS)
-{
-  quadSmoke<lsfm::QuadratureS<uchar,float,float>>();
-}
+TEST(QuadratureVariantsTest, QuadratureS) { quadSmoke<lsfm::QuadratureS<uchar, float, float>>(); }
 
-TEST(QuadratureVariantsTest, QuadratureSF)
-{
-  quadSmoke<lsfm::QuadratureSF<uchar,float>>();
-}
+TEST(QuadratureVariantsTest, QuadratureSF) { quadSmoke<lsfm::QuadratureSF<uchar, float>>(); }
 
-TEST(QuadratureVariantsTest, QuadratureLGF)
-{
-  quadSmoke<lsfm::QuadratureLGF<uchar,float>>();
-}
-
+TEST(QuadratureVariantsTest, QuadratureLGF) { quadSmoke<lsfm::QuadratureLGF<uchar, float>>(); }

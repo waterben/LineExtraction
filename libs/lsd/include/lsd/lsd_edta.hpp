@@ -39,67 +39,63 @@
 //
 //M*/
 
-#ifndef _ED_PRIMAL_LSD_HPP_
-#define _ED_PRIMAL_LSD_HPP_
-#ifdef __cplusplus
+#pragma once
 
 #include <lsd/lsd_base.hpp>
 
 struct LS {
-    double sx, sy, ex, ey; // Start & end coordinates of the line segment
+  double sx, sy, ex, ey;  // Start & end coordinates of the line segment
 };
 
 // from EDLinesLib.lib
-LS *DetectLinesByED(unsigned char *srcImg, int width, int height, int *pNoLS);
+LS* DetectLinesByED(unsigned char* srcImg, int width, int height, int* pNoLS);
 
 namespace lsfm {
 
-    template<class FT, template<class> class LPT = Vec2>
-    class LsdEDTA : public LsdBase<FT,LPT>  {
-    public:
-        typedef FT float_type;
-        typedef LPT<FT> line_point;
-        typedef typename LsdBase<FT, LPT>::Line Line;
-        typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-        typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-        typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-        typedef typename LsdBase<FT, LPT>::ImageData ImageData;
+template <class FT, template <class> class LPT = Vec2>
+class LsdEDTA : public LsdBase<FT, LPT> {
+ public:
+  typedef FT float_type;
+  typedef LPT<FT> line_point;
+  typedef typename LsdBase<FT, LPT>::Line Line;
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
 
-        LsdEDTA() {}
+  LsdEDTA() {}
 
-        LsdEDTA(ValueManager::InitializerList options) {}
+  LsdEDTA(ValueManager::InitializerList options) {}
 
-        LsdEDTA(const ValueManager::NameValueVector &options) {}
+  LsdEDTA(const ValueManager::NameValueVector& options) {}
 
-        using LsdBase<FT,LPT>::detect;
-        using LsdBase<FT,LPT>::lines;
-        using LsdBase<FT, LPT>::lineSegments;
-        using LsdBase<FT,LPT>::endPoints;
-        using LsdBase<FT,LPT>::imageDataDescriptor;
-        using LsdBase<FT,LPT>::imageData;
+  using LsdBase<FT, LPT>::detect;
+  using LsdBase<FT, LPT>::lines;
+  using LsdBase<FT, LPT>::lineSegments;
+  using LsdBase<FT, LPT>::endPoints;
+  using LsdBase<FT, LPT>::imageDataDescriptor;
+  using LsdBase<FT, LPT>::imageData;
 
-        virtual void detect(const cv::Mat& image) final {
-            cv::Mat img = image;
-            CV_Assert(!img.empty());
+  virtual void detect(const cv::Mat& image) final {
+    cv::Mat img = image;
+    CV_Assert(!img.empty());
 
-            if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
+    if (img.channels() != 1) cvtColor(img, img, cv::COLOR_BGR2GRAY);
 
-            // Convert image uchar  
-            if (img.type() != CV_8U)
-                img.convertTo(img, CV_8U);
+    // Convert image uchar
+    if (img.type() != CV_8U) img.convertTo(img, CV_8U);
 
-            clearData();
+    clearData();
 
-            int lnum;
-            LS *line = DetectLinesByED(img.ptr<uchar>(), img.cols, img.rows, &lnum);
+    int lnum;
+    LS* line = DetectLinesByED(img.ptr<uchar>(), img.cols, img.rows, &lnum);
 
-            lineSegments_.reserve(lnum);
-            for (int i = 0; i != lnum; ++i) {
-                lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(line[i].sx), static_cast<FT>(line[i].sy)), LPT<FT>(static_cast<FT>(line[i].ex), static_cast<FT>(line[i].ey))));
-            }
-        }
-    };
+    lineSegments_.reserve(lnum);
+    for (int i = 0; i != lnum; ++i) {
+      lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(line[i].sx), static_cast<FT>(line[i].sy)),
+                                          LPT<FT>(static_cast<FT>(line[i].ex), static_cast<FT>(line[i].ey))));
+    }
+  }
+};
 
-}
-#endif
-#endif
+}  // namespace lsfm

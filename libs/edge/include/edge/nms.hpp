@@ -40,17 +40,15 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _NMS_HPP_
-#define _NMS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/interpolate.hpp>
-#  include <edge/hysteresis.hpp>
-#  include <edge/index.hpp>
-#  include <opencv2/core/core.hpp>
+#include <edge/hysteresis.hpp>
+#include <edge/index.hpp>
+#include <imgproc/gradient.hpp>
+#include <imgproc/interpolate.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <vector>
+#include <vector>
 
 
 namespace lsfm {
@@ -1514,5 +1512,3 @@ class NonMaximaSuppression : public ValueManager {
   inline std::string name() const { return NMS::name(); }
 };
 }  // namespace lsfm
-#endif
-#endif

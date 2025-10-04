@@ -39,233 +39,216 @@
 //
 //M*/
 
-#ifndef _LSD_EL_HPP_
-#define _LSD_EL_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <lsd/lsd_base.hpp>
-#include <imgproc/derivative_gradient.hpp>
-#include <edge/edge_source.hpp>
 #include <edge/edge_linking.hpp>
-#include <edge/split.hpp>
+#include <edge/edge_source.hpp>
 #include <edge/fit.hpp>
 #include <edge/nfa.hpp>
 #include <edge/spe.hpp>
+#include <edge/split.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <lsd/lsd_base.hpp>
 
 namespace lsfm {
 
-    //! Enable nfa validation
-    static const int EL_USE_NFA = 1;
-    //! Use precise direction map for sub pixel esitmation
-    static const int EL_USE_PRECISE_SPE = 2;
+//! Enable nfa validation
+static const int EL_USE_NFA = 1;
+//! Use precise direction map for sub pixel esitmation
+static const int EL_USE_PRECISE_SPE = 2;
 
-    template<class FT, template<class> class LPT = Vec2, class PT = LPT<int>,
-        class ESOURCE = EdgeSourceGRAD<DerivativeGradient<uchar, short, int, FT, SobelDerivative, 
-            QuadraticMagnitude>, NonMaximaSuppression<short, int, FT>>,
-        class EDGE = EsdLinking<int, ESOURCE::NUM_DIR>, //EsdLinking<int,true>, 
-        class NFA = NfaBinom<short, FT, index_type>,
-        class SPE = PixelEstimator<FT,PT>,
-        class SPLIT = RamerSplit<FT, PT>,// RamerSplit<FT, PT>, ExtRamerSplit<SimpleMerge<ExtSplitCheck<FT,int,PT>>>, LeastSquareSplit<FT,PT>,
-        class FIT = FitLine<EigenFit<FT, PT>> // MEstimatorFitLine<FT,PT>
-    >
-    class LsdEL: public LsdExt<FT,LPT,PT>
-    {
-        ESOURCE esource_;
-        EDGE edge_;
-        SPLIT split_;
-        FIT fit_;
-        NFA nfa_;
-        int flags_;
+template <class FT,
+          template <class> class LPT = Vec2,
+          class PT = LPT<int>,
+          class ESOURCE = EdgeSourceGRAD<DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude>,
+                                         NonMaximaSuppression<short, int, FT>>,
+          class EDGE = EsdLinking<int, ESOURCE::NUM_DIR>,  // EsdLinking<int,true>,
+          class NFA = NfaBinom<short, FT, index_type>,
+          class SPE = PixelEstimator<FT, PT>,
+          class SPLIT =
+              RamerSplit<FT, PT>,  // RamerSplit<FT, PT>, ExtRamerSplit<SimpleMerge<ExtSplitCheck<FT,int,PT>>>,
+                                   // LeastSquareSplit<FT,PT>,
+          class FIT = FitLine<EigenFit<FT, PT>>  // MEstimatorFitLine<FT,PT>
+          >
+class LsdEL : public LsdExt<FT, LPT, PT> {
+  ESOURCE esource_;
+  EDGE edge_;
+  SPLIT split_;
+  FIT fit_;
+  NFA nfa_;
+  int flags_;
 
-        typename LsdExt<FT,LPT,PT>::PointVector points_;
-        EdgeSegmentVector segments_;
+  typename LsdExt<FT, LPT, PT>::PointVector points_;
+  EdgeSegmentVector segments_;
 
-        mutable typename LsdBase<FT,LPT>::ImageData imageData_;
-        
-        void init() {
-            this->addManager(esource_);
-            this->addManager(edge_);
-            this->addManager(split_);
-            this->addManager(fit_);
-            this->addManager(nfa_);
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
 
-            this->add("line_flags", std::bind(&LsdEL<FT, LPT, PT, ESOURCE, EDGE, NFA, SPE, SPLIT, FIT>::valueFlags, this, std::placeholders::_1),
-                "Flags for line detector: 0 - none, 1 - use nfa, 2 - use precise sub pixel estimation.");
+  void init() {
+    this->addManager(esource_);
+    this->addManager(edge_);
+    this->addManager(split_);
+    this->addManager(fit_);
+    this->addManager(nfa_);
 
-        }
+    this->add(
+        "line_flags",
+        std::bind(&LsdEL<FT, LPT, PT, ESOURCE, EDGE, NFA, SPE, SPLIT, FIT>::valueFlags, this, std::placeholders::_1),
+        "Flags for line detector: 0 - none, 1 - use nfa, 2 - use precise sub pixel estimation.");
+  }
 
-        virtual void clearData() final {
-            LsdBase<FT, LPT>::clearData();
-            imageData_.clear();
-        }
+  virtual void clearData() final {
+    LsdBase<FT, LPT>::clearData();
+    imageData_.clear();
+  }
 
-        using LsdBase<FT,LPT>::endPoints_;
-        using LsdBase<FT,LPT>::lineSegments_;
+  using LsdBase<FT, LPT>::endPoints_;
+  using LsdBase<FT, LPT>::lineSegments_;
 
-    public:
-        typedef FT float_type;
-        typedef LPT<FT> line_point;
-        typedef PT point_type;
+ public:
+  typedef FT float_type;
+  typedef LPT<FT> line_point;
+  typedef PT point_type;
 
-        typedef typename LsdBase<FT, LPT>::Line Line;
-        typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-        typedef typename LsdBase<FT,LPT>::LineSegment LineSegment;
-        typedef typename LsdBase<FT,LPT>::LineSegmentVector LineSegmentVector;
-        typedef typename LsdBase<FT,LPT>::ImageData ImageData;
-        typedef typename LsdExt<FT,LPT,PT>::PointVector PointVector;
+  typedef typename LsdBase<FT, LPT>::Line Line;
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
+  typedef typename LsdExt<FT, LPT, PT>::PointVector PointVector;
 
-        LsdEL(FT th_low = static_cast<FT>(0.004), FT th_high = static_cast<FT>(0.012), int min_pix = 10, FT dist = 2, int min_len = 5, FT log_eps = 0, int flags = 0) :
-            esource_({ NV("nms_th_low", th_low), NV("nms_th_high", th_high) }), edge_(min_pix), nfa_(log_eps), split_(dist, min_len), flags_(flags) {
-            init();
-        }
+  LsdEL(FT th_low = static_cast<FT>(0.004),
+        FT th_high = static_cast<FT>(0.012),
+        int min_pix = 10,
+        FT dist = 2,
+        int min_len = 5,
+        FT log_eps = 0,
+        int flags = 0)
+      : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
+        edge_(min_pix),
+        nfa_(log_eps),
+        split_(dist, min_len),
+        flags_(flags) {
+    init();
+  }
 
-        LsdEL(ValueManager::InitializerList options)  {
-            init();
-            this->value(options);
-        }
+  LsdEL(ValueManager::InitializerList options) {
+    init();
+    this->value(options);
+  }
 
-        LsdEL(ValueManager::NameValueVector options) {
-            init();
-            this->value(options);
-        }
+  LsdEL(ValueManager::NameValueVector options) {
+    init();
+    this->value(options);
+  }
 
-        Value valueFlags(const Value &f = Value::NAV()) { if (f.type()) flags(f.getInt()); return flags_; }
+  Value valueFlags(const Value& f = Value::NAV()) {
+    if (f.type()) flags(f.getInt());
+    return flags_;
+  }
 
-        int flags() const { return flags_; }
+  int flags() const { return flags_; }
 
-        void flags(int f) {
-            flags_ = f;
-        }
+  void flags(int f) { flags_ = f; }
 
-        using LsdBase<FT,LPT>::detect;
-        using LsdBase<FT,LPT>::lines;
-        using LsdBase<FT, LPT>::lineSegments;
-        using LsdBase<FT,LPT>::endPoints;
-        using LsdBase<FT,LPT>::imageDataDescriptor;
-        using LsdBase<FT,LPT>::imageData;
+  using LsdBase<FT, LPT>::detect;
+  using LsdBase<FT, LPT>::lines;
+  using LsdBase<FT, LPT>::lineSegments;
+  using LsdBase<FT, LPT>::endPoints;
+  using LsdBase<FT, LPT>::imageDataDescriptor;
+  using LsdBase<FT, LPT>::imageData;
 
-        virtual void detect(const cv::Mat& image) final {
-            clearData();
-            
-            esource_.process(image);
-            edge_.detect(esource_);
-            if (flags_ & EL_USE_PRECISE_SPE)
-                SPE::convertDir(edge_.points(), points_, esource_.magnitude(), esource_.direction());
-            else
-                SPE::convert(edge_.points(), points_, esource_.magnitude(), esource_.directionMap());
+  virtual void detect(const cv::Mat& image) final {
+    clearData();
 
-            split_.setup(esource_);
-            if (flags_ & EL_USE_NFA) {
-                nfa_.update(esource_);
-                EdgeSegmentVector tmpSeg;
-                std::vector<FT> tmpNfa;
-                nfa_.eval(edge_, tmpSeg, tmpNfa);
-                split_.apply(tmpSeg, points_, segments_);
-            }
-            else {
-                split_.apply(edge_.segments(), points_, segments_);
-            }
+    esource_.process(image);
+    edge_.detect(esource_);
+    if (flags_ & EL_USE_PRECISE_SPE)
+      SPE::convertDir(edge_.points(), points_, esource_.magnitude(), esource_.direction());
+    else
+      SPE::convert(edge_.points(), points_, esource_.magnitude(), esource_.directionMap());
 
-            lineSegments_.reserve(segments_.size());
-            for_each(segments_.begin(), segments_.end(), [this](const EdgeSegment &seg) {
-                Line l;
-                fit_.apply(this->points_.data() + seg.begin(), this->points_.data() + seg.end(), l);
-                
-                //std::cout << "reverse: " << (seg.reverse() ? "true" : "false") << std::endl;
-                const PT &first = this->points_[seg.first()];
-                const PT &last = this->points_[seg.last()];
+    split_.setup(esource_);
+    if (flags_ & EL_USE_NFA) {
+      nfa_.update(esource_);
+      EdgeSegmentVector tmpSeg;
+      std::vector<FT> tmpNfa;
+      nfa_.eval(edge_, tmpSeg, tmpNfa);
+      split_.apply(tmpSeg, points_, segments_);
+    } else {
+      split_.apply(edge_.segments(), points_, segments_);
+    }
 
-                //lastx - firstx = dx = -ny = -dx = firstx - lastx
-                //lasty - firsty = dy = nx
-                // correct direction of line
-                /*int epnx = getY(first) - getY(last);
-                int epny = getX(last) - getX(first);
-                if (epnx * l.normalX() + epny * l.normalY() < 0)
-                    l.normalFlip();*/
+    lineSegments_.reserve(segments_.size());
+    for_each(segments_.begin(), segments_.end(), [this](const EdgeSegment& seg) {
+      Line l;
+      fit_.apply(this->points_.data() + seg.begin(), this->points_.data() + seg.end(), l);
 
-                lineSegments_.push_back(LineSegment(l, first, last));
-            });
-        }
+      // std::cout << "reverse: " << (seg.reverse() ? "true" : "false") << std::endl;
+      const PT& first = this->points_[seg.first()];
+      const PT& last = this->points_[seg.last()];
 
-        virtual const DataDescriptor& imageDataDescriptor() const final {
-            static DataDescriptor dsc;
-            if (dsc.empty()) {
-                dsc.push_back(DataDescriptorEntry("gx", "Gradient in x direction"));
-                dsc.push_back(DataDescriptorEntry("gy", "Gradient in y direction"));
-                dsc.push_back(DataDescriptorEntry("dir", "Gradient direction"));
-                dsc.push_back(DataDescriptorEntry("mag", "Gradient magnitude"));
-                dsc.push_back(DataDescriptorEntry("edge_map", "Edge map, indicating if pixel is on edge or not (also giving direction 0-7)"));
-            }
-            return dsc;
-        }
+      // lastx - firstx = dx = -ny = -dx = firstx - lastx
+      // lasty - firsty = dy = nx
+      //  correct direction of line
+      /*int epnx = getY(first) - getY(last);
+      int epny = getX(last) - getX(first);
+      if (epnx * l.normalX() + epny * l.normalY() < 0)
+          l.normalFlip();*/
 
-        virtual const ImageData& imageData() const final {
-            if (imageData_.empty()) {
-                imageData_.push_back(esource_.gx());
-                imageData_.push_back(esource_.gy());
-                imageData_.push_back(esource_.direction());
-                imageData_.push_back(esource_.magnitude());
-                imageData_.push_back(esource_.directionMap());
-            }
-            return imageData_;
-        }
+      lineSegments_.push_back(LineSegment(l, first, last));
+    });
+  }
 
-        const EdgeSegmentVector& segments() const {
-            return edge_.segments();
-        }
+  virtual const DataDescriptor& imageDataDescriptor() const final {
+    static DataDescriptor dsc;
+    if (dsc.empty()) {
+      dsc.push_back(DataDescriptorEntry("gx", "Gradient in x direction"));
+      dsc.push_back(DataDescriptorEntry("gy", "Gradient in y direction"));
+      dsc.push_back(DataDescriptorEntry("dir", "Gradient direction"));
+      dsc.push_back(DataDescriptorEntry("mag", "Gradient magnitude"));
+      dsc.push_back(DataDescriptorEntry("edge_map",
+                                        "Edge map, indicating if pixel is on edge or not (also giving direction 0-7)"));
+    }
+    return dsc;
+  }
 
-        virtual const EdgeSegmentVector& lineSupportSegments() const final {
-            return segments_;
-        }
+  virtual const ImageData& imageData() const final {
+    if (imageData_.empty()) {
+      imageData_.push_back(esource_.gx());
+      imageData_.push_back(esource_.gy());
+      imageData_.push_back(esource_.direction());
+      imageData_.push_back(esource_.magnitude());
+      imageData_.push_back(esource_.directionMap());
+    }
+    return imageData_;
+  }
 
-        virtual const PointVector& points() const final {
-            return points_;
-        }
+  const EdgeSegmentVector& segments() const { return edge_.segments(); }
 
-        virtual const IndexVector& indexes() const final {
-            return edge_.points();
-        }
+  virtual const EdgeSegmentVector& lineSupportSegments() const final { return segments_; }
 
-        ESOURCE& edgeSource() {
-            return esource_;
-        }
+  virtual const PointVector& points() const final { return points_; }
 
-        const ESOURCE& edgeSource() const {
-            return esource_;
-        }
+  virtual const IndexVector& indexes() const final { return edge_.points(); }
 
-        EDGE& edge() {
-            return edge_;
-        }
+  ESOURCE& edgeSource() { return esource_; }
 
-        const EDGE& edge() const {
-            return edge_;
-        }
+  const ESOURCE& edgeSource() const { return esource_; }
 
-        SPLIT& split() {
-            return split_;
-        }
+  EDGE& edge() { return edge_; }
 
-        const SPLIT& split() const {
-            return split_;
-        }
-        
-        FIT& fit() {
-            return fit_;
-        }
+  const EDGE& edge() const { return edge_; }
 
-        const FIT& fit() const {
-            return fit_;
-        }
+  SPLIT& split() { return split_; }
 
-        NFA& nfa() {
-            return nfa_;
-        }
-        const NFA& nfa() const {
-            return nfa_;
-        }
-    };
- 
-}
-#endif
-#endif
+  const SPLIT& split() const { return split_; }
+
+  FIT& fit() { return fit_; }
+
+  const FIT& fit() const { return fit_; }
+
+  NFA& nfa() { return nfa_; }
+  const NFA& nfa() const { return nfa_; }
+};
+
+}  // namespace lsfm

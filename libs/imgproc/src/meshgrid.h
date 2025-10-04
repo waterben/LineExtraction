@@ -7,23 +7,21 @@
 // MATLAB Coder version            : 3.0
 // C/C++ source code generated on  : 27-Jan-2016 06:44:05
 //
-#ifndef __MESHGRID_H__
-#define __MESHGRID_H__
+#pragma once
 
 // Include Files
+#include "logGaborFilter_types.h"
+#include "rt_nonfinite.h"
+#include "rtwtypes.h"
+
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rt_nonfinite.h"
-#include "rtwtypes.h"
-#include "logGaborFilter_types.h"
 
 // Function Declarations
-extern void meshgrid(const emxArray_real_T *x, const emxArray_real_T *y,
-                     emxArray_real_T *xx, emxArray_real_T *yy);
+extern void meshgrid(const emxArray_real_T* x, const emxArray_real_T* y, emxArray_real_T* xx, emxArray_real_T* yy);
 
-#endif
 
 //
 // File trailer for meshgrid.h

@@ -40,97 +40,100 @@
 //M*/
 
 
-#ifndef _LFD_FEATURETOOLS_HPP_
-#define _LFD_FEATURETOOLS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#include <string>
-#include <sstream>
-#include <map>
 #include <opencv2/core/core.hpp>
+
+#include <map>
+#include <sstream>
+#include <string>
 
 namespace lsfm {
 
 
+//! get the "best" keypoints of each bin, returns a vector of vectors, number of bins, width first
+template <class FT, class GT>  // const V<GT,V1Args...>
+void getBestKeypointsInBins(std::vector<std::vector<GT>>& kpBins,
+                            std::vector<GT>& keypoints,
+                            const int& width,
+                            const int& height,
+                            const int wBins,
+                            const int hBins,
+                            const int ptsPerBin,
+                            const bool sorted = true) {
+  if (!sorted) std::sort(keypoints.begin(), keypoints.end(), [](GT a, GT b) { return b.response < a.response; });
 
+  // std::vector<std::vector<GT>> kpBins;
+  kpBins.assign(wBins * hBins, std::vector<GT>());
 
-    //! get the "best" keypoints of each bin, returns a vector of vectors, number of bins, width first
-    template<class FT, class GT> // const V<GT,V1Args...>
-    void getBestKeypointsInBins(std::vector<std::vector<GT>> &kpBins, std::vector<GT> &keypoints, const int & width, const int & height, const int wBins, const int hBins, const int ptsPerBin, const bool sorted = true){
+  // sort into bins
+  for_each(keypoints.begin(), keypoints.end(), [&](GT& kp) {
+    int wB, hB;
+    wB = static_cast<int>(static_cast<FT>(kp.pt.x) / (static_cast<FT>(width) / static_cast<FT>(wBins)));
+    wB = (wB >= wBins ? wBins - 1 : wB);
+    wB = (wB < 0 ? 0 : wB);
+    hB = static_cast<int>(static_cast<FT>(kp.pt.y) / (static_cast<FT>(height) / static_cast<FT>(hBins)));
+    hB = (hB >= hBins ? hBins - 1 : hB);
+    hB = (hB < 0 ? 0 : hB);
 
-        if(!sorted)
-            std::sort(keypoints.begin(), keypoints.end(), [] (GT a, GT b) {return b.response < a.response;});
+    kpBins[(wB + (hB * wBins))].push_back(kp);
+  });
 
-        //std::vector<std::vector<GT>> kpBins;
-        kpBins.assign(wBins * hBins, std::vector<GT>());
-
-        // sort into bins
-        for_each(keypoints.begin(), keypoints.end(), [&] (GT &kp) {
-            int wB, hB;
-            wB = static_cast<int>( static_cast<FT>(kp.pt.x) / (static_cast<FT>(width) / static_cast<FT>(wBins)) );
-            wB = (wB >= wBins ? wBins - 1 : wB);
-            wB = (wB < 0 ? 0 : wB);
-            hB = static_cast<int>( static_cast<FT>(kp.pt.y) / (static_cast<FT>(height) / static_cast<FT>(hBins)) );
-            hB = (hB >= hBins ? hBins - 1 : hB);
-            hB = (hB < 0 ? 0 : hB);
-
-            kpBins[(wB + (hB*wBins))].push_back(kp);
-        });
-
-        // As the vector was sorted, the binned vectors are also sorted
-        for_each(kpBins.begin(), kpBins.end(), [&ptsPerBin] (std::vector<GT> &bin) {
-            if(bin.size() > ptsPerBin)
-                bin.resize(ptsPerBin);
-        });
-    }
-
-    //! get the "best" keypoints of each bin, returns a vector, number of bins, width first
-    template<class FT, class GT>
-    void getBestKeypointsInBins(std::vector<GT> &kps, std::vector<GT> &keypoints, const int & width, const int & height, const int wBins, const int hBins, const int ptsPerBin, const bool sorted = true){
-        std::vector<std::vector<GT>> kpBins;
-        getBestKeypointsInBins<FT>(kpBins, keypoints, width, height, wBins, hBins, ptsPerBin, sorted);
-        kps.clear();
-        for_each(kpBins.begin(), kpBins.end(), [&kps](std::vector<GT> &bin){
-            kps.insert(kps.end(), bin.begin(), bin.end());
-        });
-    }
-
-
-
-
-    //! filter out keypoints, which have no candidates for matching - to save time on descriptor creation afterwards
-    template<class GV, class FMV, class MV>
-    void filterCandidateKeypoints(GV & keypoints0, GV & keypoints1, FMV & candidates, const MV & mLeft_, const MV & mRight_){
-        std::vector<int> map1, map2;
-        map1.assign(mLeft_.size(), -1);
-        map2.assign(mRight_.size(), -1);
-
-        GV kn0new, kn1new;
-        int kpNr = 0;
-        for(int i = 0; i < mLeft_.size(); ++i){
-            if(mLeft_[i]){
-                map1[i] = kpNr;
-                ++kpNr;
-                kn0new.push_back(keypoints0[i]);
-            }
-        }
-        kpNr = 0;
-        for(int i = 0; i < mRight_.size(); ++i){
-            if(mRight_[i]){
-                map2[i] = kpNr;
-                ++kpNr;
-                kn1new.push_back(keypoints1[i]);
-            }
-        }
-        for(int i = 0; i < candidates.size(); ++i){
-            candidates[i].queryIdx = map1[candidates[i].queryIdx];
-            candidates[i].matchIdx = map2[candidates[i].matchIdx];
-        }
-        keypoints0 = kn0new;
-        keypoints1 = kn1new;
-    }
-
-
+  // As the vector was sorted, the binned vectors are also sorted
+  for_each(kpBins.begin(), kpBins.end(), [&ptsPerBin](std::vector<GT>& bin) {
+    if (bin.size() > ptsPerBin) bin.resize(ptsPerBin);
+  });
 }
-#endif
-#endif
+
+//! get the "best" keypoints of each bin, returns a vector, number of bins, width first
+template <class FT, class GT>
+void getBestKeypointsInBins(std::vector<GT>& kps,
+                            std::vector<GT>& keypoints,
+                            const int& width,
+                            const int& height,
+                            const int wBins,
+                            const int hBins,
+                            const int ptsPerBin,
+                            const bool sorted = true) {
+  std::vector<std::vector<GT>> kpBins;
+  getBestKeypointsInBins<FT>(kpBins, keypoints, width, height, wBins, hBins, ptsPerBin, sorted);
+  kps.clear();
+  for_each(kpBins.begin(), kpBins.end(),
+           [&kps](std::vector<GT>& bin) { kps.insert(kps.end(), bin.begin(), bin.end()); });
+}
+
+
+//! filter out keypoints, which have no candidates for matching - to save time on descriptor creation afterwards
+template <class GV, class FMV, class MV>
+void filterCandidateKeypoints(GV& keypoints0, GV& keypoints1, FMV& candidates, const MV& mLeft_, const MV& mRight_) {
+  std::vector<int> map1, map2;
+  map1.assign(mLeft_.size(), -1);
+  map2.assign(mRight_.size(), -1);
+
+  GV kn0new, kn1new;
+  int kpNr = 0;
+  for (int i = 0; i < mLeft_.size(); ++i) {
+    if (mLeft_[i]) {
+      map1[i] = kpNr;
+      ++kpNr;
+      kn0new.push_back(keypoints0[i]);
+    }
+  }
+  kpNr = 0;
+  for (int i = 0; i < mRight_.size(); ++i) {
+    if (mRight_[i]) {
+      map2[i] = kpNr;
+      ++kpNr;
+      kn1new.push_back(keypoints1[i]);
+    }
+  }
+  for (int i = 0; i < candidates.size(); ++i) {
+    candidates[i].queryIdx = map1[candidates[i].queryIdx];
+    candidates[i].matchIdx = map2[candidates[i].matchIdx];
+  }
+  keypoints0 = kn0new;
+  keypoints1 = kn1new;
+}
+
+
+}  // namespace lsfm
