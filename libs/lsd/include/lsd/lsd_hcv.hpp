@@ -40,13 +40,11 @@
 // C by Benjamin Wassermann
 // M*/
 
-#ifndef _HOUGH_CV_LSD_HPP_
-#define _HOUGH_CV_LSD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_source.hpp>
-#  include <lsd/lsd_ld.hpp>
-#  include <opencv2/opencv.hpp>
+#include <edge/edge_source.hpp>
+#include <lsd/lsd_ld.hpp>
+#include <opencv2/opencv.hpp>
 
 namespace lsfm {
 
@@ -355,6 +353,3 @@ class LsdHoughP : public LsdBase<FT, LPT> {
   const ESOURCE& edgeSource() const { return esource_; }
 };
 }  // namespace lsfm
-
-#endif
-#endif

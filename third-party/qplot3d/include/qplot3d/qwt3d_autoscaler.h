@@ -1,5 +1,4 @@
-#ifndef __qwt3d_autoscaler_2003_08_18_12_05__
-#define __qwt3d_autoscaler_2003_08_18_12_05__
+#pragma once
 
 #include "qwt3d_autoptr.h"
 #include "qwt3d_global.h"
@@ -46,6 +45,3 @@ class QWT3D_EXPORT LinearAutoScaler : public AutoScaler {
 };
 
 }  // namespace Qwt3D
-
-
-#endif

@@ -1,14 +1,12 @@
-#ifndef _TASK_HPP_
-#define _TASK_HPP_
-#ifdef __cplusplus
+#pragma once
 
 
-#  include <opencv2/core.hpp>
-#  include <utility/string_table.hpp>
-#  include <utility/value_manager.hpp>
+#include <opencv2/core.hpp>
+#include <utility/string_table.hpp>
+#include <utility/value_manager.hpp>
 
-#  include <filesystem>
-#  include <memory>
+#include <filesystem>
+#include <memory>
 
 
 namespace lsfm {
@@ -119,5 +117,3 @@ struct TaskLoader {
 
 typedef std::shared_ptr<TaskLoader> TaskLoaderPtr;
 }  // namespace lsfm
-#endif
-#endif

@@ -39,18 +39,16 @@
 //
 //M*/
 
-#ifndef _LSD_LD_HPP_
-#define _LSD_LD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/edge_source.hpp>
-#  include <edge/fit.hpp>
-#  include <edge/line_tracer.hpp>
-#  include <edge/spe.hpp>
-#  include <geometry/draw.hpp>
-#  include <imgproc/derivative_gradient.hpp>
-#  include <lsd/lsd_base.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/edge_source.hpp>
+#include <edge/fit.hpp>
+#include <edge/line_tracer.hpp>
+#include <edge/spe.hpp>
+#include <geometry/draw.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <lsd/lsd_base.hpp>
 
 namespace lsfm {
 
@@ -410,5 +408,3 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

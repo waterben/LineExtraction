@@ -40,18 +40,16 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GEOMETRY_BASE_HPP_
-#define _GEOMETRY_BASE_HPP_
-#ifdef __cplusplus
+#pragma once
 
 // #define EIGEN_MATRIXBASE_PLUGIN "MatrixBaseAddons.h"
-#  include <utility/limit.hpp>
+#include <utility/limit.hpp>
 
-#  include <Eigen/Dense>
-#  include <Eigen/Geometry>
-#  include <Eigen/StdVector>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <Eigen/StdVector>
 
-#  include <cstdlib>
+#include <cstdlib>
 
 namespace lsfm {
 namespace detail {
@@ -446,7 +444,3 @@ struct traits<lsfm::Matx<_Scalar, _Rows, _Cols> > {
 };
 }  // namespace internal
 }  // namespace Eigen
-
-
-#endif
-#endif

@@ -40,13 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GEOMETRY_EIGEN2CV_HPP_
-#define _GEOMETRY_EIGEN2CV_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/base.hpp>
-#  include <opencv2/calib3d.hpp>
-#  include <opencv2/core/core.hpp>
+#include <geometry/base.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/core.hpp>
 
 namespace cv {
 
@@ -620,6 +618,3 @@ cv::Matx<FT, rows, cols> cv2eigen(const Matx<FT, rows, cols>& m) {
   return cv::Matx<FT, rows, cols>(m.data());
 }
 }  // namespace lsfm
-
-#endif
-#endif

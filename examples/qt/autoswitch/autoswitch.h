@@ -1,5 +1,4 @@
-#ifndef AUTOSWITCH_H__
-#define AUTOSWITCH_H__
+#pragma once
 
 #include <qplot3d/qwt3d_function.h>
 #include <qplot3d/qwt3d_surfaceplot.h>
@@ -40,5 +39,3 @@ class Plot : public SurfacePlot {
  public slots:
   void rotate();
 };
-
-#endif

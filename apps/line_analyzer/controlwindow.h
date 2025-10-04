@@ -1,5 +1,4 @@
-#ifndef CONTROLWINDOW_H
-#define CONTROLWINDOW_H
+#pragma once
 
 #include "helpers.h"
 #include "latool.h"
@@ -207,5 +206,3 @@ class ControlWindow : public QMainWindow {
 
   QPen pen, mPen, nPen, nmPen, selPen, nSelPen, iPen;
 };
-
-#endif  // CONTROLWINDOW_H

@@ -41,13 +41,11 @@
 //M*/
 
 
-#ifndef _GEOMETRY_CAMERACV_HPP_
-#define _GEOMETRY_CAMERACV_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/camera.hpp>
-#  include <geometry/eigen2cv.hpp>
-#  include <opencv2/calib3d/calib3d.hpp>
+#include <geometry/camera.hpp>
+#include <geometry/eigen2cv.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 namespace lsfm {
 
@@ -274,6 +272,3 @@ typedef CameraCV<float> CameraCVf;
 typedef CameraCV<double> CameraCVd;
 
 }  // namespace lsfm
-
-#endif
-#endif

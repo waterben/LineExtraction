@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _PHASE_CONGRUENCY_HPP_
-#define _PHASE_CONGRUENCY_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/quadrature.hpp>
+#include <imgproc/quadrature.hpp>
 
 namespace lsfm {
 
@@ -204,5 +202,3 @@ class PhaseCongruencyLaplace : public PhaseCongruencyLaplaceI<ET>, public Quadra
 };
 
 }  // namespace lsfm
-#endif
-#endif

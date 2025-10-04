@@ -1,5 +1,4 @@
-#ifndef LA_HELPERS_H
-#define LA_HELPERS_H
+#pragma once
 
 #include "qplot/qcustomplot.h"
 #include <imgproc/derivative_gradient.hpp>
@@ -360,6 +359,3 @@ struct DetectorRHLSD : public Detector {
     };
 };
 */
-
-
-#endif  // LA_HELPERS_H

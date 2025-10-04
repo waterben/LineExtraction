@@ -1,13 +1,11 @@
 
-#ifndef _POINT_HPP_
-#define _POINT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/base.hpp>
+#include <geometry/base.hpp>
 
 // #include <opencv2/core/version.hpp>
 // #if CV_MAJOR_VERSION == 2
-#  include <opencv2/core/core.hpp>
+#include <opencv2/core/core.hpp>
 // #elif CV_MAJOR_VERSION == 3
 //  do opencv 3 code
 // #endif
@@ -412,6 +410,3 @@ static inline void pointConvert(const IVT& idxs, VT& res) {
   pointConvert(&idxs[0], &idxs[0] + idxs.size(), &res[0]);
 }
 }  // namespace lsfm
-
-#endif
-#endif

@@ -40,16 +40,14 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _MATLAB_HELPERS_HPP_
-#define _MATLAB_HELPERS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <algorithm>
-#  include <cmath>
-#  include <complex>
-#  include <vector>
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <vector>
 
 namespace lsfm {
 using std::acos;
@@ -1130,5 +1128,3 @@ inline cv::Mat_<FT> lowpassFilter(int rows, int cols, FT cutoff, int n) {
 }
 
 }  // namespace lsfm
-#endif
-#endif

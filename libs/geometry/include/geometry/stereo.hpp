@@ -41,12 +41,10 @@
 //M*/
 
 
-#ifndef _GEOMETRY_STEREO_HPP_
-#define _GEOMETRY_STEREO_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/camera.hpp>
-#  include <geometry/plane.hpp>
+#include <geometry/camera.hpp>
+#include <geometry/plane.hpp>
 
 
 namespace lsfm {
@@ -150,13 +148,13 @@ class Stereo {
   //! compute 3d point from two rays from camera origin through corresponding stereo pixels
   inline Vec3<FT> triangulate(const Vec2<FT>& pointL, const Vec2<FT>& pointR) const {
     Line3<FT> ray = lineFromPixel(camL_.focal(), camL_.offset(), rotL_, camL_.origin(), pointL);
-#  ifdef STEREO_FAST
+#ifdef STEREO_FAST
     return ray.nearestPointOnLine(lineFromPixel(camR_.focal(), camR_.offset(), rotR_, camR_.origin(), pointR));
-#  else
+#else
     Vec3<FT> a, b;
     ray.nearestPointOnLine(lineFromPixel(camR_.focal(), camR_.offset(), rotR_, camR_.origin(), pointR), a, b);
     return (a + b) * static_cast<FT>(0.5);
-#  endif
+#endif
   }
 
   //! compute 3d points from point vector
@@ -379,5 +377,3 @@ typedef StereoPlane<float> Stereo2Planef;
 typedef StereoPlane<double> Stereo2Planed;
 
 }  // namespace lsfm
-#endif
-#endif

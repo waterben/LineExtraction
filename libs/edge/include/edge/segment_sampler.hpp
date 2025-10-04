@@ -43,14 +43,12 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _SEGMENT_SAMPLER_
-#define _SEGMENT_SAMPLER_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/index.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/index.hpp>
 
-#  include <utility>
+#include <utility>
 
 namespace lsfm {
 
@@ -537,5 +535,3 @@ class AdaptiveSegmentSampler : public SegmentSampler<PT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

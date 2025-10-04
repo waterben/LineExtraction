@@ -43,11 +43,9 @@
 //
 
 
-#ifndef _LFD_LRDESCRIPTOR_HPP_
-#define _LFD_LRDESCRIPTOR_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/GenericDescriptor.hpp>
+#include <lfd/GenericDescriptor.hpp>
 
 
 namespace lsfm {
@@ -175,5 +173,3 @@ typename Fdc<FT, GT, LRDescritpor<FT, Helper::dscSize>>::Ptr createGenericLRFdc(
       new FdcGenericLR<FT, GT, Helper>(tmp, pos, stepDir, lstep));
 }
 }  // namespace lsfm
-#endif
-#endif

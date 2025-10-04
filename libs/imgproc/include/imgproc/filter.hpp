@@ -40,15 +40,13 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _FILTER_HPP_
-#define _FILTER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
-#  include <utility/range.hpp>
-#  include <utility/value_manager.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/range.hpp>
+#include <utility/value_manager.hpp>
 
-#  include <map>
+#include <map>
 
 
 namespace lsfm {
@@ -96,5 +94,3 @@ class FilterI : public ValueManager {
   virtual std::string name() const = 0;
 };
 }  // namespace lsfm
-#endif
-#endif

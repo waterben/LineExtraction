@@ -15,8 +15,7 @@
       Houston, Texas
 */
 
-#ifndef LSYMSOL_H
-#define LSYMSOL_H
+#pragma once
 
 #include <arpack++/blas1c.h>
 #include <arpack++/lapackc.h>
@@ -184,6 +183,3 @@ void Solution(MATRA& A, MATRB& B, ARluSymGenEig<ARFLOAT>& Prob)
   }
 
 }  // Solution
-
-
-#endif  // LSYMSOL_H

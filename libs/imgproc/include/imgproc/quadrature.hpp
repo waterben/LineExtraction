@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _QUADRATURE_HPP_
-#define _QUADRATURE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/laplace.hpp>
+#include <imgproc/gradient.hpp>
+#include <imgproc/laplace.hpp>
 
 namespace lsfm {
 
@@ -338,5 +336,3 @@ class QuadratureSimple : public Quadrature<IT, GT, FT, FT, FT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

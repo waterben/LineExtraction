@@ -1,5 +1,4 @@
-#ifndef designerworkaround_h__2005_07_10_10_46_begin_guarded_code
-#define designerworkaround_h__2005_07_10_10_46_begin_guarded_code
+#pragma once
 
 #include <QAction>
 #include <QActionGroup>
@@ -71,5 +70,3 @@ class DesignerWorkaround {
 
   void setupWorkaround(QMainWindow* mw);
 };
-
-#endif

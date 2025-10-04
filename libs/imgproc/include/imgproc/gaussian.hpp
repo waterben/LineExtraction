@@ -40,13 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GAUSSIAN_HPP_
-#define _GAUSSIAN_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <cmath>
+#include <cmath>
 
 namespace lsfm {
 
@@ -136,5 +134,3 @@ cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
 }
 
 }  // namespace lsfm
-#endif
-#endif

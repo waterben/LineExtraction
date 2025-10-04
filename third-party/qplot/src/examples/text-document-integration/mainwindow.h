@@ -23,8 +23,7 @@
 **          Version: 1.3.0                                                **
 ****************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "qcpdocumentobject.h"
 
@@ -52,5 +51,3 @@ class MainWindow : public QMainWindow {
  private:
   Ui::MainWindow* ui;
 };
-
-#endif  // MAINWINDOW_H

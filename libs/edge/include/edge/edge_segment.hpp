@@ -43,12 +43,10 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _EDGE_SEGMENT_HPP_
-#define _EDGE_SEGMENT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_source.hpp>
-#  include <utility/value_manager.hpp>
+#include <edge/edge_source.hpp>
+#include <utility/value_manager.hpp>
 
 namespace lsfm {
 enum { ES_NONE = 0, ES_REVERSE = 1, ES_CLOSED = 2 };
@@ -420,5 +418,3 @@ inline char mapDir<4>(float xs, float ys) {
 }
 
 }  // namespace lsfm
-#endif
-#endif

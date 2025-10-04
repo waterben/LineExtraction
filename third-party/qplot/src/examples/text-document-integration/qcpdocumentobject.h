@@ -23,8 +23,7 @@
 **          Version: 1.3.0                                                **
 ****************************************************************************/
 
-#ifndef QCPDOCUMENTOBJECT_H
-#define QCPDOCUMENTOBJECT_H
+#pragma once
 
 #include "../../qcustomplot.h"
 
@@ -52,5 +51,3 @@ class QCPDocumentObject : public QObject, public QTextObjectInterface {
   static QTextCharFormat generatePlotFormat(QCustomPlot* plot, int width = 0, int height = 0);
 };
 Q_DECLARE_METATYPE(QPicture)
-
-#endif  // QCPDOCUMENTOBJECT_H

@@ -45,12 +45,10 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _LSD_CC_HPP_
-#define _LSD_CC_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <lsd/lsd_cc_base.hpp>
+#include <edge/edge_segment.hpp>
+#include <lsd/lsd_cc_base.hpp>
 
 
 namespace lsfm {
@@ -838,5 +836,3 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

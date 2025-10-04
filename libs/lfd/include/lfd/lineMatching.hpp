@@ -1,21 +1,19 @@
-#ifndef LINEMATCHING_H
-#define LINEMATCHING_H
+#pragma once
 
-#ifdef __cplusplus
 
-#  include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
-#  include <iostream>
+#include <iostream>
 // #include <lsd/lsd_el.hpp>
-#  include <geometry/base.hpp>
-#  include <geometry/draw.hpp>
-#  include <lsd/lsd_cc.hpp>
+#include <geometry/base.hpp>
+#include <geometry/draw.hpp>
+#include <lsd/lsd_cc.hpp>
 // #include "../slam/slamDataModel.hpp"
 // #include "../slam/pose_estimator.hpp"
 
-#  include <opencv2/line_descriptor/descriptor.hpp>
+#include <opencv2/line_descriptor/descriptor.hpp>
 
-#  define MATCHES_DIST_THRESHOLD_LM 75  // 25
+#define MATCHES_DIST_THRESHOLD_LM 75  // 25
 
 typedef double FT;
 
@@ -385,6 +383,3 @@ inline std::vector<DMatch> matchingLRcheck(cv::Mat cam0grey, cv::Mat cam1grey, L
 }
 
 }  // namespace lsfm
-
-#endif
-#endif

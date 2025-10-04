@@ -40,18 +40,16 @@
  // C by Benjamin Wassermann
  //M*/
 
-#ifndef _FIT_LINE_HPP_
-#define _FIT_LINE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/index.hpp>
-#  include <geometry/line.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <utility/value_manager.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/index.hpp>
+#include <geometry/line.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/value_manager.hpp>
 
-#  include <string>
-#  include <vector>
+#include <string>
+#include <vector>
 
 
 namespace lsfm {
@@ -665,5 +663,3 @@ class MEstimatorFitLine : public FitLine<MEstimatorFit<FT, PT>> {
   }
 };
 }  // namespace lsfm
-#endif
-#endif

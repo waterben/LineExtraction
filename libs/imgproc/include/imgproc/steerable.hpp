@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _STEERABLE_HPP_
-#define _STEERABLE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gaussian.hpp>
+#include <imgproc/gaussian.hpp>
 
 namespace lsfm {
 
@@ -109,5 +107,3 @@ cv::Mat_<FT> SteerGaussianD2(double angle, const cv::Mat& Ik0, const cv::Mat& Ik
 
 
 }  // namespace lsfm
-#endif
-#endif

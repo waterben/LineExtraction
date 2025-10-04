@@ -1,19 +1,17 @@
-#ifndef _GEOMETRY_OBJECT3D_HPP_
-#define _GEOMETRY_OBJECT3D_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line3.hpp>
+#include <geometry/line3.hpp>
 
-#  include <map>
-#  include <sstream>
+#include <map>
+#include <sstream>
 // Removed Boost: provide local helpers instead
-#  include <algorithm>
-#  include <cctype>
-#  include <stdexcept>
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
 // #include <boost/filesystem/fstream.hpp>     // <--- Opengl has trouble if included
 
-#  include <fstream>
-#  include <string>
+#include <fstream>
+#include <string>
 
 namespace lsfm {
 
@@ -326,6 +324,3 @@ bool saveObjects(const std::string& file, Object3DList<FT>& data) {
 }
 
 }  // namespace lsfm
-
-#endif
-#endif

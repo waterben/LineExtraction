@@ -39,18 +39,16 @@
 //
 //M*/
 
-#ifndef _LSD_EL_HPP_
-#define _LSD_EL_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_linking.hpp>
-#  include <edge/edge_source.hpp>
-#  include <edge/fit.hpp>
-#  include <edge/nfa.hpp>
-#  include <edge/spe.hpp>
-#  include <edge/split.hpp>
-#  include <imgproc/derivative_gradient.hpp>
-#  include <lsd/lsd_base.hpp>
+#include <edge/edge_linking.hpp>
+#include <edge/edge_source.hpp>
+#include <edge/fit.hpp>
+#include <edge/nfa.hpp>
+#include <edge/spe.hpp>
+#include <edge/split.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <lsd/lsd_base.hpp>
 
 namespace lsfm {
 
@@ -254,5 +252,3 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

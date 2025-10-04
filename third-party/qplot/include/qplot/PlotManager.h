@@ -1,5 +1,4 @@
-#ifndef PLOTMANAGER_H
-#define PLOTMANAGER_H
+#pragma once
 
 #include <qplot/PlotWindow.h>
 
@@ -220,5 +219,3 @@ class PlotManager {
     plot->plot(mat, fit_axis, prange_x, prange_y, drange, grad, st, interpolate);
   }
 };
-
-#endif

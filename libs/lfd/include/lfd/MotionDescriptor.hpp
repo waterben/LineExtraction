@@ -40,11 +40,9 @@
 //M*/
 
 
-#ifndef _LFD_MOTIONDESCRIPTOR_HPP_
-#define _LFD_MOTIONDESCRIPTOR_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/GenericDescriptor.hpp>
+#include <lfd/GenericDescriptor.hpp>
 
 namespace lsfm {
 
@@ -93,5 +91,3 @@ class FdcMotion : public FdcObj<FT, GT, MotionDescritpor<FT>> {
   virtual void setData(const MatMap& data) {}
 };
 }  // namespace lsfm
-#endif
-#endif

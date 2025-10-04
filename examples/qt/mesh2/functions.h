@@ -1,5 +1,4 @@
-#ifndef __EXAMPLE_H__
-#define __EXAMPLE_H__
+#pragma once
 
 #include <qplot3d/qwt3d_function.h>
 #include <qplot3d/qwt3d_parametricsurface.h>
@@ -161,5 +160,3 @@ class Dini : public ParametricSurface {
 };
 
 void createCone(Qwt3D::TripleField& conepos, Qwt3D::CellField& conecell);
-
-#endif

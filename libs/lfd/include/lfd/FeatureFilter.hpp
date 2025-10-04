@@ -40,13 +40,11 @@
 //M*/
 
 
-#ifndef _LFD_FEATUREFILTER_HPP_
-#define _LFD_FEATUREFILTER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <algorithm>
-#  include <iterator>
-#  include <limits>
+#include <algorithm>
+#include <iterator>
+#include <limits>
 
 namespace lsfm {
 // #define TRIM_2D_MATCHES
@@ -204,5 +202,3 @@ class FeatureFilter {
 };
 
 }  // namespace lsfm
-#endif
-#endif

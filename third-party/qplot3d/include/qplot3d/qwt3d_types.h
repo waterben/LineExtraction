@@ -1,29 +1,28 @@
+#pragma once
+
 #if defined(_MSC_VER) /* MSVC Compiler */
 #  pragma warning(disable : 4786)
 #endif
 
-#ifndef __DATATYPES_H__
-#  define __DATATYPES_H__
+#ifdef _DEBUG
+#  include <fstream>
+#endif
 
-#  ifdef _DEBUG
-#    include <fstream>
-#  endif
+#include "qwt3d_global.h"
 
-#  include "qwt3d_global.h"
+#include <string>
 
-#  include <string>
+#if defined(Q_WS_WIN)
+#  include <windows.h>
+#endif
 
-#  if defined(Q_WS_WIN)
-#    include <windows.h>
-#  endif
+#ifndef WHEEL_DELTA
+#  define WHEEL_DELTA 120
+#endif
 
-#  ifndef WHEEL_DELTA
-#    define WHEEL_DELTA 120
-#  endif
-
-#  include "qwt3d_helper.h"
-#  include "qwt3d_openglhelper.h"
-#  include "qwt3d_portability.h"
+#include "qwt3d_helper.h"
+#include "qwt3d_openglhelper.h"
+#include "qwt3d_portability.h"
 
 //! Common namespace for all QwtPlot3D classes
 namespace Qwt3D {
@@ -124,8 +123,8 @@ struct QWT3D_EXPORT Triple {
   //! Initialize Triple with x,y and z
   explicit Triple(double xv = 0, double yv = 0, double zv = 0) : x(xv), y(yv), z(zv) {}
 
-#  ifndef QWT3D_NOT_FOR_DOXYGEN
-#    ifdef Q_OS_IRIX
+#ifndef QWT3D_NOT_FOR_DOXYGEN
+#  ifdef Q_OS_IRIX
   Triple(const Triple& val) {
     if (&val == this) return;
     x = val.x;
@@ -139,8 +138,8 @@ struct QWT3D_EXPORT Triple {
     z = val.z;
     return *this;
   }
-#    endif
-#  endif  // QWT3D_NOT_FOR_DOXYGEN
+#  endif
+#endif  // QWT3D_NOT_FOR_DOXYGEN
 
   //! Triple coordinates
   double x, y, z;
@@ -270,7 +269,7 @@ struct QWT3D_EXPORT RGBA {
 //! A Color field
 typedef std::vector<RGBA> ColorVector;
 
-#  ifndef QWT3D_NOT_FOR_DOXYGEN
+#ifndef QWT3D_NOT_FOR_DOXYGEN
 
 QWT3D_EXPORT QColor GL2Qt(GLdouble r, GLdouble g, GLdouble b);  //!< RGB -> QColor
 QWT3D_EXPORT Qwt3D::RGBA Qt2GL(QColor col);                     //!< QColor -> RGBA
@@ -364,8 +363,6 @@ inline double dotProduct(Triple const& u, Triple const& v) { return u.x * v.x + 
 void convexhull2d(std::vector<unsigned>& idx, const std::vector<Qwt3D::Tuple>& src);
 
 
-#  endif  // QWT3D_NOT_FOR_DOXYGEN
+#endif  // QWT3D_NOT_FOR_DOXYGEN
 
 }  // namespace Qwt3D
-
-#endif

@@ -41,11 +41,9 @@
 //M*/
 
 
-#ifndef _GEOMETRY_PLANE_HPP_
-#define _GEOMETRY_PLANE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line3.hpp>
+#include <geometry/line3.hpp>
 
 namespace lsfm {
 
@@ -226,5 +224,3 @@ typedef Plane<float> Planef;
 typedef Plane<double> Planed;
 
 }  // namespace lsfm
-#endif
-#endif

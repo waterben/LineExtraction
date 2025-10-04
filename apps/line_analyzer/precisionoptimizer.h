@@ -1,5 +1,4 @@
-#ifndef PRECISIONOPTIMIZER_H
-#define PRECISIONOPTIMIZER_H
+#pragma once
 
 #include "controlwindow.h"
 #include "helpers.h"
@@ -63,5 +62,3 @@ class PrecisionOptimizer : public LATool {
     });
   }
 };
-
-#endif  // PRECISIONOPTIMIZER_H

@@ -40,15 +40,13 @@
 //M*/
 
 
-#ifndef _LFD_FEATUREMATCHER_HPP_
-#define _LFD_FEATUREMATCHER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/FeatureFilter.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <utility/option_manager.hpp>
+#include <lfd/FeatureFilter.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/option_manager.hpp>
 
-#  include <algorithm>
+#include <algorithm>
 
 namespace lsfm {
 
@@ -571,5 +569,3 @@ class FmBruteForce : public OptionManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

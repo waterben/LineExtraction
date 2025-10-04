@@ -1,12 +1,10 @@
-#ifndef _SPE_HPP_
-#define _SPE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/index.hpp>
-#  include <imgproc/interpolate.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/index.hpp>
+#include <imgproc/interpolate.hpp>
 
-#  include <vector>
+#include <vector>
 
 namespace lsfm {
 
@@ -393,6 +391,3 @@ struct PixelEstimator {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

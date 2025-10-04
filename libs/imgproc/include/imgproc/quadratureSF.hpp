@@ -1,12 +1,10 @@
 
-#ifndef _QUADRATURESF_HPP_
-#define _QUADRATURESF_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/polar.hpp>
-#  include <imgproc/quadrature.hpp>
-#  include <opencv2/core/core.hpp>
-#  include <utility/matlab_helpers.hpp>
+#include <imgproc/polar.hpp>
+#include <imgproc/quadrature.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
 //! Spherical Possion qudarture filter operating in freqency space
@@ -253,11 +251,11 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
     if (cols_ < cols_ext_ || rows_ < rows_ext_)
       cv::copyMakeBorder(src, src, 0, rows_ext_ - rows_, 0, cols_ext_ - cols_, cv::BORDER_REPLICATE);
 
-#  ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
+#ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
     imgf_ = perfft2(src);
-#  else
+#else
     imgf_ = fft2(src);
-#  endif
+#endif
   }
 
   //! test if energy is computed
@@ -382,6 +380,3 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

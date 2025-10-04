@@ -1,5 +1,4 @@
-#ifndef lightingdlg_h__2004_03_07_13_35_begin_guarded_code
-#define lightingdlg_h__2004_03_07_13_35_begin_guarded_code
+#pragma once
 
 #include "ui_lightingdlgbase.h"
 #include <qplot3d/qwt3d_color.h>
@@ -69,6 +68,3 @@ class LightingDlg : public LightingBase {
   void reset();
   void setRotation(double x, double y, double z);
 };
-
-
-#endif /* include guarded */

@@ -1,5 +1,4 @@
-#ifndef QUIVER_H
-#define QUIVER_H
+#pragma once
 
 #include "ui_quiver.h"
 
@@ -34,5 +33,3 @@ class Quiver : public QMainWindow {
  signals:
   void computeQuivers();
 };
-
-#endif  // QUIVER_H

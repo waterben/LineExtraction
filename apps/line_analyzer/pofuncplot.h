@@ -1,5 +1,4 @@
-#ifndef POFUNCPLOT_H
-#define POFUNCPLOT_H
+#pragma once
 
 #include "controlwindow.h"
 #include "ui_pofuncplot.h"
@@ -220,5 +219,3 @@ class POFuncPlot : public LATool {
   void fitProfile();
   void fitRotation();
 };
-
-#endif  // PRECISIONOPTIMIZER_H

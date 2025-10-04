@@ -39,11 +39,9 @@
 //
 //M*/
 
-#ifndef _ED_PRIMAL_LSD_HPP_
-#define _ED_PRIMAL_LSD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lsd/lsd_base.hpp>
+#include <lsd/lsd_base.hpp>
 
 struct LS {
   double sx, sy, ex, ey;  // Start & end coordinates of the line segment
@@ -101,5 +99,3 @@ class LsdEDTA : public LsdBase<FT, LPT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

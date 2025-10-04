@@ -39,15 +39,13 @@
 //
 //M*/
 
-#ifndef _LFD_PAIRWISELINEMATCHER_HPP_
-#define _LFD_PAIRWISELINEMATCHER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <arpack++/arlsmat.h>
-#  include <arpack++/arlssym.h>
-#  include <geometry/line.hpp>
+#include <arpack++/arlsmat.h>
+#include <arpack++/arlssym.h>
+#include <geometry/line.hpp>
 
-#  include <map>
+#include <map>
 
 namespace lsfm {
 
@@ -501,7 +499,3 @@ template <class FT, class DT>
 const FT PairwiseLineMatcher<FT, DT>::Inf = std::numeric_limits<FT>::max();
 
 }  // namespace lsfm
-
-
-#endif
-#endif

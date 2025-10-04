@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef __LIMIT_HPP_
-#define __LIMIT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <limits>
+#include <limits>
 
 namespace lsfm {
 
@@ -63,5 +61,3 @@ struct LIMITS<float> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

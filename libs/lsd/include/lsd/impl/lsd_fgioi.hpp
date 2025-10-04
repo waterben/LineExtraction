@@ -33,8 +33,7 @@
     @author rafael grompone von gioi <grompone@gmail.com>
  */
 /*----------------------------------------------------------------------------*/
-#ifndef LSD_FGIOI_IMPL
-#  define LSD_FGIOI_IMPL
+#pragma once
 
 /*----------------------------------------------------------------------------*/
 /** LSD Full Interface
@@ -283,5 +282,4 @@ double* lsd_scale(int* n_out, double* img, int X, int Y, double scale);
  */
 double* lsd(int* n_out, double* img, int X, int Y);
 
-#endif /* !LSD_HEADER */
 /*----------------------------------------------------------------------------*/

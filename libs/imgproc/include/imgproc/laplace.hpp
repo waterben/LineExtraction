@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _LAPLACE_HPP_
-#define _LAPLACE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include "opencv2/imgproc/imgproc.hpp"
-#  include <imgproc/filter.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
+#include <imgproc/filter.hpp>
 
 
 namespace lsfm {
@@ -170,9 +168,9 @@ class LoG : public LaplaceSimple<IT, LT> {
       for (int j = -width; j <= width; ++j)
         kernel(j + width, i + width) = static_cast<LT>(exp_d2(i * spacing, j * spacing, scale));
         // zero dc
-#  ifndef DISABLE_DC_ZERO_FIX
+#ifndef DISABLE_DC_ZERO_FIX
     kernel -= cv::sum(kernel)[0] / (kernel.size().area());
-#  endif
+#endif
 
     return kernel;
   }
@@ -351,5 +349,3 @@ class LaplaceCV : public Laplace<IT, LT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

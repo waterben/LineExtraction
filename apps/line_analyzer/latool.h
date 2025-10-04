@@ -1,5 +1,4 @@
-#ifndef LA_TOOL_H
-#define LA_TOOL_H
+#pragma once
 
 #include <QtWidgets/QMainWindow>
 
@@ -18,5 +17,3 @@ class LATool : public QMainWindow {
 };
 
 typedef std::vector<LATool*> LATools;
-
-#endif  // LA_TOOL_H

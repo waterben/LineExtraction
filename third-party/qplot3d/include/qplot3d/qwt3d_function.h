@@ -1,5 +1,4 @@
-#ifndef qwt3d_function_h__2004_03_05_13_51_begin_guarded_code
-#define qwt3d_function_h__2004_03_05_13_51_begin_guarded_code
+#pragma once
 
 #include "qwt3d_gridmapping.h"
 
@@ -34,5 +33,3 @@ class QWT3D_EXPORT Function : public GridMapping {
 };
 
 }  // namespace Qwt3D
-
-#endif /* include guarded */

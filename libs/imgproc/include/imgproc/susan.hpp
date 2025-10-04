@@ -285,11 +285,9 @@ between "versions 1" and the combined program, version 2.
 
 /* ********** Optional settings */
 
-#ifndef _SUSAN_GRADIENT_HPP_
-#define _SUSAN_GRADIENT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
+#include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
@@ -1023,6 +1021,3 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   }
 };
 }  // namespace lsfm
-
-#endif
-#endif

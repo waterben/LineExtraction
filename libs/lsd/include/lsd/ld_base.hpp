@@ -39,14 +39,12 @@
 //
 //M*/
 
-#ifndef _LD_BASE_HPP_
-#define _LD_BASE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <opencv2/imgproc/types_c.h>
-#  include <utility/value_manager.hpp>
+#include <geometry/line.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
+#include <utility/value_manager.hpp>
 
 namespace lsfm {
 
@@ -132,5 +130,3 @@ class LdBase : public ValueManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

@@ -1,5 +1,4 @@
-#ifndef __qwt3d_io_2003_07_04_23_27__
-#define __qwt3d_io_2003_07_04_23_27__
+#pragma once
 
 #include "qwt3d_global.h"
 
@@ -128,5 +127,3 @@ class QWT3D_EXPORT PixmapWriter : public IO::Functor {
 };
 
 }  // namespace Qwt3D
-
-#endif

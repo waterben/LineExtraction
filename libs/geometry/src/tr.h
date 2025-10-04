@@ -65,8 +65,7 @@
  */
 
 
-#ifndef TR_H
-#define TR_H
+#pragma once
 
 
 #include <GL/gl.h>
@@ -143,7 +142,4 @@ extern void trRasterPos3f(TRcontext* tr, GLfloat x, GLfloat y, GLfloat z);
 
 #ifdef __cplusplus
 }
-#endif
-
-
 #endif

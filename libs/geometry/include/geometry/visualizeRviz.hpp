@@ -1,11 +1,9 @@
-#ifndef _VISUALIZE_RVIZ_HPP_
-#define _VISUALIZE_RVIZ_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <visualization_msgs/Marker.h>
-#  include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
-#  include <string>
+#include <string>
 
 
 namespace lsfm {
@@ -293,6 +291,3 @@ void visualizePointsRviz(const std::vector<MyPoint3D> points3D,
 
 
 }  // namespace lsfm
-
-#endif
-#endif

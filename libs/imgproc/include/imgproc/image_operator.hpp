@@ -40,16 +40,14 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _IMAGE_OPERATOR_HPP_
-#define _IMAGE_OPERATOR_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <opencv2/photo/photo.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/photo/photo.hpp>
 
-#  include <memory>
-#  include <string>
+#include <memory>
+#include <string>
 
 namespace lsfm {
 
@@ -474,5 +472,3 @@ class GaussianNoiseOperator : public ImageOperator {
 };
 
 }  // namespace lsfm
-#endif
-#endif

@@ -1,5 +1,4 @@
-#ifndef mesh2mainwindow_h__2004_03_07_13_38_begin_guarded_code
-#define mesh2mainwindow_h__2004_03_07_13_38_begin_guarded_code
+#pragma once
 
 #include "designerworkaround.h"
 #include "ui_mesh2mainwindowbase.h"
@@ -113,5 +112,3 @@ class Mesh2MainWindow : public DummyBase {
   ColorMapPreview* colormappv_;
 #endif
 };
-
-#endif /* include guarded */

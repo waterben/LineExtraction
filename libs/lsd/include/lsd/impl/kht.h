@@ -31,8 +31,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _KHT_IMPL_
-#define _KHT_IMPL_
+#pragma once
 
 #include <cmath>
 #include <cstdlib>
@@ -421,5 +420,3 @@ void voting(accumulator_t& accumulator,
 
 // Identify the peaks of votes (most significant straight lines) in the accmulator.
 void peak_detection(lines_list_t& lines, const accumulator_t& accumulator);
-
-#endif  // !_KHT_

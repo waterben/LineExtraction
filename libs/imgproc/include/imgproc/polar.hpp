@@ -1,10 +1,8 @@
 
-#ifndef _POLAR_HPP_
-#define _POLAR_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
-#  include <utility/range.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/range.hpp>
 
 
 namespace lsfm {
@@ -275,6 +273,3 @@ struct PolarCV {
 
 
 }  // namespace lsfm
-
-#endif
-#endif

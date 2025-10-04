@@ -7,18 +7,17 @@
 // MATLAB Coder version            : 3.0
 // C/C++ source code generated on  : 27-Jan-2016 06:44:05
 //
-#ifndef __LOGGABORFILTER_EMXAPI_H__
-#  define __LOGGABORFILTER_EMXAPI_H__
+#pragma once
 
 // Include Files
-#  include "logGaborFilter_types.h"
-#  include "rt_nonfinite.h"
-#  include "rtwtypes.h"
+#include "logGaborFilter_types.h"
+#include "rt_nonfinite.h"
+#include "rtwtypes.h"
 
-#  include <math.h>
-#  include <stddef.h>
-#  include <stdlib.h>
-#  include <string.h>
+#include <math.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Function Declarations
 extern emxArray_creal_T* emxCreateND_creal_T(int numDimensions, int* size);
@@ -34,7 +33,6 @@ extern void emxDestroyArray_real_T(emxArray_real_T* emxArray);
 extern void emxInitArray_creal_T(emxArray_creal_T** pEmxArray, int numDimensions);
 extern void emxInitArray_real_T(emxArray_real_T** pEmxArray, int numDimensions);
 
-#endif
 
 //
 // File trailer for logGaborFilter_emxAPI.h

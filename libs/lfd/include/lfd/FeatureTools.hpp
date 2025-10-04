@@ -40,15 +40,13 @@
 //M*/
 
 
-#ifndef _LFD_FEATURETOOLS_HPP_
-#define _LFD_FEATURETOOLS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/core/core.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <map>
-#  include <sstream>
-#  include <string>
+#include <map>
+#include <sstream>
+#include <string>
 
 namespace lsfm {
 
@@ -139,5 +137,3 @@ void filterCandidateKeypoints(GV& keypoints0, GV& keypoints1, FMV& candidates, c
 
 
 }  // namespace lsfm
-#endif
-#endif

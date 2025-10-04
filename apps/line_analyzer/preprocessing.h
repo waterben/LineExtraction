@@ -1,5 +1,4 @@
-#ifndef PREPROCESSING_H
-#define PREPROCESSING_H
+#pragma once
 
 #include "ui_preprocessing.h"
 
@@ -21,5 +20,3 @@ class PreProcessing : public QMainWindow {
   void blurChange(int);
   void noiseChange(int);
 };
-
-#endif  // PREPROCESSING_H

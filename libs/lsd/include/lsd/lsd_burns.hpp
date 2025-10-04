@@ -45,8 +45,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef _LSD_BURNS_HPP_
-#define _LSD_BURNS_HPP_
+#pragma once
 
 #include <edge/fit.hpp>
 #include <edge/index.hpp>
@@ -628,6 +627,3 @@ class LsdBurns : public LsdBase<FT, LPT> {
   }
 };
 }  // namespace lsfm
-
-
-#endif

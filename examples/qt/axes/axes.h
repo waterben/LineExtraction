@@ -1,5 +1,4 @@
-#ifndef axes_h__2004_06_07_10_38_begin_guarded_code
-#define axes_h__2004_06_07_10_38_begin_guarded_code
+#pragma once
 
 #include <qplot3d/qwt3d_plot.h>
 using namespace Qwt3D;
@@ -59,6 +58,3 @@ class TimeItems : public LinearScale {
     return QString("");
   }
 };
-
-
-#endif /* include guarded */

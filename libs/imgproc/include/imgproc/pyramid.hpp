@@ -41,8 +41,7 @@
 //M*/
 
 
-#ifndef _PYRAMID_H
-#define _PYRAMID_H
+#pragma once
 
 
 #include <opencv2/core/core.hpp>
@@ -311,6 +310,3 @@ cv::Mat draw(const Pyramid<MT>& pyramid) {
 }
 
 }  // namespace lsfm
-
-
-#endif

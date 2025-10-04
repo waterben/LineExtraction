@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _LINE_TRACER_HPP_
-#define _LINE_TRACER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <geometry/line.hpp>
+#include <edge/edge_segment.hpp>
+#include <geometry/line.hpp>
 
 namespace lsfm {
 
@@ -1072,6 +1070,3 @@ template <class FT, template <class> class LPT, class PT, int DM>
 int LineTracer<FT, LPT, PT, DM>::idxSelector_[21] = {1,   -2, 3,   -4, 5,   -6, 7,   -8, 9,   -10, 11,
                                                      -12, 13, -14, 15, -16, 17, -18, 19, -20, 21};
 }  // namespace lsfm
-
-#endif
-#endif

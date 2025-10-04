@@ -40,13 +40,11 @@
 //M*/
 
 
-#ifndef _LFD_STEREOLINEMATCHER_HPP_
-#define _LFD_STEREOLINEMATCHER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/FeatureMatcher.hpp>
-#  include <lfd/LRDescriptor.hpp>
-#  include <lfd/StereoLineFilter.hpp>
+#include <lfd/FeatureMatcher.hpp>
+#include <lfd/LRDescriptor.hpp>
+#include <lfd/StereoLineFilter.hpp>
 
 namespace lsfm {
 
@@ -272,5 +270,3 @@ class StereoLineMatcher : public OptionManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

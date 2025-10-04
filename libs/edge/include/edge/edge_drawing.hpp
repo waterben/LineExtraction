@@ -43,11 +43,9 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _EDGE_DRAWING_HPP_
-#define _EDGE_DRAWING_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
+#include <edge/edge_segment.hpp>
 
 namespace lsfm {
 
@@ -56,10 +54,10 @@ class EsdDrawing : public EsdBase<MT, index_type> {
   cv::Mat dir_;
   char* pdir_;
 
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
   cv::Mat draw;
   cv::Vec3b col;
-#  endif
+#endif
 
   short dmapStore_[20];
 
@@ -71,9 +69,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
   int minPixels_;
   float magTh_, magMul_;
-#  ifndef NO_ADDED_SEEDS
+#ifndef NO_ADDED_SEEDS
   IndexVector addedSeeds_;
-#  endif
+#endif
 
   using EsdBase<MT, index_type>::points_;
   using EsdBase<MT, index_type>::segments_;
@@ -134,14 +132,14 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     dir_.col(0).setTo(-2);
     dir_.col(dir.cols - 1).setTo(-2);
     pdir_ = dir_.ptr<char>();
-#  ifndef NO_ADDED_SEEDS
+#ifndef NO_ADDED_SEEDS
     addedSeeds_.clear();
-#  endif
+#endif
 
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
     draw.create(dir_.size(), CV_8UC3);
     draw.setTo(0);
-#  endif
+#endif
 
     dmapStore_[0] = dmapStore_[8] = dmapStore_[16] = 1;
     dmapStore_[1] = dmapStore_[9] = dmapStore_[17] = static_cast<short>(dir.cols + 1);
@@ -154,10 +152,10 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
     for_each(seeds.begin(), seeds.end(), [&](index_type idx) { search(idx); });
 
-#  ifndef NO_ADDED_SEEDS
+#ifndef NO_ADDED_SEEDS
     size_t c = 0;
     while (c != addedSeeds_.size()) search(addedSeeds_[c++]);
-#  endif
+#endif
 
     // std::cout << "draw - added seeds: " << addedSeeds_.size() << std::endl;
   }
@@ -183,16 +181,16 @@ class EsdDrawing : public EsdBase<MT, index_type> {
         v = vp;
         nidx = nidxp;
         dir = fixDir<NUM_DIR>(dirp);
-#  ifndef NO_ADDED_SEEDS
+#ifndef NO_ADDED_SEEDS
         addedSeeds_.push_back(nidxn);
-#  endif
+#endif
       } else {
         v = vn;
         nidx = nidxn;
         dir = fixDir<NUM_DIR>(dirn);
-#  ifndef NO_ADDED_SEEDS
+#ifndef NO_ADDED_SEEDS
         if (vp > v) addedSeeds_.push_back(nidxp);
-#  endif
+#endif
       }
     } else if (vp > v) {
       v = vp;
@@ -206,7 +204,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     return nidx;
   }
 
-#  ifndef NO_EDGE_THICK_CHECK
+#ifndef NO_EDGE_THICK_CHECK
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
@@ -229,11 +227,11 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     }
     return nidx;
   }
-#  else
+#else
 
   // find next pixel without thickness check
   inline index_type findAdjacent(index_type idx, char& dir) { return checkAdjacent(idx, dir); }
-#  endif
+#endif
   // find next pixel without thickness check
   inline index_type findAdjacent(index_type idx) {
     char dir = pdir_[idx];
@@ -245,11 +243,11 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
     index_type tmp;
     while (idx) {
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
       draw.ptr<cv::Vec3b>()[idx] = col;
       cv::imshow("draw", draw);
       cv::waitKey(1);
-#  endif
+#endif
       points_.push_back(idx);
       tmp = idx;
       idx = findAdjacent(idx, dir);
@@ -262,10 +260,10 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     if (dir < 0) return;
 
     size_t seg_beg = points_.size(), seg_end = points_.size();
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
     cv::RNG& rng = cv::theRNG();
     col = cv::Vec3b(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-#  endif
+#endif
 
     // check for fw points
     pdmap = fwdmap;
@@ -312,5 +310,3 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

@@ -1,10 +1,8 @@
-#ifndef _PC_LGF_HPP_
-#define _PC_LGF_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/phase_congruency.hpp>
-#  include <utility/limit.hpp>
-#  include <utility/matlab_helpers.hpp>
+#include <imgproc/phase_congruency.hpp>
+#include <utility/limit.hpp>
+#include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
 template <class IT, class FT, template <typename, typename> class P = Polar>
@@ -281,11 +279,11 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     if (cols_ < cols_ext_ || rows_ < rows_ext_)
       cv::copyMakeBorder(src, src, 0, rows_ext_ - rows_, 0, cols_ext_ - cols_, cv::BORDER_REPLICATE);
 
-#  ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
+#ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
     IM = perfft2<FT>(src);
-#  else
+#else
     IM = fft2<FT>(src);
-#  endif
+#endif
 
     for (int s = 0; s != nscale_; ++s) {
       // lgf already has two same channels, so cv::multiply is fastest
@@ -430,6 +428,3 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

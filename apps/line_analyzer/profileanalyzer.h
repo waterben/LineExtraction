@@ -1,5 +1,4 @@
-#ifndef PROFILEANALYZER_H
-#define PROFILEANALYZER_H
+#pragma once
 
 #include "helpers.h"
 #include "latool.h"
@@ -51,5 +50,3 @@ class ProfileAnalyzer : public LATool {
   void plotProfile();
   void plotSProfile();
 };
-
-#endif  // PROFILEANALYZER_H

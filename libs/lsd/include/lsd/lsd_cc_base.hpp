@@ -40,18 +40,16 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _LSD_CC_BASE_HPP_
-#define _LSD_CC_BASE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/fit.hpp>
-#  include <edge/index.hpp>
-#  include <imgproc/derivative_gradient.hpp>
-#  include <lsd/lsd_base.hpp>
+#include <edge/fit.hpp>
+#include <edge/index.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <lsd/lsd_base.hpp>
 
-#  include <functional>
-#  include <memory>
-#  include <vector>
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace lsfm {
 
@@ -268,5 +266,3 @@ class LsdCCBase : public LsdBase<FT, LPT> {
   }
 };
 }  // namespace lsfm
-#endif
-#endif

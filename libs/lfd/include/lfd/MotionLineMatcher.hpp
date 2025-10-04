@@ -40,13 +40,11 @@
 //M*/
 
 
-#ifndef _LFD_MOTIONLINEMATCHER_HPP_
-#define _LFD_MOTIONLINEMATCHER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/FeatureMatcher.hpp>
-#  include <lfd/LRDescriptor.hpp>
-#  include <lfd/MotionLineFilter.hpp>
+#include <lfd/FeatureMatcher.hpp>
+#include <lfd/LRDescriptor.hpp>
+#include <lfd/MotionLineFilter.hpp>
 
 namespace lsfm {
 
@@ -406,5 +404,3 @@ class MotionLineMatcher : public OptionManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

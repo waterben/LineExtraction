@@ -46,11 +46,9 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _LSD_CP_HPP_
-#define _LSD_CP_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lsd/lsd_cc_base.hpp>
+#include <lsd/lsd_cc_base.hpp>
 
 namespace lsfm {
 // Use complex decision algo to determine near pixels in cc search
@@ -1317,5 +1315,3 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

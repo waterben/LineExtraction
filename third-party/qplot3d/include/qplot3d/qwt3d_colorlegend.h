@@ -1,5 +1,4 @@
-#ifndef __PLANE_H__
-#define __PLANE_H__
+#pragma once
 
 #include "qwt3d_axis.h"
 #include "qwt3d_color.h"
@@ -67,5 +66,3 @@ class QWT3D_EXPORT ColorLegend : public Drawable {
 };
 
 }  // namespace Qwt3D
-
-#endif

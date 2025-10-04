@@ -40,17 +40,15 @@
 //M*/
 
 
-#ifndef _LFD_FEATUREDESCRIPTOR_HPP_
-#define _LFD_FEATUREDESCRIPTOR_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/FeatureFilter.hpp>
-#  include <opencv2/core/core.hpp>
-#  include <utility/option_manager.hpp>
+#include <lfd/FeatureFilter.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/option_manager.hpp>
 
-#  include <map>
-#  include <sstream>
-#  include <string>
+#include <map>
+#include <sstream>
+#include <string>
 
 namespace lsfm {
 typedef std::map<std::string, cv::Mat> MatMap;
@@ -365,5 +363,3 @@ class MyCombinedFD {
 
 
 }  // namespace lsfm
-#endif
-#endif

@@ -43,11 +43,9 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _EDGE_SIMPLE_HPP_
-#define _EDGE_SIMPLE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
+#include <edge/edge_segment.hpp>
 
 namespace lsfm {
 
@@ -56,10 +54,10 @@ class EsdSimple : public EsdBase<MT, index_type> {
   cv::Mat dir_;
   char* pdir_;
 
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
   cv::Mat draw;
   cv::Vec3b col;
-#  endif
+#endif
 
   short dmapStore_[20];
 
@@ -105,10 +103,10 @@ class EsdSimple : public EsdBase<MT, index_type> {
     pdir_ = dir_.ptr<char>();
     pmag_ = mag.ptr<MT>();
 
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
     draw.create(dir_.size(), CV_8UC3);
     draw.setTo(0);
-#  endif
+#endif
 
     dmapStore_[0] = dmapStore_[8] = dmapStore_[16] = 1;
     dmapStore_[1] = dmapStore_[9] = dmapStore_[17] = static_cast<short>(dir.cols + 1);
@@ -125,10 +123,10 @@ class EsdSimple : public EsdBase<MT, index_type> {
       if (dir < 0) return;
 
       size_t seg_beg = points_.size(), seg_end = points_.size();
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
       cv::RNG& rng = cv::theRNG();
       col = cv::Vec3b(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
-#  endif
+#endif
 
       // check for fw points
       pdmap = fwdmap;
@@ -186,7 +184,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
     return nidx;
   }
 
-#  ifndef NO_EDGE_THICK_CHECK
+#ifndef NO_EDGE_THICK_CHECK
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
@@ -195,7 +193,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
     pdir_[nidx] = -3;
   }
 
-#    ifndef NO_GRADIENT_MAX_CHECK
+#  ifndef NO_GRADIENT_MAX_CHECK
   // find pixel near (fw + left, fw + right) current pixel
   index_type findNear(index_type idx, char dir) {
     index_type nidxp = checkAdjacent(idx, dir + 1);
@@ -217,7 +215,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
     checkThick(idx, dir);
     return nidxp;
   }
-#    else
+#  else
   index_type findNear(index_type idx, char dir) {
     index_type nidx = checkAdjacent(idx, dir + 1);
     if (nidx) {
@@ -228,7 +226,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
     if (nidx) checkThick(idx, dir - 2);
     return nidx;
   }
-#    endif
+#  endif
 
   // find adjacent pixel
   inline index_type findAdjacent(index_type idx) {
@@ -245,20 +243,20 @@ class EsdSimple : public EsdBase<MT, index_type> {
     }
     return findNear(idx, dir);
   }
-#  else
+#else
 
-#    ifndef NO_GRADIENT_MAX_CHECK
+#  ifndef NO_GRADIENT_MAX_CHECK
   index_type findNear(index_type idx, char dir) {
     index_type nidxp = checkAdjacent(idx, dir + 1);
     index_type nidxn = checkAdjacent(idx, dir - 1);
     return nidxp == 0 ? nidxn : nidxn == 0 ? nidxp : pmag_[nidxn] > pmag_[nidxp] ? nidxn : nidxp;
   };
-#    else
+#  else
   index_type findNear(index_type idx, char dir) {
     index_type nidx = checkAdjacent(idx, dir + 1);
     return nidx ? nidx : checkAdjacent(idx, dir - 1);
   };
-#    endif
+#  endif
 
   // find next pixel without thickness check
   inline index_type findAdjacent(index_type idx) {
@@ -266,15 +264,15 @@ class EsdSimple : public EsdBase<MT, index_type> {
     index_type nidx = checkAdjacent(idx, dir);
     return nidx ? nidx : findNear(idx, dir);
   }
-#  endif
+#endif
   void extractSegment(index_type idx) {
     index_type tmp;
     while (idx) {
-#  ifdef DRAW_MODE
+#ifdef DRAW_MODE
       draw.ptr<cv::Vec3b>()[idx] = col;
       cv::imshow("draw", draw);
       cv::waitKey(1);
-#  endif
+#endif
       points_.push_back(idx);
       tmp = idx;
       idx = findAdjacent(idx);
@@ -284,5 +282,3 @@ class EsdSimple : public EsdBase<MT, index_type> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

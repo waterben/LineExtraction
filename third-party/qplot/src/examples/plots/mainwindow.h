@@ -39,8 +39,7 @@
 **                                                                                                         **
 *************************************************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "../../qcustomplot.h"  // the header file of QCustomPlot. Don't forget to add it to your project, if you use an IDE, so it gets compiled.
 
@@ -95,5 +94,3 @@ class MainWindow : public QMainWindow {
   QCPItemTracer* itemDemoPhaseTracer;
   int currentDemoIndex;
 };
-
-#endif  // MAINWINDOW_H

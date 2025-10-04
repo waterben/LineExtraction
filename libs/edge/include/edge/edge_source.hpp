@@ -43,14 +43,12 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _EDGE_SOURCE_HPP_
-#define _EDGE_SOURCE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/zc.hpp>
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/laplace.hpp>
-#  include <imgproc/phase_congruency.hpp>
+#include <edge/zc.hpp>
+#include <imgproc/gradient.hpp>
+#include <imgproc/laplace.hpp>
+#include <imgproc/phase_congruency.hpp>
 
 namespace lsfm {
 
@@ -802,5 +800,3 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
   virtual const IndexVector& seeds() const override { return seeds_; }
 };
 }  // namespace lsfm
-#endif
-#endif

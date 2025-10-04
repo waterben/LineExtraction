@@ -41,14 +41,12 @@
 //M*/
 
 
-#ifndef _GEOMETRY_LINE3_HPP_
-#define _GEOMETRY_LINE3_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line.hpp>
-#  include <opencv2/calib3d/calib3d.hpp>
+#include <geometry/line.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
-#  include <iostream>
+#include <iostream>
 
 
 namespace lsfm {
@@ -550,5 +548,3 @@ typedef LineSegment3<float> LineSegment3f;
 typedef LineSegment3<double> LineSegment3d;
 
 }  // namespace lsfm
-#endif
-#endif

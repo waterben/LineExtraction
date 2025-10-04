@@ -1,5 +1,4 @@
-#ifndef ANALYSEROPTIONS_H
-#define ANALYSEROPTIONS_H
+#pragma once
 
 #include "ui_analyseroptions.h"
 
@@ -25,5 +24,3 @@ class AnalyserOptions : public QMainWindow {
 
  public slots:
 };
-
-#endif  // ANALYSEROPTIONS_H

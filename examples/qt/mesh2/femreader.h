@@ -1,5 +1,4 @@
-#ifndef femreader_h__2004_03_07_14_03_begin_guarded_code
-#define femreader_h__2004_03_07_14_03_begin_guarded_code
+#pragma once
 
 #include <qplot3d/qwt3d_global.h>
 #include <qplot3d/qwt3d_types.h>
@@ -64,5 +63,3 @@ bool readConnections(Qwt3D::CellField& v, const char* fname, FILTER fil) {
   }
   return true;
 }
-
-#endif /* include guarded */

@@ -43,12 +43,10 @@
 // detect junction or corner areas and skip them for optimization -> less error for wide range interpolation like
 // cubic....
 
-#ifndef _LINE_OPTIMIZER_HPP_
-#define _LINE_OPTIMIZER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <dlib/optimization.h>
-#  include <imgproc/mean.hpp>
+#include <dlib/optimization.h>
+#include <imgproc/mean.hpp>
 
 namespace lsfm {
 template <class mat_type,
@@ -220,5 +218,3 @@ struct LineOptimizer {
 
 
 }  // namespace lsfm
-#endif
-#endif

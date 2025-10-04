@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include "stats.h"
 #include <geometry/line.hpp>
@@ -109,5 +108,3 @@ Rect2d selectROI(const String& video_name, const Mat& frame) {
   }
   return data.box;
 }
-
-#endif  // UTILS_H

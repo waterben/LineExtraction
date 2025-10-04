@@ -1,12 +1,10 @@
-#ifndef _CAMERA_UTILITIES_HPP_
-#define _CAMERA_UTILITIES_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv/cv.h>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <opencv2/opencv.hpp>
+#include <opencv/cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
-#  include <iostream>
+#include <iostream>
 
 namespace lsfm {
 
@@ -217,6 +215,3 @@ class StereoPreprocessor {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

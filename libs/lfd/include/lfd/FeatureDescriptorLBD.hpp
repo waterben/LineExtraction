@@ -43,16 +43,14 @@
 // Code adapted from Lilian Zhang
 
 
-#ifndef _LFD_FEATUREDESCRIPTORLBD_HPP_
-#define _LFD_FEATUREDESCRIPTORLBD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line.hpp>
-#  include <imgproc/interpolate.hpp>
-#  include <lfd/FeatureDescriptor.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
+#include <geometry/line.hpp>
+#include <imgproc/interpolate.hpp>
+#include <lfd/FeatureDescriptor.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-#  include <vector>
+#include <vector>
 
 
 namespace lsfm {
@@ -412,5 +410,3 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   }
 };
 }  // namespace lsfm
-#endif
-#endif

@@ -39,12 +39,10 @@
 //
 //M*/
 
-#ifndef _LSD_BASE_HPP_
-#define _LSD_BASE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <lsd/ld_base.hpp>
+#include <edge/edge_segment.hpp>
+#include <lsd/ld_base.hpp>
 
 namespace lsfm {
 
@@ -175,5 +173,3 @@ class LsdExt : public LsdBase<FT, LPT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

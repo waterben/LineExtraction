@@ -40,13 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _INTERPOLATE_HPP_
-#define _INTERPOLATE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/point.hpp>
-#  include <opencv2/core/core.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
+#include <geometry/point.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 namespace lsfm {
 
@@ -1090,5 +1088,3 @@ struct InterpolationHelper {
 };
 
 }  // namespace lsfm
-#endif
-#endif

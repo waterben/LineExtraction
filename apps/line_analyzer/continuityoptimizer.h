@@ -1,5 +1,4 @@
-#ifndef CONTINUITYOPTIMIZER_H
-#define CONTINUITYOPTIMIZER_H
+#pragma once
 
 #include "controlwindow.h"
 #include "ui_continuityoptimizer.h"
@@ -25,5 +24,3 @@ class ContinuityOptimizer : public LATool {
  signals:
   void linesMerged(const std::vector<lsfm::LineSegment2d>& lines);
 };
-
-#endif  // CONTINUITYOPTIMIZER_H

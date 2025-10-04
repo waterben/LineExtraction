@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _MEAN_HPP_
-#define _MEAN_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line.hpp>
-#  include <imgproc/interpolate.hpp>
+#include <geometry/line.hpp>
+#include <imgproc/interpolate.hpp>
 
 namespace lsfm {
 
@@ -466,5 +464,3 @@ struct MeanHelper {
 };
 
 }  // namespace lsfm
-#endif
-#endif

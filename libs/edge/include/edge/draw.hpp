@@ -40,15 +40,13 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _EDGE_DRAW_HPP_
-#define _EDGE_DRAW_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <opencv2/imgproc/types_c.h>
-#  include <opencv2/opencv.hpp>
-#  include <utility/range.hpp>
+#include <edge/edge_segment.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/opencv.hpp>
+#include <utility/range.hpp>
 
 namespace lsfm {
 
@@ -73,6 +71,3 @@ inline void drawSegment(cv::Mat& img,
 }
 
 }  // namespace lsfm
-
-#endif
-#endif

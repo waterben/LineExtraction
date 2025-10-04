@@ -1,5 +1,4 @@
-#ifndef enrichments_h__2004_02_25_13_58_begin_guarded_code
-#define enrichments_h__2004_02_25_13_58_begin_guarded_code
+#pragma once
 
 #include <qplot3d/qwt3d_plot.h>
 
@@ -25,5 +24,3 @@ class Label3D {
  public:
   void draw(Qwt3D::Triple const&, double w, double h);
 };
-
-#endif

@@ -40,15 +40,13 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _DIRECTION_HPP_
-#define _DIRECTION_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/polar.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <utility/range.hpp>
+#include <imgproc/polar.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/range.hpp>
 
-#  include <string>
+#include <string>
 
 
 namespace lsfm {
@@ -107,12 +105,12 @@ struct FastDirection {
     for (size_t i = 0; i != size; ++i) dir[i] = FastDirection<GT, DT>::process(gx[i], gy[i]);
   }
 
-#  if (CV_MAJOR_VERSION < 3)
+#if (CV_MAJOR_VERSION < 3)
 
   inline static void process(const float* gx, const float* gy, float* dir, size_t size) {
     cv::fastAtan2(gy, gx, dir, static_cast<int>(size), true);
   }
-#  endif
+#endif
 
   //! process direction using cv::Mat objects
   inline static void process(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& dir) {
@@ -137,5 +135,3 @@ struct FastDirection {
   inline static const std::string name() { return "fdir"; }
 };
 }  // namespace lsfm
-#endif
-#endif

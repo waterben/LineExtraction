@@ -32,8 +32,7 @@
  * Please report all bugs and problems to <gl2ps@geuz.org>.
  */
 
-#ifndef __GL2PS_H__
-#define __GL2PS_H__
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -200,5 +199,3 @@ GL2PSDLL_API const char* gl2psGetFormatDescription(GLint format);
 #if defined(__cplusplus)
 }
 #endif
-
-#endif /* __GL2PS_H__ */

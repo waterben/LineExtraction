@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _DERIVATIVE_GRADIENT_HPP_
-#define _DERIVATIVE_GRADIENT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
+#include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
@@ -200,5 +198,3 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

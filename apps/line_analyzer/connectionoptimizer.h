@@ -1,5 +1,4 @@
-#ifndef CONNECTIONOPTIMIZER_H
-#define CONNECTIONOPTIMIZER_H
+#pragma once
 
 #include "controlwindow.h"
 #include "ui_connectionoptimizer.h"
@@ -27,5 +26,3 @@ class ConnectionOptimizer : public LATool {
  signals:
   void linesConnected(const std::vector<lsfm::LineSegment2d>& lines);
 };
-
-#endif  // CONTINUITYOPTIMIZER_H

@@ -40,17 +40,15 @@
 //M*/
 
 
-#ifndef _LFD_MOTIONPOINTFILTER_HPP_
-#define _LFD_MOTIONPOINTFILTER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/point.hpp>
-#  include <lfd/FeatureMatcher.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <utility/option_manager.hpp>
+#include <geometry/point.hpp>
+#include <lfd/FeatureMatcher.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/option_manager.hpp>
 
-#  include <algorithm>
-#  include <array>
+#include <algorithm>
+#include <array>
 
 namespace lsfm {
 
@@ -382,5 +380,3 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
 
 
 }  // namespace lsfm
-#endif
-#endif

@@ -1,5 +1,4 @@
-#ifndef LINEANALYSER2D_H
-#define LINEANALYSER2D_H
+#pragma once
 
 #include "analyseroptions.h"
 #include "precisionoptimizer.h"
@@ -238,5 +237,3 @@ class LineAnalyser2D : public LATool {
   template <class T>
   void loadErrorInfo(T& data, QTableWidget*& widget, int& row, bool add_at_front);
 };
-
-#endif  // LINEANALYSER2D_H

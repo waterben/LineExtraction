@@ -10,12 +10,10 @@ of arbitrary size.
 
 \**********************************************************************/
 
-#ifndef _PC_MATLAB_HPP_
-#define _PC_MATLAB_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/impl/PhaseCong.hpp>
-#  include <imgproc/phase_congruency.hpp>
+#include <imgproc/impl/PhaseCong.hpp>
+#include <imgproc/phase_congruency.hpp>
 
 namespace lsfm {
 template <class IT>
@@ -267,6 +265,3 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

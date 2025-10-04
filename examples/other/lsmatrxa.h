@@ -24,8 +24,7 @@
       Houston, Texas
 */
 
-#ifndef LSMATRXA_H
-#define LSMATRXA_H
+#pragma once
 
 #include <math.h>
 
@@ -92,5 +91,3 @@ void SymmetricMatrixA(ARINT nx, ARINT& n, ARINT& nnz, ARFLOAT*& A, ARINT*& irow,
   }
 
 }  // SymmetricMatrixA.
-
-#endif  // LSMATRXA_H

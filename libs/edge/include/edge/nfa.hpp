@@ -40,17 +40,15 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _NFA_HPP_
-#define _NFA_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/edge_source.hpp>
-#  include <geometry/line.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/edge_source.hpp>
+#include <geometry/line.hpp>
 
-#  include <algorithm>
-#  include <map>
-#  include <vector>
+#include <algorithm>
+#include <map>
+#include <vector>
 
 namespace lsfm {
 
@@ -445,7 +443,7 @@ class NfaBinom : public ValueManager {
            static_cast<FT>(0.5) * x * std::log(x * std::sinh(1 / x) + 1 / (810 * std::pow(x, 6)));
   }
 
-#  define log_gamma(x) ((x) > 15.0 ? log_gamma_windschitl(x) : log_gamma_lanczos(x))
+#define log_gamma(x) ((x) > 15.0 ? log_gamma_windschitl(x) : log_gamma_lanczos(x))
   /*
           static FT log_gamma(FT x) {
               return x > 15 ? log_gamma_windschitl(x) : log_gamma_lanczos(x);
@@ -1147,5 +1145,3 @@ class NfaBinom2 : public ValueManager {
 
 
 }  // namespace lsfm
-#endif
-#endif

@@ -39,12 +39,10 @@
 //
 //M*/
 
-#ifndef _EDLZ_LSD_HPP_
-#define _EDLZ_LSD_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lsd/impl/lsd_edlz.hpp>
-#  include <lsd/lsd_base.hpp>
+#include <lsd/impl/lsd_edlz.hpp>
+#include <lsd/lsd_base.hpp>
 
 class EDLineDetector;
 
@@ -240,5 +238,3 @@ class LsdEDLZ : public LsdBase<FT, LPT> {
   virtual const ImageData& imageData() const final { return imageData_; }
 };
 }  // namespace lsfm
-#endif
-#endif

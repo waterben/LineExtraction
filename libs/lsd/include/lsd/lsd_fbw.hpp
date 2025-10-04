@@ -42,8 +42,7 @@
 //M*/
 
 
-#ifndef _LSD_FBW_HPP_
-#define _LSD_FBW_HPP_
+#pragma once
 
 #include <edge/fit.hpp>
 #include <edge/index.hpp>
@@ -535,6 +534,3 @@ template <class FT, template <class> class LPT, class PT, class GRAD, class FIT>
 const FT LsdFBW<FT, LPT, PT, GRAD, FIT>::FBW_NOTDEF = static_cast<FT>(-5);
 
 }  // namespace lsfm
-
-
-#endif

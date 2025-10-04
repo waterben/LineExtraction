@@ -40,13 +40,11 @@
 //M*/
 
 
-#ifndef _LFD_MOTIONPOINTMATCHER_HPP_
-#define _LFD_MOTIONPOINTMATCHER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lfd/FeatureMatcher.hpp>
-#  include <lfd/LRDescriptor.hpp>
-#  include <lfd/MotionPointFilter.hpp>
+#include <lfd/FeatureMatcher.hpp>
+#include <lfd/LRDescriptor.hpp>
+#include <lfd/MotionPointFilter.hpp>
 
 namespace lsfm {
 
@@ -404,5 +402,3 @@ class MotionPointMatcher : public OptionManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

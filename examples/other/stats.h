@@ -1,5 +1,4 @@
-#ifndef STATS_H
-#define STATS_H
+#pragma once
 
 struct Stats {
   int matches;
@@ -27,5 +26,3 @@ struct Stats {
     return *this;
   }
 };
-
-#endif  // STATS_H

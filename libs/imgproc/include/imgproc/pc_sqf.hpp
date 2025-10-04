@@ -1,13 +1,11 @@
-#ifndef _PC_SQF_HPP_
-#define _PC_SQF_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/laplace.hpp>
-#  include <imgproc/phase_congruency.hpp>
-#  include <imgproc/quadratureS.hpp>
-#  include <imgproc/quadratureSF.hpp>
-#  include <utility/limit.hpp>
-#  include <utility/matlab_helpers.hpp>
+#include <imgproc/laplace.hpp>
+#include <imgproc/phase_congruency.hpp>
+#include <imgproc/quadratureS.hpp>
+#include <imgproc/quadratureSF.hpp>
+#include <utility/limit.hpp>
+#include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
 template <class IT = uchar, class FT = float, template <typename, typename> class P = Polar>
@@ -232,11 +230,11 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
       cv::copyMakeBorder(src, src, 0, rows_ext_ - rows_, 0, cols_ext_ - cols_, cv::BORDER_REPLICATE);
 
 
-#  ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
+#ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
     imgf_ = perfft2<FT>(src);
-#  else
+#else
     imgf_ = fft2<FT>(src);
-#  endif
+#endif
 
     for (int s = 0; s != nscale_; ++s) {
       e = real(ifft2(multiply(imgf_, fe_[s])));
@@ -600,9 +598,9 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     }
 
     // zero dc
-#  ifndef DISABLE_DC_ZERO_FIX
+#ifndef DISABLE_DC_ZERO_FIX
     keds_ -= cv::sum(keds_)[0] / (ksize_ * ksize_);
-#  endif
+#endif
 
     koyds_ = koxds_.t();
   }
@@ -761,6 +759,3 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

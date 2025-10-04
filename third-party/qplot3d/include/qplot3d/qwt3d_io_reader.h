@@ -1,5 +1,4 @@
-#ifndef qwt3d_reader_h__2004_03_07_14_03_begin_guarded_code
-#define qwt3d_reader_h__2004_03_07_14_03_begin_guarded_code
+#pragma once
 
 #include "qwt3d_io.h"
 
@@ -35,5 +34,3 @@ class QWT3D_EXPORT NativeReader : public IO::Functor {
 
 
 }  // namespace Qwt3D
-
-#endif

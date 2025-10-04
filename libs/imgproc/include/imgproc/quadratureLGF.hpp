@@ -1,11 +1,9 @@
-#ifndef _QUADRATURELGF_HPP_
-#define _QUADRATURELGF_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/polar.hpp>
-#  include <imgproc/quadrature.hpp>
-#  include <opencv2/core/core.hpp>
-#  include <utility/matlab_helpers.hpp>
+#include <imgproc/polar.hpp>
+#include <imgproc/quadrature.hpp>
+#include <opencv2/core/core.hpp>
+#include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
 //! Spherical Log Gabor quadraturte filter operating in freqency space
@@ -189,11 +187,11 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
     if (cols_ < cols_ext_ || rows_ < rows_ext_)
       cv::copyMakeBorder(src, src, 0, rows_ext_ - rows_, 0, cols_ext_ - cols_, cv::BORDER_REPLICATE);
 
-#  ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
+#ifdef USE_PERIODIC_FFT  // slower, but removes artifacts
     IM = perfft2<FT>(src);
-#  else
+#else
     IM = fft2<FT>(src);
-#  endif
+#endif
 
     tmpv = multiply(IM, lgf_);
     e_ = real(ifft2<FT>(tmpv));
@@ -298,6 +296,3 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

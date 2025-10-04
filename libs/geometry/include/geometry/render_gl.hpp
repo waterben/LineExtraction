@@ -1,21 +1,19 @@
-#ifndef _GEOMETRY_RENDER_GL_HPP_
-#define _GEOMETRY_RENDER_GL_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/cameracv.hpp>
-#  include <geometry/line3.hpp>
+#include <geometry/cameracv.hpp>
+#include <geometry/line3.hpp>
 
-#  include <functional>
-#  include <map>
-#  include <sstream>
+#include <functional>
+#include <map>
+#include <sstream>
 // #include <boost/filesystem/fstream.hpp>
 
-#  include <GL/glut.h>
-#  include <geometry/draw.hpp>
-#  include <geometry/object3d.hpp>
+#include <GL/glut.h>
+#include <geometry/draw.hpp>
+#include <geometry/object3d.hpp>
 
-#  include <bitset>
-#  include <math.h>
+#include <bitset>
+#include <math.h>
 // #include <slam/slamDataModel.hpp>
 
 namespace lsfm {
@@ -352,6 +350,3 @@ void renderLines3d(LineType lineSegments3) {
 
 
 }  // namespace lsfm
-
-#endif
-#endif

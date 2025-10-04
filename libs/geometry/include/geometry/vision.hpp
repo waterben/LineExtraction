@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GEOMETRY_VISION_HPP_
-#define _GEOMETRY_VISION_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/base.hpp>
-#  include <opencv2/calib3d/calib3d.hpp>
+#include <geometry/base.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 // #include <ceres/jet.h>
 
 
@@ -62,5 +60,3 @@ inline void decomposeProjectionMatrix(const Matx34<FT>& proj, Matx33<FT>& cam, V
 }
 
 }  // namespace lsfm
-#endif
-#endif

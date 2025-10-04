@@ -41,12 +41,10 @@
 //M*/
 
 
-#ifndef _GEOMETRY_STEREOCV_HPP_
-#define _GEOMETRY_STEREOCV_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/cameracv.hpp>
-#  include <geometry/stereo.hpp>
+#include <geometry/cameracv.hpp>
+#include <geometry/stereo.hpp>
 
 
 namespace lsfm {
@@ -344,5 +342,3 @@ typedef StereoCV<float> StereoCVf;
 typedef StereoCV<double> StereoCVd;
 
 }  // namespace lsfm
-#endif
-#endif
