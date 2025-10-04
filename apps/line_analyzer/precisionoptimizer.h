@@ -11,13 +11,14 @@ class PrecisionOptimizer;
 
 class PrecisionOptimizer : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(PrecisionOptimizer)
   typedef ControlWindow::LineVector LineVector;
   typedef ControlWindow::Line Line;
 
-  Ui::PrecisionOptimizer* ui;
-  const ImageSources* sources;
-  LineVector* lines;
-  int lineSel;
+  Ui::PrecisionOptimizer* ui{nullptr};
+  const ImageSources* sources{nullptr};
+  LineVector* lines{nullptr};
+  int lineSel = -1;
 
  public:
   explicit PrecisionOptimizer(QWidget* parent = 0);

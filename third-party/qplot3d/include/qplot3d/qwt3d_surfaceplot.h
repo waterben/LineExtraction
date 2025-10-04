@@ -10,6 +10,7 @@ namespace Qwt3D {
     */
 class QWT3D_EXPORT SurfacePlot : public Plot3D {
   Q_OBJECT
+  Q_DISABLE_COPY(SurfacePlot)
 
  public:
 #if QT_VERSION >= 0x050400

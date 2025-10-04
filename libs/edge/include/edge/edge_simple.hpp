@@ -177,7 +177,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
  private:
   // check for vaild adjacent pixel by given direction and retun new index
   inline index_type checkAdjacent(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    index_type nidx = idx + pdmap[static_cast<int>(dir)];
     char ndir = pdir_[nidx];
     // is pixel already used / not set and direction is -+1
     if (ndir < 0 || absDiff<NUM_DIR>(dir - ndir) > 1) return 0;
@@ -188,7 +188,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    index_type nidx = idx + pdmap[static_cast<int>(dir)];
     if (pdir_[nidx] < 0) return;
     pdir_[nidx] = -3;
   }

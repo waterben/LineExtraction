@@ -17,6 +17,7 @@ class ControlWindow;
 
 class ControlWindow : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(ControlWindow)
 
   QFileDialog* file;
   PlotWindow* lplot;
@@ -54,6 +55,8 @@ class ControlWindow : public QMainWindow {
 
   struct Line {
     Line(const LineSegment& l = LineSegment(), const LineMod& m = LineMod()) : segment(l), mod(m), line(0), normal(0) {}
+    Line(const Line&) = default;
+    Line& operator=(const Line&) = default;
 
 
     LineSegment segment;

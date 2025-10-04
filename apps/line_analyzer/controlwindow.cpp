@@ -19,6 +19,7 @@ ControlWindow::ControlWindow(QWidget* parent)
       file(new QFileDialog(this, tr("Open Image"))),
       lplot(new PlotWindow("Line Plot", this)),
       pp(new PreProcessing(this)),
+      cdia(new QColorDialog(this)),
       qo(new Quiver(this)),
       imgMap(0),
       lineSel(-1),

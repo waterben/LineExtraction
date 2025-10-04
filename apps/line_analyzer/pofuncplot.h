@@ -6,12 +6,17 @@
 #include <qplot3d/qwt3d_function.h>
 #include <qplot3d/qwt3d_surfaceplot.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+
 namespace Ui {
 class POFuncPlot;
 }
 
 class POFuncPlot : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(POFuncPlot)
 
   Ui::POFuncPlot* ui;
 
@@ -40,6 +45,8 @@ class POFuncPlot : public LATool {
   };
 
   class FunctionPlot : public QMainWindow {
+    Q_DISABLE_COPY(FunctionPlot)
+
     const ImageSources* src;
     Ui::POFuncPlot* po;
     Qwt3D::SurfacePlot* plot;
@@ -49,7 +56,13 @@ class POFuncPlot : public LATool {
 
    public:
     FunctionPlot(QWidget* parent, Ui::POFuncPlot* p)
-        : QMainWindow(parent), src(0), po(p), plot(new Qwt3D::SurfacePlot(this)), lpoi(*plot), lpod(*plot), z_scale(1) {
+        : QMainWindow(parent),
+          src(nullptr),
+          po(p),
+          plot(new Qwt3D::SurfacePlot(this)),
+          lpoi(*plot),
+          lpod(*plot),
+          z_scale(1) {
       setWindowTitle("PO Function Plot");
 
       setCentralWidget(plot);
@@ -65,7 +78,7 @@ class POFuncPlot : public LATool {
       plot->setRotation(20, 0, 44.9);
     }
 
-    ~FunctionPlot() { delete plot; }
+    ~FunctionPlot() override = default;
 
 
     void setSource(const ImageSources& s) { src = &s; }
@@ -163,18 +176,30 @@ class POFuncPlot : public LATool {
     }
 
     void update(const LineSegment& l) {
-      if (src == 0) return;
+      if (src == nullptr || src->empty()) return;
 
-      float_type rot_range = po->spin_range_rot->value(), prof_range = po->spin_range_prof->value();
-      int subdiv = po->spin_subdiv->value();
-      cv::Mat mag = (*src)[po->cb_data_source->currentData().toInt()].data;
+      const float_type rot_range = po->spin_range_rot->value();
+      const float_type prof_range = po->spin_range_prof->value();
+      const int subdiv = po->spin_subdiv->value();
+
+      const int sourceIndex = po->cb_data_source->currentData().toInt();
+      if (sourceIndex < 0) return;
+      const auto index = static_cast<std::size_t>(sourceIndex);
+      if (index >= src->size()) return;
+
+      const cv::Mat& mag = src->at(index).data;
+
+      const auto meshProfileSamples =
+          static_cast<unsigned int>(std::max<long>(1L, std::lround(2.0 * prof_range * subdiv)));
+      const auto meshRotationSamples =
+          static_cast<unsigned int>(std::max<long>(1L, std::lround(2.0 * rot_range * subdiv)));
 
       if (mag.type() == cv::DataType<float_type>::type) {
         lpod.setDomain(-prof_range, prof_range, -rot_range, rot_range);
         lpod.mag = mag;
         lpod.line = l;
         lpod.mean_param = po->spin_line_dist->value();
-        lpod.setMesh(2 * prof_range * subdiv, 2 * rot_range * subdiv);
+        lpod.setMesh(meshProfileSamples, meshRotationSamples);
         lpod.mean_op = getMean<float_type>(po->cb_profile_interp->currentIndex(), po->chb_line_samples->isChecked(),
                                            po->chb_fast_interp->isChecked());
         lpod.scale = 1;
@@ -186,7 +211,7 @@ class POFuncPlot : public LATool {
         lpoi.mag = mag;
         lpoi.line = l;
         lpoi.mean_param = po->spin_line_dist->value();
-        lpoi.setMesh(2 * prof_range * subdiv, 2 * rot_range * subdiv);
+        lpoi.setMesh(meshProfileSamples, meshRotationSamples);
         lpoi.mean_op = getMean<int>(po->cb_profile_interp->currentIndex(), po->chb_line_samples->isChecked(),
                                     po->chb_fast_interp->isChecked());
         lpoi.scale = 1;

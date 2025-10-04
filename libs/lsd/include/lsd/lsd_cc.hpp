@@ -380,28 +380,30 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     // find next pixel by given direction
     auto find_pixel = [&](State& fs, char edir, char ndir) {
-      int idx2 = fs.idx + pdmap[ndir][0];
+      const int dirIndex = static_cast<int>(ndir);
+      int idx2 = fs.idx + pdmap[dirIndex][0];
       char edir2 = pemap[idx2];
       // pixel is already used
-      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[edir - edir2] > 1) return false;
+      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[static_cast<int>(edir - edir2)] > 1) return false;
       fs.idx = idx2;
-      fs.x += pdmap[ndir][1];
-      fs.y += pdmap[ndir][2];
-      fs.dir = static_cast<char>(dmap[ndir][3]);
+      fs.x += pdmap[dirIndex][1];
+      fs.y += pdmap[dirIndex][2];
+      fs.dir = static_cast<char>(dmap[dirIndex][3]);
       return true;
     };
 
     // check for thick lines and add pixels
     auto check_dir_add = [&](const State& ls, char ndir) -> void {
-      int idx2 = ls.idx + pdmap[ndir][0];
+      const int dirIndex = static_cast<int>(ndir);
+      int idx2 = ls.idx + pdmap[dirIndex][0];
       if (pemap[idx2] < 0 || plsmap[idx2]) return;
       plsmap[idx2] = seg.id;
-      this->points_.push_back(PT(ls.x + pdmap[ndir][1], ls.y + pdmap[ndir][2]));
+      this->points_.push_back(PT(ls.x + pdmap[dirIndex][1], ls.y + pdmap[dirIndex][2]));
     };
 
     // check for thick lines and remove pixels
     auto check_dir_remove = [&](const State& ls, char ndir) -> void {
-      int idx2 = ls.idx + pdmap[ndir][0];
+      int idx2 = ls.idx + pdmap[static_cast<int>(ndir)][0];
       if (pemap[idx2] < 0 || plsmap[idx2]) return;
       plsmap[idx2] = -2;
     };
@@ -415,7 +417,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       if (find_pixel(fs, edir, edir - 1)) return true;
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
       if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
 
       return false;
@@ -456,8 +458,9 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
             return true;
           }
           // got pixels on both sides -> try to decide by difference to main dir or greater gradient magnitude
-          if (abs_diffmap[edir - tmp3.dir] > abs_diffmap[edir - tmp4.dir] ||
-              (abs_diffmap[edir - tmp3.dir] == abs_diffmap[edir - tmp4.dir] && pmag[tmp2.idx] > pmag[tmp1.idx])) {
+          if (abs_diffmap[static_cast<int>(edir - tmp3.dir)] > abs_diffmap[static_cast<int>(edir - tmp4.dir)] ||
+              (abs_diffmap[static_cast<int>(edir - tmp3.dir)] == abs_diffmap[static_cast<int>(edir - tmp4.dir)] &&
+               pmag[tmp2.idx] > pmag[tmp1.idx])) {
             fs = tmp2;
             return true;
           }
@@ -471,7 +474,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
       if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
 
       return false;
@@ -484,21 +487,23 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     // auto find_gap = [&](State &fs, char edir) {
     auto find_gap = [&](State& fs, char edir) -> bool {
       auto add_gap_pixel = [&](char ndir) {
-        int idx2 = fs.idx + pdmap[ndir][0];
+        const int dirIndex = static_cast<int>(ndir);
+        int idx2 = fs.idx + pdmap[dirIndex][0];
         char edir2 = pemap[idx2];
         // pixel is already used
         if (edir2 < 0 || plsmap[idx2] || edir != edir2) return false;
         fs.idx = idx2;
-        fs.x += pdmap[ndir][1];
-        fs.y += pdmap[ndir][2];
-        fs.dir = static_cast<char>(dmap[ndir][3]);
+        fs.x += pdmap[dirIndex][1];
+        fs.y += pdmap[dirIndex][2];
+        fs.dir = static_cast<char>(dmap[dirIndex][3]);
         return true;
       };
 
       for (int i = 0; i != max_gap_; ++i) {
-        fs.idx += pdmap[edir][0];
-        fs.x += pdmap[edir][1];
-        fs.y += pdmap[edir][2];
+        const int dirIndex = static_cast<int>(edir);
+        fs.idx += pdmap[dirIndex][0];
+        fs.x += pdmap[dirIndex][1];
+        fs.y += pdmap[dirIndex][2];
 
         if (plsmap[fs.idx]) break;
         if (add_gap_pixel(edir)) return true;
@@ -577,8 +582,8 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       // find next pixels
       while (find_next(fs = s)) {
-        int diff_s = abs_diffmap[ls_dir - s.dir];
-        int diff_fs = abs_diffmap[ls_dir - fs.dir];
+        int diff_s = abs_diffmap[static_cast<int>(ls_dir - s.dir)];
+        int diff_fs = abs_diffmap[static_cast<int>(ls_dir - fs.dir)];
         //                         |
         // check for hard corner  _|
         if (diff_s > 1 && diff_fs > 1) return;
@@ -587,7 +592,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         //                           |       /
         // check for hard corners  _/   or _|
         if (find_next(fs2 = fs)) {
-          int diff_fs2 = abs_diffmap[ls_dir - fs2.dir];
+          int diff_fs2 = abs_diffmap[static_cast<int>(ls_dir - fs2.dir)];
 
           if (diff_fs > 1 && diff_fs2 > 1) {
             //      \     _
@@ -642,6 +647,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           // just switch fw with rv
           fwdmap = rvdmap;
           rvdmap = dmap;
+          [[fallthrough]];
         case 3:  // <---x---> : rv: <---, fw: --->
         case 4: {
           State ps = s;
@@ -738,7 +744,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       }
 
       LinePointIter beg = lpbeg + sbeg, end = lpbeg + send - 1;
-      size_t max_point;
+      size_t max_point = sbeg;
 
       const PT& first = *beg;
       bool no_gap = true;

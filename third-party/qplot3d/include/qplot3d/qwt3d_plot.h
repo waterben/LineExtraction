@@ -21,6 +21,7 @@ class QWT3D_EXPORT Plot3D : public QGLWidget
 #endif
 {
   Q_OBJECT
+  Q_DISABLE_COPY(Plot3D)
 
  public:
 #if QT_VERSION >= 0x050400
@@ -259,7 +260,7 @@ class QWT3D_EXPORT Plot3D : public QGLWidget
 
  private:
   struct Light {
-    Light() : unlit(true) {}
+    Light() : unlit(true), rot(), shift() {}
     bool unlit;
     Qwt3D::Triple rot;
     Qwt3D::Triple shift;

@@ -145,26 +145,26 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     //! convert direction d to x,y steps
     static const short* dir_step(char d) {
       static short steps[9][2] = {{0, 0}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
-      return steps[d];
+      return steps[static_cast<int>(d)];
     }
 
     //! convert direction difference to cyclic difference (e.g. 0 - 7 is not -7 but same as 0 - -1 = 1)
-    static const char dir_diff(char diff) {
+    static char dir_diff(char diff) {
       static char diffmap[] = {1, 2, 3, -4, -3, -2, -1, 0, 1, 2, 3, 4, -3, -2, -1};
-      return diffmap[diff + 7];
+      return diffmap[static_cast<int>(diff) + 7];
     }
 
     //! convert direction difference to cyclic difference
-    static const char dir_diff(char a, char b) { return dir_diff(a - b); }
+    static char dir_diff(char a, char b) { return dir_diff(static_cast<char>(a - b)); }
 
     //! convert direction difference to cyclic absolute difference
-    static const char dir_abs_diff(char diff) {
+    static char dir_abs_diff(char diff) {
       static char diffmap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
-      return diffmap[diff + 7];
+      return diffmap[static_cast<int>(diff) + 7];
     }
 
     //! convert direction difference to cyclic absolute difference
-    static const char dir_abs_diff(char a, char b) { return dir_abs_diff(a - b); }
+    static char dir_abs_diff(char a, char b) { return dir_abs_diff(static_cast<char>(a - b)); }
   };
 
   struct Pattern {
@@ -518,14 +518,15 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     // check for pixel in ndir direction
     auto find_pixel = [&](SearchState& fs, char edir, char ndir) {
-      int idx2 = fs.idx + pdmap[ndir][0];
+      const int dirIndex = static_cast<int>(ndir);
+      int idx2 = fs.idx + pdmap[dirIndex][0];
       char edir2 = pemap[idx2];
       // pixel is already used
-      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[edir - edir2] > 1) return false;
+      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[static_cast<int>(edir - edir2)] > 1) return false;
       fs.idx = idx2;
-      fs.x += pdmap[ndir][1];
-      fs.y += pdmap[ndir][2];
-      fs.dir = static_cast<char>(dmap[ndir][3]);
+      fs.x += pdmap[dirIndex][1];
+      fs.y += pdmap[dirIndex][2];
+      fs.dir = static_cast<char>(dmap[dirIndex][3]);
       return true;
     };
 
@@ -535,7 +536,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       if (find_pixel(fs, edir, edir - 1)) return true;
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
       if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
 
       return false;
@@ -576,8 +577,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
             return true;
           }
           // got pixels on both sides -> try to decide by difference to main dir or greater gradient magnitude
-          if (abs_diffmap[edir - tmp3.dir] > abs_diffmap[edir - tmp4.dir] ||
-              (abs_diffmap[edir - tmp3.dir] == abs_diffmap[edir - tmp4.dir] && pmag[tmp2.idx] > pmag[tmp1.idx])) {
+          if (abs_diffmap[static_cast<int>(edir - tmp3.dir)] > abs_diffmap[static_cast<int>(edir - tmp4.dir)] ||
+              (abs_diffmap[static_cast<int>(edir - tmp3.dir)] == abs_diffmap[static_cast<int>(edir - tmp4.dir)] &&
+               pmag[tmp2.idx] > pmag[tmp1.idx])) {
             fs = tmp2;
             return true;
           }
@@ -591,7 +593,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
       if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
 
       return false;
@@ -611,7 +613,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     // check for thick lines and remove pixels
     auto check_dir = [&](const SearchState& ls, char ndir) -> void {
-      int idx2 = ls.idx + pdmap[ndir][0];
+      int idx2 = ls.idx + pdmap[static_cast<int>(ndir)][0];
       if (pemap[idx2] < 0 || plsmap[idx2]) return;
       plsmap[idx2] = -2;
     };
@@ -635,7 +637,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     };
 
     auto move_idx = [&pemap, &pdmap](int& idx, char ndir) {
-      idx += pdmap[ndir][0];
+      idx += pdmap[static_cast<int>(ndir)][0];
       return pemap[idx];
     };
 
@@ -672,7 +674,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         ldir = move_idx(idxl, edir);
         if (ldir == -2) return false;
         if (ldir > -1) {
-          if (abs_diffmap[edir - ldir] < 2) {
+          if (abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
             idx = idxl;
             goto done;
           }
@@ -691,13 +693,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       for (int i = 0; i != max_gap_; ++i) {
         ldir = move_idx(idxl, edir);
-        if (ldir > -1 && abs_diffmap[edir - ldir] < 2) {
+        if (ldir > -1 && abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
           idx = idxl;
           goto done;
         }
 
         rdir = move_idx(idxr, edir);
-        if (rdir > -1 && abs_diffmap[edir - rdir] < 2) {
+        if (rdir > -1 && abs_diffmap[static_cast<int>(edir - rdir)] < 2) {
           idx = idxr;
           goto done;
         }
@@ -709,13 +711,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       for (int i = 0; i != max_gap_; ++i) {
         ldir = move_idx(idxl2, edir);
-        if (ldir > -1 && abs_diffmap[edir - ldir] < 2) {
+        if (ldir > -1 && abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
           idx = idxl2;
           goto done;
         }
 
         rdir = move_idx(idxr2, edir);
-        if (rdir > -1 && abs_diffmap[edir - rdir] < 2) {
+        if (rdir > -1 && abs_diffmap[static_cast<int>(edir - rdir)] < 2) {
           idx = idxr2;
           goto done;
         }
@@ -736,7 +738,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       //     return false;
       SearchState tmp = s;
       return (!find_next_no_check(tmp) ||
-              (abs_diffmap[edir - pemap[tmp.idx]] < 2 && std::abs(lmag - pmag[tmp.idx]) < 500));
+              (abs_diffmap[static_cast<int>(edir - pemap[tmp.idx])] < 2 && std::abs(lmag - pmag[tmp.idx]) < 500));
     };
 
     // search connected components in one direction
@@ -779,7 +781,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           p.primitive.dir_next = seg.sstate.dir;
 
           // if direction change is to big, stop pattern
-          if (abs_diffmap[ls_dir - seg.sstate.dir] > 1) {
+          if (abs_diffmap[static_cast<int>(ls_dir - seg.sstate.dir)] > 1) {
             checkEnd(0);
           }
           // if no last pattern exist, just store current pattern as last and continue
@@ -893,16 +895,16 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         if (p.primitive.size > 1 && ls_dir != seg.sstate.dir) {
           // get new direction
           p.primitive.dir_next = seg.sstate.dir;
-          int diff_s = abs_diffmap[ls_dir - seg.sstate.dir];
+          int diff_s = abs_diffmap[static_cast<int>(ls_dir - seg.sstate.dir)];
 
           // check corner rule
           if (next) {
-            int diff_fs = abs_diffmap[ls_dir - fs.dir];
+            int diff_fs = abs_diffmap[static_cast<int>(ls_dir - fs.dir)];
             //                           |        |
             //                           |       /     |
             // check for hard corners  _/   or _|  or _|
             if (find_next(fs2 = fs)) {
-              int diff_fs2 = abs_diffmap[ls_dir - fs2.dir];
+              int diff_fs2 = abs_diffmap[static_cast<int>(ls_dir - fs2.dir)];
               if (diff_fs > 1) {
                 if (diff_s == 2) {
                   checkEnd(CP_PATTERN_TERMINATE);
@@ -1057,6 +1059,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           // just switch fw with rv
           fwdmap = rvdmap;
           rvdmap = dmap;
+          [[fallthrough]];
         case 3:  // <---x---> : rv: <---, fw: --->
         case 4: {
           SearchState fs = seg.sstate, s = seg.sstate;
@@ -1269,8 +1272,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         // corner check
         if (max_count != 0) {
           PatternIter e2 = p_idx + max_count;
-          if (abs_diffmap[(e2 - 1)->primitive.dir - e2->primitive.dir] >
-              abs_diffmap[(p_idx - 1)->primitive.dir - p_idx->primitive.dir])
+          if (abs_diffmap[static_cast<int>((e2 - 1)->primitive.dir - e2->primitive.dir)] >
+              abs_diffmap[static_cast<int>((p_idx - 1)->primitive.dir - p_idx->primitive.dir)])
             max_end = e2;
         }
         search(fbeg, max_end);

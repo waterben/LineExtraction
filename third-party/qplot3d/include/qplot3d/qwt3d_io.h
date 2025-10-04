@@ -116,7 +116,7 @@ class QWT3D_EXPORT PixmapWriter : public IO::Functor {
   friend class IO;
 
  public:
-  PixmapWriter() : quality_(-1) {}
+  PixmapWriter() : fmt_(), quality_(-1) {}
   void setQuality(int val);
 
  private:

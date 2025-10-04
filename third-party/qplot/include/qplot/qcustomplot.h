@@ -1023,6 +1023,7 @@ Q_DECLARE_TYPEINFO(QCPLineEnding, Q_MOVABLE_TYPE);
 
 class QCP_LIB_DECL QCPGrid : public QCPLayerable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPGrid)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(bool subGridVisible READ subGridVisible WRITE setSubGridVisible)
   Q_PROPERTY(bool antialiasedSubGrid READ antialiasedSubGrid WRITE setAntialiasedSubGrid)
@@ -1430,6 +1431,7 @@ Q_DECLARE_METATYPE(QCPAxis::SelectablePart)
 
 
 class QCPAxisPainterPrivate {
+  Q_DISABLE_COPY(QCPAxisPainterPrivate)
  public:
   explicit QCPAxisPainterPrivate(QCustomPlot* parentPlot);
   virtual ~QCPAxisPainterPrivate();
@@ -1792,6 +1794,7 @@ class QCP_LIB_DECL QCPAbstractItem : public QCPLayerable {
 
 class QCP_LIB_DECL QCustomPlot : public QWidget {
   Q_OBJECT
+  Q_DISABLE_COPY(QCustomPlot)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QRect viewport READ viewport WRITE setViewport)
   Q_PROPERTY(QPixmap background READ background WRITE setBackground)
@@ -2291,6 +2294,7 @@ class QCP_LIB_DECL QCPAbstractLegendItem : public QCPLayoutElement {
 
 class QCP_LIB_DECL QCPPlottableLegendItem : public QCPAbstractLegendItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPPlottableLegendItem)
  public:
   QCPPlottableLegendItem(QCPLegend* parent, QCPAbstractPlottable* plottable);
 
@@ -2508,6 +2512,7 @@ class QCP_LIB_DECL QCPPlotTitle : public QCPLayoutElement {
 
 class QCPColorScaleAxisRectPrivate : public QCPAxisRect {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPColorScaleAxisRectPrivate)
  public:
   explicit QCPColorScaleAxisRectPrivate(QCPColorScale* parentColorScale);
 
@@ -2633,6 +2638,7 @@ typedef QMutableMapIterator<double, QCPData> QCPDataMutableMapIterator;
 
 class QCP_LIB_DECL QCPGraph : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPGraph)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
   Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
@@ -2831,6 +2837,7 @@ typedef QMutableMapIterator<double, QCPCurveData> QCPCurveDataMutableMapIterator
 
 class QCP_LIB_DECL QCPCurve : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPCurve)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
   Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
@@ -3028,6 +3035,7 @@ typedef QMutableMapIterator<double, QCPBarData> QCPBarDataMutableMapIterator;
 
 class QCP_LIB_DECL QCPBars : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPBars)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(double width READ width WRITE setWidth)
   Q_PROPERTY(WidthType widthType READ widthType WRITE setWidthType)
@@ -3250,6 +3258,7 @@ class QCP_LIB_DECL QCPColorMapData {
 
 class QCP_LIB_DECL QCPColorMap : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPColorMap)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QCPRange dataRange READ dataRange WRITE setDataRange NOTIFY dataRangeChanged)
   Q_PROPERTY(QCPAxis::ScaleType dataScaleType READ dataScaleType WRITE setDataScaleType NOTIFY dataScaleTypeChanged)
@@ -3347,6 +3356,7 @@ typedef QMutableMapIterator<double, QCPFinancialData> QCPFinancialDataMutableMap
 
 class QCP_LIB_DECL QCPFinancial : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPFinancial)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(ChartStyle chartStyle READ chartStyle WRITE setChartStyle)
   Q_PROPERTY(double width READ width WRITE setWidth)
@@ -3460,6 +3470,7 @@ class QCP_LIB_DECL QCPFinancial : public QCPAbstractPlottable {
 
 class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemStraightLine)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3498,6 +3509,7 @@ class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemLine)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3542,6 +3554,7 @@ class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemCurve)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3587,6 +3600,7 @@ class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemRect)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3640,6 +3654,7 @@ class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemText : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemText)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QColor color READ color WRITE setColor)
   Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor)
@@ -3731,6 +3746,7 @@ class QCP_LIB_DECL QCPItemText : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemEllipse)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3797,6 +3813,7 @@ class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemPixmap)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPixmap pixmap READ pixmap WRITE setPixmap)
   Q_PROPERTY(bool scaled READ scaled WRITE setScaled)
@@ -3861,6 +3878,7 @@ class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemTracer)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3945,6 +3963,7 @@ class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemBracket : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemBracket)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)

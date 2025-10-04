@@ -154,7 +154,8 @@ class RamerSplit : public ValueManager {
       return;
     }
 
-    size_t max_point, max_count = 0;
+    size_t max_point = seg.begin();
+    size_t max_count = 0;
 
     const PT& first = points[beg];
     bool no_gap = true;

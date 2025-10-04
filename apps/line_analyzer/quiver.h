@@ -8,6 +8,7 @@
 
 class Quiver : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(Quiver)
 
   QColorDialog* color_dia;
 

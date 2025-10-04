@@ -19,14 +19,15 @@
 
 class PlotWindow : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(PlotWindow)
 
-  QAction* actionInsert_Plot;
-  QAction* actionSave_Document;
-  QWidget* centralWidget;
-  QGridLayout* gridLayout;
-  QScrollBar* verticalScrollBar;
-  QScrollBar* horizontalScrollBar;
-  QStatusBar* statusBar;
+  QAction* actionInsert_Plot{nullptr};
+  QAction* actionSave_Document{nullptr};
+  QWidget* centralWidget{nullptr};
+  QGridLayout* gridLayout{nullptr};
+  QScrollBar* verticalScrollBar{nullptr};
+  QScrollBar* horizontalScrollBar{nullptr};
+  QStatusBar* statusBar{nullptr};
 
   bool hold_;
   bool keep_aspect_;
@@ -46,9 +47,9 @@ class PlotWindow : public QMainWindow {
   explicit PlotWindow(const char* title = "", QWidget* parent = 0);
   ~PlotWindow();
   // direct access to custom plot
-  QCustomPlot* qplot;
-  double scale_x, scale_y;
-  double border_x, border_y;
+  QCustomPlot* qplot{nullptr};
+  double scale_x{}, scale_y{};
+  double border_x{}, border_y{};
 
   //! reset plot and set back to initial setup
   void reset();

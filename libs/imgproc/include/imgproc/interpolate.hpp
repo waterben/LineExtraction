@@ -496,7 +496,7 @@ struct LinearInterpolator {
       }
 
       // no interpolation required, get entry from src
-      static_cast<FT>(readVal<MT>(src, yi, xi));
+      return static_cast<FT>(readVal<MT>(src, yi, xi));
     }
 
     // interpolate with 4 pixels

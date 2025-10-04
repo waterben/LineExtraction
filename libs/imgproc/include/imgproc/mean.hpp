@@ -258,7 +258,10 @@ struct FastMean {
     int step = static_cast<int>(dist);
     if (step < 1) step = 1;
     FT ret = 0, ret2 = 0, nstep, tmp, nx = fabs(l.normalX()), ny = fabs(l.normalY());
-    int n = 0, cols = mag.cols - 2, rows = mag.rows - 2, matStepY = mag.step[0] / sizeof(MT);
+    int n = 0;
+    const int cols = mag.cols - 2;
+    const int rows = mag.rows - 2;
+    int matStepY = static_cast<int>(mag.step[0] / sizeof(MT));
     PT<FT> start = l.startPoint(), end = l.endPoint();
     const MT* data = 0;
     if (nx > ny) {

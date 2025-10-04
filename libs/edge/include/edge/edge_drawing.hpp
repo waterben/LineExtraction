@@ -168,9 +168,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     char dirn = dir - 1;
     char dirp = dir + 1;
 
-    index_type nidx = idx + pdmap[dir];
-    index_type nidxn = idx + pdmap[dirn];
-    index_type nidxp = idx + pdmap[dirp];
+    index_type nidx = idx + pdmap[static_cast<int>(dir)];
+    index_type nidxn = idx + pdmap[static_cast<int>(dirn)];
+    index_type nidxp = idx + pdmap[static_cast<int>(dirp)];
 
     MT v = pmag_[nidx];
     MT vn = pmag_[nidxn];
@@ -208,7 +208,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    index_type nidx = idx + pdmap[static_cast<int>(dir)];
     if (pdir_[nidx] < -1) return;
     pdir_[nidx] = -4;
   }

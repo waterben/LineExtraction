@@ -6,13 +6,13 @@
 
 class PreProcessing : public QMainWindow {
   Q_OBJECT
-
+  Q_DISABLE_COPY(PreProcessing)
 
  public:
   explicit PreProcessing(QWidget* parent = 0);
   ~PreProcessing();
 
-  Ui::PreProcessing* ui;
+  Ui::PreProcessing* ui{nullptr};
 
 
  public slots:

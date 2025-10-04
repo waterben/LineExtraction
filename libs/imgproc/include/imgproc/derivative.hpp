@@ -82,6 +82,8 @@ struct Derivative {
 
   //! get name of derivative operator
   virtual std::string name() const = 0;
+
+  virtual ~Derivative() = default;
 };
 
 

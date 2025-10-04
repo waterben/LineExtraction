@@ -42,7 +42,10 @@ constexpr int D_MAG_SQR = 1;
 constexpr int D_COLOR_INPUT = 2;
 
 struct Detector {
-  Detector(const QString& n = QString(), int f = 0) : name(n), flags(f) {}
+  Detector(const QString& n = QString(), int f = 0) : flags(f), name(n), lsd() {}
+  virtual ~Detector() = default;
+  Detector(const Detector&) = default;
+  Detector& operator=(const Detector&) = default;
 
   int flags;
   QString name;

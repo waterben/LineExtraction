@@ -1,6 +1,9 @@
 #include "pofuncplot.h"
 
-POFuncPlot::POFuncPlot(QWidget* parent) : LATool("PO Function Plot", parent), ui(new Ui::POFuncPlot), plot3d(0) {
+#include <algorithm>
+
+POFuncPlot::POFuncPlot(QWidget* parent)
+    : LATool("PO Function Plot", parent), ui(new Ui::POFuncPlot), plot3d(nullptr), line() {
   setWindowTitle("PO Function Plot");
   ui->setupUi(this);
 

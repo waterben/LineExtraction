@@ -14,6 +14,7 @@ class SurfacePlot;
 class QWT3D_EXPORT GridMapping : public Mapping {
  public:
   GridMapping();  //!< Constructs GridMapping object w/o assigned SurfacePlot.
+  Q_DISABLE_COPY(GridMapping)
 
   void setMesh(unsigned int columns, unsigned int rows);               //!< Sets number of rows and columns.
   void setDomain(double minu, double maxu, double minv, double maxv);  //!< Sets u-v domain boundaries.
@@ -21,9 +22,13 @@ class QWT3D_EXPORT GridMapping : public Mapping {
 
  protected:
   Qwt3D::ParallelEpiped range_p;
-  Qwt3D::SurfacePlot* plotwidget_p;
-  unsigned int umesh_p, vmesh_p;
-  double minu_p, maxu_p, minv_p, maxv_p;
+  Qwt3D::SurfacePlot* plotwidget_p{nullptr};
+  unsigned int umesh_p{};
+  unsigned int vmesh_p{};
+  double minu_p{};
+  double maxu_p{};
+  double minv_p{};
+  double maxv_p{};
 };
 
 }  // namespace Qwt3D
