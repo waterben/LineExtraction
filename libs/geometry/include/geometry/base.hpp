@@ -364,8 +364,12 @@ Matx44<FT> composeHom(const Vec3<FT>& trans, const Vec3<FT>& rot = Vec3<FT>(FT(0
 //! compose homogeneouse matrix from trans vector and rot matrix
 template <class FT>
 Matx44<FT> composeHom(const Vec3<FT>& trans, const Matx33<FT>& rot) {
-  return Matx44<FT>(rot(0, 0), rot(0, 1), rot(0, 2), trans.x(), rot(1, 0), rot(1, 1), rot(1, 2), trans.y(), rot(2, 0),
-                    rot(2, 1), rot(2, 2), trans.z(), FT(0), FT(0), FT(0), FT(1));
+  return Matx44<FT>(
+      rot(0, 0), rot(0, 1), rot(0, 2), trans.x(),
+      rot(1, 0), rot(1, 1), rot(1, 2), trans.y(),
+      rot(2, 0), rot(2, 1), rot(2, 2), trans.z(),
+      FT(0),    FT(0),    FT(0),    FT(1)
+  );
 }
 
 //! compose homogeneouse matrix from other matrix
