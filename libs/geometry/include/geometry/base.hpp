@@ -361,23 +361,29 @@ Matx44<FT> composeHom(const Vec3<FT>& trans, const Vec3<FT>& rot = Vec3<FT>(FT(0
   return composeHom(trans, rodrigues(rot));
 }
 
+// clang-format off
 //! compose homogeneouse matrix from trans vector and rot matrix
 template <class FT>
 Matx44<FT> composeHom(const Vec3<FT>& trans, const Matx33<FT>& rot) {
   return Matx44<FT>(
-      rot(0, 0), rot(0, 1), rot(0, 2), trans.x(),
-      rot(1, 0), rot(1, 1), rot(1, 2), trans.y(),
-      rot(2, 0), rot(2, 1), rot(2, 2), trans.z(),
-      FT(0),    FT(0),    FT(0),    FT(1)
+    rot(0, 0), rot(0, 1), rot(0, 2), trans.x(),
+    rot(1, 0), rot(1, 1), rot(1, 2), trans.y(),
+    rot(2, 0), rot(2, 1), rot(2, 2), trans.z(),
+    FT(0),    FT(0),      FT(0),     FT(1)
   );
 }
 
 //! compose homogeneouse matrix from other matrix
 template <class FT>
 Matx44<FT> composeHom(const Matx33<FT>& m) {
-  return Matx44<FT>(m(0, 0), m(0, 1), m(0, 2), FT(0), m(1, 0), m(1, 1), m(1, 2), FT(0), m(2, 0), m(2, 1), m(2, 2),
-                    FT(0), FT(0), FT(0), FT(0), FT(1));
+  return Matx44<FT>(
+    m(0, 0), m(0, 1), m(0, 2), FT(0),
+    m(1, 0), m(1, 1), m(1, 2), FT(0),
+    m(2, 0), m(2, 1), m(2, 2), FT(0),
+    FT(0),   FT(0),   FT(0),   FT(1)
+);
 }
+// clang-format on
 
 //! decompose homogeneouse matrix to trans vector and rot vector
 template <class FT>
@@ -394,23 +400,38 @@ void decomposeHom(const Matx44<FT>& m, Vec3<FT>& trans, Matx33<FT>& rot) {
   decomposeHom(m, rot);
 }
 
+// clang-format off
 //! decompose homogeneouse matrix and  matrix
 template <class FT>
 void decomposeHom(const Matx44<FT>& m, Matx33<FT>& m33) {
-  m33 = Matx33<FT>(m(0, 0), m(0, 1), m(0, 2), m(1, 0), m(1, 1), m(1, 2), m(2, 0), m(2, 1), m(2, 2));
+  m33 = Matx33<FT>(
+    m(0, 0), m(0, 1), m(0, 2),
+    m(1, 0), m(1, 1), m(1, 2),
+    m(2, 0), m(2, 1), m(2, 2)
+  );
 }
+
 
 //! compose homogeneouse matrix from trans vector and rot matrix
 template <class FT>
 Matx33<FT> composeHom(const Vec2<FT>& trans, const Matx22<FT>& rot) {
-  return Matx33<FT>(rot(0, 0), rot(0, 1), trans.x(), rot(1, 0), rot(1, 1), trans.y(), FT(0), FT(0), FT(1));
+  return Matx33<FT>(
+    rot(0, 0), rot(0, 1), trans.x(),
+    rot(1, 0), rot(1, 1), trans.y(),
+    FT(0),     FT(0),     FT(1)
+  );
 }
 
 //! compose homogeneouse matrix from other matrix
 template <class FT>
 Matx33<FT> composeHom(const Matx22<FT>& m) {
-  return Matx33<FT>(m(0, 0), m(0, 1), FT(0), m(1, 0), m(1, 1), FT(0), FT(0), FT(0), FT(1));
+  return Matx33<FT>(
+    m(0, 0), m(0, 1), FT(0),
+    m(1, 0), m(1, 1), FT(0),
+    FT(0), FT(0), FT(1)
+  );
 }
+// clang-format on
 
 //! decompose homogeneouse matrix to trans vector and rot matrix
 template <class FT>
