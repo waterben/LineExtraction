@@ -1,7 +1,7 @@
 # -Try to find Arpack
 #
 #
-# The following are set after configuration is done: 
+# The following are set after configuration is done:
 #  ARPACK_FOUND
 #  ARPACK_LIBRARIES
 
@@ -28,7 +28,7 @@ ELSE(WIN32)
 SET (ARPACK_NAMES arpack arpack)
 ENDIF(WIN32)
 
-FIND_LIBRARY(ARPACK_LIBRARIES 
+FIND_LIBRARY(ARPACK_LIBRARIES
   NAMES ${ARPACK_NAMES}
   PATHS ${ARPACK_DIR}
 )

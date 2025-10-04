@@ -1,0 +1,49 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - duplicate
+      - invalid
+      - wontfix
+      - question
+    authors:
+      - dependabot
+      - dependabot[bot]
+      - github-actions[bot]
+  categories:
+    - title: ⚠️ Breaking Changes
+      labels:
+        - breaking-change
+        - breaking
+        - major
+    - title: ✨ Features & Enhancements
+      labels:
+        - feature
+        - enhancement
+        - new-feature
+        - improvement
+    - title: 🐛 Bug Fixes
+      labels:
+        - bugfix
+        - hotfix
+        - bug
+        - fix
+    - title: 📚 Documentation & Testing
+      labels:
+        - documentation
+        - docs
+        - test
+        - testing
+    - title: 🏗️ Development & Maintenance
+      labels:
+        - ci
+        - build
+        - workflow
+        - maintenance
+        - cleanup
+        - chore
+        - refactor
+        - style
+    - title: 🔧 Other Changes
+      labels:
+        - "*"

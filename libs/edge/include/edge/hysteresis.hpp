@@ -40,12 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _HYSTERESIS_HPP_
-#define _HYSTERESIS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/index.hpp>
-#  include <opencv2/core/core.hpp>
+#include <edge/index.hpp>
+#include <opencv2/core/core.hpp>
 
 
 namespace lsfm {
@@ -135,17 +133,17 @@ inline cv::Mat hysteresis_binary(const cv::Mat& dmap, IndexVector& edgels, uchar
 
   // now track the edges (hysteresis thresholding)
   while (visited != edgels.size()) {
-    index_type i = edgels[visited];
+    ptrdiff_t i = static_cast<ptrdiff_t>(edgels[visited]);
     uint8_t* m = pmap + i;
     ++visited;
 
     if (m[-1]) {
       m[-1] = 0;
-      edgels.push_back(i - 1);
+      edgels.push_back(static_cast<size_t>(i - 1));
     }
     if (m[1]) {
       m[1] = 0;
-      edgels.push_back(i + 1);
+      edgels.push_back(static_cast<size_t>(i + 1));
     }
     if (m[-mapstep - 1]) {
       m[-mapstep - 1] = 0;
@@ -203,5 +201,3 @@ inline cv::Mat hysteresis_binary_const(const cv::Mat& dmap, const IndexVector& e
 }
 
 }  // namespace lsfm
-#endif
-#endif

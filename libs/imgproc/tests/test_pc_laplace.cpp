@@ -1,19 +1,19 @@
-#include <gtest/gtest.h>
 #include <imgproc/pc_sqf.hpp>
 
-static cv::Mat makeSin(int rows=32, int cols=32, double period=8.0)
-{
+#include <gtest/gtest.h>
+
+static cv::Mat makeSin(int rows = 32, int cols = 32, double period = 8.0) {
   cv::Mat img(rows, cols, CV_8U);
-  for (int r=0;r<rows;++r) for (int c=0;c<cols;++c) {
-    double v = 128.0 + 127.0*std::sin(2.0*CV_PI * r / period);
-    img.at<uchar>(r,c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
-  }
+  for (int r = 0; r < rows; ++r)
+    for (int c = 0; c < cols; ++c) {
+      double v = 128.0 + 127.0 * std::sin(2.0 * CV_PI * r / period);
+      img.at<uchar>(r, c) = static_cast<uchar>(std::clamp(v, 0.0, 255.0));
+    }
   return img;
 }
 
-TEST(PCLSqfTest, Smoke)
-{
-  using PCL = lsfm::PCLSqf<uchar,float>;
+TEST(PCLSqfTest, Smoke) {
+  using PCL = lsfm::PCLSqf<uchar, float>;
   PCL pcl(1.0f, 2.0f, 1.0f);
   auto img = makeSin();
   pcl.process(img);
@@ -33,10 +33,9 @@ TEST(PCLSqfTest, Smoke)
   EXPECT_GT(vmax1, 0.0);
 }
 
-TEST(PCLSqTest, Smoke)
-{
-  using PCL = lsfm::PCLSq<uchar,float,float>;
-  PCL pcl(1.0f, 2.0f, 1, 1.0f); // scale, muls, k, spacing
+TEST(PCLSqTest, Smoke) {
+  using PCL = lsfm::PCLSq<uchar, float, float>;
+  PCL pcl(1.0f, 2.0f, 1, 1.0f);  // scale, muls, k, spacing
   auto img = makeSin();
   pcl.process(img);
   cv::Mat lx, ly;

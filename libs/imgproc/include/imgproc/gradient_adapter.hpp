@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _GRADIENT_ADAPTER_HPP_
-#define _GRADIENT_ADAPTER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
+#include <imgproc/gradient.hpp>
 
 namespace lsfm {
 
@@ -251,5 +249,3 @@ class GradientPC : public GradientOdd<QUAD> {
 };
 
 }  // namespace lsfm
-#endif
-#endif

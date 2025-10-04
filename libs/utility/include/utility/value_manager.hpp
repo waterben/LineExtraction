@@ -39,17 +39,14 @@
 //
 //M*/
 
-#ifndef _VALUE_MANAGER_HPP_
-#define _VALUE_MANAGER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <utility/value.hpp>
+#include <utility/value.hpp>
 
-#  include <functional>
-#  include <initializer_list>
-#  include <map>
-#  include <utility>
-#  include <vector>
+#include <functional>
+#include <initializer_list>
+#include <map>
+#include <vector>
 
 
 namespace lsfm {
@@ -184,5 +181,3 @@ inline void ValueManager::addManager<ValueManager>(const ValueManager& vm) {
 typedef ValueManager::NameValuePair NV;
 typedef ValueManager::InitializerList IL;
 }  // namespace lsfm
-#endif
-#endif

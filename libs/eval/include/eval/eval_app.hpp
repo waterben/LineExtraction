@@ -17,13 +17,13 @@ class EvalApp : public ConsoleApp {
   int run() final;
 
   /// @brief Initialize evaluation
-  virtual void initEval(){};
+  virtual void initEval() {};
 
   /// @brief Run evaluation
   virtual void runEval() = 0;
 
   /// @brief Terminate evaluation
-  virtual void terminateEval(){};
+  virtual void terminateEval() {};
 
   // Flags and options
   std::string input_{};

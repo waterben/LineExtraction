@@ -39,12 +39,10 @@
 //
 //M*/
 
-#ifndef _LSD_FGIOI_HPP_
-#define _LSD_FGIOI_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <lsd/impl/lsd_fgioi.hpp>
-#  include <lsd/lsd_base.hpp>
+#include <lsd/impl/lsd_fgioi.hpp>
+#include <lsd/lsd_base.hpp>
 
 
 namespace lsfm {
@@ -202,5 +200,3 @@ class LsdFGioi : public LsdBase<FT, LPT> {
   const LineDataVector& lineData() const { return lineData_; }
 };
 }  // namespace lsfm
-#endif
-#endif

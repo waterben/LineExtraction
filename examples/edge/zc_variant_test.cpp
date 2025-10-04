@@ -1,15 +1,16 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
-#include <ctime>
-#include <opencv2/opencv.hpp>
+#include <edge/zc.hpp>
+#include <imgproc/derivative_gradient.hpp>
+#include <imgproc/image_operator.hpp>
+#include <imgproc/laplace.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
-#include <imgproc/derivative_gradient.hpp>
-#include <imgproc/laplace.hpp>
-#include <imgproc/image_operator.hpp>
-#include <edge/zc.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
 
 
 using namespace std;
@@ -17,29 +18,27 @@ using namespace lsfm;
 using namespace cv;
 
 
-template<class ZC>
-void showZC(const std::string &name,ZC &zc) {
+template <class ZC>
+void showZC(const std::string& name, ZC& zc) {
+  // cv::Mat emap = nms.directionMap();
+  cv::Mat emap = zc.hysteresis();
+  cv::Mat emapImg;
+  emapImg.create(emap.rows, emap.cols, CV_8UC3);
 
-    //cv::Mat emap = nms.directionMap();
-    cv::Mat emap = zc.hysteresis();
-    cv::Mat emapImg;
-    emapImg.create(emap.rows, emap.cols, CV_8UC3);
+  emapImg.setTo(cv::Vec3b(0, 0, 0));
+  emapImg.setTo(cv::Vec3b(220, 150, 255), emap == 7);  // magenta2
+  emapImg.setTo(cv::Vec3b(255, 0, 150), emap == 6);    // lila
+  emapImg.setTo(cv::Vec3b(255, 0, 0), emap == 5);      // blue
+  emapImg.setTo(cv::Vec3b(255, 255, 0), emap == 4);    // cyan
+  emapImg.setTo(cv::Vec3b(0, 255, 0), emap == 3);      // green
+  emapImg.setTo(cv::Vec3b(0, 255, 255), emap == 2);    // yellow
+  emapImg.setTo(cv::Vec3b(0, 150, 255), emap == 1);    // orange
+  emapImg.setTo(cv::Vec3b(0, 0, 255), emap == 0);      // red
 
-    emapImg.setTo(cv::Vec3b(0, 0, 0));
-    emapImg.setTo(cv::Vec3b(220, 150, 255), emap == 7); // magenta2
-    emapImg.setTo(cv::Vec3b(255, 0, 150), emap == 6); // lila
-    emapImg.setTo(cv::Vec3b(255, 0, 0), emap == 5); // blue
-    emapImg.setTo(cv::Vec3b(255, 255, 0), emap == 4); // cyan
-    emapImg.setTo(cv::Vec3b(0, 255, 0), emap == 3); // green
-    emapImg.setTo(cv::Vec3b(0, 255, 255), emap == 2); // yellow
-    emapImg.setTo(cv::Vec3b(0, 150, 255), emap == 1); // orange
-    emapImg.setTo(cv::Vec3b(0, 0, 255), emap == 0); // red
-    
-    imshow("zc " + name,emapImg);
+  imshow("zc " + name, emapImg);
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";

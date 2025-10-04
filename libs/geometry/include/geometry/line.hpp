@@ -41,19 +41,16 @@
 //M*/
 
 
-#ifndef _GEOMETRY_LINE_HPP_
-#define _GEOMETRY_LINE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/point.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
+#include <geometry/point.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
-#  include <algorithm>
-#  include <string.h>
-
+#include <algorithm>
+#include <string.h>
 
 // for cout
-#  include <iostream>
+#include <iostream>
 
 namespace lsfm {
 
@@ -1023,5 +1020,3 @@ void Line<FT, LPT>::drawImpl(
 }
 
 }  // namespace lsfm
-#endif
-#endif

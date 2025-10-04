@@ -41,18 +41,16 @@
 //M*/
 
 
-#ifndef _GEOMETRY_POSE_HPP_
-#define _GEOMETRY_POSE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/base.hpp>
+#include <geometry/base.hpp>
 
 namespace lsfm {
 
 namespace detail {
-#  ifndef GEOMETRY_USE_CERES
+#ifndef GEOMETRY_USE_CERES
 using namespace std;
-#  endif
+#endif
 };  // namespace detail
 
 //! Base class for poses in 3d space (rotation and translation)
@@ -247,6 +245,3 @@ inline Pose<FT> operator*(const Matx44<FT>& m, const Pose<FT>& pose) {
 typedef Pose<float> Posef;
 typedef Pose<double> Posed;
 }  // namespace lsfm
-
-#endif
-#endif

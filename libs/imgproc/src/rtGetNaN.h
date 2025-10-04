@@ -8,16 +8,15 @@
  * C/C++ source code generated on  : 27-Jan-2016 06:44:05
  */
 
-#ifndef __RTGETNAN_H__
-#define __RTGETNAN_H__
-#include <stddef.h>
-#include "rtwtypes.h"
+#pragma once
 #include "rt_nonfinite.h"
+#include "rtwtypes.h"
+
+#include <stddef.h>
 
 extern real_T rtGetNaN(void);
 extern real32_T rtGetNaNF(void);
 
-#endif
 
 /*
  * File trailer for rtGetNaN.h

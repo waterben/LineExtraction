@@ -1,0 +1,80 @@
+{
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.path": "/usr/local/bin/clangd",
+  "clangd.checkUpdates": true,
+  "clangd.arguments": [
+    "--enable-config",
+    "--compile-commands-dir=${workspaceFolder}",
+    "--header-insertion=iwyu",
+    "--clang-tidy",
+    "--background-index",
+    "--background-index-priority=background",
+    "-j=1",
+    "--malloc-trim",
+    "--function-arg-placeholders=true"
+  ],
+  "doxdocgen.c.commentPrefix": "///",
+  "doxdocgen.c.firstLine": "",
+  "doxdocgen.c.lastLine": "",
+  "doxdocgen.c.triggerSequence": "///",
+  "doxdocgen.cpp.tparamTemplate": " @tparam {param} ",
+  "doxdocgen.file.fileTemplate": " @file",
+  "doxdocgen.file.versionTag": " @version 0.1",
+  "doxdocgen.generic.authorTag": " @author {author} ({email})",
+  "doxdocgen.generic.briefTemplate": " @brief {text}",
+  "doxdocgen.generic.dateTemplate": " @date {date}",
+  "doxdocgen.generic.order": [
+    "brief",
+    "tparam",
+    "param",
+    "return",
+    "custom"
+  ],
+  "doxdocgen.generic.paramTemplate": " @param[in] {param}",
+  "doxdocgen.generic.boolReturnsTrueFalse": false,
+  "doxdocgen.generic.returnTemplate": " @return ",
+  "doxdocgen.generic.useGitUserName": true,
+  "doxdocgen.generic.useGitUserEmail": true,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "[cpp]": {
+    "editor.wordBasedSuggestions": "off",
+    "editor.suggest.insertMode": "replace",
+    "editor.semanticHighlighting.enabled": true,
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+    "editor.rulers": [
+      120
+    ]
+  },
+  "files.eol": "\n",
+  "files.exclude": {
+    "logseq/*": true
+  },
+  "files.insertFinalNewline": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "bazel-bin/**": true,
+    "bazel-out/**": true,
+    "bazel-testlogs/**": true,
+    "bazel-xil-core/**": true,
+    "bazel-workspace/**": true,
+    "external/**": true,
+  },
+  "testMate.cpp.test.advancedExecutables": [
+    {
+      "pattern": "bazel-bin/**/*.runfiles/**/*{test_}*",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "[python]": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.rulers": [
+      120
+    ]
+  },
+  "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
+  "cmake.buildBeforeRun": false
+}

@@ -14,7 +14,7 @@
 #define EDGE_THICK_CHECK
 #define GRADIENT_MAX_CHECK
 #define CORNER_CHECK
-//#define DRAW_MODE
+// #define DRAW_MODE
 #include <edge/edge_drawing.hpp>
 #include <edge/edge_linking.hpp>
 #include <edge/edge_pattern.hpp>

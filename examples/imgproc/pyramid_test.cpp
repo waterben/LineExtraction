@@ -1,38 +1,38 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <ctime>
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/types_c.h>
+#include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/pyramid.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/opencv.hpp>
 #include <utility/matlab_helpers.hpp>
-#include <edge/nms.hpp>
+
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 
 using namespace std;
 using namespace lsfm;
 using namespace cv;
 
-template<class P>
-void showPyramid(const std::string &name,P &p, bool BW = false) {
-    cv::Mat out = draw(p);
-    if (p.type() == CV_32F) {
-        out = normalizeMat(out);
-    }
-    if (BW && p.type() == CV_8S) {
-        out.setTo(1,out > -1);
-        out.setTo(0,out < 0);
-        out.convertTo(out,CV_8U);
-        out.setTo(255,out > 0);
-    }
-    imshow(name,out);
+template <class P>
+void showPyramid(const std::string& name, P& p, bool BW = false) {
+  cv::Mat out = draw(p);
+  if (p.type() == CV_32F) {
+    out = normalizeMat(out);
+  }
+  if (BW && p.type() == CV_8S) {
+    out.setTo(1, out > -1);
+    out.setTo(0, out < 0);
+    out.convertTo(out, CV_8U);
+    out.setTo(255, out > 0);
+  }
+  imshow(name, out);
 }
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/b1.JPG";
   // const char* filename = argc >= 2 ? argv[1] : "../../images/outsideC.jpg";
@@ -63,15 +63,15 @@ int main(int argc, char** argv)
     nms.process(sobel);
     imgNMS[i] = nms.hysteresis();
     if (i == 0) t = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
-    }
-    double time = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
-    std::cout << "time image: " <<  t << "ms, time pyramid: " << time << "ms" << std::endl;
-    showPyramid("img", imgP);
-    showPyramid("grad", imgGrad);
-    showPyramid("nms", imgNMS, true);
+  }
+  double time = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
+  std::cout << "time image: " << t << "ms, time pyramid: " << time << "ms" << std::endl;
+  showPyramid("img", imgP);
+  showPyramid("grad", imgGrad);
+  showPyramid("nms", imgNMS, true);
 
 
-    waitKey();
+  waitKey();
 
-    return 0;
+  return 0;
 }

@@ -1,5 +1,4 @@
-#ifndef __plot3d_2003_06_09_12_14__
-#define __plot3d_2003_06_09_12_14__
+#pragma once
 
 #include "qwt3d_coordsys.h"
 #include "qwt3d_enrichment_std.h"
@@ -329,6 +328,3 @@ class QWT3D_EXPORT Plot3D : public QGLWidget
 
 
 }  // namespace Qwt3D
-
-
-#endif

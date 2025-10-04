@@ -1,5 +1,4 @@
-#ifndef PLOTWINDOW_H
-#define PLOTWINDOW_H
+#pragma once
 
 #include "qplot/qcustomplot.h"
 #include <QtCore/QVariant>
@@ -217,6 +216,3 @@ inline QCPItemLine* PlotWindow::line(const lsfm::LineSegment<FT, LPT>& l, bool f
   lsfm::Vec<FT, 4> data = l.endPoints();
   return line(data[0], data[1], data[2], data[3], fit_axis, pen);
 }
-
-
-#endif

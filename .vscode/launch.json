@@ -1,0 +1,226 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug CMake Binary",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug CMake Binary 2",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug python C++ target",
+            "type": "pythoncpp",
+            "request": "launch",
+            "pythonLaunchName": "Debug python target",
+            "cppAttachName": "C++ Attach",
+            "preLaunchTask": "build-python-debug",
+        },
+        {
+            "name": "Debug python C++ test target",
+            "type": "pythoncpp",
+            "request": "launch",
+            "pythonLaunchName": "Debug python test target",
+            "cppAttachName": "C++ Attach",
+            "preLaunchTask": "build-python-test-debug",
+        },
+        {
+            "name": "Debug binary target",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${python.defaultInterpreterPath}",
+            "preLaunchTask": "build-binary-debug",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bazel-bin/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug test target",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/${input:bazelTestTargets}",
+            "preLaunchTask": "build-test-debug",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bazel-bin/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug python target",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/${input:bazelPythonTargets}",
+            "args": [],
+            "cwd": "${workspaceFolder}/bazel-bin/",
+        },
+        {
+            "name": "Debug python test target",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/${input:bazelPythonTestTargets}",
+            "args": [],
+            "cwd": "${workspaceFolder}/bazel-bin/",
+        },
+        {
+            "name": "Python: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/build/Debug/lib",
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "C++ Attach",
+            "type": "cppdbg",
+            "request": "attach",
+            "processId": "${command:pickProcess}",
+            "program": "${command:python.defaultInterpreterPath}",
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "cmakeDebugBinaries",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "bash -lc \"if [ ! -d '${workspaceFolder}/build/Debug/bin' ]; then >&2 echo 'build/Debug/bin not found. Run the configure/build task first.'; exit 1; fi; cd '${workspaceFolder}/build/Debug/bin' && bash '${workspaceFolder}/.vscode/find_debug_executables.sh' | sed 's#^\\./##'\"",
+                "description": "Please select a launch target"
+            }
+        },
+        {
+            "id": "bazelBinaryTargets",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh launch cc_binary",
+                "description": "Please select a launch target"
+            }
+        },
+        {
+            "id": "bazelTestTargets",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh launch cc_test",
+                "description": "Please select a launch target"
+            }
+        },
+        {
+            "id": "bazelPythonTargets",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh launch py_binary",
+                "description": "Please select a launch target"
+            }
+        },
+        {
+            "id": "bazelPythonTestTargets",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh launch py_test",
+                "description": "Please select a launch target"
+            }
+        }
+    ]
+}

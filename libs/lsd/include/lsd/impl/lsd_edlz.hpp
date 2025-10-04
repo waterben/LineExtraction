@@ -37,8 +37,7 @@ or tort (including negligence or otherwise) arising in any way out of
 the use of this software, even if advised of the possibility of such damage.
 */
 
-#ifndef _LSD_EDLZ_IMPL_HPP_
-#define _LSD_EDLZ_IMPL_HPP_
+#pragma once
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -46,9 +45,6 @@ the use of this software, even if advised of the possibility of such damage.
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <array>
-#include <cfloat>
-#include <cmath>
-#include <cstdlib>
 #include <iostream>
 #include <list>
 #include <vector>
@@ -425,5 +421,3 @@ tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
 
 #undef RELATIVE_ERROR_FACTOR
 #undef log_gamma
-
-#endif /* EDLINEDETECTOR_HH_ */

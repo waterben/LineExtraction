@@ -9,4 +9,3 @@ endif (POLICY CMP0020)
 add_executable(test_axes axesmainwindow.cpp main.cpp axesmainwindowbase.ui)
 qt5_use_modules(test_axes Core Gui Widgets OpenGL)
 target_link_libraries(test_axes lib_qplot3d ${OPENGL_LIBRARIES})
-

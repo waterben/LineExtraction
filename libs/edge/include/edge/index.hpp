@@ -1,9 +1,7 @@
 
-#ifndef _INDEX_HPP_
-#define _INDEX_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/point.hpp>
+#include <geometry/point.hpp>
 
 namespace lsfm {
 
@@ -368,6 +366,3 @@ inline bool is_same(const A&, const B&) {
 }
 
 }  // namespace lsfm
-
-#endif
-#endif

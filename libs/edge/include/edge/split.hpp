@@ -45,13 +45,11 @@
  *  (C) by Benjamin Wassermann
  */
 
-#ifndef _SPLIT_HPP_
-#define _SPLIT_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/edge_segment.hpp>
-#  include <edge/edge_source.hpp>
-#  include <edge/fit.hpp>
+#include <edge/edge_segment.hpp>
+#include <edge/edge_source.hpp>
+#include <edge/fit.hpp>
 
 namespace lsfm {
 //! @brief Perform a Ramer or Douglas Peucker split to a given edge segment.
@@ -1340,5 +1338,3 @@ class AdaptiveLeastSquareSplit : public ValueManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

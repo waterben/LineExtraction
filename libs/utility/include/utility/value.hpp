@@ -39,15 +39,13 @@
 //
 //M*/
 
-#ifndef _VALUE_HPP_
-#define _VALUE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 
-#  include <cstring>
-#  include <iostream>
-#  include <sstream>
+#include <cstring>
+#include <iostream>
+#include <sstream>
 
 
 namespace lsfm {
@@ -438,5 +436,3 @@ inline std::istream& operator>>(std::istream& is, Value& v) {
 }
 
 }  // namespace lsfm
-#endif
-#endif

@@ -1,5 +1,4 @@
-#ifndef __LABELPIXMAP_H__
-#define __LABELPIXMAP_H__
+#pragma once
 
 #include "qwt3d_drawable.h"
 
@@ -71,5 +70,3 @@ class QWT3D_EXPORT Label : public Drawable {
 };
 
 }  // namespace Qwt3D
-
-#endif

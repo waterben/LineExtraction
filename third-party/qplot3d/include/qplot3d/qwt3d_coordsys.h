@@ -1,5 +1,4 @@
-#ifndef __COORDSYS_H__
-#define __COORDSYS_H__
+#pragma once
 
 #include "qwt3d_axis.h"
 #include "qwt3d_colorlegend.h"
@@ -97,5 +96,3 @@ class QWT3D_EXPORT CoordinateSystem : public Drawable {
 };
 
 }  // namespace Qwt3D
-
-#endif

@@ -39,13 +39,12 @@
 //
 //M*/
 
-#ifndef _OPTION_MANAGER_HPP_
-#define _OPTION_MANAGER_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <algorithm>
-#  include <utility>
-#  include <vector>
+#include <algorithm>
+#include <string>
+#include <vector>
+
 
 namespace lsfm {
 
@@ -118,5 +117,3 @@ class OptionManager {
 };
 
 }  // namespace lsfm
-#endif
-#endif

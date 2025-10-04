@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.5...3.27)
 # This is the base utility library - avoid dependencies on other LineExtraction libs
 le_add_library(lib_utility
     AUTO_TESTS
-    PUBLIC_DEPS 
+    PUBLIC_DEPS
         ${OpenCV_LIBS}
         Eigen3::Eigen
     PUBLIC_INCLUDES
@@ -13,4 +13,3 @@ le_add_library(lib_utility
     TEST_DEPS
         ${CMAKE_THREAD_LIBS_INIT}
 )
-

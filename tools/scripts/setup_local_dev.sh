@@ -403,7 +403,7 @@ remove_system_packages() {
         base_packages=$(extract_package_names "$DOCKER_BASE_DIR/common_packages.txt")
         writeInfo "Base common packages to remove: $base_packages"
     fi
-    
+
     # Note: system_packages.txt is NOT included in removal for system stability
 
     # Get packages from devenv configuration

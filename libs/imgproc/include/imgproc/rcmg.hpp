@@ -17,14 +17,12 @@
  *																		   *
  ***************************************************************************/
 
-#ifndef _RCMG_HPP_
-#define _RCMG_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/gradient.hpp>
-#  include <opencv2/core/core.hpp>
+#include <imgproc/gradient.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <vector>
+#include <vector>
 
 namespace lsfm {
 
@@ -640,6 +638,3 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
   }
 };
 }  // namespace lsfm
-
-#endif
-#endif

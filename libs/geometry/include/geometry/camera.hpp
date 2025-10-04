@@ -41,13 +41,11 @@
 //M*/
 
 
-#ifndef _GEOMETRY_CAMERA_HPP_
-#define _GEOMETRY_CAMERA_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line3.hpp>
-#  include <geometry/pose.hpp>
-#  include <geometry/vision.hpp>
+#include <geometry/line3.hpp>
+#include <geometry/pose.hpp>
+#include <geometry/vision.hpp>
 
 namespace lsfm {
 
@@ -930,6 +928,3 @@ class Camera2P : public CameraHom<FT> {
 typedef Camera2P<float> Camera2Pf;
 typedef Camera2P<double> Camera2Pd;
 }  // namespace lsfm
-
-#endif
-#endif

@@ -10,7 +10,6 @@
 #include <imgproc/impl/PhaseCong.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <limits>
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>

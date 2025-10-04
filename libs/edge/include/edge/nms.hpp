@@ -40,17 +40,15 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _NMS_HPP_
-#define _NMS_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/hysteresis.hpp>
-#  include <edge/index.hpp>
-#  include <imgproc/gradient.hpp>
-#  include <imgproc/interpolate.hpp>
-#  include <opencv2/core/core.hpp>
+#include <edge/hysteresis.hpp>
+#include <edge/index.hpp>
+#include <imgproc/gradient.hpp>
+#include <imgproc/interpolate.hpp>
+#include <opencv2/core/core.hpp>
 
-#  include <vector>
+#include <vector>
 
 
 namespace lsfm {
@@ -67,7 +65,7 @@ namespace lsfm {
 //           bright                                        |
 //                                                         |
 // The gradient is orthogonal to the line direction  -------------> line direction
-// line direction = gradiend direction + pi/2
+// line direction = gradient direction + pi/2
 // Since the positive y axis is from top to bottom, the positive rotation is clockwise
 // For 8 region NMS we define following tags:
 //
@@ -1514,5 +1512,3 @@ class NonMaximaSuppression : public ValueManager {
   inline std::string name() const { return NMS::name(); }
 };
 }  // namespace lsfm
-#endif
-#endif

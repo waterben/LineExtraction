@@ -1,12 +1,10 @@
 
-#ifndef _QUADRATURES_HPP_
-#define _QUADRATURES_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/derivative.hpp>
-#  include <imgproc/polar.hpp>
-#  include <imgproc/quadrature.hpp>
-#  include <opencv2/core/core.hpp>
+#include <imgproc/derivative.hpp>
+#include <imgproc/polar.hpp>
+#include <imgproc/quadrature.hpp>
+#include <opencv2/core/core.hpp>
 
 namespace lsfm {
 
@@ -77,10 +75,10 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
     }
 
     // zero dc
-#  ifndef DISABLE_DC_ZERO_FIX
+#ifndef DISABLE_DC_ZERO_FIX
     // std::cout << "dc fix (" << ksize_ << "): " << cv::sum(ke_)[0] / (ksize_*ksize_) << std::endl;
     ke_ -= cv::sum(ke_)[0] / (ksize_ * ksize_);
-#  endif
+#endif
 
     koy_ = kox_.t();
 
@@ -401,6 +399,3 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

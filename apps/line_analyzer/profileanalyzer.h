@@ -1,56 +1,52 @@
-#ifndef PROFILEANALYZER_H
-#define PROFILEANALYZER_H
+#pragma once
 
-#include <qplot/PlotWindow.h>
-#include "latool.h"
 #include "helpers.h"
+#include "latool.h"
+#include <qplot/PlotWindow.h>
 
 namespace Ui {
 class ProfileAnalyzer;
 }
 
-class ProfileAnalyzer : public LATool
-{
-    Q_OBJECT
-    
-    PlotWindow *plot;
-    const ImageSources *sources;
-    ControlWindow *cw;
-    lsfm::LineSegment2d line;
+class ProfileAnalyzer : public LATool {
+  Q_OBJECT
 
-    QVector<double> X, profile, std_dev, single_profile;
-    double linePos, p_min, p_max, sp_min, sp_max;
-    QCPGraph *profile_plot, *sprofile_plot, *std_dev_upper, *std_dev_lower;
-    QCPItemLine *pa_indicator;
-    
-public:
-    explicit ProfileAnalyzer(QWidget *parent = 0);
-    ~ProfileAnalyzer();
-    void connectTools(ControlWindow *w);
+  PlotWindow* plot;
+  const ImageSources* sources;
+  ControlWindow* cw;
+  lsfm::LineSegment2d line;
 
-public slots:
-    void updateSources(const ImageSources& src);
-    void updateLine(const LineSegment& l);
-    void updateLinePosSpin();
-    void updateLinePosSlider();
-    void updateX();
-    void updatePlot();
-    void updateProfile();
-    void updateProfileLayer();
-    void updateSProfile();
-    void updateSProfileLayer();
-    void fitProfile();
+  QVector<double> X, profile, std_dev, single_profile;
+  double linePos, p_min, p_max, sp_min, sp_max;
+  QCPGraph *profile_plot, *sprofile_plot, *std_dev_upper, *std_dev_lower;
+  QCPItemLine* pa_indicator;
 
-    
-private:
-    Ui::ProfileAnalyzer *ui;
+ public:
+  explicit ProfileAnalyzer(QWidget* parent = 0);
+  ~ProfileAnalyzer();
+  void connectTools(ControlWindow* w);
 
-    void createX();
-    void createProfile();
-    void createSProfile();
+ public slots:
+  void updateSources(const ImageSources& src);
+  void updateLine(const LineSegment& l);
+  void updateLinePosSpin();
+  void updateLinePosSlider();
+  void updateX();
+  void updatePlot();
+  void updateProfile();
+  void updateProfileLayer();
+  void updateSProfile();
+  void updateSProfileLayer();
+  void fitProfile();
 
-    void plotProfile();
-    void plotSProfile();
+
+ private:
+  Ui::ProfileAnalyzer* ui;
+
+  void createX();
+  void createProfile();
+  void createSProfile();
+
+  void plotProfile();
+  void plotSProfile();
 };
-
-#endif // PROFILEANALYZER_H

@@ -60,5 +60,3 @@ else ()
         qt_repo("${PROJECT_SOURCE_DIR}/extern")
     endif()
 endif()
-
-

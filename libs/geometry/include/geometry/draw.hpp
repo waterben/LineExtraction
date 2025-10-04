@@ -40,17 +40,14 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _DRAW_HPP_
-#define _DRAW_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <geometry/line.hpp>
-#  include <geometry/polygon.hpp>
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <opencv2/imgproc/types_c.h>
-#  include <opencv2/opencv.hpp>
-#  include <utility/range.hpp>
-
+#include <geometry/line.hpp>
+#include <geometry/polygon.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/opencv.hpp>
+#include <utility/range.hpp>
 
 namespace lsfm {
 
@@ -753,5 +750,3 @@ inline void draw(
   for_each(pv.begin(), pv.end(), [&](const Polygon<FT, PT>& p) { p.draw(img, color, thickness, lineType); });
 }
 }  // namespace lsfm
-#endif
-#endif

@@ -1,0 +1,15 @@
+// cSpell Settings
+{
+  // words - list of words to be always considered correct
+  "words": [
+    "Bazel",
+    "buildifier",
+    "clangd",
+  ],
+  // Specify paths/files to ignore.
+  "ignorePaths": [
+    "**/bazel-bin/**", // Ignore bazel
+    "**/bazel-out/**", // Ignore bazel
+    "**/bazel-testlogs/**" // Ignore bazel
+  ]
+}

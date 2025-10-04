@@ -40,14 +40,12 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _MAGNITUDE_HPP_
-#define _MAGNITUDE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <opencv2/imgproc/imgproc.hpp>
-#  include <utility/option_manager.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <utility/option_manager.hpp>
 
-#  include <string>
+#include <string>
 
 namespace lsfm {
 enum NormType { NONE = 0, NORM_L1, NORM_L2, NORM_L2SQR };
@@ -190,5 +188,3 @@ struct AbsoluteMagnitude {
 
 
 }  // namespace lsfm
-#endif
-#endif

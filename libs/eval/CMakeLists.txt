@@ -6,7 +6,7 @@ if(ENABLE_EVALUATION)
     # Create eval library using automatic source detection
     le_add_library(lib_eval
         AUTO_TESTS
-        PUBLIC_DEPS 
+        PUBLIC_DEPS
             lib_utility
             lib_edge
             lib_imgproc

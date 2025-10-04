@@ -1,10 +1,10 @@
 // C by Benjamin Wassermann
 
-#include <filesystem>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <filesystem>
 #include <iostream>
 
 using namespace lsfm;

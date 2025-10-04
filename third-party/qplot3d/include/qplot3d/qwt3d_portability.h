@@ -1,5 +1,4 @@
-#ifndef qwt3d_portability_h__2005_07_02_11_55_begin_guarded_code
-#define qwt3d_portability_h__2005_07_02_11_55_begin_guarded_code
+#pragma once
 
 //! Portability classes providing transparent Qt3/4 support
 
@@ -44,6 +43,3 @@ class KeyboardState {
   Qt::KeyboardModifiers km_;
 };
 }  // namespace Qwt3D
-
-
-#endif

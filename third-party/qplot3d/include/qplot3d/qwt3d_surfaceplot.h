@@ -1,5 +1,4 @@
-#ifndef qwt3d_SurfacePlot_h__2004_03_05_11_36_begin_guarded_code
-#define qwt3d_SurfacePlot_h__2004_03_05_11_36_begin_guarded_code
+#pragma once
 
 #include "qwt3d_plot.h"
 
@@ -127,6 +126,3 @@ class QWT3D_EXPORT SurfacePlot : public Plot3D {
 };
 
 }  // namespace Qwt3D
-
-
-#endif

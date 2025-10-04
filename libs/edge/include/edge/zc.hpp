@@ -40,11 +40,9 @@
 // C by Benjamin Wassermann
 //M*/
 
-#ifndef _ZC_HPP_
-#define _ZC_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <edge/nms.hpp>
+#include <edge/nms.hpp>
 
 namespace lsfm {
 
@@ -1082,5 +1080,3 @@ class ZeroCrossing : public ValueManager {
   inline std::string name() const { return ZC::name(); }
 };
 }  // namespace lsfm
-#endif
-#endif

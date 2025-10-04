@@ -1,10 +1,8 @@
-#ifndef _STRING_TABLE_HPP_
-#define _STRING_TABLE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <iostream>
-#  include <string>
-#  include <vector>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace lsfm {
 
@@ -95,6 +93,3 @@ class StringTable {
 std::ostream& operator<<(std::ostream& os, const StringTable& StringTable);
 
 }  // namespace lsfm
-
-#endif
-#endif

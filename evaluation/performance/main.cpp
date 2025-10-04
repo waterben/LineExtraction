@@ -1,10 +1,10 @@
 #include "performance_test.hpp"
-#include <filesystem>
-#include <string>
 #include <utility/high_prio.hpp>
 
+#include <filesystem>
 #include <functional>
 #include <iostream>
+#include <string>
 
 
 using namespace lsfm;

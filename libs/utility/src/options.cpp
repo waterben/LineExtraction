@@ -18,10 +18,7 @@ void Options::add_string(const std::string& long_name,
   if (short_name) by_short_[short_name] = p;
 }
 
-void Options::add_switch(const std::string& long_name,
-                         char short_name,
-                         const std::string& description,
-                         bool& target) {
+void Options::add_switch(const std::string& long_name, char short_name, const std::string& description, bool& target) {
   auto e = std::make_unique<SwitchEntry>(long_name, short_name, description, target);
   auto p = e.get();
   entries_.push_back(std::move(e));

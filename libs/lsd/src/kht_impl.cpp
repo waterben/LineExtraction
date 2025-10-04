@@ -34,8 +34,7 @@
 #include <lsd/impl/kht.h>
 
 #include <algorithm>
-#include <cmath>
-#include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include <memory.h>
 

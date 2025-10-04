@@ -17,7 +17,8 @@ void stream_value(std::ostringstream& oss, char /*spec*/, int width, bool zero_p
   oss << value;
 }
 
-std::size_t parse_spec(const std::string& fmt, std::size_t pos, bool& zero_pad, int& width, int& precision, char& spec) {
+std::size_t parse_spec(
+    const std::string& fmt, std::size_t pos, bool& zero_pad, int& width, int& precision, char& spec) {
   zero_pad = false;
   width = -1;
   precision = -1;
@@ -35,12 +36,16 @@ std::size_t parse_spec(const std::string& fmt, std::size_t pos, bool& zero_pad, 
     ++i;
     std::size_t pstart = i;
     while (i < fmt.size() && std::isdigit(static_cast<unsigned char>(fmt[i]))) ++i;
-    if (i > pstart) precision = std::stoi(fmt.substr(pstart, i - pstart));
-    else precision = 0;
+    if (i > pstart)
+      precision = std::stoi(fmt.substr(pstart, i - pstart));
+    else
+      precision = 0;
   }
   // specifier
-  if (i < fmt.size()) spec = fmt[i++];
-  else spec = '\0';
+  if (i < fmt.size())
+    spec = fmt[i++];
+  else
+    spec = '\0';
   return i;
 }
 
@@ -57,4 +62,3 @@ void format_impl(std::string& out, const std::string& fmt, std::size_t start) {
 
 }  // namespace detail
 }  // namespace utility
-

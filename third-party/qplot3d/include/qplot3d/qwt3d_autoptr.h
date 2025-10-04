@@ -1,5 +1,4 @@
-#ifndef qwt3d_autoptr_h__2004_05_14_18_57_begin_guarded_code
-#define qwt3d_autoptr_h__2004_05_14_18_57_begin_guarded_code
+#pragma once
 
 namespace Qwt3D {
 
@@ -50,5 +49,3 @@ class qwt3d_ptr {
 };
 
 }  // namespace Qwt3D
-
-#endif /* include guarded */

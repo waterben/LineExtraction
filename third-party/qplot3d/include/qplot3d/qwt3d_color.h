@@ -1,5 +1,4 @@
-#ifndef __COLORGENERATOR_H__
-#define __COLORGENERATOR_H__
+#pragma once
 
 #include "qwt3d_global.h"
 #include "qwt3d_types.h"
@@ -59,5 +58,3 @@ class QWT3D_EXPORT StandardColor : public Color {
 };
 
 }  // namespace Qwt3D
-
-#endif

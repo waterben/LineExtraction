@@ -8,13 +8,13 @@
 # X11_Xext_FOUND   - True if the X11 extensions are available.
 
 IF (UNIX)
-  
+
   FIND_PATH(X11_INCLUDE_DIR X11/X.h
-    /usr/include 
-    /usr/local/include 
-    /usr/openwin/include 
-    /usr/openwin/share/include 
-    /usr/X11R6/include 
+    /usr/include
+    /usr/local/include
+    /usr/openwin/include
+    /usr/openwin/share/include
+    /usr/X11R6/include
     /usr/include/X11
     /opt/graphics/OpenGL/include
   )
@@ -22,17 +22,17 @@ IF (UNIX)
 
   FIND_LIBRARY(X11_X11_LIBRARY X11
     /usr/lib64
-    /usr/lib 
-    /usr/local/lib 
-    /usr/openwin/lib 
+    /usr/lib
+    /usr/local/lib
+    /usr/openwin/lib
     /usr/X11R6/lib
   )
 
   FIND_LIBRARY(X11_Xext_LIBRARY Xext
     /usr/lib64
-    /usr/lib 
-    /usr/local/lib 
-    /usr/openwin/lib 
+    /usr/lib
+    /usr/local/lib
+    /usr/openwin/lib
     /usr/X11R6/lib
   )
 

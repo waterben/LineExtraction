@@ -1,10 +1,8 @@
-#ifndef _PERFORMANCE_HPP_
-#define _PERFORMANCE_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <utility/task.hpp>
+#include <utility/task.hpp>
 
-#  include <utility>
+#include <utility>
 
 namespace lsfm {
 
@@ -117,6 +115,3 @@ struct PerformanceTest : public TaskLoader {
 
 typedef std::shared_ptr<PerformanceTest> PerformanceTestPtr;
 }  // namespace lsfm
-
-#endif
-#endif

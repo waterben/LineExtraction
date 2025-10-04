@@ -1,11 +1,9 @@
 
-#ifndef _QUADRATUREG2_HPP_
-#define _QUADRATUREG2_HPP_
-#ifdef __cplusplus
+#pragma once
 
-#  include <imgproc/polar.hpp>
-#  include <imgproc/quadrature.hpp>
-#  include <opencv2/core/core.hpp>
+#include <imgproc/polar.hpp>
+#include <imgproc/quadrature.hpp>
+#include <opencv2/core/core.hpp>
 
 
 // #define ENABLE_G2_FULL_STEER
@@ -43,9 +41,9 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   cv::Mat_<FT> m_g2a, m_g2b, m_g2c, m_h2a, m_h2b, m_h2c, m_h2d;
   cv::Mat_<FT> m_c1, m_c2, m_c3, m_theta;
 
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
   cv::Mat_<FT> m_s;
-#  endif
+#endif
 
   mutable cv::Mat energy_, phase_, ox_, oy_, e_, o_;
 
@@ -70,10 +68,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     m_h4 = createFilter(ksize_, kspacing_, H24);
 
     // zero dc
-#  ifndef DISABLE_DC_ZERO_FIX
+#ifndef DISABLE_DC_ZERO_FIX
     m_g1 -= cv::sum(m_g1)[0] / ksize_;
     m_h4 -= cv::sum(m_h4)[0] / ksize_;
-#  endif
+#endif
     max_response();
   }
 
@@ -206,10 +204,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
 
     cv::Mat g2aa = m_g2a.mul(m_g2a);  // g2a*
     cv::Mat g2ab = m_g2a.mul(m_g2b);
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
     cv::Mat g2ac = m_g2a.mul(m_g2c);
     cv::Mat g2bb = m_g2b.mul(m_g2b);  // g2b*
-#  endif
+#endif
     cv::Mat g2bc = m_g2b.mul(m_g2c);
     cv::Mat g2cc = m_g2c.mul(m_g2c);  // g2c*
     cv::Mat h2aa = m_h2a.mul(m_h2a);  // h2a*
@@ -223,18 +221,18 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     cv::Mat h2cd = m_h2c.mul(m_h2d);
     cv::Mat h2dd = m_h2d.mul(m_h2d);  // h2d*
 
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
     m_c1 = 0.5 * (g2bb) + 0.25 * (g2ac) + 0.375 * (g2aa + g2cc) + 0.3125 * (h2aa + h2dd) + 0.5625 * (h2bb + h2cc) +
            0.375 * (h2ac + h2bd);
-#  endif
+#endif
     m_c2 = 0.5 * (g2aa - g2cc) + 0.46875 * (h2aa - h2dd) + 0.28125 * (h2bb - h2cc) + 0.1875 * (h2ac - h2bd);
     m_c3 = (-g2ab) - g2bc - (0.9375 * (h2cd + h2ab)) - (1.6875 * (h2bc)) - (0.1875 * (h2ad));
 
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
     P<FT, FT>::cart2Polar(m_c2, m_c3, m_s, m_theta);
-#  else
+#else
     P<FT, FT>::phase(m_c2, m_c3, m_theta);
-#  endif
+#endif
     m_theta *= -0.5;
   }
 
@@ -245,10 +243,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
 
   DirectionRange directionRange() const { return P<FT, FT>::range(); }
 
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
   //! get direction strength
   cv::Mat strength() const { return m_s; }
-#  endif
+#endif
 
   //! get odd response
   void odd(cv::Mat& ox, cv::Mat& oy) const {
@@ -381,7 +379,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   using Quadrature<IT, FT, FT, FT, FT>::normType;
   using Quadrature<IT, FT, FT, FT, FT>::energyThreshold;
 
-#  ifdef ENABLE_G2_FULL_STEER
+#ifdef ENABLE_G2_FULL_STEER
   void computeEnergyAndPhase(const cv::Mat& g2, const cv::Mat& h2, cv::Mat& energy, cv::Mat& phase) const {
     P<FT, FT>::cart2Polar(g2, h2, energy, phase);
     // cv::cartToPolar(g2, h2, energy, phase); // [0..2*piI]
@@ -440,10 +438,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     P<FT, FT>::polar2Cart(theta * 2.0, c2t, s2t);
     e = m_c1 + m_c2.mul(c2t) + m_c3.mul(s2t);
   }
-#  endif
+#endif
 };
 
 }  // namespace lsfm
-
-#endif
-#endif

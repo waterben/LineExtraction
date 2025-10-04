@@ -1,5 +1,4 @@
-#ifndef _PHASE_CONG_HPP_
-#define _PHASE_CONG_HPP_
+#pragma once
 
 #include <opencv2/core/core.hpp>
 
@@ -45,6 +44,3 @@ class PhaseCong {
 };
 
 }  // namespace lsfm
-
-
-#endif
