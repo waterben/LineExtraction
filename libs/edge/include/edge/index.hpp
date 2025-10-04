@@ -202,7 +202,7 @@ struct IndexConvert {
   }
 
   static inline void convert(
-      const index_type* beg, const index_type* end, PT* data, const cv::Mat& mag, const cv::Mat& dmap = cv::Mat()) {
+      const index_type* beg, const index_type* end, PT* data, const cv::Mat& mag, const cv::Mat& = cv::Mat()) {
     for (; beg != end; ++beg, ++data) toPoint(*beg, *data, mag);
   }
 

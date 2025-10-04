@@ -45,6 +45,8 @@
 #include <edge/edge_segment.hpp>
 #include <geometry/line.hpp>
 
+#include <cstddef>
+
 namespace lsfm {
 
 //! @brief Perform a line tracing and point collection
@@ -340,8 +342,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -349,7 +351,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -359,8 +361,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -368,7 +370,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -393,8 +395,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -402,7 +404,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -412,8 +414,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -421,7 +423,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -447,8 +449,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -456,7 +458,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -466,8 +468,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -475,7 +477,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -498,8 +500,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -507,7 +509,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -517,8 +519,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -526,7 +528,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -550,8 +552,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -559,7 +561,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -569,8 +571,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -578,7 +580,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -603,8 +605,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -612,7 +614,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     } else {
@@ -622,8 +624,8 @@ class LineTracer : public ValueManager {
           ++pixCount;
         } else
           ++gapCount;
-        if (gapCount > maxGap_) {
-          if (pixCount >= minPix_) {
+        if (gapCount > static_cast<size_t>(maxGap_)) {
+          if (pixCount >= static_cast<size_t>(minPix_)) {
             outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
           }
           beg += pixCount;
@@ -631,7 +633,7 @@ class LineTracer : public ValueManager {
           gapCount = 0;
         }
       }
-      if (pixCount >= minPix_) {
+      if (pixCount >= static_cast<size_t>(minPix_)) {
         outSegments.push_back(EdgeSegment(beg, beg + pixCount, id));
       }
     }
@@ -820,7 +822,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -838,7 +841,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -860,7 +864,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * map.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * map.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -878,7 +883,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * map.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * map.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -900,7 +906,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -920,7 +927,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -942,7 +950,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * map.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * map.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -962,7 +971,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * map.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * map.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -989,7 +999,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -1011,7 +1022,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getX(ipos) += idxSelector_[i];
-      idx += idxSelector_[i];
+      const std::ptrdiff_t offset = idxSelector_[i];
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -1038,7 +1050,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * edge.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * edge.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }
@@ -1060,7 +1073,8 @@ class LineTracer : public ValueManager {
         return true;
       }
       getY(ipos) += idxSelector_[i];
-      idx += idxSelector_[i] * edge.cols;
+      const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(idxSelector_[i]) * edge.cols;
+      idx = static_cast<index_type>(static_cast<std::ptrdiff_t>(idx) + offset);
     }
     return false;
   }

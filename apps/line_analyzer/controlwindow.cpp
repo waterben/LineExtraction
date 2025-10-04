@@ -21,10 +21,25 @@ ControlWindow::ControlWindow(QWidget* parent)
       pp(new PreProcessing(this)),
       cdia(new QColorDialog(this)),
       qo(new Quiver(this)),
-      imgMap(0),
+      img{},
+      src{},
+      tools(0),
+      sources{},
+      imgMap(nullptr),
       lineSel(-1),
+      inputSourcesSize(0),
+      detectors{},
+      indicator(nullptr),
+      lines{},
+      quiver{},
       ui(new Ui::ControlWindow),
-      tools(0) {
+      pen{},
+      mPen{},
+      nPen{},
+      nmPen{},
+      selPen{},
+      nSelPen{},
+      iPen{} {
   setWindowTitle("Line Analyzer");
   ui->setupUi(this);
 
@@ -195,7 +210,26 @@ void ControlWindow::loadSources() {
     isi = -1;
   }
   ui->cb_image_mode->clear();
-  const ImageModes& ms = sources[ui->cb_image_source->currentIndex()].modes;
+  if (sources.empty()) {
+    ui->cb_image_source->blockSignals(false);
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+
+  const int sourceIdx = ui->cb_image_source->currentIndex();
+  if (sourceIdx < 0) {
+    ui->cb_image_source->blockSignals(false);
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+  const std::size_t sourceIndex{static_cast<std::size_t>(sourceIdx)};
+  if (sourceIndex >= sources.size()) {
+    ui->cb_image_source->blockSignals(false);
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+
+  const ImageModes& ms = sources[sourceIndex].modes;
   for_each(ms.begin(), ms.end(), [&](const ImageMode& m) { ui->cb_image_mode->addItem(m.name); });
 
   if (isi != -1 && isi < ui->cb_image_mode->count() && ui->cb_image_mode->itemText(isi) == iss)
@@ -207,8 +241,21 @@ void ControlWindow::loadSources() {
 }
 
 void ControlWindow::updateSource(bool fit_axis) {
-  const ImageSource& s = sources[ui->cb_image_source->currentIndex()];
-  const ImageMode& m = s.modes[ui->cb_image_mode->currentIndex()];
+  if (sources.empty()) return;
+
+  const int sourceIdx = ui->cb_image_source->currentIndex();
+  if (sourceIdx < 0) return;
+  const std::size_t sourceIndex{static_cast<std::size_t>(sourceIdx)};
+  if (sourceIndex >= sources.size()) return;
+
+  const ImageSource& s = sources[sourceIndex];
+
+  const int modeIdx = ui->cb_image_mode->currentIndex();
+  if (modeIdx < 0) return;
+  const std::size_t modeIndex{static_cast<std::size_t>(modeIdx)};
+  if (modeIndex >= s.modes.size()) return;
+
+  const ImageMode& m = s.modes[modeIndex];
   lplot->qplot->setCurrentLayer("image");
   lplot->qplot->clearPlottables();
   lplot->hold(true);
@@ -219,7 +266,19 @@ void ControlWindow::updateSource(bool fit_axis) {
 
 void ControlWindow::updateSourceOptions() {
   if (!imgMap) return;
-  const ImageMode& m = sources[ui->cb_image_source->currentIndex()].modes[ui->cb_image_mode->currentIndex()];
+  const int sourceIdx = ui->cb_image_source->currentIndex();
+  if (sourceIdx < 0) return;
+  const std::size_t sourceIndex{static_cast<std::size_t>(sourceIdx)};
+  if (sourceIndex >= sources.size()) return;
+
+  const ImageSource& s = sources[sourceIndex];
+
+  const int modeIdx = ui->cb_image_mode->currentIndex();
+  if (modeIdx < 0) return;
+  const std::size_t modeIndex{static_cast<std::size_t>(modeIdx)};
+  if (modeIndex >= s.modes.size()) return;
+
+  const ImageMode& m = s.modes[modeIndex];
   if (m.name != "RGB") imgMap->setGradient(m.grad);
   imgMap->setInterpolate(ui->chb_image_interp->isChecked());
   if (ui->chb_image_grid->isChecked() && lplot->qplot->layer("grid")->index() > lplot->qplot->layer("image")->index())
@@ -271,9 +330,6 @@ void ControlWindow::processQuiver() {
       energy = is.data;
     }
   });
-
-  double phase_max = 0.0, mag_min = 0.0, mag_max = 0.0, gx_max = 0.0, gy_max = 0.0, dir_max = 0.0, dir_min = 0.0,
-         energy_max = 0.0;
 
   if (qo->data_mode == 0) {
     gradientQuiver(mag, gx, gy);
@@ -471,7 +527,23 @@ void ControlWindow::deleteQuivers(bool replot) {
 void ControlWindow::sourceChanged() {
   ui->cb_image_mode->blockSignals(true);
   ui->cb_image_mode->clear();
-  const ImageModes& ms = sources[ui->cb_image_source->currentIndex()].modes;
+  if (sources.empty()) {
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+
+  const int sourceIdx = ui->cb_image_source->currentIndex();
+  if (sourceIdx < 0) {
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+  const std::size_t sourceIndex{static_cast<std::size_t>(sourceIdx)};
+  if (sourceIndex >= sources.size()) {
+    ui->cb_image_mode->blockSignals(false);
+    return;
+  }
+
+  const ImageModes& ms = sources[sourceIndex].modes;
   for_each(ms.begin(), ms.end(), [&](const ImageMode& m) { ui->cb_image_mode->addItem(m.name); });
   ui->cb_image_mode->setCurrentIndex(0);
   ui->cb_image_mode->blockSignals(false);
@@ -499,7 +571,12 @@ void ControlWindow::addDetector(const DetectorPtr& detector) {
 }
 
 void ControlWindow::selectDetector() {
-  DetectorPtr detector = detectors[ui->cb_detector_select->currentIndex()];
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return;
+
+  DetectorPtr detector = detectors[detectorIndex];
   lsfm::ValueManager::NameValueVector options = detector->lsd->values();
 
   ui->table_detector_params->setColumnCount(static_cast<int>(options.size()));
@@ -521,7 +598,12 @@ void ControlWindow::selectDetector() {
 }
 
 void ControlWindow::resetDetector() {
-  detectors[ui->cb_detector_select->currentIndex()]->create();
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return;
+
+  detectors[detectorIndex]->create();
   selectDetector();
 }
 
@@ -532,8 +614,16 @@ void ControlWindow::resetAllDetectors() {
 
 
 void ControlWindow::setDetectorOption(int row, int col) {
-  DetectorPtr detector = detectors[ui->cb_detector_select->currentIndex()];
-  lsfm::Value option = detector->lsd->value(col);
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return;
+
+  DetectorPtr detector = detectors[detectorIndex];
+  if (col < 0) return;
+  const std::size_t columnIndex{static_cast<std::size_t>(col)};
+
+  lsfm::Value option = detector->lsd->value(columnIndex);
   lsfm::Value tmp;
   tmp.fromString(ui->table_detector_params->item(row, col)->text().toStdString());
 
@@ -544,9 +634,9 @@ void ControlWindow::setDetectorOption(int row, int col) {
     ui->table_detector_params->item(row, col)->setText(option.toString().c_str());
     ui->table_detector_params->blockSignals(false);
   } else {
-    detector->lsd->value(col, tmp);
+    detector->lsd->value(columnIndex, tmp);
     ui->table_detector_params->blockSignals(true);
-    ui->table_detector_params->item(row, col)->setText(detector->lsd->value(col).toString().c_str());
+    ui->table_detector_params->item(row, col)->setText(detector->lsd->value(columnIndex).toString().c_str());
     ui->table_detector_params->blockSignals(false);
   }
 }
@@ -554,7 +644,12 @@ void ControlWindow::setDetectorOption(int row, int col) {
 void ControlWindow::processData() {
   if (src.empty()) return;
   sources.resize(inputSourcesSize);
-  DetectorPtr detector = detectors[ui->cb_detector_select->currentIndex()];
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return;
+
+  DetectorPtr detector = detectors[detectorIndex];
   if (detector->colorInput() && src.channels() != 3) return;
   double stime = double(cv::getTickCount());
   LineSegmentVector l = detector->detect(src);
@@ -709,9 +804,11 @@ void ControlWindow::updateLineGeometry(Line& l) {
 }
 
 void ControlWindow::updateLine(int idx) {
-  if (idx < 0 || idx >= lines.size()) return;
+  if (idx < 0) return;
+  const std::size_t index{static_cast<std::size_t>(idx)};
+  if (index >= lines.size()) return;
 
-  Line& l = lines[idx];
+  Line& l{lines[index]};
   updateLineGeometry(l);
   updateLineTableData(idx);
   if (idx == lineSel) {
@@ -732,8 +829,11 @@ void ControlWindow::updateLines() {
   });
 
   if (lineSel >= 0) {
-    setControls(&lines[lineSel].mod);
-    emit lineChanged(lines[lineSel].modSegment());
+    const std::size_t selected{static_cast<std::size_t>(lineSel)};
+    if (selected < lines.size()) {
+      setControls(&lines[selected].mod);
+      emit lineChanged(lines[selected].modSegment());
+    }
   }
   lplot->replot();
 }
@@ -747,7 +847,9 @@ void ControlWindow::updateLineLayers() {
 
 void ControlWindow::readLineMod() {
   if (lineSel < 0) return;
-  Line& l = lines[lineSel];
+  const std::size_t index{static_cast<std::size_t>(lineSel)};
+  if (index >= lines.size()) return;
+  Line& l{lines[index]};
   l.mod.angle = ui->spin_line_rot->value() / 180 * CV_PI;
   l.mod.distance = ui->spin_line_otrans->value();
   l.mod.start = ui->spin_line_strans->value();
@@ -755,9 +857,11 @@ void ControlWindow::readLineMod() {
 }
 
 void ControlWindow::updateLineTableData(int idx) {
-  if (idx < 0 || idx >= lines.size()) return;
+  if (idx < 0) return;
+  const std::size_t index{static_cast<std::size_t>(idx)};
+  if (index >= lines.size()) return;
 
-  LineSegment line = lines[idx].modSegment();
+  LineSegment line{lines[index].modSegment()};
   ui->table_lines->blockSignals(true);
   ui->table_lines->item(idx, 0)->setText(QString::number(line.angle() * 180 / CV_PI));
   ui->table_lines->item(idx, 1)->setText(QString::number(line.originDist()));
@@ -767,7 +871,7 @@ void ControlWindow::updateLineTableData(int idx) {
   ui->table_lines->item(idx, 5)->setText(QString::number(line.normalX()));
   ui->table_lines->item(idx, 6)->setText(QString::number(line.normalY()));
 
-  auto p = line.centerPoint();
+  auto p{line.centerPoint()};
   ui->table_lines->item(idx, 7)->setText(QString::number(p.x));
   ui->table_lines->item(idx, 8)->setText(QString::number(p.y));
 
@@ -786,7 +890,11 @@ void ControlWindow::updateLineTableData(int idx) {
 
 void ControlWindow::updateLineByCellChange(int row, int col) {
   if (col > 3) return;
-  Line& l = lines[row];
+  if (row < 0) return;
+  const std::size_t index{static_cast<std::size_t>(row)};
+  if (index >= lines.size()) return;
+
+  Line& l{lines[index]};
   bool ok;
   float_type val = static_cast<float_type>(ui->table_lines->item(row, col)->text().toDouble(&ok));
   if (ok) switch (col) {
@@ -854,7 +962,10 @@ void ControlWindow::flipEndpoints() {
 
 void ControlWindow::fitLine() {
   if (lineSel < 0) return;
-  auto l = lines[lineSel].segment.endPoints();
+  const std::size_t index{static_cast<std::size_t>(lineSel)};
+  if (index >= lines.size()) return;
+
+  auto l{lines[index].segment.endPoints()};
   lplot->setAxis(l[0], l[2], l[1], l[3], 1, 1, 2, 2);
   float_type w = abs(l[0] - l[2]), h = abs(l[1] - l[3]);
   if (w > h) {
@@ -903,7 +1014,17 @@ void ControlWindow::setLineSelected(Line& l) {
 void ControlWindow::selectLineByRow() { selectLine(ui->table_lines->currentRow()); }
 
 void ControlWindow::selectLine(int sel) {
-  if (sel >= lines.size() || sel == lineSel) return;
+  if (sel == lineSel) return;
+  if (sel < 0) {
+    clearLineSelected();
+    lineSel = sel;
+    emit lineSelChanged(lineSel);
+    lplot->replot();
+    return;
+  }
+
+  const std::size_t index{static_cast<std::size_t>(sel)};
+  if (index >= lines.size()) return;
   clearLineSelected();
   if (sel > -1) {
     lineSel = sel;
@@ -919,19 +1040,36 @@ void ControlWindow::selectLine(int sel) {
 void ControlWindow::lplotSelChange() {
   auto items = lplot->qplot->selectedItems();
   if (items.size()) {
-    lineSel = items.front()->property("index").toInt();
-    lplot->qplot->blockSignals(true);
-    if (items.size() > 1)
-      for_each(items.begin() + 1, items.end(), [&](decltype(*items.begin())& item) { item->setSelected(false); });
-    lplot->qplot->blockSignals(false);
+    const int selection = items.front()->property("index").toInt();
+    bool validSelection = selection >= 0;
+    std::size_t index{};
+    if (validSelection) {
+      index = static_cast<std::size_t>(selection);
+      validSelection = index < lines.size();
+    }
 
-    ui->table_lines->blockSignals(true);
-    ui->table_lines->selectRow(lineSel);
-    ui->table_lines->blockSignals(false);
+    if (validSelection) {
+      lineSel = selection;
+      lplot->qplot->blockSignals(true);
+      if (items.size() > 1)
+        for_each(items.begin() + 1, items.end(), [&](decltype(*items.begin())& item) { item->setSelected(false); });
+      lplot->qplot->blockSignals(false);
 
-    setLineSelected(lines[lineSel]);
-    setControls(&lines[lineSel].mod);
-    emit lineChanged(lines[lineSel].modSegment());
+      ui->table_lines->blockSignals(true);
+      ui->table_lines->selectRow(lineSel);
+      ui->table_lines->blockSignals(false);
+
+      setLineSelected(lines[index]);
+      setControls(&lines[index].mod);
+      emit lineChanged(lines[index].modSegment());
+    } else {
+      lineSel = -1;
+      ui->pb_line_fit->setDisabled(true);
+      ui->table_lines->blockSignals(true);
+      ui->table_lines->clearSelection();
+      ui->table_lines->blockSignals(false);
+      setControls();
+    }
   } else {
     lineSel = -1;
     ui->pb_line_fit->setDisabled(true);
@@ -945,7 +1083,9 @@ void ControlWindow::lplotSelChange() {
 
 void ControlWindow::freezeLine() {
   if (lineSel < 0) return;
-  lines[lineSel].freeze();
+  const std::size_t index{static_cast<std::size_t>(lineSel)};
+  if (index >= lines.size()) return;
+  lines[index].freeze();
   updateLine();
 }
 
@@ -957,7 +1097,9 @@ void ControlWindow::freezeAllLines() {
 
 void ControlWindow::resetControls() {
   if (lineSel < 0) return;
-  lines[lineSel].reset();
+  const std::size_t index{static_cast<std::size_t>(lineSel)};
+  if (index >= lines.size()) return;
+  lines[index].reset();
   updateLine();
 }
 
@@ -1188,7 +1330,9 @@ void ControlWindow::setIndicatorVisible(bool val) {
 
 void ControlWindow::setIndicatorPosition(double pos, double range) {
   if (lineSel < 0) return;
-  setIndicatorPosition(lines[lineSel].modSegment(), pos, range);
+  const std::size_t index{static_cast<std::size_t>(lineSel)};
+  if (index >= lines.size()) return;
+  setIndicatorPosition(lines[index].modSegment(), pos, range);
 }
 
 void ControlWindow::setIndicatorPosition(const LineSegment& l, double pos, double range) {

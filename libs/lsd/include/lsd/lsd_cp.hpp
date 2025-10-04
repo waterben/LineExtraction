@@ -69,8 +69,8 @@ template <class FT,
           class GRAD = DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude>,
           class FIT = FitLine<EigenFit<FT, PT>>>
 class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
-  int flags_, min_pix_, max_gap_, pat_tol_;
-  FT err_dist_;
+  int flags_{}, min_pix_{}, max_gap_{}, pat_tol_{};
+  FT err_dist_{};
 
   void init() {
     this->add("edge_min_pixels", std::bind(&LsdCP<FT, LPT, PT, GRAD, FIT>::valueMinPixel, this, std::placeholders::_1),
@@ -124,11 +124,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     PatternPrimitive(ushort s = 0, char d = -1, char dn = -1) : size(s), dir(d), dir_next(dn) {}
 
     // primitive size
-    ushort size;
+    ushort size{};
     // primitive direction
-    char dir;
+    char dir{};
     // direction change to next primitive
-    char dir_next;
+    char dir_next{};
 
     //! match PatternPrimitive by tolerance
     inline bool match(const PatternPrimitive& rhs, int tol) const {
@@ -176,13 +176,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     Pattern(size_t b, ushort s, uchar f, const PatternPrimitive& pp) : beg(b), primitive(pp), size(s), flags(f) {}
 
     // start position in point list
-    size_t beg;
+    size_t beg{};
     // pattern primitive data
-    PatternPrimitive primitive;
+    PatternPrimitive primitive{};
     // number of points
-    ushort size;
+    ushort size{};
     // pattern control flags
-    uchar flags;
+    uchar flags{};
 
     inline size_t begpos() const { return beg; }
 
@@ -207,9 +207,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         : points_(po), patterns_(pa), pat_beg(b), pat_size(s) {}
 
     // start position in pattern list
-    size_t pat_beg;
+    size_t pat_beg{};
     // number of patterns
-    unsigned int pat_size;
+    unsigned int pat_size{};
 
     inline size_t pattern_begpos() const { return pat_beg; }
 
@@ -435,9 +435,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
  private:
   // list of all patterns in segments
-  PatternVector patterns_;
+  PatternVector patterns_{};
   // line data vector
-  LineDataVector lineData_;
+  LineDataVector lineData_{};
 
   // LsdCP& operator= (const LsdCP&); // to quiet MSVC
 
@@ -445,18 +445,18 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   struct SearchState {
     SearchState(int i = 0, int xp = 0, int yp = 0, char d = -1) : idx(i), x(xp), y(yp), dir(d) {}
 
-    int idx, x, y;
-    char dir;
+    int idx{}, x{}, y{};
+    char dir{};
   };
 
   struct SegmentState {
     SegmentState(int i = 0, size_t p = 0, uchar r = 0, const SearchState& s = SearchState())
         : id(i), pos(p), rstate(r), sstate(s) {}
 
-    int id;
-    size_t pos;
-    uchar rstate;
-    SearchState sstate;
+    int id{};
+    size_t pos{};
+    uchar rstate{};
+    SearchState sstate{};
   };
 
   void computePatterns() {

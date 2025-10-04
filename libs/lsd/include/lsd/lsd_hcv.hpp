@@ -55,14 +55,14 @@ template <class FT,
 class LdHough : public LdBase<FT, LPT> {
   using LdBase<FT, LPT>::lines_;
 
-  ESOURCE esource_;
-  std::vector<cv::Vec2f> cvLines_;
+  ESOURCE esource_{};
+  std::vector<cv::Vec2f> cvLines_{};
 
-  cv::Mat binaryEdgeMap_;
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  cv::Mat binaryEdgeMap_{};
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
-  double rho_, theta_, rho_msdiv_, theta_msdiv_;
-  int voteThreshold_;
+  double rho_{}, theta_{}, rho_msdiv_{}, theta_msdiv_{};
+  int voteThreshold_{};
 
   void init() {
     this->addManager(esource_);

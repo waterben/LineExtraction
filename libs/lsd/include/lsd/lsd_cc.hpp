@@ -121,13 +121,13 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         : id(i), p_beg(b), p_end(e), points_(v), reverse(r) {}
 
     // segment id of lsmap
-    int id;
+    int id{};
 
     // start / end position in point list (supporting points)
-    size_t p_beg, p_end;
+    size_t p_beg{}, p_end{};
 
     // order of supporting points
-    bool reverse;
+    bool reverse{};
 
     // number of supporting points
     inline size_t size() const { return p_end - p_beg; }
@@ -372,11 +372,11 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     struct State {
       State(int i = 0, int xp = 0, int yp = 0, char d = 0) : idx(i), x(xp), y(yp), dir(d) {}
 
-      int idx, x, y;
-      char dir;
+      int idx{}, x{}, y{};
+      char dir{};
     };
 
-    State s;
+    State s{};
 
     // find next pixel by given direction
     auto find_pixel = [&](State& fs, char edir, char ndir) {

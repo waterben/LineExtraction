@@ -291,6 +291,15 @@ between "versions 1" and the combined program, version 2.
 
 namespace lsfm {
 
+template <typename OutT, typename InT>
+constexpr inline OutT auto_cast(const InT& in) {
+  if constexpr (std::is_same<InT, OutT>::value) {
+    return in;
+  } else {
+    return static_cast<OutT>(in);
+  }
+}
+
 template <class GT = short, class MT = short, class DT = float, class DO = Direction<GT, DT>>
 class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   // Thresholds for brightness and distance
@@ -466,8 +475,8 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
     MT m, n;
     GT x, y, w = 0;
     uchar c, do_symmetry;
-    const uchar* p;
-    const uchar* cp;
+    const uchar* p{nullptr};
+    const uchar* cp{nullptr};
     const uchar* bp = bp_ + 256;
 
     MT max_no = static_cast<MT>(max_no_ * 0.277);
@@ -479,19 +488,19 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
         p = in + (i - 1) * x_size + j - 1;
         cp = bp + in[pos];
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 2;
 
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p));
         p += 2;
         n += *(cp - *p);
         p += x_size - 2;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
 
         if (n <= max_no) r[pos] = max_no - n;
       }
@@ -510,30 +519,30 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             y = 0;
 
             c = *(cp - *p++);
-            x -= c;
-            y -= c;
+            x -= auto_cast<GT>(c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            y -= c;
+            y -= auto_cast<GT>(c);
             c = *(cp - *p);
-            x += c;
-            y -= c;
+            x += auto_cast<GT>(c);
+            y -= auto_cast<GT>(c);
             p += x_size - 2;
 
             c = *(cp - *p);
-            x -= c;
+            x -= auto_cast<GT>(c);
             p += 2;
             c = *(cp - *p);
-            x += c;
+            x += auto_cast<GT>(c);
             p += x_size - 2;
 
             c = *(cp - *p++);
-            x -= c;
-            y += c;
+            x -= auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
+            y += auto_cast<MT>(c);
             c = *(cp - *p);
-            x += c;
-            y += c;
+            x += auto_cast<MT>(c);
+            y += auto_cast<MT>(c);
 
             if ((x * x + y * y) > (0.16 * n * n)) {
               do_symmetry = 0;
@@ -572,34 +581,34 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             y = 0;
 
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w += c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
+            y += auto_cast<GT>(c);
             c = *(cp - *p);
-            x += c;
-            y += c;
-            w -= c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(c);
             p += x_size - 2;
 
             c = *(cp - *p);
-            x += c;
+            x += auto_cast<GT>(c);
             p += 2;
             c = *(cp - *p);
-            x += c;
+            x += auto_cast<GT>(c);
             p += x_size - 2;
 
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w -= c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
+            y += auto_cast<GT>(c);
             c = *(cp - *p);
-            x += c;
-            y += c;
-            w += c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(c);
 
             float z = (y == 0) ? 1000000.0f : static_cast<float>(x) / static_cast<float>(y);
             if (z < 0.25) { /* vertical */
@@ -647,55 +656,55 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
         p = in + (i - 3) * x_size + j - 1;
         cp = bp + in[pos];
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 3;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 5;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 6;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += 2;
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 6;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 5;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
         p += x_size - 3;
 
-        n += *(cp - *p++);
-        n += *(cp - *p++);
-        n += *(cp - *p);
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p++));
+        n += auto_cast<MT>(*(cp - *p));
 
         if (n <= max_no_) r[pos] = max_no_ - n;
       }
@@ -714,114 +723,114 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             y = 0;
 
             c = *(cp - *p++);
-            x -= c;
-            y -= 3 * c;
+            x -= auto_cast<GT>(c);
+            y -= auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            y -= 3 * c;
+            y -= auto_cast<GT>(3 * c);
             c = *(cp - *p);
-            x += c;
-            y -= 3 * c;
+            x += auto_cast<GT>(c);
+            y -= auto_cast<GT>(3 * c);
             p += x_size - 3;
 
             c = *(cp - *p++);
-            x -= 2 * c;
-            y -= 2 * c;
+            x -= auto_cast<GT>(2 * c);
+            y -= auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x -= c;
-            y -= 2 * c;
+            x -= auto_cast<GT>(c);
+            y -= auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            y -= 2 * c;
+            y -= auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x += c;
-            y -= 2 * c;
+            x += auto_cast<GT>(c);
+            y -= auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 2 * c;
-            y -= 2 * c;
+            x += auto_cast<GT>(2 * c);
+            y -= auto_cast<GT>(2 * c);
             p += x_size - 5;
 
             c = *(cp - *p++);
-            x -= 3 * c;
-            y -= c;
+            x -= auto_cast<GT>(3 * c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            x -= 2 * c;
-            y -= c;
+            x -= auto_cast<GT>(2 * c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            x -= c;
-            y -= c;
+            x -= auto_cast<GT>(c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            y -= c;
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += c;
-            y -= c;
+            x += auto_cast<GT>(c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += 2 * c;
-            y -= c;
+            x += auto_cast<GT>(2 * c);
+            y -= auto_cast<GT>(c);
             c = *(cp - *p);
-            x += 3 * c;
-            y -= c;
+            x += auto_cast<GT>(3 * c);
+            y -= auto_cast<GT>(c);
             p += x_size - 6;
 
             c = *(cp - *p++);
-            x -= 3 * c;
+            x -= auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            x -= 2 * c;
+            x -= auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x -= c;
+            x -= auto_cast<GT>(c);
             p += 2;
             c = *(cp - *p++);
-            x += c;
+            x += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += 2 * c;
+            x += auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 3 * c;
+            x += auto_cast<GT>(3 * c);
             p += x_size - 6;
 
             c = *(cp - *p++);
-            x -= 3 * c;
+            x -= auto_cast<GT>(3 * c);
+            y += auto_cast<GT>(c);
+            c = *(cp - *p++);
+            x -= auto_cast<GT>(2 * c);
+            y += auto_cast<GT>(c);
+            c = *(cp - *p++);
+            x -= auto_cast<GT>(c);
             y += c;
             c = *(cp - *p++);
-            x -= 2 * c;
-            y += c;
+            y += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x -= c;
-            y += c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
-            c = *(cp - *p++);
-            x += c;
-            y += c;
-            c = *(cp - *p++);
-            x += 2 * c;
-            y += c;
+            x += auto_cast<GT>(2 * c);
+            y += auto_cast<GT>(c);
             c = *(cp - *p);
-            x += 3 * c;
-            y += c;
+            x += auto_cast<GT>(3 * c);
+            y += auto_cast<GT>(c);
             p += x_size - 5;
 
             c = *(cp - *p++);
-            x -= 2 * c;
-            y += 2 * c;
+            x -= auto_cast<GT>(2 * c);
+            y += auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x -= c;
-            y += 2 * c;
+            x -= auto_cast<GT>(c);
+            y += auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            y += 2 * c;
+            y += auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x += c;
-            y += 2 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 2 * c;
-            y += 2 * c;
+            x += auto_cast<GT>(2 * c);
+            y += auto_cast<GT>(2 * c);
             p += x_size - 3;
 
             c = *(cp - *p++);
-            x -= c;
-            y += 3 * c;
+            x -= auto_cast<GT>(c);
+            y += auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            y += 3 * c;
+            y += auto_cast<GT>(3 * c);
             c = *(cp - *p);
-            x += c;
-            y += 3 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(3 * c);
 
             if ((x * x + y * y) > (0.81 * n * n)) {
               do_symmetry = 0;
@@ -863,138 +872,138 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
             w = 0;
 
             c = *(cp - *p++);
-            x += c;
-            y += 9 * c;
-            w += 3 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(9 * c);
+            w += auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            y += 9 * c;
+            y += auto_cast<GT>(9 * c);
             c = *(cp - *p);
-            x += c;
-            y += 9 * c;
-            w -= 3 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(9 * c);
+            w -= auto_cast<GT>(3 * c);
             p += x_size - 3;
 
             c = *(cp - *p++);
-            x += 4 * c;
-            y += 4 * c;
-            w += 4 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(4 * c);
+            w += auto_cast<GT>(4 * c);
             c = *(cp - *p++);
-            x += c;
-            y += 4 * c;
-            w += 2 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(4 * c);
+            w += auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            y += 4 * c;
+            y += auto_cast<GT>(4 * c);
             c = *(cp - *p++);
-            x += c;
-            y += 4 * c;
-            w -= 2 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(4 * c);
+            w -= auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 4 * c;
-            y += 4 * c;
-            w -= 4 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(4 * c);
+            w -= auto_cast<GT>(4 * c);
             p += x_size - 5;
 
             c = *(cp - *p++);
-            x += 9 * c;
-            y += c;
-            w += 3 * c;
+            x += auto_cast<GT>(9 * c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            x += 4 * c;
-            y += c;
-            w += 2 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w += c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
+            y += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w -= c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += 4 * c;
-            y += c;
-            w -= 2 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 9 * c;
-            y += c;
-            w -= 3 * c;
+            x += auto_cast<GT>(9 * c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(3 * c);
             p += x_size - 6;
 
             c = *(cp - *p++);
-            x += 9 * c;
+            x += auto_cast<GT>(9 * c);
             c = *(cp - *p++);
-            x += 4 * c;
+            x += auto_cast<GT>(4 * c);
             c = *(cp - *p);
-            x += c;
+            x += auto_cast<GT>(c);
             p += 2;
             c = *(cp - *p++);
-            x += c;
+            x += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += 4 * c;
+            x += auto_cast<GT>(4 * c);
             c = *(cp - *p);
-            x += 9 * c;
+            x += auto_cast<GT>(9 * c);
             p += x_size - 6;
 
             c = *(cp - *p++);
-            x += 9 * c;
-            y += c;
-            w -= 3 * c;
+            x += auto_cast<GT>(9 * c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            x += 4 * c;
-            y += c;
-            w -= 2 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w -= c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w -= auto_cast<GT>(c);
             c = *(cp - *p++);
-            y += c;
+            y += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += c;
-            y += c;
-            w += c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(c);
             c = *(cp - *p++);
-            x += 4 * c;
-            y += c;
-            w += 2 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 9 * c;
-            y += c;
-            w += 3 * c;
+            x += auto_cast<GT>(9 * c);
+            y += auto_cast<GT>(c);
+            w += auto_cast<GT>(3 * c);
             p += x_size - 5;
 
             c = *(cp - *p++);
-            x += 4 * c;
-            y += 4 * c;
-            w -= 4 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(4 * c);
+            w -= auto_cast<GT>(4 * c);
             c = *(cp - *p++);
-            x += c;
-            y += 4 * c;
-            w -= 2 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(4 * c);
+            w -= auto_cast<GT>(2 * c);
             c = *(cp - *p++);
-            y += 4 * c;
+            y += auto_cast<GT>(4 * c);
             c = *(cp - *p++);
-            x += c;
-            y += 4 * c;
-            w += 2 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(4 * c);
+            w += auto_cast<GT>(2 * c);
             c = *(cp - *p);
-            x += 4 * c;
-            y += 4 * c;
-            w += 4 * c;
+            x += auto_cast<GT>(4 * c);
+            y += auto_cast<GT>(4 * c);
+            w += auto_cast<GT>(4 * c);
             p += x_size - 3;
 
             c = *(cp - *p++);
-            x += c;
-            y += 9 * c;
-            w -= 3 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(9 * c);
+            w -= auto_cast<GT>(3 * c);
             c = *(cp - *p++);
-            y += 9 * c;
+            y += auto_cast<GT>(9 * c);
             c = *(cp - *p);
-            x += c;
-            y += 9 * c;
-            w += 3 * c;
+            x += auto_cast<GT>(c);
+            y += auto_cast<GT>(9 * c);
+            w += auto_cast<GT>(3 * c);
 
             float z = (y == 0) ? 1000000.0f : static_cast<float>(x) / static_cast<float>(y);
             if (z < 0.25) { /* vertical */

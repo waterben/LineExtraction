@@ -120,8 +120,8 @@ class LsdBase : public LdBase<FT, LPT> {
  protected:
   LsdBase() {}
   using LdBase<FT, LPT>::lines_;
-  mutable LineSegmentVector lineSegments_;
-  mutable EndPointVector endPoints_;
+  mutable LineSegmentVector lineSegments_{};
+  mutable EndPointVector endPoints_{};
 
   virtual void clearData() override {
     lines_.clear();

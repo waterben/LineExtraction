@@ -49,8 +49,8 @@ namespace lsfm {
 
 template <class FT, template <class> class LPT = Vec2>
 class LsdFGioi : public LsdBase<FT, LPT> {
-  FT quant_, angle_th_, log_eps_, density_th_;
-  int num_bins_;
+  FT quant_{}, angle_th_{}, log_eps_{}, density_th_{};
+  int num_bins_{};
 
 
   // LsdFGioi& operator= (const LsdFGioi&); // to quiet MSVC
@@ -83,13 +83,13 @@ class LsdFGioi : public LsdBase<FT, LPT> {
   struct LineData {
     LineData(double w = 0, double p = 0, double n = 0) : width(w), prec(p), nfa(n) {}
 
-    double width, prec, nfa;
+    double width{}, prec{}, nfa{};
   };
 
   typedef std::vector<LineData> LineDataVector;
 
  private:
-  LineDataVector lineData_;
+  LineDataVector lineData_{};
 
  public:
   //! Create a PrimalLineSegmentDetector object. Specifying scale, number of subdivisions for the image, should the

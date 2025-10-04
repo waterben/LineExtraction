@@ -66,33 +66,33 @@ class LsdBurns : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::endPoints_;
   using LsdBase<FT, LPT>::lineSegments_;
 
-  GRAD grad_;  // gradient object
+  GRAD grad_{};  // gradient object
 
   // segmentation components
-  cv::Mat partitionMap_;                    // CV_8U, 0, pixels with partition indicies
-  cv::Mat partitionMapShifted_;             // CV_8U, 0, pixels with shifted partition indicies
-  std::vector<IndexVector> seeds_;          // edge points sorted by partition
-  std::vector<IndexVector> seeds_shifted_;  // edge points sorted by shifted partition
+  cv::Mat partitionMap_{};                    // CV_8U, 0, pixels with partition indicies
+  cv::Mat partitionMapShifted_{};             // CV_8U, 0, pixels with shifted partition indicies
+  std::vector<IndexVector> seeds_{};          // edge points sorted by partition
+  std::vector<IndexVector> seeds_shifted_{};  // edge points sorted by shifted partition
 
   // connected components
   struct CcData {
     CcData(uchar part = 0, bool sh = false) : partition(part), accepted(false), shifted(sh){};
 
-    IndexVector data;
-    uchar partition;
-    bool accepted;
-    bool shifted;
+    IndexVector data{};
+    uchar partition{};
+    bool accepted{};
+    bool shifted{};
   };
   typedef std::vector<CcData> CcDataVector;  // vector of connected components
 
-  CcDataVector ccLists_, ccListsShifted_;
+  CcDataVector ccLists_{}, ccListsShifted_{};
 
-  cv::Mat voteMap_;
+  cv::Mat voteMap_{};
 
-  int pixel_count_, rows_, cols_, min_pix_, part_num_, flags_;
-  FT th_low_, th_high_;
+  int pixel_count_{}, rows_{}, cols_{}, min_pix_{}, part_num_{}, flags_{};
+  FT th_low_{}, th_high_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   void init() {
     this->addManager(grad_);

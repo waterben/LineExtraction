@@ -194,21 +194,24 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
   }
 
   void norms() {
-    int i, j, location;
+    int i, j;
     MT n, max_norm;
 
     for (i = 0; i < dists.rows - 1; ++i) {
       max_norm = static_cast<MT>(-1);
+      int best = i + 1;
+      const size_t idx = static_cast<size_t>(i);
       for (j = i + 1; j < dists.rows; ++j) {
-        n = static_cast<MT>(norm(window[i], window[j], norm_));
+        const size_t jdx = static_cast<size_t>(j);
+        n = static_cast<MT>(norm(window[idx], window[jdx], norm_));
         if (n > max_norm) {
           max_norm = n;
-          location = j;
+          best = j;
         }
         dists(i, j) = n;
       }
-      max_dists[i] = max_norm;
-      locations[i] = location;
+      max_dists[idx] = max_norm;
+      locations[idx] = best;
     }
   }
 
@@ -216,31 +219,35 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
     int i, j;
     MT n;
 
-    for (i = 0; i < dists.rows - mask_ - 1; ++i) {    // copy existing values into new positions
-      max_dists[i] = max_dists[i + mask_];            // copy max dists and location and
-      locations[i] = locations[i + mask_] - mask_;    // adjust by mask_ for move
+    for (i = 0; i < dists.rows - mask_ - 1; ++i) {  // copy existing values into new positions
+      const size_t idx = static_cast<size_t>(i);
+      const size_t idxMask = static_cast<size_t>(i + mask_);
+      max_dists[idx] = max_dists[idxMask];            // copy max dists and location and
+      locations[idx] = locations[idxMask] - mask_;    // adjust by mask_ for move
       for (j = i + 1; j < dists.rows - mask_; ++j) {  // copy dists
         dists(i, j) = dists(i + mask_, j + mask_);
       }
 
       for (j = i + 1; j < dists.rows - mask_; ++j) {  // copy dists
         dists(i, j) = n = dists(i + mask_, j + mask_);
-        if (n > max_dists[i]) {
-          max_dists[i] = n;
-          locations[i] = j;
+        if (n > max_dists[idx]) {
+          max_dists[idx] = n;
+          locations[idx] = j;
         }
       }
     }
 
     for (i = dists.rows - mask_ - 1; i < dists.rows - 1; ++i)  // clear remaining max_dists
-      max_dists[i] = static_cast<MT>(-1);
+      max_dists[static_cast<size_t>(i)] = static_cast<MT>(-1);
 
     for (i = 0; i < dists.rows - 1; ++i) {  // add new values and update max_dists
+      const size_t idx = static_cast<size_t>(i);
       for (j = cv::max(i + 1, mask_); j < dists.rows; ++j) {
-        dists(i, j) = n = static_cast<MT>(norm(window[i], window[j], norm_));
-        if (n > max_dists[i]) {
-          max_dists[i] = n;
-          locations[i] = j;
+        const size_t jdx = static_cast<size_t>(j);
+        dists(i, j) = n = static_cast<MT>(norm(window[idx], window[jdx], norm_));
+        if (n > max_dists[idx]) {
+          max_dists[idx] = n;
+          locations[idx] = j;
         }
       }
     }
@@ -257,7 +264,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
     int hs = (mask_ - 1) / 2;
     int m2 = mask_ * mask_;
     //
-    int v1, v2, location, pos;
+    int v1{0}, v2{0}, location{0}, pos{0};
 
 
     // magnitude, gx, gy
@@ -484,21 +491,24 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
   }
 
   void norms() {
-    int i, j, location;
+    int i, j;
     MT norm, max_norm;
 
     for (i = 0; i < dists.rows - 1; ++i) {
       max_norm = -1;
+      int best = i + 1;
+      const size_t idx = static_cast<size_t>(i);
       for (j = i + 1; j < dists.rows; ++j) {
-        norm = std::abs(static_cast<MT>(window[i]) - window[j]);
+        const size_t jdx = static_cast<size_t>(j);
+        norm = std::abs(static_cast<MT>(window[idx]) - window[jdx]);
         if (norm > max_norm) {
           max_norm = norm;
-          location = j;
+          best = j;
         }
         dists(i, j) = norm;
       }
-      max_dists[i] = max_norm;
-      locations[i] = location;
+      max_dists[idx] = max_norm;
+      locations[idx] = best;
     }
   }
 
@@ -506,31 +516,35 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     int i, j;
     MT n;
 
-    for (i = 0; i < dists.rows - mask_ - 1; ++i) {    // copy existing values into new positions
-      max_dists[i] = max_dists[i + mask_];            // copy max dists and location and
-      locations[i] = locations[i + mask_] - mask_;    // adjust by mask_ for move
+    for (i = 0; i < dists.rows - mask_ - 1; ++i) {  // copy existing values into new positions
+      const size_t idx = static_cast<size_t>(i);
+      const size_t idxMask = static_cast<size_t>(i + mask_);
+      max_dists[idx] = max_dists[idxMask];            // copy max dists and location and
+      locations[idx] = locations[idxMask] - mask_;    // adjust by mask_ for move
       for (j = i + 1; j < dists.rows - mask_; ++j) {  // copy dists
         dists(i, j) = dists(i + mask_, j + mask_);
       }
 
       for (j = i + 1; j < dists.rows - mask_; ++j) {  // copy dists
         dists(i, j) = n = dists(i + mask_, j + mask_);
-        if (n > max_dists[i]) {
-          max_dists[i] = n;
-          locations[i] = j;
+        if (n > max_dists[idx]) {
+          max_dists[idx] = n;
+          locations[idx] = j;
         }
       }
     }
 
     for (i = dists.rows - mask_ - 1; i < dists.rows - 1; ++i)  // clear remaining max_dists
-      max_dists[i] = -1;
+      max_dists[static_cast<size_t>(i)] = -1;
 
     for (i = 0; i < dists.rows - 1; ++i) {  // add new values and update max_dists
+      const size_t idx = static_cast<size_t>(i);
       for (j = cv::max(i + 1, mask_); j < dists.rows; ++j) {
-        dists(i, j) = n = std::abs(static_cast<MT>(window[i]) - window[j]);
-        if (n > max_dists[i]) {
-          max_dists[i] = n;
-          locations[i] = j;
+        const size_t jdx = static_cast<size_t>(j);
+        dists(i, j) = n = std::abs(static_cast<MT>(window[idx]) - window[jdx]);
+        if (n > max_dists[idx]) {
+          max_dists[idx] = n;
+          locations[idx] = j;
         }
       }
     }
@@ -547,7 +561,7 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     int hs = (mask_ - 1) / 2;
     int m2 = mask_ * mask_;
     //
-    int v1, v2, location, pos;
+    int v1{0}, v2{0}, location{0}, pos{0};
 
 
     // magnitude, gx, gy

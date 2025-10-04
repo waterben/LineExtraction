@@ -68,16 +68,16 @@ template <class FT,
           class FIT = FitLine<EigenFit<FT, PT>>  // MEstimatorFitLine<FT,PT>
           >
 class LsdEP : public LsdExt<FT, LPT, PT> {
-  ESOURCE esource_;
-  EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, ESOURCE::NUM_DIR, CORNER_RULE> edge_;
-  SPLIT split_;
-  FIT fit_;
-  int flags_;
+  ESOURCE esource_{};
+  EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, ESOURCE::NUM_DIR, CORNER_RULE> edge_{};
+  SPLIT split_{};
+  FIT fit_{};
+  int flags_{};
 
-  typename LsdExt<FT, LPT, PT>::PointVector points_;
-  EdgeSegmentVector segments_;
+  typename LsdExt<FT, LPT, PT>::PointVector points_{};
+  EdgeSegmentVector segments_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   void init() {
     this->addManager(esource_);

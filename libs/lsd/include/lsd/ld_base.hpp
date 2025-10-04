@@ -52,8 +52,8 @@ struct DataDescriptorEntry {
   DataDescriptorEntry(const std::string& n = std::string(), const std::string d = std::string())
       : name(n), description(d) {}
 
-  std::string name;
-  std::string description;
+  std::string name{};
+  std::string description{};
 };
 
 typedef std::vector<DataDescriptorEntry> DataDescriptor;
@@ -122,7 +122,7 @@ class LdBase : public ValueManager {
  protected:
   LdBase() {}
 
-  mutable LineVector lines_;
+  mutable LineVector lines_{};
   // int flags_;
 
   //! helper that should be used to clear internal data

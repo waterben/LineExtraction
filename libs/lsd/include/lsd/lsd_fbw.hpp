@@ -71,34 +71,34 @@ class LsdFBW : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::endPoints_;
   using LsdBase<FT, LPT>::lineSegments_;
 
-  GRAD grad_;
+  GRAD grad_{};
 
   // the images
-  cv::Mat img_;  // input image
+  cv::Mat img_{};  // input image
 
-  cv::Mat used_;  // indicates used pixels
+  cv::Mat used_{};  // indicates used pixels
 
   // segmentation components
-  cv::Mat th_dir_;     // FT,  Threshold filtered gradient direction
-  IndexVector seeds_;  // seed indexes (above higer thres)
-  IndexVector areas_;
+  cv::Mat th_dir_{};     // FT,  Threshold filtered gradient direction
+  IndexVector seeds_{};  // seed indexes (above higer thres)
+  IndexVector areas_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   // image parameters
-  int cols_;         // image width
-  int rows_;         // image height
-  int pixel_count_;  // image pixel count
+  int cols_{};         // image width
+  int rows_{};         // image height
+  int pixel_count_{};  // image pixel count
 
-  int flags_;
-  FT th_low_;    // gives the lower threshold for the gradient
-  FT th_high_;   // gives the higher threshold for the gradient
-  FT angle_th_;  // Gradient angle tolerance in degrees.
-  int min_pix_;  // minimum amount of supporting pixels
-  FT quant_;
+  int flags_{};
+  FT th_low_{};    // gives the lower threshold for the gradient
+  FT th_high_{};   // gives the higher threshold for the gradient
+  FT angle_th_{};  // Gradient angle tolerance in degrees.
+  int min_pix_{};  // minimum amount of supporting pixels
+  FT quant_{};
 
-  FT prec_;
-  FT nang_;
+  FT prec_{};
+  FT nang_{};
 
   void init() {
     this->addManager(grad_);
@@ -153,7 +153,7 @@ class LsdFBW : public LsdBase<FT, LPT> {
   typedef std::vector<LineData> LineDataVector;  // vector of LineData structs
 
  private:
-  LineDataVector lineData_;
+  LineDataVector lineData_{};
 
  public:
   //! Create a FoodLineSegmentDetector object.

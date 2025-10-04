@@ -149,7 +149,7 @@ class RamerSplit : public ValueManager {
     size_t beg = seg.begin(), end = seg.end(), s = end - beg;
     if (s < static_cast<size_t>(min_len_)) return;
 
-    if (s < 2 * dist_) {
+    if (static_cast<float_type>(s) < 2 * dist_) {
       out.push_back(seg);
       return;
     }
@@ -302,7 +302,7 @@ class RamerSplit : public ValueManager {
     PT n, a, b, d;
     FT max_h = 0;
     for (; beg < end; ++beg) {
-      if (beg->size() < dist_) {
+      if (static_cast<float_type>(beg->size()) < dist_) {
         out.push_back(*beg);
         continue;
       }
@@ -315,7 +315,7 @@ class RamerSplit : public ValueManager {
       b = points[(beg + 1)->begin()] - d;
       d = a - b;
 
-      if ((beg + 1)->size() < dist_ || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
+      if (static_cast<float_type>((beg + 1)->size()) < dist_ || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
         out.push_back(*beg);
         ++beg;
         out.push_back(*beg);
@@ -449,7 +449,7 @@ struct SimpleMerge {
     point_type n, a, b, d, max_point;
     float_type max_h = 0, tmp;
     for (; beg < end; ++beg) {
-      if (beg->size() < dist_low) {
+      if (static_cast<float_type>(beg->size()) < dist_low) {
         out.push_back(*beg);
         continue;
       }
@@ -465,7 +465,7 @@ struct SimpleMerge {
 
       d = a - b;
 
-      if ((beg + 1)->size() < dist_low || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
+      if (static_cast<float_type>((beg + 1)->size()) < dist_low || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
         out.push_back(*beg);
         ++beg;
         out.push_back(*beg);
@@ -620,7 +620,7 @@ class ExtRamerSplit : public ValueManager {
     size_t beg = seg.begin(), end = seg.end(), s = end - beg;
     if (s < static_cast<size_t>(min_len_)) return;
 
-    if (s < 2 * dist_low_) {
+    if (static_cast<float_type>(s) < 2 * dist_low_) {
       out.push_back(seg);
       return;
     }

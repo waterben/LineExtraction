@@ -47,27 +47,29 @@
 
 #include <edge/edge_segment.hpp>
 
+#include <cstddef>
+
 namespace lsfm {
 
 template <class MT, int NUM_DIR = 8>
 class EsdSimple : public EsdBase<MT, index_type> {
-  cv::Mat dir_;
-  char* pdir_;
+  cv::Mat dir_{};
+  char* pdir_{nullptr};
 
 #ifdef DRAW_MODE
-  cv::Mat draw;
-  cv::Vec3b col;
+  cv::Mat draw{};
+  cv::Vec3b col{};
 #endif
 
-  short dmapStore_[20];
+  short dmapStore_[20]{};
 
-  const short* dmap;
-  const short* pdmap;
-  const short* rvdmap;
-  const short* fwdmap;
-  const MT* pmag_;
+  const short* dmap{nullptr};
+  const short* pdmap{nullptr};
+  const short* rvdmap{nullptr};
+  const short* fwdmap{nullptr};
+  const MT* pmag_{nullptr};
 
-  int min_pix_;
+  int min_pix_{};
 
   using EsdBase<MT, index_type>::points_;
   using EsdBase<MT, index_type>::segments_;
@@ -177,7 +179,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
  private:
   // check for vaild adjacent pixel by given direction and retun new index
   inline index_type checkAdjacent(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[static_cast<int>(dir)];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     char ndir = pdir_[nidx];
     // is pixel already used / not set and direction is -+1
     if (ndir < 0 || absDiff<NUM_DIR>(dir - ndir) > 1) return 0;
@@ -188,7 +192,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[static_cast<int>(dir)];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < 0) return;
     pdir_[nidx] = -3;
   }
