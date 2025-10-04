@@ -19,3 +19,14 @@ target_include_directories(lib_qplot PUBLIC
 )
 target_link_libraries(lib_qplot PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::PrintSupport ${OpenCV_LIBS} lib_geometry)
 SET_TARGET_PROPERTIES(lib_qplot PROPERTIES LINKER_LANGUAGE CXX)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(lib_qplot PRIVATE
+        -Wno-effc++
+        -Wno-float-conversion
+        -Wno-sign-conversion
+        -Wno-conversion
+        -Wno-unused-parameter
+        -Wno-deprecated-declarations
+    )
+endif()

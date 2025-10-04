@@ -174,11 +174,6 @@ bool Axis::prepTicCalculation(Triple& startpoint) {
   scale_->setMajorLimits(autostart_, autostop_);
   scale_->calculate();
 
-  Triple normal = (end_ - beg_);
-  // normal.normalize();
-  Triple beg = beg_ + ((autostart_ - start_) / (stop_ - start_)) * normal;
-  Triple end = end_ - ((stop_ - autostop_) / (stop_ - start_)) * normal;
-
   startpoint = end_ - beg_;
 
   majorpos_.clear();

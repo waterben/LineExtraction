@@ -40,3 +40,14 @@ target_include_directories(lib_qplot3d PUBLIC
 
 target_link_libraries(lib_qplot3d PUBLIC Qt5::OpenGL Qt5::Widgets Qt5::Gui Qt5::Core GL GLU)
 SET_TARGET_PROPERTIES(lib_qplot3d PROPERTIES LINKER_LANGUAGE CXX)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(lib_qplot3d PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-effc++>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-conversion>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-sign-conversion>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-float-conversion>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-unused-parameter>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-declarations>
+    )
+endif()
