@@ -20,7 +20,7 @@ class EntryNMS4Fast : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -49,7 +49,7 @@ class EntryNMSFast : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -79,7 +79,7 @@ class EntryNMSFastDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.magnitude();
     sobel.direction();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -109,7 +109,7 @@ class EntryNMSPreciseLinear : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -140,7 +140,7 @@ class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.magnitude();
     sobel.direction();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -170,7 +170,7 @@ class EntryNMSPreciseCubic : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -201,7 +201,7 @@ class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.magnitude();
     sobel.direction();
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
@@ -230,7 +230,7 @@ class EntryZCNoDir : public PerformanceTaskDefault {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -260,7 +260,7 @@ class EntryZCFast : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -291,7 +291,7 @@ class EntryZCFastDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.direction();
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -322,7 +322,7 @@ class EntryZCPreciseLinear : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -353,7 +353,7 @@ class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.direction();
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -384,7 +384,7 @@ class EntryZCPreciseCubic : public PerformanceTaskDefault {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
@@ -415,7 +415,7 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
     sobel.process(src);
     sobel.direction();
     laplace.process(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),

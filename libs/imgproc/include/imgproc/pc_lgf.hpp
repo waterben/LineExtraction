@@ -140,9 +140,9 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
         cutOff_(cutOff),
         g_(g),
         deviationGain_(deviationGain),
-        noiseMethod_(noiseMethod),
         T_(0),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        noiseMethod_(noiseMethod) {
     init();
   }
 
@@ -162,9 +162,9 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
         cutOff_(static_cast<FT>(0.5)),
         g_(10),
         deviationGain_(1.5),
-        noiseMethod_(-1),
         T_(0),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        noiseMethod_(-1) {
     init();
     value(options);
   }
@@ -185,9 +185,9 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
         cutOff_(static_cast<FT>(0.5)),
         g_(10),
         deviationGain_(1.5),
-        noiseMethod_(-1),
         T_(0),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        noiseMethod_(-1) {
     init();
     value(options);
   }

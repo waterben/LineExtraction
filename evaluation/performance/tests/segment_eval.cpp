@@ -52,7 +52,7 @@ struct Entry : public PerformanceTaskBase {
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     EdgeSegmentVector out;
     std::vector<float> n;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       eval.update(pdata.grad);

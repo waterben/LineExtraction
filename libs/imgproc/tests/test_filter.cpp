@@ -111,7 +111,7 @@ TEST_F(FilterTest, FilterResults) {
   filter->process(test_img);
   results = filter->results();
   EXPECT_FALSE(results.empty());
-  EXPECT_EQ(results.size(), 1);
+  EXPECT_EQ(results.size(), static_cast<size_t>(1));
 
   // Check result content
   auto it = results.find("output");
@@ -132,7 +132,7 @@ TEST_F(FilterTest, FilterResultsMap) {
   results["result1"] = FilterData(mat1, 0.0, 1.0);
   results["result2"] = FilterData(mat2, -1.0, 1.0);
 
-  EXPECT_EQ(results.size(), 2);
+  EXPECT_EQ(results.size(), static_cast<size_t>(2));
   EXPECT_NE(results.find("result1"), results.end());
   EXPECT_NE(results.find("result2"), results.end());
   EXPECT_EQ(results.find("nonexistent"), results.end());
@@ -157,7 +157,7 @@ TEST_F(FilterTest, IntensityRangeTypes) {
 
   EXPECT_EQ(uchar_range.lower, 0);
   EXPECT_EQ(uchar_range.upper, 255);
-  EXPECT_EQ(int_range.size(), 2000);
+  EXPECT_EQ(int_range.size(), static_cast<decltype(int_range.size())>(2000));
   EXPECT_DOUBLE_EQ(double_range.size(), 2.0);
 }
 

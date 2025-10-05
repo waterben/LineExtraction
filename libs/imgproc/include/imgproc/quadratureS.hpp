@@ -164,12 +164,12 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
               img_type int_lower = std::numeric_limits<img_type>::lowest(),
               img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, GT, FT, FT, FT>(int_lower, int_upper),
+        anchor(-1, -1),
         ksize_(5),
         kspacing_(1),
         kscale_(1),
         scale_(1),
-        muls_(2),
-        anchor(-1, -1) {
+        muls_(2) {
     init();
     this->value(options);
   }
@@ -178,12 +178,12 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
               img_type int_lower = std::numeric_limits<img_type>::lowest(),
               img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, GT, FT, FT, FT>(int_lower, int_upper),
+        anchor(-1, -1),
         ksize_(5),
         kspacing_(1),
         kscale_(1),
         scale_(1),
-        muls_(2),
-        anchor(-1, -1) {
+        muls_(2) {
     init();
     this->value(options);
   }

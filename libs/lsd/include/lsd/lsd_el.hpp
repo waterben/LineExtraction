@@ -125,8 +125,8 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
         int flags = 0)
       : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
         edge_(min_pix),
-        nfa_(log_eps),
         split_(dist, min_len),
+        nfa_(log_eps),
         flags_(flags) {
     init();
   }

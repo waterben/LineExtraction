@@ -455,7 +455,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -468,7 +469,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -478,7 +479,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
@@ -488,7 +490,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
     pdmap = fwdmap;
     extractSegment(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 
 
@@ -701,7 +703,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegmentC(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -714,7 +717,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegmentC(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -724,7 +727,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
@@ -734,7 +738,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
     pdmap = fwdmap;
     extractSegmentC(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 };
 

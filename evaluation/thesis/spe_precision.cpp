@@ -248,7 +248,7 @@ struct Data {
   Data& operator=(Data&&) = default;
 
   Data(std::string n, std::vector<PT<FT>>&& p, const GroundTruth<FT, PT>& gt, double rt_nms = 0, double rt_spe = 0)
-      : points(std::move(p)), name(std::move(n)), runtime_nms(rt_nms), runtime_spe(rt_spe) {
+      : points(std::move(p)), runtime_nms(rt_nms), runtime_spe(rt_spe), name(std::move(n)) {
     process(gt);
   }
 
@@ -857,7 +857,7 @@ class EntryTreshT : public Entry<FT, PT> {
 
     int runs = global_runs;
     int64 rt{}, tmp{};
-    for (size_t i = 0; i != runs; ++i) {
+    for (int i = 0; i != runs; ++i) {
       tmp = cv::getTickCount();
       cv::Mat mag_th = global_th_mag.process(mag);
       edge_pix = thinImage(mag_th);
@@ -868,7 +868,7 @@ class EntryTreshT : public Entry<FT, PT> {
     std::vector<PT<FT>> edge_pts;
     rt = 0;
     tmp = 0;
-    for (size_t i = 0; i != runs; ++i) {
+    for (int i = 0; i != runs; ++i) {
       tmp = cv::getTickCount();
       edge_pts.clear();
       cv::findNonZero(edge_pix, edge_pts);

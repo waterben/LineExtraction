@@ -33,8 +33,6 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
  private:
-  cv::Point anchor;
-
   // the kernels
   cv::Mat_<FT> m_dx, m_dy;
   cv::Mat_<FT> m_g1, m_g2, m_g3, m_h1, m_h2, m_h3, m_h4;
@@ -52,6 +50,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
 
   int ksize_;
   FT kspacing_;
+  cv::Point anchor;
 
   mutable bool energy_done_, phase_done_, oxy_done_, eo_done_;
 
@@ -123,9 +122,9 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
-        anchor(-1, -1),
         ksize_(kernel_size),
-        kspacing_(kernel_spacing) {
+        kspacing_(kernel_spacing),
+        anchor(-1, -1) {
     init();
   }
 
@@ -133,9 +132,9 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
-        anchor(-1, -1),
         ksize_(9),
-        kspacing_(static_cast<FT>(0.782)) {
+        kspacing_(static_cast<FT>(0.782)),
+        anchor(-1, -1) {
     init();
     this->value(options);
   }

@@ -46,7 +46,7 @@ struct Entry : public PerformanceTaskBase {
     this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       edge->detect(pdata.grad, pdata.nms);

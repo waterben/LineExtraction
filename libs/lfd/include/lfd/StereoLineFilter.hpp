@@ -84,7 +84,7 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
 
   StereoLineFilter(int height, FT maxDisPx = 10000, FT angleTh = 45, FT minYOverlap = 0.5)
-      : height_(height), maxDisPx_(maxDisPx), angleTh_(angleTh), minYOverlap_(minYOverlap) {
+      : maxDisPx_(maxDisPx), angleTh_(angleTh), minYOverlap_(minYOverlap), height_(height) {
     CV_Assert(height >= 0 && maxDisPx_ >= 0 && angleTh > 0 && minYOverlap > 0 && minYOverlap <= 1);
 
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
@@ -227,11 +227,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       if (start > end) std::swap(start, end);
       ++end;
 
-      if (end > bins) end = bins;
+      if (end > static_cast<int>(bins)) end = static_cast<int>(bins);
 
       if (end < 0) end = 0;
 
-      if (start > bins) start = bins;
+      if (start > static_cast<int>(bins)) start = static_cast<int>(bins);
 
       if (start < 0) start = 0;
 
@@ -276,11 +276,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       if (start > end) std::swap(start, end);
       ++end;
 
-      if (end > bins) end = bins;
+      if (end > static_cast<int>(bins)) end = static_cast<int>(bins);
 
       if (end < 0) end = 0;
 
-      if (start > bins) start = bins;
+      if (start > static_cast<int>(bins)) start = static_cast<int>(bins);
 
       if (start < 0) start = 0;
 
@@ -295,22 +295,6 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
         });
       }
     }
-  }
-
- protected:
-  void setOptionImpl(const std::string& name, FT value) {
-    /*if (name == "k") {
-        if (value >= 0 && value <= std::numeric_limits<int>::max()) {
-            k_ = static_cast<int>(value);
-            this->options_[0].value = k_;
-        }
-    }
-    else if (name == "radius") {
-        if (value >= 0 && value <= std::numeric_limits<float_type>::max()) {
-            radius_ = static_cast<float_type>(value);
-            this->options_[1].value = radius_;
-        }
-    }*/
   }
 
  private:
@@ -346,11 +330,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       if (start > end) std::swap(start, end);
       ++end;
 
-      if (end > bins) end = bins;
+      if (end > static_cast<int>(bins)) end = static_cast<int>(bins);
 
       if (end < 0) end = 0;
 
-      if (start > bins) start = bins;
+      if (start > static_cast<int>(bins)) start = static_cast<int>(bins);
 
       if (start < 0) start = 0;
 

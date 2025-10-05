@@ -141,7 +141,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
   //! @param flags Flags for line direction estimation
   //!                   BURNS_NMS - Use Non Maxima Supression for burns detector
   LsdBurns(FT th_low = 0.004, FT th_high = 0.012, int min_pix = 5, int part_num = 12, int flags = 0)
-      : flags_(flags), th_high_(th_high), th_low_(th_low), part_num_(part_num), min_pix_(min_pix) {
+      : min_pix_(min_pix), part_num_(part_num), flags_(flags), th_low_(th_low), th_high_(th_high) {
     CV_Assert(part_num_ < 256 && part_num_ > 3 && th_low <= 1 && th_low > 0 && th_high <= 1 && th_high > 0 &&
               th_high >= th_low && min_pix > 1);
     init();
@@ -479,7 +479,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
           // get all elements of the area and add them to the vectors
 
           getArea(idx);
-          if (ccdata->size() < this->min_pix_)
+          if (ccdata->size() < static_cast<size_t>(this->min_pix_))
             ccdata->clear();
           else {
             ccLists_.push_back(CcData(i));
@@ -490,7 +490,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
       });
 
       // raise the area count
-      if (ccdata->size() < this->min_pix_) ccLists_.pop_back();
+      if (ccdata->size() < static_cast<size_t>(this->min_pix_)) ccLists_.pop_back();
     }
 
     pmap = partitionMapShifted_.ptr<uchar>();
@@ -509,7 +509,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
           // get all elements of the area and add them to the vectors
           getArea(idx);
           // raise the area count
-          if (ccdata->size() < this->min_pix_)
+          if (ccdata->size() < static_cast<size_t>(this->min_pix_))
             ccdata->clear();
           else {
             ccListsShifted_.push_back(CcData(i, true));
@@ -519,7 +519,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
         }
       });
       // raise the area count
-      if (ccdata->size() < this->min_pix_) ccListsShifted_.pop_back();
+      if (ccdata->size() < static_cast<size_t>(this->min_pix_)) ccListsShifted_.pop_back();
     }
   }
 

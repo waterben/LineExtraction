@@ -423,7 +423,7 @@ class LsdFBW : public LsdBase<FT, LPT> {
       size_t start = areas_.size();
       regionGrow(idx, prec_, rangle);
       // ignore region
-      if (areas_.size() - start < min_pix_) return;
+      if (areas_.size() - start < static_cast<size_t>(min_pix_)) return;
 
 
       LineData ld(start, areas_.size());

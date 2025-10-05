@@ -72,7 +72,7 @@ class EntryNearest : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point> points;
     points.reserve(idxs.size());
@@ -106,7 +106,7 @@ class EntrySpeLin : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -140,7 +140,7 @@ class EntrySpeQuad : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -174,7 +174,7 @@ class EntrySpeCog : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -208,7 +208,7 @@ class EntrySpeSobel : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -242,7 +242,7 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -277,7 +277,7 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -312,7 +312,7 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -347,7 +347,7 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -382,7 +382,7 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -417,7 +417,7 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -452,7 +452,7 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
@@ -487,7 +487,7 @@ class EntrySpeSobelDirIpCubic : public Entry<FT> {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());

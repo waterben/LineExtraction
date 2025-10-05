@@ -126,13 +126,13 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        rows_(0),
+        cols_(0),
+        rows_ext_(0),
+        cols_ext_(0),
         kspacing_(kernel_spacing),
         scale_(scale),
-        muls_(muls),
-        cols_(0),
-        cols_ext_(0),
-        rows_(0),
-        rows_ext_(0) {
+        muls_(muls) {
     init();
   }
 
@@ -143,13 +143,13 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        rows_(0),
+        cols_(0),
+        rows_ext_(0),
+        cols_ext_(0),
         kspacing_(kernel_spacing),
         scale_(scale * pow(l, k)),
-        muls_(pow(l, k - 1) / pow(l, k)),
-        cols_(0),
-        cols_ext_(0),
-        rows_(0),
-        rows_ext_(0) {
+        muls_(pow(l, k - 1) / pow(l, k)) {
     init();
   }
 
@@ -157,13 +157,13 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        rows_(0),
+        cols_(0),
+        rows_ext_(0),
+        cols_ext_(0),
         kspacing_(1),
         scale_(1),
-        muls_(2),
-        cols_(0),
-        cols_ext_(0),
-        rows_(0),
-        rows_ext_(0) {
+        muls_(2) {
     init();
     value(options);
   }
@@ -172,13 +172,13 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        rows_(0),
+        cols_(0),
+        rows_ext_(0),
+        cols_ext_(0),
         kspacing_(1),
         scale_(1),
-        muls_(2),
-        cols_(0),
-        cols_ext_(0),
-        rows_(0),
-        rows_ext_(0) {
+        muls_(2) {
     init();
     value(options);
   }

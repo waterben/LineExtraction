@@ -133,13 +133,13 @@ class FdcObjI {
     dst.resize(input.size());
 
     auto miter = mask.begin();
-    auto iter = dst.begin();
-    for_each(input.begin(), input.end(), [this, &iter, &miter](const GT& gt) {
-      if (*miter++)
-        this->create(gt, *iter++);
+    auto diter = dst.begin();
+    for (auto in_iter = input.begin(); in_iter != input.end(); ++in_iter, ++miter, ++diter) {
+      if (*miter)
+        this->create(*in_iter, *diter);
       else
-        *iter++ = DT();
-    });
+        *diter = DT();
+    }
   }
 
   //! create descriptors from geometric object vector and write to descriptor in geometric object vector
@@ -148,12 +148,12 @@ class FdcObjI {
   template <template <class, class...> class GV, class... Args1, class MV>
   void createList(GV<GT, Args1...>& input, const MV& mask) {
     auto miter = mask.begin();
-    for_each(input.begin(), input.end(), [this, &miter](GT& gt) {
-      if (*miter++)
-        this->create(gt, gt.descriptor);
+    for (auto in_iter = input.begin(); in_iter != input.end(); ++in_iter, ++miter) {
+      if (*miter)
+        this->create(*in_iter, in_iter->descriptor);
       else
-        gt.descriptor = DT();
-    });
+        in_iter->descriptor = DT();
+    }
   }
 
   //! create single descriptor from single geometric object

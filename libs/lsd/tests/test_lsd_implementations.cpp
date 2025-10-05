@@ -44,7 +44,7 @@ TEST_F(LSDTest, LsdCC_Basic) {
   const auto& segments = lsd_cc.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GT(segments.size(), 0);
+  EXPECT_GT(segments.size(), size_t{0});
 
   // Check that segments are reasonable
   for (const auto& seg : segments) {
@@ -62,7 +62,7 @@ TEST_F(LSDTest, LsdCP_Basic) {
   const auto& segments = lsd_cp.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);  // May not always find segments with stricter criteria
+  EXPECT_GE(segments.size(), size_t{0});  // May not always find segments with stricter criteria
 }
 
 TEST_F(LSDTest, LsdEL_Basic) {
@@ -74,7 +74,7 @@ TEST_F(LSDTest, LsdEL_Basic) {
   const auto& segments = lsd_el.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdEP_Basic) {
@@ -86,7 +86,7 @@ TEST_F(LSDTest, LsdEP_Basic) {
   const auto& segments = lsd_ep.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdBurns_Basic) {
@@ -98,7 +98,7 @@ TEST_F(LSDTest, LsdBurns_Basic) {
   const auto& segments = lsd_burns.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdFBW_Basic) {
@@ -110,7 +110,7 @@ TEST_F(LSDTest, LsdFBW_Basic) {
   const auto& segments = lsd_fbw.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdFGioi_Basic) {
@@ -122,7 +122,7 @@ TEST_F(LSDTest, LsdFGioi_Basic) {
   const auto& segments = lsd_fgioi.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdEDLZ_Basic) {
@@ -134,7 +134,7 @@ TEST_F(LSDTest, LsdEDLZ_Basic) {
   const auto& segments = lsd_edlz.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, EmptyImage) {
@@ -154,7 +154,7 @@ TEST_F(LSDTest, UniformImage) {
 
   const auto& segments = lsd.lineSegments();
   // Uniform image should have no or very few line segments
-  EXPECT_LE(segments.size(), 2);  // Allow for small detection variations
+  EXPECT_LE(segments.size(), size_t{2});  // Allow for small detection variations
 }
 
 TEST_F(LSDTest, SmallImage) {
@@ -169,5 +169,5 @@ TEST_F(LSDTest, SmallImage) {
 
   const auto& segments = lsd.lineSegments();
   // Should handle small images without crashing
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }

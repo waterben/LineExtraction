@@ -39,7 +39,7 @@ struct Entry : public PerformanceTaskDefault {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     lsd->detect(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       lsd->detect(src);

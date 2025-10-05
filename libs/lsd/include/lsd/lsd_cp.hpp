@@ -300,8 +300,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         flags_(flags),
         min_pix_(min_pix),
         max_gap_(max_gap),
-        err_dist_(err_dist),
-        pat_tol_(pat_tol) {
+        pat_tol_(pat_tol),
+        err_dist_(err_dist) {
     CV_Assert(pat_tol >= 0 && max_gap >= 0 && min_pix > 1 && th_high <= 1 && th_high > 0 && th_low <= 1 && th_low > 0 &&
               th_high >= th_low && err_dist > 0);
     init();
@@ -1173,7 +1173,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         if (std::abs(getX(n) * getX(a) + getY(n) * getY(a)) > err ||
             std::abs(getX(n) * getX(a2) + getY(n) * getY(a2)) > err) {
           ld.pat_size = static_cast<unsigned int>(idx - ld.pat_beg);
-          if (ld.size() >= min_pix_) {
+          if (ld.size() >= static_cast<size_t>(min_pix_)) {
             lineData_.push_back(ld);
           }
           ld.pat_beg = idx;
@@ -1184,7 +1184,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       if (p.terminate()) {
         ld.pat_size = static_cast<unsigned int>(idx - ld.pat_beg);
-        if (ld.size() >= min_pix_) {
+        if (ld.size() >= static_cast<size_t>(min_pix_)) {
           lineData_.push_back(ld);
         }
         lterm = true;
@@ -1207,7 +1207,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       if (beg >= end) return;
 
       if (end - beg == 1) {
-        if (beg->size >= this->min_pix_)
+        if (static_cast<int>(beg->size) >= this->min_pix_)
           lineData_.push_back(LineData(static_cast<size_t>(beg - pbeg), 1, &this->points_, &this->patterns_));
         return;
       }
@@ -1297,7 +1297,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     typedef typename PointVector::const_iterator const_iter;
 
     for_each(lineData_.begin(), lineData_.end(), [&](LineData& ldata) {
-      if (ldata.size() < min_pix_) return;
+      if (ldata.size() < static_cast<size_t>(min_pix_)) return;
       const_iter beg = ldata.begin(), end = ldata.end();
 
       const PT& first = ldata.reverse() ? *beg : *(end - 1);

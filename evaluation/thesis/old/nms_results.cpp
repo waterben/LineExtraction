@@ -40,10 +40,10 @@ struct Entry {
   Entry() {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, double l, double h, int f = 0)
-      : filter(a), name(b), low(l), high(h), flags(f) {}
+      : filter(a), name(b), flags(f), low(l), high(h) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, int f = 0)
-      : filter(a), name(b), low(0.01), high(0.03), flags(f) {}
+      : filter(a), name(b), flags(f), low(0.01), high(0.03) {}
 
 
   cv::Ptr<FilterI<uchar>> filter;

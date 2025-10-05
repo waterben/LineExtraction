@@ -396,7 +396,6 @@ struct ExtSplitCheck {
     if (f2 > 1) f2 = 1;
     FT f3 = l2_norm<FT, PT>(last - max_point) / max_len;
     if (f3 > 1) f3 = 1;
-    FT tmp = add * std::cbrt(f1 * f2 * f3);
     return (max_h > (dist_low + add * std::cbrt(f1 * f2 * f3)) * norm);
   }
 };
@@ -525,18 +524,18 @@ class ExtRamerSplit : public ValueManager {
 
  public:
   ExtRamerSplit(float_type dist_low = 2, int minp = 2, float_type dist_high = 6)
-      : dist_low_(dist_low), dist_high_(dist_high), min_len_(minp), max_len_(0), mag_max_(0) {
+      : dist_low_(dist_low), dist_high_(dist_high), max_len_(0), min_len_(minp), mag_max_(0) {
     init();
   }
 
   ExtRamerSplit(const ValueManager::NameValueVector& options)
-      : dist_low_(2), dist_high_(6), min_len_(2), max_len_(0), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0) {
     init();
     this->value(options);
   }
 
   ExtRamerSplit(ValueManager::InitializerList options)
-      : dist_low_(2), dist_high_(6), min_len_(2), max_len_(0), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0) {
     init();
     this->value(options);
   }
@@ -735,7 +734,11 @@ class ExtRamerSplit : public ValueManager {
     const point_type& last = points[units[end - 1].end() - 1];
 
     // get direction of line
-    point_type n = last - first, a = points[units[beg].end() - 1], b, max_point, tmp;
+    point_type n = last - first;
+    point_type a = points[units[beg].end() - 1];
+    point_type b = a;
+    point_type max_point = first;
+    point_type tmp;
     // get normal
     float_type max_h = 0, h;
     set(n, -getY(n), getX(n));
@@ -926,8 +929,8 @@ class LeastSquareSplit : public ValueManager {
  private:
   void applyM1(const EdgeSegment& seg, const PointVector& points, EdgeSegmentVector& out, int id) const {
     const PT* pPoints = points.data();
-    const PT* pbeg;
-    const PT* pend;
+    const PT* pbeg = nullptr;
+    const PT* pend = nullptr;
     size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
     if (s < static_cast<size_t>(min_len_)) return;
 
@@ -963,8 +966,10 @@ class LeastSquareSplit : public ValueManager {
     size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
     if (s < static_cast<size_t>(min_len_)) return;
 
-    Vec2<FT> normal, centroid;
-    FT max_dist, dist_norm;
+    Vec2<FT> normal = Vec2<FT>::Zero();
+    Vec2<FT> centroid = Vec2<FT>::Zero();
+    FT max_dist = 0;
+    FT dist_norm = 0;
     for (; beg < end; ++beg) {
       pbeg = pPoints + beg;
       pend = pbeg + min_len_;
@@ -1066,11 +1071,13 @@ class LeastSquareSplit : public ValueManager {
 
     size_t unit_size = units[beg].size(), pos = beg + 1;
 
-    const PT* pbeg;
-    const PT* pend;
+    const PT* pbeg = nullptr;
+    const PT* pend = nullptr;
 
-    Vec2<FT> normal, centroid;
-    FT max_dist, dist_norm;
+    Vec2<FT> normal = Vec2<FT>::Zero();
+    Vec2<FT> centroid = Vec2<FT>::Zero();
+    FT max_dist = 0;
+    FT dist_norm = 0;
     // try to get initial fit
     for (; beg < end; ++beg) {
       while (unit_size < static_cast<size_t>(min_len_) && pos != end) {

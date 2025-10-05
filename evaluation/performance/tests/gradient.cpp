@@ -31,7 +31,7 @@ struct Entry : public PerformanceTaskDefault {
     gradient->process(src);
     gradient->magnitude();
     cv::Mat tmp;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != loops; ++i) {
       start = cv::getTickCount();
       gradient->process(src);

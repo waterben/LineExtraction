@@ -56,7 +56,7 @@ struct Entry : public PerformanceTaskBase {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     std::vector<LineSegment<float, Vec2>> lsegs;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       fit.apply(pdata.edge.segments(), pdata.points, lsegs);

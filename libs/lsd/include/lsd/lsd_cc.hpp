@@ -118,7 +118,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
    public:
     LineData(int i = 0, size_t b = 0, size_t e = 0, bool r = false, const PointVector* v = 0)
-        : id(i), p_beg(b), p_end(e), points_(v), reverse(r) {}
+        : points_(v), id(i), p_beg(b), p_end(e), reverse(r) {}
 
     // segment id of lsmap
     int id{};
@@ -718,7 +718,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           break;
       }
 
-      if (seg.p_end - seg.p_beg >= min_pix_) {
+      if (seg.p_end - seg.p_beg >= static_cast<size_t>(min_pix_)) {
         segments_.push_back(seg);
       }
       ++seg.id;
@@ -736,7 +736,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     std::function<void(size_t, size_t)> search;
     search = [&](size_t sbeg, size_t send) {
       size_t s = send - sbeg;
-      if (s < min_pix_) return;
+      if (s < static_cast<size_t>(min_pix_)) return;
 
       if (s < 2 * err_dist_) {
         lineData_.push_back(LineData(pseg->id, sbeg, send, pseg->reverse, &this->points_));
@@ -820,7 +820,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     typedef typename PointVector::const_iterator const_iter;
 
     for_each(lineData_.begin(), lineData_.end(), [&](LineData& ldata) {
-      if (ldata.size() < min_pix_) return;
+      if (ldata.size() < static_cast<size_t>(min_pix_)) return;
 
       const_iter beg = ldata.begin(), end = ldata.end();
 

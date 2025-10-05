@@ -704,11 +704,27 @@ class LineSegment : public Line<FT, PT> {
     }
 
     // get endpoints
-    point_type pb, pe;
+    point_type pb;
+    point_type pe;
     this->endPoints(pb, pe);
 
     // compute intersections with box lines
-    point_type ihl, ihu, ivl, ivr;
+    point_type ihl;
+    point_type ihu;
+    point_type ivl;
+    point_type ivr;
+
+    auto zeroPoint = [](point_type& p) {
+      setX(p, FT(0));
+      setY(p, FT(0));
+    };
+
+    zeroPoint(pb);
+    zeroPoint(pe);
+    zeroPoint(ihl);
+    zeroPoint(ihu);
+    zeroPoint(ivl);
+    zeroPoint(ivr);
 
     // lower horizontal line
     this->intersection(Line<FT, PT>(FT(0), FT(1), min_y), ihl);

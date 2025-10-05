@@ -18,7 +18,7 @@ struct EntryFFTCPU : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
@@ -47,7 +47,7 @@ struct EntryFFTCL : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
 
     cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
@@ -85,7 +85,7 @@ struct EntryFFTCLNT : public PerformanceTaskDefault {
     cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
 
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
       start = cv::getTickCount();
@@ -116,7 +116,7 @@ struct EntryFFTCuda : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::cuda::GpuMat in, tmp;
     in.upload(complexI);
     cv::cuda::dft(in, tmp, in.size());
@@ -149,7 +149,7 @@ struct EntryFFTCudaNT : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::cuda::GpuMat in, tmp;
     in.upload(complexI);
     cv::cuda::dft(in, tmp, in.size());

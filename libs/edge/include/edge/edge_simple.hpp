@@ -137,7 +137,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
         pdmap = rvdmap;
         extractSegment(idx);
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_))
+          segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
         return;
       }
 
@@ -150,7 +151,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
         pdmap = fwdmap;
         extractSegment(idx);
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
         return;
       }
 
@@ -160,7 +161,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
       // closed check
       if (this->points_.back() == idx) {
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_))
+          segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
         return;
       }
 
@@ -170,7 +172,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(min_pix_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
     });
   }
 

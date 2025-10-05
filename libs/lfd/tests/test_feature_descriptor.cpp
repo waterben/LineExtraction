@@ -93,7 +93,7 @@ class FeatureDescriptorTest : public ::testing::Test {
   std::unique_ptr<MockFeatureDescriptorObj<float>> obj_descriptor;
 };
 
-TEST_F(FeatureDescriptorTest, MatDescriptorSize) { EXPECT_EQ(mat_descriptor->size(), 4); }
+TEST_F(FeatureDescriptorTest, MatDescriptorSize) { EXPECT_EQ(mat_descriptor->size(), static_cast<size_t>(4)); }
 
 TEST_F(FeatureDescriptorTest, SingleMatDescriptor) {
   const auto& line = test_lines[0];
@@ -211,7 +211,7 @@ TEST_F(FeatureDescriptorTest, EmptyObjectList) {
 
   obj_descriptor->createList(const_empty_lines, descriptors);
 
-  EXPECT_EQ(descriptors.size(), 0);
+  EXPECT_EQ(descriptors.size(), size_t{0});
 }
 
 TEST_F(FeatureDescriptorTest, TypeTemplating) {

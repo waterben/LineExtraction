@@ -149,7 +149,7 @@ TEST_F(FeatureFilterTest, DescriptorMatchMaskedFiltering) {
     }
   }
 
-  EXPECT_EQ(non_masked.size(), 4);  // All except the one with FS_MASKED
+  EXPECT_EQ(non_masked.size(), static_cast<size_t>(4));  // All except the one with FS_MASKED
 
   // Check that the masked one is not included
   for (const auto& match : non_masked) {

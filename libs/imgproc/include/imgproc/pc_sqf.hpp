@@ -109,13 +109,14 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
       : QuadratureSF<IT, FT, P>(scale, muls, kernel_spacing, int_lower, int_upper),
-        nscale_(nscale),
         k_(kn),
-        cutOff_(cutOff),
         g_(g),
+        cutOff_(cutOff),
         dGain_(deviationGain),
         nMethod_(noiseMethod),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(nscale) {
     init();
   }
 
@@ -132,13 +133,14 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
       : QuadratureSF<IT, FT, P>(scale, l, k, kernel_spacing, int_lower, int_upper),
-        nscale_(nscale),
         k_(kn),
-        cutOff_(cutOff),
         g_(g),
+        cutOff_(cutOff),
         dGain_(deviationGain),
         nMethod_(noiseMethod),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(nscale) {
     init();
   }
 
@@ -146,13 +148,14 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
       : QuadratureSF<IT, FT, P>(static_cast<FT>(1), static_cast<FT>(2), static_cast<FT>(1), int_lower, int_upper),
-        nscale_(4),
         k_(3),
-        cutOff_(0.5),
         g_(10),
+        cutOff_(0.5),
         dGain_(1.5),
         nMethod_(-1),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(4) {
     init();
     value(options);
   }
@@ -161,13 +164,14 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
       : QuadratureSF<IT, FT, P>(static_cast<FT>(1), static_cast<FT>(2), static_cast<FT>(1), int_lower, int_upper),
-        nscale_(4),
         k_(3),
-        cutOff_(0.5),
         g_(10),
+        cutOff_(0.5),
         dGain_(1.5),
         nMethod_(-1),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(4) {
     init();
     value(options);
   }

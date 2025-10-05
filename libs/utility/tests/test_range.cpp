@@ -35,18 +35,18 @@ TEST_F(RangeTest, Construction) {
 
 TEST_F(RangeTest, Size) {
   // Test size calculation for positive range
-  EXPECT_EQ(range_int.size(), 10);
+  EXPECT_EQ(range_int.size(), static_cast<decltype(range_int.size())>(10));
   EXPECT_FLOAT_EQ(range_float.size(), 5.0f);
 
   // Test size for negative range
   EXPECT_DOUBLE_EQ(range_negative.size(), 7.0);
 
   // Test size for reversed range (should still be positive)
-  EXPECT_EQ(range_reversed.size(), 10);
+  EXPECT_EQ(range_reversed.size(), static_cast<decltype(range_reversed.size())>(10));
 
   // Test size for zero-width range
   Range<int> zero_range(5, 5);
-  EXPECT_EQ(zero_range.size(), 0);
+  EXPECT_EQ(zero_range.size(), static_cast<decltype(zero_range.size())>(0));
 }
 
 TEST_F(RangeTest, Swap) {
@@ -80,13 +80,13 @@ TEST_F(RangeTest, FloatingPointPrecision) {
 TEST_F(RangeTest, TypeConversions) {
   // Test with different numeric types
   Range<short> short_range(100, 200);
-  EXPECT_EQ(short_range.size(), 100);
+  EXPECT_EQ(short_range.size(), static_cast<decltype(short_range.size())>(100));
 
   Range<long> long_range(1000000L, 2000000L);
-  EXPECT_EQ(long_range.size(), 1000000L);
+  EXPECT_EQ(long_range.size(), static_cast<decltype(long_range.size())>(1000000L));
 
   Range<unsigned int> uint_range(5u, 15u);
-  EXPECT_EQ(uint_range.size(), 10u);
+  EXPECT_EQ(uint_range.size(), static_cast<decltype(uint_range.size())>(10u));
 }
 
 TEST_F(RangeTest, EdgeCases) {
@@ -100,5 +100,5 @@ TEST_F(RangeTest, EdgeCases) {
 
   // Test crossing zero
   Range<int> crossing_zero(-5, 5);
-  EXPECT_EQ(crossing_zero.size(), 10);
+  EXPECT_EQ(crossing_zero.size(), static_cast<decltype(crossing_zero.size())>(10));
 }

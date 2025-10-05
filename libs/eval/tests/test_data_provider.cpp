@@ -104,6 +104,6 @@ TEST(DataProviderTest, SharedPointer) {
   lsfm::DataProvider<TestData>::PtrList providers;
   providers.push_back(provider);
 
-  EXPECT_EQ(providers.size(), 1);
+  EXPECT_EQ(providers.size(), static_cast<size_t>(1));
   EXPECT_EQ(providers[0]->name, "shared_provider");
 }

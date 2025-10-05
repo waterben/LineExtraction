@@ -85,16 +85,16 @@ class LineTracer : public ValueManager {
 
  public:
   LineTracer(int minPix = 10, int maxGap = 3, int searchSteps = 2)
-      : maxGap_(maxGap), minPix_(minPix), searchSteps_(searchSteps) {
+      : minPix_(minPix), maxGap_(maxGap), searchSteps_(searchSteps) {
     init();
   }
 
-  LineTracer(const ValueManager::NameValueVector& options) : maxGap_(3), minPix_(10), searchSteps_(2) {
+  LineTracer(const ValueManager::NameValueVector& options) : minPix_(10), maxGap_(3), searchSteps_(2) {
     init();
     this->value(options);
   }
 
-  LineTracer(ValueManager::InitializerList options) : maxGap_(3), minPix_(10), searchSteps_(2) {
+  LineTracer(ValueManager::InitializerList options) : minPix_(10), maxGap_(3), searchSteps_(2) {
     init();
     this->value(options);
   }

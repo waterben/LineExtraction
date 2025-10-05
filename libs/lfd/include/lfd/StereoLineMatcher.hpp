@@ -183,20 +183,21 @@ class StereoLineMatcher : public OptionManager {
     auto diter = candidatesR.begin();
     auto dend = diter;
     auto dbeg = diter;
-    int idx = 0;
+    size_t idx = 0;
 
     for_each(candidatesR.begin(), candidatesR.end(), [&](const match_type& fm) {
-      if (idx != fm.matchIdx) {
+      const size_t match_idx = static_cast<size_t>(fm.matchIdx);
+      if (idx != match_idx) {
         if (diter != dend) {
           // sort by distance
           std::sort(diter, dend);
-          relationsR[idx + 1] = dend - dbeg;
+          relationsR[idx + 1] = static_cast<size_t>(dend - dbeg);
           mean += diter->distance;
           diter = dend;
           ++idx;
           ++count;
         }
-        for (; idx < fm.matchIdx; ++idx) relationsR[idx + 1] = relationsR[idx];
+        for (; idx < match_idx; ++idx) relationsR[idx + 1] = relationsR[idx];
       }
       ++dend;
     });
@@ -205,7 +206,7 @@ class StereoLineMatcher : public OptionManager {
       if (diter != dend) {
         // sort by distance
         std::sort(diter, dend);
-        relationsR[idx + 1] = dend - dbeg;
+        relationsR[idx + 1] = static_cast<size_t>(dend - dbeg);
         mean += diter->distance;
         ++idx;
         ++count;

@@ -56,7 +56,7 @@ struct LRDescritpor {
   LRDescritpor() {}
   LRDescritpor(const FT* d) : data() { memcopy(data, d, sizeof(FT) * (cn * 2)); }
 
-  FT data[cn * 2];
+  FT data[cn * 2]{};
 
   inline FT* dataL() { return data; }
 

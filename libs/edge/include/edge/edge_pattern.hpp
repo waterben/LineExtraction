@@ -119,9 +119,9 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       : EsdBasePattern<MT, index_type>(),
         minPixels_(minPix),
         maxGap_(maxGap),
+        patTol_(pat_tol),
         magMul_(magMul),
-        magTh_(magTh),
-        patTol_(pat_tol) {
+        magTh_(magTh) {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;

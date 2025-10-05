@@ -60,7 +60,7 @@ struct Entry : public PerformanceTaskBase {
     pdata.edge.segments();
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start;
+    uint64 start = 0;
     split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
@@ -90,7 +90,7 @@ struct EntryPattern : public PerformanceTaskBase {
     EdgeSegmentVector out;
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start;
+    uint64 start = 0;
     split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();

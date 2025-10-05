@@ -80,7 +80,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
  public:
   EsdDrawing(int minPix = 10, float magMul = 3, float magTh = 5)
-      : EsdBase<MT, index_type>(), minPixels_(minPix), magMul_(magMul), magTh_(magTh) {
+      : EsdBase<MT, index_type>(), minPixels_(minPix), magTh_(magTh), magMul_(magMul) {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;
@@ -284,7 +284,8 @@ class EsdDrawing : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -297,7 +298,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -307,7 +308,8 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
@@ -317,7 +319,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     pdmap = fwdmap;
     extractSegment(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 };
 

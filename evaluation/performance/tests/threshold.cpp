@@ -34,7 +34,7 @@ struct Entry : public PerformanceTaskDefault {
     filter->process(src);
     filterRes = filter->results();
     cv::Mat mag = filterRes["mag"].data;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != loops; ++i) {
       start = cv::getTickCount();
       thresholdRes = threshold->process(mag);
