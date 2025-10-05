@@ -68,9 +68,15 @@ struct RotationAlign {
 
 template <class FT>
 struct NoAlign {
-  static inline void apply(const Line<FT>& line, const Vec2<FT>& p, Vec2<FT>& ret) { ret = p; }
+  static inline void apply(const Line<FT>& line, const Vec2<FT>& p, Vec2<FT>& ret) {
+    static_cast<void>(line);
+    ret = p;
+  }
 
-  static inline Vec2<FT> apply(const Line<FT>& line, const Vec2<FT>& p) { return p; }
+  static inline Vec2<FT> apply(const Line<FT>& line, const Vec2<FT>& p) {
+    static_cast<void>(line);
+    return p;
+  }
 };
 
 // Generic Feature Descriptor

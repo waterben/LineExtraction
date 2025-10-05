@@ -1113,13 +1113,13 @@ class NfaBinom2 : public ValueManager {
 
   static uint64 binomial(uint64 n, uint64 k) {
     uint64 c = 1, d, i;
-    if (k < 0 || k > n) return 0;
-    if (k == 0 || k == n) return 1;
+    if (k > n) return 0;
+    if (k == 0U || k == n) return 1;
     if (k > n - k) k = n - k;  // take advantage of symmetry
     for (i = 1; i <= k; ++i, --n) {
       d = c / i;
       if (d > UINT64_MAX / n)  // return 0 on overflow
-        return 0;
+        return 0U;
       c = d * n + c % i * n / i;  // split c*n/i into (c/i*i + c%i)*n/i
     }
     return c;

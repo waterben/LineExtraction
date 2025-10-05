@@ -122,7 +122,7 @@ double processError(Entry& e, const fs::path& path, int n, double& time) {
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   char c;
   std::cin >> c;
 

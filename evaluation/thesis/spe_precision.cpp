@@ -371,7 +371,7 @@ class Entry {
         const std::string& n,
         int f,
         cv::Mat odir = cv::Mat())
-      : gt(gt_in), name(n), filter(fil), flags(f) {}
+      : gt(gt_in), name(n), filter(fil), optional_dir(odir), flags(f) {}
 
  public:
   using MyData = Data<FT, PT>;

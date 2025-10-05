@@ -135,7 +135,7 @@ void processPath(std::vector<Entry>& entries, const std::pair<fs::path, std::str
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::vector<std::pair<fs::path, std::string>> sets;
   // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
   sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));

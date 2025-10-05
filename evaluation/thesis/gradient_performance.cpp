@@ -98,7 +98,7 @@ void processPath(std::vector<Entry<GT, MT, DT>>& entries, const std::pair<fs::pa
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "start gradient performance eval..." << std::endl;
 
   std::vector<std::pair<fs::path, std::string>> sets;

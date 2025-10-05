@@ -254,7 +254,7 @@ double testDisk(Entry<GT, MT, DT>& e, cv::Mat img, cv::Mat mask, double blur = 0
 }
 
 
-int main(int argc, char** argv) {
+int main() {
   std::vector<Entry<short>> gradI;
   gradI.push_back(Entry<short>(new SusanGradient<short, int, double>, "Susan (37)", ENTRY_HALF_RANGE));
   gradI.push_back(Entry<short>(new SusanGradient<short, int, double>(20, true), "Susan (3x3)", ENTRY_HALF_RANGE));

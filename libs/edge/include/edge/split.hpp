@@ -104,7 +104,10 @@ class RamerSplit : public ValueManager {
   void minLength(int p) { min_len_ = p; }
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 
@@ -354,6 +357,13 @@ struct SimpleSplitCheck {
                            FT dist_high,
                            mat_type mag_max,
                            const cv::Mat& data) {
+    static_cast<void>(max_point);
+    static_cast<void>(first);
+    static_cast<void>(last);
+    static_cast<void>(max_len);
+    static_cast<void>(dist_high);
+    static_cast<void>(mag_max);
+    static_cast<void>(data);
     return max_h > dist_low * norm;
   }
 };
@@ -417,6 +427,12 @@ struct NoMerge {
                            float_type dist_high,
                            mat_type mag_max,
                            const cv::Mat& data) {
+    static_cast<void>(points);
+    static_cast<void>(max_len);
+    static_cast<void>(dist_low);
+    static_cast<void>(dist_high);
+    static_cast<void>(mag_max);
+    static_cast<void>(data);
     out.insert(out.end(), in.begin(), in.end());
   }
 };
@@ -845,7 +861,10 @@ class LeastSquareSplit : public ValueManager {
 
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 
@@ -1174,7 +1193,10 @@ class AdaptiveLeastSquareSplit : public ValueManager {
   void minLength(int p) { min_len_ = p; }
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 

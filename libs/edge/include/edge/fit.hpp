@@ -375,9 +375,9 @@ class FitLine : public ValueManager {
 
   FitLine() {}
 
-  FitLine(const ValueManager::NameValueVector& options) {}
+  FitLine(const ValueManager::NameValueVector& options) { static_cast<void>(options); }
 
-  FitLine(ValueManager::InitializerList options) {}
+  FitLine(ValueManager::InitializerList options) { static_cast<void>(options); }
 
   template <class ITER, template <class> class LPT>
   inline void apply(ITER beg, ITER end, Line<float_type, LPT>& l) const {

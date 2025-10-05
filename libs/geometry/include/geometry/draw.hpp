@@ -629,7 +629,7 @@ cv::Mat quiver(const cv::Mat& image,
         if (length != 0) v *= length / d;
         p *= scale;
         v *= scale;
-        line(canvas, LineSegment<float>(p, p + cv::Point_<float>(v[0], v[1])), color, 1, lineType, normalLength,
+        line(canvas, LineSegment<float>(p, p + cv::Point_<float>(v[0], v[1])), color, thickness, lineType, normalLength,
              tipLength);
       }
     }
@@ -688,7 +688,7 @@ cv::Mat quiverDir(const cv::Mat& image,
         v *= length;
         p *= scale;
         v *= scale;
-        line(canvas, LineSegment<float>(p, p + v), color, 1, lineType, normalLength, tipLength);
+        line(canvas, LineSegment<float>(p, p + v), color, thickness, lineType, normalLength, tipLength);
       }
     }
   }

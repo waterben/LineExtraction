@@ -120,7 +120,7 @@ void outputSet(const std::string& name,
   if (show) cv::imshow(name.c_str(), out);
 }
 
-int main(int argc, char** argv) {
+int main() {
   typedef double FT;
   DerivativeGradient<uchar, FT, FT, FT, ScharrDerivative> grad(0, 255);
   LaplaceCV<uchar, FT> laplace(5, 0, 255);

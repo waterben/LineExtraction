@@ -159,7 +159,7 @@ cv::Mat drawGeometry(const vector<LineSegment2<FT>>& edges1L,
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   // camera parameters
   Vec3<FT> originL(-1, 0, 10);
   Vec3<FT> originR(1, 0, 10);

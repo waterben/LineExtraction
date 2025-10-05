@@ -670,11 +670,17 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
   EdgeSourcePCLZC(const ValueManager::NameValueVector& options,
                   ESQuadratureOptions quadOps = ESQO_MAG,
                   ESDirectionOptions dirOps = ESDO_NONE)
-      : EdgeSourceQUADZC<PCL, ZC>(options) {}
+      : EdgeSourceQUADZC<PCL, ZC>(options) {
+    this->quadOps_ = quadOps;
+    this->dirOps_ = dirOps;
+  }
   EdgeSourcePCLZC(ValueManager::InitializerList& options,
                   ESQuadratureOptions quadOps = ESQO_MAG,
                   ESDirectionOptions dirOps = ESDO_NONE)
-      : EdgeSourceQUADZC<PCL, ZC>(options) {}
+      : EdgeSourceQUADZC<PCL, ZC>(options) {
+    this->quadOps_ = quadOps;
+    this->dirOps_ = dirOps;
+  }
 
   using EdgeSourceT<PCL, ZC>::responseFilter;
   using EdgeSourceT<PCL, ZC>::pixelExtractor;

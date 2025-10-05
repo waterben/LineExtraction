@@ -67,7 +67,10 @@ class TaskLoader {
   virtual void clear() {}
 
   /// @brief Get results
-  virtual StringTable resultTable(bool fullReport = false) { return StringTable(); };
+  virtual StringTable resultTable(bool fullReport = false) {
+    static_cast<void>(fullReport);
+    return StringTable();
+  };
 
   /// @brief List of tasks to run
   typename Task::PtrList tasks{};

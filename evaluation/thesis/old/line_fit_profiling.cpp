@@ -112,7 +112,7 @@ void processPath(EntryVector& entries, const std::pair<fs::path, std::string>& p
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   char c;
   std::cin >> c;
 

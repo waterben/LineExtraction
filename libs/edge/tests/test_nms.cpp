@@ -123,7 +123,7 @@ TEST_F(NMSTest, EdgeIndex) {
 
   // Edge detection may or may not find seeds depending on algorithm parameters
   // The important thing is that it runs without error and produces valid results
-  EXPECT_TRUE(seeds.size() >= 0);  // Should be a valid vector (always true, but tests access)
+  EXPECT_TRUE(seeds.size() > 0U);  // Should be a valid vector (always true, but tests access)
 
   // If there are seeds, validate they're in bounds
   for (const auto& seed : seeds) {

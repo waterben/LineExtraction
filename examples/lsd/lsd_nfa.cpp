@@ -46,6 +46,7 @@ void testNfa(LSD& lsd, const NFA& nfa, const std::string& name) {
 
 template <class LSD, class NFA>
 void showNfa(LSD& lsd, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
+  static_cast<void>(circles);
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
   cv::RNG& rng = cv::theRNG();

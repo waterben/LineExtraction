@@ -106,7 +106,7 @@ double processError(Entry& e, const fs::path& path) {
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   fs::path path = "../../images/MDB/MiddEval3-Q";
 
   cv::Ptr<QuadratureI<uchar, double, double, double, double>> gt(new QuadratureSF<uchar, FT>(1, 2, 1.2));

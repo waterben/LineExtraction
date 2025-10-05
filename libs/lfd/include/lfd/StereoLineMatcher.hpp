@@ -251,9 +251,12 @@ class StereoLineMatcher : public OptionManager {
   }
 
   void setOptionImpl(const std::string& name, FT value) {
+    static_cast<void>(name);
+    static_cast<void>(value);
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
-            k_ = static_cast<int>(value);
+            k_ =
+    static_cast<int>(value);
             this->options_[0].value = k_;
         }
     }

@@ -153,6 +153,16 @@ class Camera : public Pose<FT> {
   Camera(const Camera<FT>& cam)
       : Pose<FT>(cam.trans_, cam.rot_), focal_(cam.focal_), offset_(cam.offset_), imageSize_(cam.imageSize_) {}
 
+  Camera& operator=(const Camera<FT>& cam) {
+    if (this != &cam) {
+      this->pose(cam);
+      focal_ = cam.focal_;
+      offset_ = cam.offset_;
+      imageSize_ = cam.imageSize_;
+    }
+    return *this;
+  }
+
   //! test for empty camera (f = 0)
   virtual bool empty() const { return (focal_.x() == 0 && focal_.y() == 0); }
 
