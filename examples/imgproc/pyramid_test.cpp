@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
   Pyramid<float> imgGrad(src.size(), -3);
   Pyramid<char> imgNMS(src.size(), -3);
   int64 start = cv::getTickCount();
-  double t;
-  for (int i = 0; i != imgP.size(); ++i) {
+  double t{};
+  for (std::size_t i = 0; i != imgP.size(); ++i) {
     sobel.process(imgP[i]);
     imgGrad[i] = sobel.magnitude();
     nms.process(sobel);

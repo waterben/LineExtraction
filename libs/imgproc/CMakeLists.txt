@@ -6,10 +6,9 @@ le_add_library(lib_imgproc
     PUBLIC_DEPS
         lib_utility
         lib_geometry
-        ${OpenCV_LIBS}
+        le::opencv
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${OpenCV_INCLUDE_DIR}
     TEST_DEPS
         ${CMAKE_THREAD_LIBS_INIT}
 )

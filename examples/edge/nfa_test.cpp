@@ -65,7 +65,6 @@ void drawSegment(cv::Mat img, const EdgeSegment& seg, const std::vector<PT>& v, 
 
 template <class EDGE, class NFA>
 void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
-  typedef typename EDGE::point_type point_type;
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
   cv::RNG rng(time(0));

@@ -120,13 +120,13 @@ class Pyramid {
   }
 
   Pyramid(const Pyramid& p) {
-    for (int i = 0; i < p.size(); ++i) scales_.push_back(p[i].clone());
+    for (std::size_t i = 0; i < p.size(); ++i) scales_.push_back(p[i].clone());
   }
 
   template <class C>
   Pyramid(const Pyramid<C>& p) {
     cv::Mat tmp;
-    for (int i = 0; i < p.size(); ++i) {
+    for (std::size_t i = 0; i < p.size(); ++i) {
       p[i].convertTo(tmp, type());
       scales_.push_back(tmp);
     }
@@ -136,7 +136,7 @@ class Pyramid {
 
   Pyramid clone() const {
     Pyramid pyramid;
-    for (int i = 0; i < scales_.size(); ++i) pyramid.scales_.push_back(scales_[i].clone());
+    for (std::size_t i = 0; i < scales_.size(); ++i) pyramid.scales_.push_back(scales_[i].clone());
     return pyramid;
   }
 
@@ -146,7 +146,7 @@ class Pyramid {
 
     Pyramid<C> pyramid;
     cv::Mat tmp;
-    for (int i = 0; i < scales_.size(); ++i) {
+    for (std::size_t i = 0; i < scales_.size(); ++i) {
       scales_[i].convertTo(tmp, cv::DataType<C>::type);
       pyramid.scales_.push_back(tmp);
     }
@@ -168,38 +168,38 @@ class Pyramid {
   inline void resize(size_t size) { scales_.resize(size); }
 
   inline Pyramid& mul(const Pyramid& rhs) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] = scales_[i].mul(rhs);
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] = scales_[i].mul(rhs);
     return *this;
   }
 
   inline Pyramid& div(const Pyramid& rhs) {
-    for (int i = 0; i < scales_.size(); ++i) cv::divide(scales_[i], rhs, scales_[i]);
+    for (std::size_t i = 0; i < scales_.size(); ++i) cv::divide(scales_[i], rhs, scales_[i]);
     return *this;
   }
 
   inline Pyramid& operator*=(double value) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] *= value;
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] *= value;
     return *this;
   }
 
   inline Pyramid& operator+=(double value) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] += value;
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += value;
     return *this;
   }
 
 
   inline Pyramid& operator+=(const Pyramid& rhs) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
     return *this;
   }
 
   inline Pyramid& operator-=(double value) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] -= value;
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] -= value;
     return *this;
   }
 
   inline Pyramid& operator-=(const Pyramid& rhs) {
-    for (int i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
+    for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
     return *this;
   }
 };
@@ -207,63 +207,63 @@ class Pyramid {
 template <class MT>
 inline Pyramid<MT> operator*(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator*(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator/(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value / tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value / tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator/(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value / tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value / tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator+(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value + tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value + tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator+(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value + tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value + tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator+(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] += b[i];
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] += b[i];
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator-(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value - tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value - tmp[i]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator-(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = (value - tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value - tmp[i]);
   return tmp;
 }
 
@@ -271,14 +271,14 @@ inline Pyramid<MT> operator-(const Pyramid<MT>& pyramid, double value) {
 template <class MT>
 inline Pyramid<MT> operator-(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] -= b[i];
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] -= b[i];
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> abs(const Pyramid<MT>& a) {
   Pyramid<MT> tmp = a.clone();
-  for (int i = 0; i < tmp.size(); ++i) tmp[i] = cv::abs(tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = cv::abs(tmp[i]);
   return tmp;
 }
 
@@ -298,7 +298,7 @@ template <class MT>
 cv::Mat draw(const Pyramid<MT>& pyramid) {
   cv::Point tl(0, 0);
   cv::Mat canvas(pyramid[0].rows, pyramid[0].cols + ((pyramid[0].cols + 2) >> 1), pyramid.type(), cv::Scalar::all(0));
-  for (int i = 0; i < pyramid.size() - 1; ++i) {
+  for (std::size_t i = 0; i < pyramid.size() - 1; ++i) {
     pyramid[i].copyTo(canvas(cv::Rect(tl, pyramid[i].size())));
     if (!(i % 2)) {
       tl.x += pyramid[i].cols;

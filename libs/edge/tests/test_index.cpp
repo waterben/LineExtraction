@@ -14,7 +14,7 @@ class IndexTest : public ::testing::Test {
     rows = test_mat.rows;  // 5
 
     // Fill with unique values
-    for (int i = 0; i < test_mat.total(); ++i) {
+    for (std::size_t i = 0; i < test_mat.total(); ++i) {
       test_mat.ptr<float>()[i] = static_cast<float>(i);
     }
   }

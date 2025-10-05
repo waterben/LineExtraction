@@ -53,11 +53,9 @@ TEST_F(ZCTest, VerticalEdgeZeroCrossing) {
   EXPECT_EQ(zc_map.size(), test_img.size());
 
   // Check for zero crossings near the edge
-  bool zc_found = false;
   for (int y = 1; y < zc_map.rows - 1; ++y) {
     for (int x = 1; x < zc_map.cols - 1; ++x) {
       if (zc_map.at<int>(y, x) >= 0) {  // Non-negative values indicate zero crossings
-        zc_found = true;
         // Zero crossings should be near the vertical edge (column 3)
         EXPECT_TRUE(abs(x - 3) <= 3);  // Allow some tolerance
       }
@@ -79,11 +77,9 @@ TEST_F(ZCTest, HorizontalEdgeZeroCrossing) {
   const cv::Mat& zc_map = zc.directionMap();
 
   // Check for zero crossings near the edge
-  bool zc_found = false;
   for (int y = 1; y < zc_map.rows - 1; ++y) {
     for (int x = 1; x < zc_map.cols - 1; ++x) {
       if (zc_map.at<int>(y, x) >= 0) {  // Non-negative values indicate zero crossings
-        zc_found = true;
         // Zero crossings should be near the horizontal edge (row 3)
         EXPECT_TRUE(abs(y - 3) <= 3);  // Allow some tolerance
       }

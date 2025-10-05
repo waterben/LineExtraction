@@ -9,7 +9,7 @@ if(OPENGL_FOUND)
 	# Add Libraries
 	add_executable(test_qplot3d test_qplot3d)
 	qt5_use_modules(test_qplot3d Core Gui Widgets OpenGL)
-	target_link_libraries(test_qplot3d lib_qplot3d ${OPENGL_LIBRARIES} ${OpenCV_LIBS})
+	target_link_libraries(test_qplot3d lib_qplot3d ${OPENGL_LIBRARIES} le::opencv)
 
     #add_subdirectory(autoswitch)
     #add_subdirectory(axes)

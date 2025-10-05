@@ -10,6 +10,7 @@ if(ENABLE_EVALUATION)
             lib_utility
             lib_edge
             lib_imgproc
+            le::opencv
         PUBLIC_INCLUDES
             ${CMAKE_CURRENT_SOURCE_DIR}/include
         TEST_DEPS

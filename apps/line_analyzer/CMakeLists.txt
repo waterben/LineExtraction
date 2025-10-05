@@ -57,6 +57,6 @@ le_add_executable(app_line_analyzer
         lib_qplot
         lib_qplot3d
         ${OPENGL_LIBRARIES}
-        ${OpenCV_LIBS}
+        le::opencv
         dlib::dlib
 )

@@ -104,8 +104,6 @@ class EdgeSegApp : public EvalApp {
               bool circles = false,
               bool img_bg = false,
               std::size_t top = 0) {
-    typedef typename EDGE::point_type point_type;
-
     std::vector<float> n;
     EdgeSegmentVector out;
     nfa.eval(edge, out, n);

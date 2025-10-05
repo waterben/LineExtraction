@@ -45,7 +45,6 @@ inline void setCircle(cv::Mat& dst, const lsfm::Vec2i& idx, const Vec3b& color, 
 
 template <class EDGE>
 void showPattern(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
-  typedef typename EDGE::point_type point_type;
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
   cv::RNG rng(time(0));
