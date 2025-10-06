@@ -968,7 +968,7 @@ class LeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
 
     // add points
     for (; end2 != end; ++end2) {
@@ -1227,7 +1227,7 @@ class AdaptiveLeastSquareSplit : public ValueManager {
     const PT* pPoints = points.data();
     const PT* pbeg;
     const PT* pend;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
     Line<FT> line;
@@ -1245,7 +1245,7 @@ class AdaptiveLeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
     pbeg = pPoints + beg;
     pend = pPoints + end2;
 

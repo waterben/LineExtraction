@@ -245,9 +245,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     inline size_t endpos() const { return pattern_back().endpos(); }
 
-    inline typename PointVector::const_iterator begin() const { return points_->cbegin() + begpos(); }
+    inline typename PointVector::const_iterator begin() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(begpos());
+    }
 
-    inline typename PointVector::const_iterator end() const { return points_->cbegin() + endpos(); }
+    inline typename PointVector::const_iterator end() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(endpos());
+    }
 
     inline typename PointVector::const_reverse_iterator rbegin() const {
       return PointVector::const_reverse_iterator(end());
@@ -471,7 +475,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     points_.clear();
     points_.reserve(size);
     patterns_.clear();
-    patterns_.reserve(size / (2 * pat_tol_));
+    patterns_.reserve(size / static_cast<size_t>(2 * pat_tol_));
 
     short dmapStore[28][4] = {{-1, -1, 0, 0},
                               {static_cast<short>(-1 - cols_), -1, -1, 1},
@@ -811,7 +815,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
               Pattern& blp = patterns_.back();
               if (!blp.terminate() && lp.primitive.dir == blp.primitive.dir) {
                 unsigned int s = blp.primitive.size + p.primitive.size;
-                if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
+                if (lp.size <= s + static_cast<unsigned int>(2 * pat_tol_) &&
+                    lp.size >= s - static_cast<unsigned int>(2 * pat_tol_)) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
                   blp.size += static_cast<ushort>(blpadd);
@@ -970,7 +975,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
               Pattern& blp = patterns_.back();
               if (!blp.terminate() && lp.primitive.dir == blp.primitive.dir) {
                 unsigned int s = blp.primitive.size + p.primitive.size;
-                if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
+                if (lp.size <= s + static_cast<unsigned int>(2 * pat_tol_) &&
+                    lp.size >= s - static_cast<unsigned int>(2 * pat_tol_)) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
                   blp.size += static_cast<ushort>(blpadd);
@@ -1023,7 +1029,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
                                size_t po_size, uchar flag) {
       size_t po_beg = beg->beg;
       size_t po_end = po_beg + po_size;
-      std::reverse(this->points_.begin() + po_beg, this->points_.begin() + po_end);
+      std::reverse(this->points_.begin() + static_cast<std::ptrdiff_t>(po_beg),
+                   this->points_.begin() + static_cast<std::ptrdiff_t>(po_end));
       while (beg < end) {
         --end;
         Pattern tmp = *beg;
@@ -1097,7 +1104,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           if (this->points_.back() == PT(fs.x, fs.y)) {
             seg.rstate = dmap != fwdmap;
           } else {
-            pattern_reverse(patterns_.begin() + ppos1, patterns_.begin() + patterns_.size(),
+            pattern_reverse(patterns_.begin() + static_cast<std::ptrdiff_t>(ppos1),
+                            patterns_.begin() + static_cast<std::ptrdiff_t>(patterns_.size()),
                             this->points_.size() - seg.pos, static_cast<uchar>(fwdmap == dmap));
 
             // get current pattern

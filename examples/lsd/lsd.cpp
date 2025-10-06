@@ -58,7 +58,7 @@ void showData(const cv::Mat& src, const Entry<FT>& e) {
   cv::Mat img;
   cvtColor(src, img, CV_GRAY2BGR);
 
-  cv::RNG rng(cv::getTickCount());
+  cv::RNG rng(static_cast<uint64_t>(cv::getTickCount()));
 
   for_each(e.lsd->lineSegments().begin(), e.lsd->lineSegments().end(), [&](const LineSegment<FT>& l) {
     cv::Vec3b color(static_cast<unsigned char>(20 + rng.uniform(0, 225)),

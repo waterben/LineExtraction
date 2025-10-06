@@ -520,9 +520,9 @@ cv::Mat drawMatches(const cv::Mat& img1,
                     static_cast<uchar>(20 + rng.uniform(0, 225)));
 
     char buffer[50];
-    sprintf(buffer, "%i", useNumbers ? lineNumber.at(m.queryIdx) : idx);
-    drawMatch(outImg, outImgL, outImgR, l1[m.queryIdx], l2[m.matchIdx], cv::Scalar(color[0], color[1], color[2]),
-              buffer, connect);
+    sprintf(buffer, "%i", useNumbers ? lineNumber.at(static_cast<size_t>(m.queryIdx)) : idx);
+    drawMatch(outImg, outImgL, outImgR, l1[static_cast<size_t>(m.queryIdx)], l2[static_cast<size_t>(m.matchIdx)],
+              cv::Scalar(color[0], color[1], color[2]), buffer, connect);
     idx++;
   });
 

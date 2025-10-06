@@ -33,15 +33,16 @@ struct Entry : public PerformanceTaskDefault {
     cv::Mat tmp;
     uint64 start = 0;
     for (int i = 0; i != loops; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       gradient->process(src);
       tmp = gradient->magnitude();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (loops * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (loops * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   void saveResults() {}

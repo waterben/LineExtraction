@@ -325,10 +325,13 @@ class LsdBurns : public LsdBase<FT, LPT> {
           } else {
             mag_type tg67x = tg22x + x * 65536;
             if (y > tg67x) {
-              if (m > pmag[idx - cols_] && m >= pmag[idx + cols_]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_)] && m >= pmag[idx + static_cast<size_t>(cols_)])
+                goto maxima;
             } else {
               int s = neg_sign(xs, ys) ? -1 : 1;
-              if (m > pmag[idx - cols_ - s] && m > pmag[idx + cols_ + s]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_) - static_cast<size_t>(s)] &&
+                  m > pmag[idx + static_cast<size_t>(cols_) + static_cast<size_t>(s)])
+                goto maxima;
             }
           }
           continue;
@@ -346,8 +349,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
           // set pixel in the segment map and shifted segment map
           // increment by 1 for map (0 is reserved for no data)
-          ppmap[idx] = static_cast<char>(part_num + 1);
-          ppmaps[idx] = static_cast<char>(part_num_shift + 1);
+          ppmap[idx] = static_cast<uchar>(part_num + 1);
+          ppmaps[idx] = static_cast<uchar>(part_num_shift + 1);
 
           if (m > high) {
             // add index to according partition lists as seeds
@@ -398,8 +401,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
           // set pixel in the segment map and shifted segment map
           // increment by 1 for map (1-part_num, 0 is reserved for no data)
-          ppmap[idx] = static_cast<char>(part_num + 1);
-          ppmaps[idx] = static_cast<char>(part_num_shift + 1);
+          ppmap[idx] = static_cast<uchar>(part_num + 1);
+          ppmaps[idx] = static_cast<uchar>(part_num_shift + 1);
 
           if (mag > high) {
             // add index to according partition list as seeds
@@ -452,12 +455,12 @@ class LsdBurns : public LsdBase<FT, LPT> {
         for (int m = 0; m < 3; ++m) {
           // test the three pixels in y-1
           if (pmap[upper + m] == part) {
-            ccdata->push_back(upper + m);
+            ccdata->push_back(static_cast<size_t>(upper + m));
             pmap[upper + m] = 0;
           }
           // test the three pixels in y+1
           if (pmap[lower + m] == part) {
-            ccdata->push_back(lower + m);
+            ccdata->push_back(static_cast<size_t>(lower + m));
             pmap[lower + m] = 0;
           }
         }

@@ -224,14 +224,15 @@ class StereoLineMatcher : public OptionManager {
       if (sizeL == 0) return;
       const match_type& fmL = candidatesL[startL];
 
-      size_t startR = relationsR[fmL.matchIdx];
+      size_t startR = relationsR[static_cast<size_t>(fmL.matchIdx)];
 
       // if (sizeR == 0)
       //     return;
 
       const match_type& fmR = candidatesR[startR];
 
-      FT llow = left[fmL.queryIdx].length(), lhigh = right[fmL.matchIdx].length();
+      FT llow = left[static_cast<size_t>(fmL.queryIdx)].length(),
+         lhigh = right[static_cast<size_t>(fmL.matchIdx)].length();
       if (llow > lhigh) std::swap(llow, lhigh);
 
       // L-R-Check

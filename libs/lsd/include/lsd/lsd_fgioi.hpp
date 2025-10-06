@@ -188,8 +188,8 @@ class LsdFGioi : public LsdBase<FT, LPT> {
     double* segs = LineSegmentDetection(&seg_num, img.ptr<double>(), img.cols, img.rows, 1.0, 0.1, quant_, angle_th_,
                                         log_eps_, density_th_, num_bins_, NULL, NULL, NULL);
 
-    lineSegments_.reserve(seg_num);
-    lineData_.reserve(seg_num);
+    lineSegments_.reserve(static_cast<size_t>(seg_num));
+    lineData_.reserve(static_cast<size_t>(seg_num));
     for (int i = 0; i != seg_num; ++i, segs += 7) {
       lineSegments_.push_back(LineSegment(LPT<FT>(static_cast<FT>(segs[0]), static_cast<FT>(segs[1])),
                                           LPT<FT>(static_cast<FT>(segs[2]), static_cast<FT>(segs[3]))));

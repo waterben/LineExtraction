@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
             << std::endl;
 
   for (size_t i = 0; i != matches2.size(); ++i) {
-    imshow("Detected Lines Img1", drawLine(src1, lsd1.lineSegments()[matches2[i].queryIdx]));
-    imshow("Detected Lines Img2", drawLine(src2, lsd2.lineSegments()[matches2[i].matchIdx]));
+    imshow("Detected Lines Img1", drawLine(src1, lsd1.lineSegments()[static_cast<size_t>(matches2[i].queryIdx)]));
+    imshow("Detected Lines Img2", drawLine(src2, lsd2.lineSegments()[static_cast<size_t>(matches2[i].matchIdx)]));
     waitKey();
   }
 

@@ -136,9 +136,13 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     inline size_t endpos() const { return p_end; }
 
-    inline typename PointVector::const_iterator begin() const { return points_->cbegin() + p_beg; }
+    inline typename PointVector::const_iterator begin() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(p_beg);
+    }
 
-    inline typename PointVector::const_iterator end() const { return points_->cbegin() + p_end; }
+    inline typename PointVector::const_iterator end() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(p_end);
+    }
 
     inline typename PointVector::const_reverse_iterator rbegin() const {
       return PointVector::const_reverse_iterator(end());
@@ -323,7 +327,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     points_.clear();
     points_.reserve(size);
     segments_.clear();
-    segments_.reserve(static_cast<size_t>(size / (min_pix_ * min_pix_) + 100));
+    segments_.reserve(static_cast<size_t>(size / static_cast<size_t>(min_pix_ * min_pix_) + 100));
 
     short dmapStore[28][4] = {{-1, -1, 0, 0},
                               {static_cast<short>(-1 - cols_), -1, -1, 1},
@@ -681,7 +685,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           if (this->points_.back() == PT(s.x, s.y)) {
             seg.reverse = fwdmap != dmap;
           } else {
-            std::reverse(this->points_.begin() + seg.p_beg, this->points_.end());
+            std::reverse(this->points_.begin() + static_cast<std::ptrdiff_t>(seg.p_beg), this->points_.end());
 
             // do fw
             pdmap = fwdmap;
@@ -743,7 +747,8 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         return;
       }
 
-      LinePointIter beg = lpbeg + sbeg, end = lpbeg + send - 1;
+      LinePointIter beg = lpbeg + static_cast<std::ptrdiff_t>(sbeg),
+                    end = lpbeg + static_cast<std::ptrdiff_t>(send) - 1;
       size_t max_point = sbeg;
 
       const PT& first = *beg;
@@ -777,7 +782,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
         if (max_count != 0) {
           // corner / center check
-          max_end += max_count;
+          max_end += static_cast<size_t>(max_count);
           if (sbeg + 3 > max_point) {
             max_end = max_point;
           } else if (max_end + 4 > send) {
@@ -793,8 +798,8 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
             int mediff = static_cast<int>(mdir - edir + 360) % 180;
 
             if (mbdiff < 45 && mediff < 45) {
-              max_point += max_count / 2;
-              max_end = max_point + (max_count % 2);
+              max_point += static_cast<size_t>(max_count / 2);
+              max_end = max_point + static_cast<size_t>(max_count % 2);
             } else if (mbdiff > mediff) {
               max_end = max_point + (max_count == 1 && mediff > 45);
             } else {

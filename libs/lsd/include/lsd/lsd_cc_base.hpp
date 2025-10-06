@@ -189,7 +189,7 @@ class LsdCCBase : public LsdBase<FT, LPT> {
     static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds_.clear();
-    seeds_.reserve(size_ / 3);
+    seeds_.reserve(static_cast<size_t>(size_ / 3));
     emap_.create(rows_, cols_, CV_8SC1);
     emap_.row(0).setTo(-1);
     emap_.row(rows_ - 1).setTo(-1);

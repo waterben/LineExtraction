@@ -183,8 +183,8 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
   virtual bool filter(int lfIdx, int rfIdx) const {
-    const LineData& ld = ldLeft_[lfIdx];
-    const LineData& rd = ldRight_[rfIdx];
+    const LineData& ld = ldLeft_[static_cast<size_t>(lfIdx)];
+    const LineData& rd = ldRight_[static_cast<size_t>(rfIdx)];
     return filter(ld, rd);
   }
 
@@ -217,10 +217,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
     int size = static_cast<int>(ldLeft_.size());
     for (int lidx = 0; lidx != size; ++lidx) {
-      const LineData ld = ldLeft_[lidx];
+      const LineData ld = ldLeft_[static_cast<size_t>(lidx)];
       ridxList.assign(lsize, 0);
 
-      const std::array<std::vector<int>, bins>& qbins = this->bins_[static_cast<int>(ld.angle / 90) % 4];
+      const std::array<std::vector<int>, bins>& qbins =
+          this->bins_[static_cast<size_t>(static_cast<int>(ld.angle / 90) % 4)];
 
       int start = static_cast<int>(ld.beg.y()) / bstep, end = static_cast<int>(ld.end.y()) / bstep;
 
@@ -236,12 +237,13 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       if (start < 0) start = 0;
 
       for (; start < end; ++start) {
-        for_each(qbins[start].begin(), qbins[start].end(), [&, this](int ridx) {
-          if (!ridxList[ridx] && !this->filter(lidx, ridx)) {
-            matches.push_back(typename FMV::value_type(lidx, ridx));
-            ++ridxList[ridx];
-          }
-        });
+        for_each(qbins[static_cast<size_t>(start)].begin(), qbins[static_cast<size_t>(start)].end(),
+                 [&, this](int ridx) {
+                   if (!ridxList[static_cast<size_t>(ridx)] && !this->filter(lidx, ridx)) {
+                     matches.push_back(typename FMV::value_type(lidx, ridx));
+                     ++ridxList[static_cast<size_t>(ridx)];
+                   }
+                 });
       }
     }
   }
@@ -266,10 +268,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
     int size = static_cast<int>(ldLeft_.size());
     for (int lidx = 0; lidx != size; ++lidx) {
-      const LineData ld = ldLeft_[lidx];
+      const LineData ld = ldLeft_[static_cast<size_t>(lidx)];
       ridxList.assign(lsize, 0);
 
-      const std::array<std::vector<int>, bins>& qbins = this->bins_[static_cast<int>(ld.angle / 90) % 4];
+      const std::array<std::vector<int>, bins>& qbins =
+          this->bins_[static_cast<size_t>(static_cast<int>(ld.angle / 90) % 4)];
 
       int start = static_cast<int>(ld.beg[1] / bstep), end = static_cast<int>(ld.end[1] / bstep);
 
@@ -285,14 +288,15 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       if (start < 0) start = 0;
 
       for (; start < end; ++start) {
-        for_each(qbins[start].begin(), qbins[start].end(), [&, this](int ridx) {
-          if (!ridxList[ridx] && !this->filter(lidx, ridx)) {
-            matches.push_back(typename FMV::value_type(lidx, ridx));
-            ++lm[lidx];
-            ++rm[ridx];
-            ++ridxList[ridx];
-          }
-        });
+        for_each(qbins[static_cast<size_t>(start)].begin(), qbins[static_cast<size_t>(start)].end(),
+                 [&, this](int ridx) {
+                   if (!ridxList[static_cast<size_t>(ridx)] && !this->filter(lidx, ridx)) {
+                     matches.push_back(typename FMV::value_type(lidx, ridx));
+                     ++lm[static_cast<size_t>(lidx)];
+                     ++rm[static_cast<size_t>(ridx)];
+                     ++ridxList[static_cast<size_t>(ridx)];
+                   }
+                 });
       }
     }
   }
@@ -320,11 +324,11 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
     int size = static_cast<int>(lines.size());
     for (int idx = 0; idx != size; ++idx) {
-      const geometric_type& line = lines[idx];
+      const geometric_type& line = lines[static_cast<size_t>(idx)];
       LineData ld(line.startPoint(), line.endPoint(), line.anglef(), std::fabs(1 / line.normalX()));
       data.push_back(ld);
 
-      std::array<std::vector<int>, bins>& qbins = this->bins_[static_cast<int>(ld.angle / 90) % 4];
+      std::array<std::vector<int>, bins>& qbins = this->bins_[static_cast<size_t>(static_cast<int>(ld.angle / 90) % 4)];
       int start = static_cast<int>(ld.beg[1] / bstep), end = static_cast<int>(ld.end[1] / bstep);
 
       if (start > end) std::swap(start, end);
@@ -340,7 +344,7 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
 
       for (; start < end; ++start) {
-        qbins[start].push_back(idx);
+        qbins[static_cast<size_t>(start)].push_back(idx);
       }
     }
   }

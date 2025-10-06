@@ -22,16 +22,17 @@ class EntryNMS4Fast : public PerformanceTaskDefault {
     sobel.magnitude();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMS4Fast); }
@@ -51,16 +52,17 @@ class EntryNMSFast : public PerformanceTaskDefault {
     sobel.magnitude();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSFast); }
@@ -81,17 +83,18 @@ class EntryNMSFastDir : public PerformanceTaskDefault {
     sobel.direction();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSFastDir); }
@@ -111,16 +114,17 @@ class EntryNMSPreciseLinear : public PerformanceTaskDefault {
     sobel.magnitude();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseLinear); }
@@ -142,17 +146,18 @@ class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
     sobel.direction();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseLinearDir); }
@@ -172,16 +177,17 @@ class EntryNMSPreciseCubic : public PerformanceTaskDefault {
     sobel.magnitude();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseCubic); }
@@ -203,17 +209,18 @@ class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
     sobel.direction();
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseCubicDir); }
@@ -232,16 +239,17 @@ class EntryZCNoDir : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCNoDir); }
@@ -262,16 +270,17 @@ class EntryZCFast : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCFast); }
@@ -293,17 +302,18 @@ class EntryZCFastDir : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCFastDir); }
@@ -324,16 +334,17 @@ class EntryZCPreciseLinear : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseLinear); }
@@ -355,17 +366,18 @@ class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseLinearDir); }
@@ -386,16 +398,17 @@ class EntryZCPreciseCubic : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseCubic); }
@@ -417,17 +430,18 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
     laplace.process(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseCubicDir); }

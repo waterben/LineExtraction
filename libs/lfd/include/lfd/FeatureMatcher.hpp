@@ -97,12 +97,13 @@ class FmBruteForce : public OptionManager {
       // loop match descriptors
       auto miter = mDsc.begin();
       for (size_t j = 0; j != ms; ++j, ++miter)
-        diter[j] = match_type(static_cast<int>(i), static_cast<int>(j), iter->distance(*miter));
-      auto dend = diter + ms;
+        diter[static_cast<std::ptrdiff_t>(j)] =
+            match_type(static_cast<int>(i), static_cast<int>(j), iter->distance(*miter));
+      auto dend = diter + static_cast<std::ptrdiff_t>(ms);
       // sort by distance
       std::sort(diter, dend);
       // check if we have set k nearest neighbors, if so, resize to k
-      if (k_ > 0 && k_ < static_cast<int>(ms)) dend = diter + static_cast<size_t>(k_);
+      if (k_ > 0 && k_ < static_cast<int>(ms)) dend = diter + static_cast<std::ptrdiff_t>(k_);
       // check if we have set a serach radius, if so, sort out distances > radius
       if (radius_ > 0 && ms > 0 && (dend - 1)->distance > radius_)
         dend = std::upper_bound(diter, dend, match_type(0, 0, radius_));
@@ -112,7 +113,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -157,7 +158,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -199,7 +200,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -251,7 +252,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -304,7 +305,8 @@ class FmBruteForce : public OptionManager {
         for (; idx < query_idx; ++idx) graph_.relations[idx + 1] = graph_.relations[idx];
       }
       if (fm.filterState == FS_MASKED) return;
-      *dend = match_type(fm.queryIdx, fm.matchIdx, qDsc[fm.queryIdx].distance(mDsc[fm.matchIdx]));
+      *dend = match_type(fm.queryIdx, fm.matchIdx,
+                         qDsc[static_cast<size_t>(fm.queryIdx)].distance(mDsc[static_cast<size_t>(fm.matchIdx)]));
       ++dend;
     });
 
@@ -326,7 +328,7 @@ class FmBruteForce : public OptionManager {
       for (; idx < qDsc.size(); ++idx) graph_.relations[idx + 1] = graph_.relations[idx];
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(mDsc.size());
     // overall max dist

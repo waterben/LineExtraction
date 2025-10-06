@@ -78,14 +78,15 @@ class EntryNearest : public Entry<FT> {
     points.reserve(idxs.size());
     cv::Mat mag = g.magnitude();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNearest); }
@@ -112,14 +113,15 @@ class EntrySpeLin : public Entry<FT> {
     points.reserve(idxs.size());
     cv::Mat mag = g.magnitude();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLin); }
@@ -146,14 +148,15 @@ class EntrySpeQuad : public Entry<FT> {
     points.reserve(idxs.size());
     cv::Mat mag = g.magnitude();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuad); }
@@ -180,14 +183,15 @@ class EntrySpeCog : public Entry<FT> {
     points.reserve(idxs.size());
     cv::Mat mag = g.magnitude();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCog); }
@@ -214,14 +218,15 @@ class EntrySpeSobel : public Entry<FT> {
     points.reserve(idxs.size());
     cv::Mat mag = g.magnitude();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobel); }
@@ -249,14 +254,15 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLinDirIpLin); }
@@ -284,14 +290,15 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuadDirIpLin); }
@@ -319,14 +326,15 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCogDirIpLin); }
@@ -354,14 +362,15 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobelDirIpLin); }
@@ -389,14 +398,15 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLinDirIpCubic); }
@@ -424,14 +434,15 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuadDirIpCubic); }
@@ -459,14 +470,15 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCogDirIpCubic); }
@@ -494,14 +506,15 @@ class EntrySpeSobelDirIpCubic : public Entry<FT> {
     cv::Mat mag = g.magnitude();
     cv::Mat dir = g.direction();
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobelDirIpCubic); }

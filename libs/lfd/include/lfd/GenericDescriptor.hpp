@@ -85,10 +85,11 @@ struct GenericDescritpor {
   GenericDescritpor() {}
   GenericDescritpor(const FT* d) : data() { memcopy(data, d, sizeof(FT) * cn); }
 
-  FT data[cn];
+  FT data[static_cast<size_t>(cn)];
 
   inline FT distance(const GenericDescritpor<FT, cn>& rhs) const {
-    return static_cast<FT>(norm(cv::_InputArray(data, cn), cv::_InputArray(rhs.data, cn), cv::NORM_L2));
+    return static_cast<FT>(norm(cv::_InputArray(data, static_cast<int>(cn)),
+                                cv::_InputArray(rhs.data, static_cast<int>(cn)), cv::NORM_L2));
   }
 
   //! compute distance between two descriptors (static version)
