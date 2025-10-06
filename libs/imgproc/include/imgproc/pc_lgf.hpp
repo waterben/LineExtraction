@@ -53,12 +53,12 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
 
 
   void updateFilter() {
-    lgf_.resize(nscale_);
+    lgf_.resize(static_cast<size_t>(nscale_));
     std::vector<cv::Mat_<FT>> lgfTmp;
-    lgfTmp.resize(nscale_);
+    lgfTmp.resize(static_cast<size_t>(nscale_));
     logGaborFilter(&lgfTmp[0], H_, rows_ext_, cols_ext_, minW_, mult_, sigmaOnf_, nscale_);
     for (int i = 0; i != nscale_; ++i) {
-      lgf_[i] = merge<FT>(lgfTmp[i], lgfTmp[i]);
+      lgf_[static_cast<size_t>(i)] = merge<FT>(lgfTmp[static_cast<size_t>(i)], lgfTmp[static_cast<size_t>(i)]);
     }
 
     sumAn = cv::Mat_<FT>::zeros(rows_, cols_);
@@ -287,7 +287,7 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
 
     for (int s = 0; s != nscale_; ++s) {
       // lgf already has two same channels, so cv::multiply is fastest
-      cv::multiply(IM, lgf_[s], tmpv);
+      cv::multiply(IM, lgf_[static_cast<size_t>(s)], tmpv);
       tmp1 = real<FT>(ifft2<FT>(tmpv));
       multiply(tmpv, H_, tmpv);
       tmpv = ifft2<FT>(tmpv);
@@ -324,7 +324,7 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     if (noiseMethod_ >= 0)
       T_ = static_cast<FT>(noiseMethod_);
     else {
-      FT totalTau = tau * (1 - std::pow((1 / mult_), nscale_)) / (1 - (1 / mult_));
+      FT totalTau = tau * (1 - std::pow(static_cast<FT>(1 / mult_), static_cast<FT>(nscale_))) / (1 - (1 / mult_));
       FT EstNoiseEnergyMean = totalTau * std::sqrt(static_cast<FT>(CV_PI) / 2);
       FT EstNoiseEnergySigma = totalTau * std::sqrt((4 - static_cast<FT>(CV_PI)) / 2);
 

@@ -258,9 +258,9 @@ void zc_base(const cv::Mat& l, LT low, LT high, IndexVector& seeds, cv::Mat& dma
                   : 0;
 
       idxm = static_cast<size_t>(idx) + 1;
-      mdiff = std::abs(xdiff);
-      if (std::abs(ydiff) > mdiff) {
-        mdiff = std::abs(ydiff);
+      mdiff = static_cast<LT>(std::abs(xdiff));
+      if (static_cast<LT>(std::abs(ydiff)) > mdiff) {
+        mdiff = static_cast<LT>(std::abs(ydiff));
         idxm = static_cast<size_t>(idx) + static_cast<size_t>(l.cols);
         lx = ly;
       }
@@ -318,9 +318,9 @@ void zc_base(
                   : 0;
 
       idxm = static_cast<size_t>(idx) + 1;
-      mdiff = std::abs(xdiff);
-      if (std::abs(ydiff) > mdiff) {
-        mdiff = std::abs(ydiff);
+      mdiff = static_cast<LT>(std::abs(xdiff));
+      if (static_cast<LT>(std::abs(ydiff)) > mdiff) {
+        mdiff = static_cast<LT>(std::abs(ydiff));
         idxm = static_cast<size_t>(idx) + static_cast<size_t>(l.cols);
         lx = ly;
       }
@@ -385,7 +385,7 @@ struct PreciseZC {
         ys /= n;
 
         FT l1 = pl[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
@@ -438,7 +438,7 @@ struct PreciseZC {
         ys /= n;
 
         FT l1 = pl[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
@@ -486,7 +486,7 @@ struct PreciseZC {
         FT l1 = pl[idx];
         FT xs = pgx[idx];
         FT ys = pgy[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
@@ -533,7 +533,7 @@ struct PreciseZC {
         FT l1 = pl[idx];
         FT xs = pgx[idx];
         FT ys = pgy[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
@@ -649,10 +649,10 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys)) * l.cols)];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
-          LT diff = std::abs(l1 - l2);
+          LT diff = static_cast<LT>(std::abs(l1 - l2));
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
             if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
@@ -701,7 +701,7 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys)) * l.cols)];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           LT diff = std::abs(l1 - l2);
@@ -749,10 +749,10 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys * static_cast<FT>(l.cols))))];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
-          LT diff = std::abs(l1 - l2);
+          LT diff = static_cast<LT>(std::abs(l1 - l2));
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
             if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
@@ -797,7 +797,7 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys * static_cast<FT>(l.cols))))];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           LT diff = std::abs(l1 - l2);

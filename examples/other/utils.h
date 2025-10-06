@@ -35,7 +35,7 @@ void drawStatistics(Mat image, const Stats& stats) {
   str1 << "Matches: " << stats.matches;
   str2 << "Inliers: " << stats.inliers;
   str3 << "Inlier ratio: " << setprecision(2) << stats.ratio;
-  str4 << "Time: " << setprecision(2) << stats.time * 1000.0 / cv::getTickFrequency() << "ms";
+  str4 << "Time: " << setprecision(2) << static_cast<double>(stats.time) * 1000.0 / cv::getTickFrequency() << "ms";
 
   putText(image, str1.str(), Point(0, image.rows - 120), font, 2, Scalar::all(255), 3);
   putText(image, str2.str(), Point(0, image.rows - 90), font, 2, Scalar::all(255), 3);
@@ -51,7 +51,7 @@ void printStatistics(string name, Stats stats) {
   cout << "Inliers " << stats.inliers << endl;
   cout << "Inlier ratio " << setprecision(2) << stats.ratio << endl;
   cout << "Keypoints " << stats.keypoints << endl;
-  cout << "Time " << stats.time * 1000.0 / cv::getTickFrequency() << "ms" << endl;
+  cout << "Time " << static_cast<double>(stats.time) * 1000.0 / cv::getTickFrequency() << "ms" << endl;
   cout << endl;
 }
 

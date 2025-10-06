@@ -502,7 +502,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.distances.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       last = graph_.relations[i];
       int j = 0, jn = size > k ? k : size;
       for (; j < jn; ++j, ++iter) matches.push_back(*iter);
@@ -527,7 +527,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.distances.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       if (size == 0) continue;
       last = graph_.relations[i];
       matches.insert(matches.end(), iter, std::upper_bound(iter, iter + size, mt));
@@ -541,7 +541,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.relations.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       if (size == 0) continue;
       last = graph_.relations[i];
       matches.push_back(*iter);

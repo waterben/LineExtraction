@@ -27,7 +27,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   static cv::Mat_<FT> createFilter(int width, FT spacing, KernelType f) {
     width = width / 2;
     cv::Mat_<FT> kernel(1, width * 2 + 1);
-    for (int i = -width; i <= width; ++i) kernel(i + width) = f(i * spacing);
+    for (int i = -width; i <= width; ++i) kernel(i + width) = f(static_cast<FT>(i) * spacing);
 
     return kernel;
   }

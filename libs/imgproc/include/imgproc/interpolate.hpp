@@ -425,7 +425,7 @@ struct FastRoundNearestInterpolator {
 //! x is position between value 0 and 1
 template <class FT, class MT>
 inline FT interpolate_linear(const MT* data, FT x) {
-  return (data[1] - data[0]) * x + data[0];
+  return (static_cast<FT>(data[1]) - static_cast<FT>(data[0])) * x + static_cast<FT>(data[0]);
 }
 
 template <class FT, class MT>
@@ -482,8 +482,8 @@ struct LinearInterpolator {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
 
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     if (fx == 0 || fy == 0) {
       // interpolate with 2 pixels along y
@@ -520,8 +520,8 @@ struct LinearInterpolator {
   static inline FT getNB(const cv::Mat& src, FT fx, FT fy) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     /*if (fx == 0 || fy == 0) {
         // interpolate with 2 pixels along y
@@ -550,8 +550,8 @@ struct LinearInterpolator {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
 
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     // no interpolation required, get entry from src
     if (fx == 0 || fy == 0) {
@@ -607,8 +607,8 @@ struct LinearInterpolator {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
 
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     // no interpolation required, get entry from src
     if (fx == 0 || fy == 0) {
@@ -676,10 +676,10 @@ struct LinearInterpolator {
 //! see http://www.paulinternet.nl/?page=bicubic
 template <class FT, class MT>
 inline FT interpolate_cubic(const MT* data, FT x) {
-  return data[1] + 0.5 * x *
-                       (data[2] - data[0] +
-                        x * (2.0 * data[0] - 5.0 * data[1] + 4.0 * data[2] - data[3] +
-                             x * (3.0 * (data[1] - data[2]) + data[3] - data[0])));
+  return static_cast<FT>(data[1] + 0.5 * x *
+                                       (data[2] - data[0] +
+                                        x * (2.0 * data[0] - 5.0 * data[1] + 4.0 * data[2] - data[3] +
+                                             x * (3.0 * (data[1] - data[2]) + data[3] - data[0]))));
 }
 
 template <class FT, class MT>
@@ -689,7 +689,7 @@ inline FT interpolate_cubic(const Vec<MT, 4>& data, FT x) {
 
 template <class FT, class MT>
 inline FT interpolate_cubic(MT a, MT b, MT c, MT d, FT x) {
-  return b + 0.5 * x * (c - a + x * (2.0 * a - 5.0 * b + 4.0 * c - d + x * (3.0 * (b - c) + d - a)));
+  return static_cast<FT>(b + 0.5 * x * (c - a + x * (2.0 * a - 5.0 * b + 4.0 * c - d + x * (3.0 * (b - c) + d - a))));
 }
 
 template <class FT, class MT>
@@ -738,7 +738,7 @@ struct CubicInterpolator {
 
   static inline FT getX(const MT* src, int cols, FT fx, int border_type, MT border_val = 0) {
     int xi = static_cast<int>(fx);
-    fx -= xi;
+    fx -= static_cast<FT>(xi);
 
     // if (fx == 0)
     //     static_cast<FT>(readValX(src, cols, xi), border_type, border_val);
@@ -775,8 +775,8 @@ struct CubicInterpolator {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
 
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     // no interpolation required, get entry from src
     if (fx == 0 || fy == 0) {
@@ -830,8 +830,8 @@ struct CubicInterpolator {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
 
-    fx -= xi;
-    fy -= yi;
+    fx -= static_cast<FT>(xi);
+    fy -= static_cast<FT>(yi);
 
     if (fx == 0 || fy == 0) {
       if (fy != 0)

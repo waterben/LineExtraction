@@ -693,8 +693,10 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       return;
     }
 
-    pattern_reverse(patterns_.begin() + pat_seg_beg, patterns_.end());
-    std::reverse(primitives_.begin() + pat_seg_beg, primitives_.end());
+    pattern_reverse(patterns_.begin() + static_cast<typename std::vector<EdgeSegment>::difference_type>(pat_seg_beg),
+                    patterns_.end());
+    std::reverse(primitives_.begin() + static_cast<typename std::vector<Primitive>::difference_type>(pat_seg_beg),
+                 primitives_.end());
 
     // get current pattern
     p.seg = patterns_.back();
@@ -786,8 +788,10 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       return;
     }
 
-    pattern_reverse(patterns_.begin() + pat_seg_beg, patterns_.end());
-    std::reverse(primitives_.begin() + pat_seg_beg, primitives_.end());
+    pattern_reverse(patterns_.begin() + static_cast<typename std::vector<EdgeSegment>::difference_type>(pat_seg_beg),
+                    patterns_.end());
+    std::reverse(primitives_.begin() + static_cast<typename std::vector<Primitive>::difference_type>(pat_seg_beg),
+                 primitives_.end());
 
     // get current pattern
     p.seg = patterns_.back();

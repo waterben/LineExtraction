@@ -317,11 +317,11 @@ struct PreciseNMS {
           DT xs = pgx[idx];
           DT ys = pgy[idx];
 
-          size_t x = idx % mag.cols;
-          size_t y = idx / mag.cols;
+          int x = idx % mag.cols;
+          int y = idx / mag.cols;
 
-          if (m > Interpolate<DT, MT>::getNB(mag, x - xs, y - ys) &&
-              m >= Interpolate<DT, MT>::getNB(mag, x + xs, y + ys)) {
+          if (static_cast<DT>(m) > Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) - xs, static_cast<DT>(y) - ys) &&
+              static_cast<DT>(m) >= Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) + xs, static_cast<DT>(y) + ys)) {
             if (m > high) addSeed(seeds, idx);
 
             EM<DT>::map(pdmap[idx], xs, ys);
@@ -369,11 +369,11 @@ struct PreciseNMS {
           DT xs = pgx[idx];
           DT ys = pgy[idx];
 
-          size_t x = idx % mag.cols;
-          size_t y = idx / mag.cols;
+          size_t x = static_cast<size_t>(idx) % static_cast<size_t>(mag.cols);
+          size_t y = static_cast<size_t>(idx) / static_cast<size_t>(mag.cols);
 
-          if (m > Interpolate<DT, MT>::getNB(mag, x - xs, y - ys) &&
-              m >= Interpolate<DT, MT>::getNB(mag, x + xs, y + ys)) {
+          if (m > Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) - xs, static_cast<DT>(y) - ys) &&
+              m >= Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) + xs, static_cast<DT>(y) + ys)) {
             if (m > phigh[idx]) addSeed(seeds, idx);
 
             EM<DT>::map(pdmap[idx], xs, ys);
@@ -878,9 +878,9 @@ struct FastNMS4 {
           // MT ays = std::abs(ys) << 15;
           MT ays = std::abs(ys) * 32768;
 
-          int tg22x = axs * TG22;
+          int tg22x = static_cast<int>(axs * TG22);
 
-          if (ays < tg22x)  // |
+          if (ays < static_cast<MT>(tg22x))  // |
           {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
@@ -888,7 +888,7 @@ struct FastNMS4 {
             }
           } else {
             // int tg67x = tg22x + (axs << 16);
-            MT tg67x = tg22x + (axs * 65536);
+            MT tg67x = static_cast<MT>(tg22x) + (axs * static_cast<MT>(65536));
             if (ays > tg67x)  // -
             {
               if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {

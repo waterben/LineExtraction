@@ -21,12 +21,12 @@ void calcMagnitude(const EdgeSegmentVector& seg, const IndexVector& points, cons
     FT sqSum = 0;
 
     for (size_t lpos = seg[i].begin(); lpos != seg[i].end(); ++lpos) {
-      sum += get<MT>(Mag, points[lpos]);
-      sqSum += std::sqrt(get<MT>(Mag, points[lpos]));
+      sum += static_cast<FT>(get<MT>(Mag, points[lpos]));
+      sqSum += std::sqrt(static_cast<FT>(get<MT>(Mag, points[lpos])));
     }
-    n.push_back(sqSum / (seg[i].size()));
-    std::cout << "line: " << i << " sqrt(sum)/n: " << std::sqrt(sum) / (seg[i].size())
-              << "  sum(sqrt(val))/n: " << sqSum / (seg[i].size()) << std::endl;
+    n.push_back(sqSum / static_cast<FT>(seg[i].size()));
+    std::cout << "line: " << i << " sqrt(sum)/n: " << std::sqrt(sum) / static_cast<FT>(seg[i].size())
+              << "  sum(sqrt(val))/n: " << sqSum / static_cast<FT>(seg[i].size()) << std::endl;
   }
 }
 
@@ -41,7 +41,8 @@ void testNfa(LSD& lsd, const NFA& nfa, const std::string& name) {
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << "nfa - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "nfa - " << name << ": "
+            << (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / static_cast<double>(runs) << std::endl;
 }
 
 template <class LSD, class NFA>
@@ -130,7 +131,7 @@ int main(int argc, char** argv) {
 
 
   //    LsdCC<FT> lsd(0.008, 0.012, 30, 0, 2);
-  LsdEL<FT> lsd(0.004, 0.012, 10, 3, 10, 4, 0 /*EL_USE_NFA*/);
+  LsdEL<FT> lsd(0.004f, 0.012f, 10, 3, 10, 4, 0 /*EL_USE_NFA*/);
 
 
   NfaContrast<int, float, index_type, std::map<int, float>> nfac(8);
@@ -140,15 +141,15 @@ int main(int argc, char** argv) {
   lsd.detect(src);
   std::cout << "lines: " << lsd.lineSegments().size() << std::endl;
 
-  double scale = 2;
+  FT scale = 2;
   cv::Mat q = quiver<short>(src, lsd.imageData("gx"), lsd.imageData("gy"), 4, 4, scale, 2, 10, Scalar(0, 0, 255), 1,
                             cv::LINE_AA);
   for_each(lsd.lineSegments().begin(), lsd.lineSegments().end(), [&](LineSegment<FT> l) {
     l.scale(scale);
     Vec2<FT> pt1 = l.centerPoint();
-    Vec2<FT> pt2 =
-        lsfm::Vec2<FT>(10 * cos(l.gradientAnglef() * CV_PI / 180), 10 * sin(l.gradientAnglef() * CV_PI / 180)) +
-        l.centerPoint();
+    Vec2<FT> pt2 = lsfm::Vec2<FT>(10 * cos(l.gradientAnglef() * static_cast<FT>(CV_PI / 180)),
+                                  10 * sin(l.gradientAnglef() * static_cast<FT>(CV_PI / 180))) +
+                   l.centerPoint();
     LineSegment<FT> l2(pt1, pt2);
     line(q, l2, Scalar(255, 0, 0), 1, cv::LINE_AA, 0.0, 4.0);
   });

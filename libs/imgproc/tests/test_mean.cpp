@@ -13,7 +13,7 @@ class MeanTest : public ::testing::Test {
     test_img = Mat::zeros(10, 10, CV_32F);
     for (int y = 0; y < 10; ++y) {
       for (int x = 0; x < 10; ++x) {
-        test_img.at<float>(y, x) = x + y * 0.1f;  // Simple gradient
+        test_img.at<float>(y, x) = static_cast<float>(x) + static_cast<float>(y) * 0.1f;  // Simple gradient
       }
     }
   }

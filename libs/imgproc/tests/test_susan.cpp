@@ -23,7 +23,9 @@ class SusanTest : public ::testing::Test {
     gradient_img = Mat::zeros(10, 10, CV_8UC1);
     for (int y = 0; y < 10; ++y) {
       for (int x = 0; x < 10; ++x) {
-        gradient_img.at<uchar>(y, x) = std::min(255, x * 50);  // More pronounced horizontal gradient
+        int val = x * 50;
+        gradient_img.at<uchar>(y, x) =
+            static_cast<uchar>(val > 255 ? 255 : val);  // More pronounced horizontal gradient
       }
     }
 

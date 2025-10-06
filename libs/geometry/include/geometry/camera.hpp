@@ -572,7 +572,7 @@ class CameraHom : public Camera<FT> {
       // Create temporary matrices with correct layout
       Eigen::Matrix<FT, Eigen::Dynamic, 3> pts_matrix(vh.size(), 3);
       for (size_t i = 0; i < vh.size(); ++i) {
-        pts_matrix.row(i) << vh[i].x(), vh[i].y(), vh[i].z();
+        pts_matrix.row(static_cast<Eigen::Index>(i)) << vh[i].x(), vh[i].y(), vh[i].z();
       }
 
       Eigen::Matrix<FT, Eigen::Dynamic, 2> res_matrix(vh.size(), 2);
@@ -582,7 +582,7 @@ class CameraHom : public Camera<FT> {
 
       // Copy back to result vector
       for (size_t i = 0; i < vh.size(); ++i) {
-        ret[i] = Vec2<FT>(res_matrix(i, 0), res_matrix(i, 1));
+        ret[i] = Vec2<FT>(res_matrix(static_cast<Eigen::Index>(i), 0), res_matrix(static_cast<Eigen::Index>(i), 1));
       }
     }
   }

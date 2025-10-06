@@ -131,7 +131,7 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
                     return false;
     */
     // skip lines that are nearly horizontal
-    FT angleMod180 = fmod(ld.angle, 180);
+    FT angleMod180 = static_cast<FT>(fmod(ld.angle, 180));
     if (angleMod180 < H_LINE_TOL || angleMod180 > (static_cast<FT>(180) - H_LINE_TOL)) {
       //                std::cout << " too horizontal";
       //                return true;

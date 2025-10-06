@@ -132,7 +132,7 @@ class Polygon {
 
   //! rotate shape by angle (radian) around piviot
   inline void rotate(FT angle) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     for_each(verticies_.begin(), verticies_.end(),
              [&](point_type& p) { set(p, getX(p) * ca - getY(p) * sa, getX(p) * sa + getY(p) * ca); });
   }
@@ -181,7 +181,7 @@ class Polygon {
     point_type tmp;
     for_each(verticies_.begin(), verticies_.end(), [&, this](const point_type& p) {
       tmp = p + this->piviot_;
-      in.push_back(cv::Point(std::round(getX(tmp)), std::round(getY(tmp))));
+      in.push_back(cv::Point(static_cast<int>(std::round(getX(tmp))), static_cast<int>(std::round(getY(tmp)))));
     });
     cv::fillConvexPoly(img, in.data(), static_cast<int>(verticies_.size()), color, lineType);
   }
@@ -193,7 +193,7 @@ class Polygon {
 
     for_each(verticies_.begin(), verticies_.end(), [&, this](const point_type& p) {
       tmp = p + this->piviot_;
-      in.push_back(cv::Point(std::round(getX(tmp)), std::round(getY(tmp))));
+      in.push_back(cv::Point(static_cast<int>(std::round(getX(tmp))), static_cast<int>(std::round(getY(tmp)))));
     });
     int np = static_cast<int>(verticies_.size());
     const cv::Point* data = in.data();
@@ -206,7 +206,7 @@ class Polygon {
     point_type tmp;
     for_each(verticies_.begin(), verticies_.end(), [&, this](const point_type& p) {
       tmp = p + this->piviot_;
-      in.push_back(cv::Point(std::round(getX(tmp)), std::round(getY(tmp))));
+      in.push_back(cv::Point(static_cast<int>(std::round(getX(tmp))), static_cast<int>(std::round(getY(tmp)))));
     });
     int np = static_cast<int>(verticies_.size());
     const cv::Point* data = in.data();

@@ -46,7 +46,7 @@ class FilterTest : public ::testing::Test {
     test_img = Mat::zeros(5, 5, CV_32F);
     for (int y = 0; y < 5; ++y) {
       for (int x = 0; x < 5; ++x) {
-        test_img.at<float>(y, x) = y * 5 + x;
+        test_img.at<float>(y, x) = static_cast<float>(y * 5 + x);
       }
     }
 

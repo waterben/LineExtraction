@@ -28,7 +28,7 @@ void testOP(OP& op, const Mat& src, const std::string& name) {
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << name << ": " << (static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
 }
 
 template <class OP>
@@ -66,9 +66,11 @@ int main(int argc, char** argv) {
 
   imshow("img", src);
 
-  double tmp = cv::getTickCount();
+  double tmp = static_cast<double>(cv::getTickCount());
   int th = otsu.process(src);
-  std::cout << "otsu: " << th << ", " << ((cv::getTickCount() - tmp) * 1000.0 / cv::getTickFrequency()) << std::endl;
+  std::cout << "otsu: " << th << ", "
+            << (static_cast<double>(cv::getTickCount() - static_cast<int64>(tmp)) * 1000.0 / cv::getTickFrequency())
+            << std::endl;
   cv::Mat src_th;
   src.copyTo(src_th);
   src_th.setTo(0, src < th);
@@ -131,11 +133,13 @@ int main(int argc, char** argv) {
   // showOp("phase",phase);
 
   ThresholdOtsu<float, 256, float> otsu2(sobel.magnitudeRange().upper);
-  tmp = cv::getTickCount();
+  tmp = static_cast<double>(cv::getTickCount());
   cv::Mat mag;
   sobel.magnitude().copyTo(mag);
-  th = otsu2.process(mag);
-  std::cout << "otsu2: " << th << ", " << ((cv::getTickCount() - tmp) * 1000.0 / cv::getTickFrequency()) << std::endl;
+  th = static_cast<int>(otsu2.process(mag));
+  std::cout << "otsu2: " << th << ", "
+            << (static_cast<double>(cv::getTickCount() - static_cast<int64>(tmp)) * 1000.0 / cv::getTickFrequency())
+            << std::endl;
   mag.setTo(0, mag < th);
 
   imshow("sobel_th", mag / sobel.magnitudeRange().upper * 4);

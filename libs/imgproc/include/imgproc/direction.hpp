@@ -123,7 +123,9 @@ struct FastDirection {
       cv::phase(gx, gy, dir, true);
     else {
       dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
-      FastDirection<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows * gx.cols * gx.channels());
+      FastDirection<GT, DT>::process(
+          gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(),
+          static_cast<size_t>(gx.rows) * static_cast<size_t>(gx.cols) * static_cast<size_t>(gx.channels()));
     }
   }
 

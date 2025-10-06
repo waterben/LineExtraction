@@ -210,7 +210,8 @@ struct SubPixelEstimator {
     Pointi p2, dir2;
     index2Point(p, p2, mag.cols);
     dir2Vec4(dir + 2, dir2);
-    Pointf pf(getX(p2), getY(p2)), dirf(getX(dir2), getY(dir2));
+    Pointf pf(static_cast<float>(getX(p2)), static_cast<float>(getY(p2))),
+        dirf(static_cast<float>(getX(dir2)), static_cast<float>(getY(dir2)));
 
     res = pf + dirf * estimate(mag.ptr<MT>()[p], get<MT>(mag, p2 - dir2), get<MT>(mag, p2 + dir2));
   }

@@ -42,7 +42,9 @@ void showData(const cv::Mat& src, const Entry<FT>& e) {
   cv::RNG rng(cv::getTickCount());
 
   for_each(e.lsd->lineSegments().begin(), e.lsd->lineSegments().end(), [&](const LineSegment<FT>& l) {
-    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Vec3b color(static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)));
     cv::Scalar scolor(color[0], color[1], color[2]);
     line(img, l, scolor, 1, 8, 10.0, 3.0);
     // Vec2<FT> p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
@@ -81,32 +83,33 @@ int main(int argc, char** argv) {
   std::vector<Entry<FT>> vlsd;
 
   vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdSimple<int>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd es"));
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdSimple<int>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10), "lsd es"));
+
+  vlsd.push_back(
+      Entry<FT>(new LsdEL<FT, Vec2, PT, EdgeSource, EsdDrawing<int>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10),
+                "lsd ed"));
 
   vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdDrawing<int>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10), "lsd ed"));
-
-  vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, false>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, false>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10),
       "lsd el"));
 
   vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, true>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdLinking<int, 8, true>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10),
       "lsd elc"));
 
   vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, false>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, false>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10),
       "lsd elp"));
 
   vlsd.push_back(Entry<FT>(
-      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, true>, Nfa, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10),
+      new LsdEL<FT, Vec2, PT, EdgeSource, EsdPattern<int, 8, true>, Nfa, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10),
       "lsd elpc"));
 
   vlsd.push_back(
-      Entry<FT>(new LsdEP<FT, Vec2, false, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd ep"));
+      Entry<FT>(new LsdEP<FT, Vec2, false, PT, EdgeSource, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10, 3), "lsd ep"));
 
   vlsd.push_back(
-      Entry<FT>(new LsdEP<FT, Vec2, true, PT, EdgeSource, Conv, Split, Fit>(0.004, 0.012, 10, 3, 10, 3), "lsd epc"));
+      Entry<FT>(new LsdEP<FT, Vec2, true, PT, EdgeSource, Conv, Split, Fit>(0.004f, 0.012f, 10, 3, 10, 3), "lsd epc"));
 
 
   int runs = 10;

@@ -163,7 +163,9 @@ int main() {
   });
 
   for_each(filter.begin(), filter.end(), [&](Entry& e) {
-    std::cout << e.name << ": " << e.time * 1000 / (e.images * cv::getTickFrequency()) << "ms" << std::endl;
+    std::cout << e.name << ": "
+              << static_cast<double>(e.time) * 1000.0 / (static_cast<double>(e.images) * cv::getTickFrequency()) << "ms"
+              << std::endl;
   });
 
   return 0;

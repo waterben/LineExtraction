@@ -395,7 +395,7 @@ struct ExtSplitCheck {
     const MT* pmag = &data.at<MT>(getY(max_point) - 1, getX(max_point) - 1);
     FT f1 = static_cast<FT>(pmag[0] + pmag[1] + pmag[2] + pmag[data.cols] + pmag[data.cols + 1] + pmag[data.cols + 2] +
                             pmag[2 * data.cols] + pmag[2 * data.cols + 1] + pmag[2 * data.cols + 2]) /
-            mag_max;
+            static_cast<FT>(mag_max);
     // if signal is strong, split
     if (f1 >= 1) return true;
 
@@ -790,12 +790,12 @@ class ExtRamerSplit : public ValueManager {
 
 template <class FT, class PT>
 inline FT distanceCheck(const Line<FT>& line, const PT& point) {
-  return std::abs(line.distance(getX(point), getY(point)));
+  return std::abs(line.distance(static_cast<FT>(getX(point)), static_cast<FT>(getY(point))));
 }
 
 template <class FT, class PT>
 inline FT distanceCheck(const Vec2<FT>& normal, const PT& point) {
-  return std::abs(getX(normal) * getX(point) + getY(normal) * getY(point));
+  return std::abs(getX(normal) * static_cast<FT>(getX(point)) + getY(normal) * static_cast<FT>(getY(point)));
 }
 
 template <class FT>
@@ -805,7 +805,8 @@ inline FT distanceCheck(const Vec2<FT>& normal, const Vec2<FT>& point) {
 
 template <class FT, class PT>
 inline FT distanceCheck(const Vec2<FT>& normal, const Vec2<FT>& line_point, const PT& point) {
-  return distanceCheck(normal, Vec2<FT>(getX(point) - line_point.x(), getY(point) - line_point.y()));
+  return distanceCheck(
+      normal, Vec2<FT>(static_cast<FT>(getX(point)) - line_point.x(), static_cast<FT>(getY(point)) - line_point.y()));
 }
 
 template <class FT, class PT = Vec2i, bool LINE_MODE = true, class FIT = EigenFit<FT, PT>>
@@ -950,7 +951,7 @@ class LeastSquareSplit : public ValueManager {
     const PT* pPoints = points.data();
     const PT* pbeg = nullptr;
     const PT* pend = nullptr;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
     Line<FT> line;
@@ -982,7 +983,7 @@ class LeastSquareSplit : public ValueManager {
     const PT* pPoints = points.data();
     const PT* pbeg;
     const PT* pend;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
     Vec2<FT> normal = Vec2<FT>::Zero();
@@ -1003,7 +1004,7 @@ class LeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
 
     // add points
     for (; end2 != end; ++end2) {
@@ -1112,10 +1113,10 @@ class LeastSquareSplit : public ValueManager {
 
       // if only one pattern is included, a fit is found
       if (beg + 1 == pos) {
-        normal[0] = getX(*(pend - 1)) - getX(*pbeg);
-        normal[1] = getY(*(pend - 1)) - getY(*pbeg);
-        centroid[0] = getX(*pbeg);
-        centroid[1] = getY(*pbeg);
+        normal[0] = static_cast<FT>(getX(*(pend - 1)) - getX(*pbeg));
+        normal[1] = static_cast<FT>(getY(*(pend - 1)) - getY(*pbeg));
+        centroid[0] = static_cast<FT>(getX(*pbeg));
+        centroid[1] = static_cast<FT>(getY(*pbeg));
         dist_norm = dist_ * l2_norm<FT>(normal);
         break;
       }

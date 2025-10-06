@@ -201,7 +201,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceBinaryTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -212,7 +213,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceDirmapTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -224,7 +226,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceDirmapTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, dirMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -234,7 +237,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceBinaryTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, outSupportPoints, outSegments, id);
   }
 
@@ -244,7 +248,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceDirmapTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, outSupportPoints, outSegments, id);
   }
 
@@ -255,7 +260,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     traceDirmapTrimmed(
-        trim2Box<FT>(line, edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_),
+        trim2Box<FT>(line, static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                     static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)),
         edgeMap, dirMap, outSupportPoints, outSegments, id);
   }
 
@@ -266,7 +272,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceBinaryTrimmed(lineTrimmed, edgeMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -277,7 +284,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceDirmapTrimmed(lineTrimmed, edgeMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -289,7 +297,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceDirmapTrimmed(lineTrimmed, edgeMap, dirMap, outSupportPoints, outSupportIndexes, outSegments, id);
   }
 
@@ -299,7 +308,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceBinaryTrimmed(lineTrimmed, edgeMap, outSupportPoints, outSegments, id);
   }
 
@@ -309,7 +319,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceDirmapTrimmed(lineTrimmed, edgeMap, outSupportPoints, outSegments, id);
   }
 
@@ -320,7 +331,8 @@ class LineTracer : public ValueManager {
                           EdgeSegmentVector& outSegments,
                           int id = 0) {
     LineSegment<FT, LPT> lineTrimmed = line;
-    if (lineTrimmed.trim2Box(edgeMap.cols - searchSteps_, edgeMap.rows - searchSteps_, searchSteps_, searchSteps_))
+    if (lineTrimmed.trim2Box(static_cast<FT>(edgeMap.cols - searchSteps_), static_cast<FT>(edgeMap.rows - searchSteps_),
+                             static_cast<FT>(searchSteps_), static_cast<FT>(searchSteps_)))
       traceDirmapTrimmed(lineTrimmed, edgeMap, dirMap, outSupportPoints, outSegments, id);
   }
 

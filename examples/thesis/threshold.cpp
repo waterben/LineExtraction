@@ -152,7 +152,7 @@ class ThresholdApp : public EvalApp {
     // Otsu global on magnitude
     ThresholdOtsu<float, 256> otsu_mag(sobel.magnitudeRange().upper);
     if (verbose_) {
-      int th = otsu_mag.process(mag);
+      int th = static_cast<int>(otsu_mag.process(mag));
       std::cout << "otsu_mag: max: " << sobel.magnitudeRange().upper << ", th: " << th
                 << ", runtime:" << performanceOP(otsu_mag, mag) << "ms" << std::endl;
     }
@@ -164,12 +164,12 @@ class ThresholdApp : public EvalApp {
     process(otsu_global_th_mag_st, mag, "otsu_global_th_mag_st", "Sobel mag Otsu th single thread");
 
     if (show_visuals_ || write_visuals_) {
-      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_low(sobel.magnitudeRange().upper,
-                                                                      sobel.magnitudeRange().upper * 0.03);
-      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_good(sobel.magnitudeRange().upper,
-                                                                       sobel.magnitudeRange().upper * 0.12);
-      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_high(sobel.magnitudeRange().upper,
-                                                                       sobel.magnitudeRange().upper * 0.35);
+      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_low(
+          sobel.magnitudeRange().upper, static_cast<float>(sobel.magnitudeRange().upper * 0.03));
+      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_good(
+          sobel.magnitudeRange().upper, static_cast<float>(sobel.magnitudeRange().upper * 0.12));
+      GlobalThreshold<float, ThresholdUser<float>> otsu_global_th_high(
+          sobel.magnitudeRange().upper, static_cast<float>(sobel.magnitudeRange().upper * 0.35));
 
       cv::Mat mag_th_low = otsu_global_th_low.process(mag);
       cv::Mat mag_th_good = otsu_global_th_good.process(mag);

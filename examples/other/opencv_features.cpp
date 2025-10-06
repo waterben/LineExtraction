@@ -75,8 +75,8 @@ Mat Tracker::process(const Mat frame, Stats& stats) {
   matcher->knnMatch(first_desc, desc, matches, 2);
   for (unsigned i = 0; i < matches.size(); i++) {
     if (matches[i][0].distance < nn_match_ratio * matches[i][1].distance) {
-      matched1.push_back(first_kp[matches[i][0].queryIdx]);
-      matched2.push_back(kp[matches[i][0].trainIdx]);
+      matched1.push_back(first_kp[static_cast<size_t>(matches[i][0].queryIdx)]);
+      matched2.push_back(kp[static_cast<size_t>(matches[i][0].trainIdx)]);
     }
   }
   stats.matches = (int)matched1.size();
@@ -96,7 +96,7 @@ Mat Tracker::process(const Mat frame, Stats& stats) {
     return res;
   }
   for (unsigned i = 0; i < matched1.size(); i++) {
-    if (inlier_mask.at<uchar>(i)) {
+    if (inlier_mask.at<uchar>(static_cast<int>(i))) {
       int new_i = static_cast<int>(inliers1.size());
       inliers1.push_back(matched1[i]);
       inliers2.push_back(matched2[i]);

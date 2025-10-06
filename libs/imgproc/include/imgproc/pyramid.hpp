@@ -120,7 +120,7 @@ class Pyramid {
   }
 
   Pyramid(const Pyramid& p) {
-    for (std::size_t i = 0; i < p.size(); ++i) scales_.push_back(p[i].clone());
+    for (std::size_t i = 0; i < p.size(); ++i) scales_.push_back(p[static_cast<int>(i)].clone());
   }
 
   template <class C>
@@ -155,9 +155,9 @@ class Pyramid {
 
   static inline int type() { return cv::DataType<MT>::type; }
 
-  inline const cv::Mat& operator[](int i) const { return scales_[i]; }
+  inline const cv::Mat& operator[](int i) const { return scales_[static_cast<size_t>(i)]; }
 
-  inline cv::Mat& operator[](int i) { return scales_[i]; }
+  inline cv::Mat& operator[](int i) { return scales_[static_cast<size_t>(i)]; }
 
   inline size_t size() const { return scales_.size(); }
 
@@ -207,14 +207,14 @@ class Pyramid {
 template <class MT>
 inline Pyramid<MT> operator*(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[static_cast<int>(i)] = (value * tmp[static_cast<int>(i)]);
   return tmp;
 }
 
 template <class MT>
 inline Pyramid<MT> operator*(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
-  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] = (value * tmp[i]);
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[static_cast<int>(i)] = (value * tmp[static_cast<int>(i)]);
   return tmp;
 }
 
@@ -249,7 +249,7 @@ inline Pyramid<MT> operator+(const Pyramid<MT>& pyramid, double value) {
 template <class MT>
 inline Pyramid<MT> operator+(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
-  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[i] += b[i];
+  for (std::size_t i = 0; i < tmp.size(); ++i) tmp[static_cast<int>(i)] += b[static_cast<int>(i)];
   return tmp;
 }
 
@@ -299,11 +299,11 @@ cv::Mat draw(const Pyramid<MT>& pyramid) {
   cv::Point tl(0, 0);
   cv::Mat canvas(pyramid[0].rows, pyramid[0].cols + ((pyramid[0].cols + 2) >> 1), pyramid.type(), cv::Scalar::all(0));
   for (std::size_t i = 0; i < pyramid.size() - 1; ++i) {
-    pyramid[i].copyTo(canvas(cv::Rect(tl, pyramid[i].size())));
+    pyramid[static_cast<int>(i)].copyTo(canvas(cv::Rect(tl, pyramid[static_cast<int>(i)].size())));
     if (!(i % 2)) {
-      tl.x += pyramid[i].cols;
+      tl.x += static_cast<int>(pyramid[static_cast<int>(i)].cols);
     } else {
-      tl.y += pyramid[i].rows;
+      tl.y += static_cast<int>(pyramid[static_cast<int>(i)].rows);
     }
   }
   return canvas;

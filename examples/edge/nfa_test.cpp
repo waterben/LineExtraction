@@ -36,7 +36,8 @@ void testNfa(GRAD& grad, NMS& nms, EDGE& edge, const NFA& nfa, const std::string
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << "nfa - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "nfa - " << name << ": "
+            << (static_cast<double>(rt) * 1000.0 / static_cast<double>(cv::getTickFrequency())) / runs << std::endl;
 }
 
 inline void setPixel(cv::Mat& dst, index_type idx, const Vec3b& color) { dst.ptr<cv::Vec3b>()[idx] = color; }
@@ -46,7 +47,10 @@ inline void setPixel(cv::Mat& dst, cv::Point idx, const Vec3b& color) { dst.at<c
 inline void setPixel(cv::Mat& dst, lsfm::Vec3i idx, const Vec3b& color) { dst.at<cv::Vec3b>(idx.y(), idx.x()) = color; }
 
 inline void setCircle(cv::Mat& dst, index_type idx, const Vec3b& color, int r) {
-  circle(dst, cv::Point(idx % dst.cols, idx / dst.cols), r, Scalar(color[0], color[1], color[2]));
+  circle(dst,
+         cv::Point(static_cast<int>(idx % static_cast<index_type>(dst.cols)),
+                   static_cast<int>(idx / static_cast<index_type>(dst.cols))),
+         r, Scalar(color[0], color[1], color[2]));
 }
 
 inline void setCircle(cv::Mat& dst, cv::Point idx, const Vec3b& color, int r) {
@@ -67,7 +71,7 @@ template <class EDGE, class NFA>
 void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(time(0));
+  cv::RNG rng(static_cast<uint64_t>(time(0)));
 
   std::vector<float> n;
   EdgeSegmentVector out;
@@ -81,7 +85,8 @@ void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& 
   });
 
   for_each(out.begin(), out.end(), [&](const EdgeSegment& seg) {
-    Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                static_cast<uchar>(20 + rng.uniform(0, 225)));
     drawSegment(edgeImg, seg, edge.points(), color);
 
     if (circles) {
@@ -105,7 +110,8 @@ void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& 
 
     cvtColor(src, edgeImg, CV_GRAY2BGR);
     for (size_t i = 0; i != 20; ++i) {
-      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                  static_cast<uchar>(20 + rng.uniform(0, 225)));
       drawSegment(edgeImg, out[idxVec[i].first], edge.points(), color);
     }
 
@@ -135,9 +141,9 @@ int main(int argc, char** argv) {
 
   // imshow("img",src);
   lsfm::Vec2i a(1, 2);
-  lsfm::Vec2f b(getX(a), getY(a));
+  lsfm::Vec2f b(static_cast<float>(getX(a)), static_cast<float>(getY(a)));
 
-  float th_low = 0.004, th_high = 0.012;
+  float th_low = 0.004f, th_high = 0.012f;
   DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
   NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
 
@@ -147,8 +153,8 @@ int main(int argc, char** argv) {
   NfaBinom2<short, float, index_type> nfab2(8, 1.0 / 8);
 
   EsdSimple<int> simple;
-  EsdDrawing<int> draw(10, 3, sobel.magnitudeThreshold(th_low));
-  EsdLinking<int> link(10, 3, 3, sobel.magnitudeThreshold(th_low));
+  EsdDrawing<int> draw(10, 3, static_cast<int>(static_cast<float>(sobel.magnitudeThreshold(th_low))));
+  EsdLinking<int> link(10, 3, 3, static_cast<int>(static_cast<float>(sobel.magnitudeThreshold(th_low))));
 
   sobel.process(src);
   nfac.update(sobel.magnitude());

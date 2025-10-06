@@ -34,12 +34,12 @@ inline MT get(const cv::Mat& m, index_type i) {
 
 template <class T>
 inline T getX(index_type idx, int cols) {
-  return idx % cols;
+  return static_cast<T>(idx % static_cast<index_type>(cols));
 }
 
 template <class T>
 inline T getY(index_type idx, int cols) {
-  return idx / cols;
+  return static_cast<T>(idx / static_cast<index_type>(cols));
 }
 
 template <class PT>
@@ -80,7 +80,8 @@ inline index_type point2Index(const Vec2i& p, int cols) {
 
 template <class PT>
 inline index_type point2Index(const PT& p, int cols) {
-  return std::round(getY(p)) * cols + std::round(getX(p));
+  return static_cast<index_type>(round(getY(p))) * static_cast<index_type>(cols) +
+         static_cast<index_type>(round(getX(p)));
 }
 
 template <class PT>

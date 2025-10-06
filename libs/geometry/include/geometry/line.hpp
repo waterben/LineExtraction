@@ -94,8 +94,8 @@ class Line {
   //! Init Line by start and end points (as two point_type)
   template <class APT>
   Line(const APT& beg, const APT& end) : nx_(0), ny_(0), d_(0) {
-    nx_ = getY(beg) - getY(end);  //-y
-    ny_ = getX(end) - getX(beg);  // x
+    nx_ = static_cast<FT>(getY(beg) - getY(end));  //-y
+    ny_ = static_cast<FT>(getX(end) - getX(beg));  // x
     FT norm = detail::hypot(nx_, ny_);
 
     if (norm < LIMITS<FT>::eps()) {
@@ -105,7 +105,7 @@ class Line {
     }
     nx_ /= norm;
     ny_ /= norm;
-    d_ = normalProject(getX(beg), getY(beg));
+    d_ = normalProject(static_cast<FT>(getX(beg)), static_cast<FT>(getY(beg)));
   }
 
   //! Init Line by start and end points (as Vec<FT,4>)
@@ -354,7 +354,7 @@ class Line {
   //! rotate line by angle (radian) at line origin (shortes point of line to origin ->
   //! just rotate normal)
   inline void rotate(FT angle) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     FT tmp = nx_ * ca - ny_ * sa;
     ny_ = ny_ * ca + nx_ * sa;
     nx_ = tmp;
@@ -408,7 +408,7 @@ class Line {
 
   //! rotate line around point (radian) impl
   virtual void rotateImpl(FT angle, const point_type& pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     point_type p = origin();
     p -= pivot;
     p = point_type(getX(p) * ca - getY(p) * sa, getY(p) * ca + getX(p) * sa);
@@ -424,7 +424,7 @@ class Line {
 
   //! rotate line around line point (radian)
   virtual void rotateImpl(FT angle, FT pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // get point for pivot
     point_type p = lineDist(pivot, origin());
@@ -890,7 +890,7 @@ class LineSegment : public Line<FT, PT> {
 
   //! rotate line around point (radian)
   virtual void rotateImpl(FT angle, const point_type& pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // rotate point on line segment
     point_type p = this->startPoint();
@@ -914,7 +914,7 @@ class LineSegment : public Line<FT, PT> {
 
   //! rotate line around line point (radian)
   virtual void rotateImpl(FT angle, FT pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // get point for pivot
     point_type p = this->lineDist(pivot, this->origin());

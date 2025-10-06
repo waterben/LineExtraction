@@ -451,7 +451,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   DirectionRange directionRange() const { return DO::range(); }
 
   MagnitudeRange magnitudeRange() const {
-    return MagnitudeRange(0, small_kernel_ ? static_cast<int>(max_no_ * 0.277) : max_no_);
+    return MagnitudeRange(0, small_kernel_ ? static_cast<MT>(static_cast<int>(max_no_ * 0.277)) : max_no_);
   }
 
   GradientRange gradientRange() const {
@@ -537,12 +537,12 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
 
             c = *(cp - *p++);
             x -= auto_cast<GT>(c);
-            y += auto_cast<GT>(c);
+            y += static_cast<GT>(auto_cast<GT>(c));
             c = *(cp - *p++);
-            y += auto_cast<MT>(c);
+            y += static_cast<GT>(auto_cast<MT>(c));
             c = *(cp - *p);
-            x += auto_cast<MT>(c);
-            y += auto_cast<MT>(c);
+            x += static_cast<GT>(auto_cast<MT>(c));
+            y += static_cast<GT>(auto_cast<MT>(c));
 
             if ((x * x + y * y) > (0.16 * n * n)) {
               do_symmetry = 0;

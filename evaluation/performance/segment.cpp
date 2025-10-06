@@ -77,16 +77,18 @@ PerformanceTestPtr createSegmentPerformanceTest(const lsfm::DataProviderList& pr
   Grad grad;
 
   test->tasks.push_back(PerformanceTaskPtr(new Entry(new EsdSimple<int>, "ESD Simple")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdDrawing<int>(10, 3, grad.magnitudeThreshold(th_low)), "ESD Drawing")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdLinking<int>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Linking")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdPattern<int>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Pattern")));
   test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdLinking<int, 8, true>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Linking Corner")));
+      new Entry(new EsdDrawing<int>(10, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Drawing")));
   test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdPattern<int, 8, true>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Pattern Corner")));
+      new Entry(new EsdLinking<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Linking")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdPattern<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Pattern")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdLinking<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
+                "ESD Linking Corner")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdPattern<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
+                "ESD Pattern Corner")));
   return test;
 }
 

@@ -287,8 +287,8 @@ class LaplaceCV : public Laplace<IT, LT> {
 
   void calc_range() {
     // TODO
-    laplaceRange_.lower = -this->intRange_.upper * 2 * ksize_;
-    laplaceRange_.upper = this->intRange_.upper * 2 * ksize_;
+    laplaceRange_.lower = static_cast<LT>(-this->intRange_.upper * 2 * ksize_);
+    laplaceRange_.upper = static_cast<LT>(this->intRange_.upper * 2 * ksize_);
   }
 
  public:

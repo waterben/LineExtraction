@@ -22,6 +22,7 @@
 #include <imgproc/gradient.hpp>
 #include <opencv2/core/core.hpp>
 
+#include <cstddef>
 #include <vector>
 
 namespace lsfm {
@@ -128,7 +129,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
   //! get y derivative
   cv::Mat gy() const { return gy_; }
 
-  GradientRange gradientRange() const { return GradientRange(-mask_, mask_); }
+  GradientRange gradientRange() const { return GradientRange(static_cast<GT>(-mask_), static_cast<GT>(mask_)); }
 
   //! get magnitude
   cv::Mat magnitude() const { return mag_; }
@@ -184,12 +185,13 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
     if (m < 3) m = 3;
 
     mask_ = m;
-    int m2 = m * m;
+    const int m2 = m * m;
+    const auto window_size = static_cast<std::size_t>(m2);
 
-    max_dists.resize(m2);
-    locations.resize(m2);
-    not_removed.resize(m2);
-    window.resize(m2);
+    max_dists.resize(window_size);
+    locations.resize(window_size);
+    not_removed.resize(window_size);
+    window.resize(window_size);
     dists.create(m2, m2);
   }
 
@@ -287,7 +289,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
         // iterate the window
         for (jmask = j - hs; jmask <= j + hs; ++jmask) {  // fill col-1 first
           for (imask = i - hs; imask <= i + hs; ++imask) {
-            window[index] = img.at<cv::Vec<IT, channels>>(imask, jmask);
+            window[static_cast<size_t>(index)] = img.at<cv::Vec<IT, channels>>(imask, jmask);
             // window[index] /= std::numeric_limits<IT>::max();
             index++;
           }
@@ -302,10 +304,10 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
 
         max_dist = static_cast<MT>(-1);
         for (k = 0; k < m2 - 1; ++k) {  // *m2-1 as last row only -1s
-          if (max_dists[k] > max_dist) {
-            max_dist = max_dists[k];
+          if (max_dists[static_cast<size_t>(k)] > max_dist) {
+            max_dist = max_dists[static_cast<size_t>(k)];
             v1 = k;  // Note: v1 and v2 also needed for direction
-            v2 = locations[k];
+            v2 = locations[static_cast<size_t>(k)];
           }
         }
 
@@ -313,30 +315,31 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
           std::fill(not_removed.begin(), not_removed.end(), 1);
           copyof_max_dists = max_dists;
           for (index = 1; index <= s_; ++index) {
-            not_removed[v1] = 0;
-            not_removed[v2] = 0;
+            not_removed[static_cast<size_t>(v1)] = 0;
+            not_removed[static_cast<size_t>(v2)] = 0;
             max_dist = static_cast<MT>(-1);
             for (k = 0; k < m2 - 1; ++k) {
-              if (not_removed[k]) {
-                if (copyof_max_dists[k] > max_dist) {
-                  if (not_removed[locations[k]]) {  // vector locations[k] not removed
-                    max_dist = copyof_max_dists[k];
+              if (not_removed[static_cast<size_t>(k)]) {
+                if (copyof_max_dists[static_cast<size_t>(k)] > max_dist) {
+                  if (not_removed[static_cast<size_t>(
+                          locations[static_cast<size_t>(k)])]) {  // vector locations[k] not removed
+                    max_dist = copyof_max_dists[static_cast<size_t>(k)];
                     v1 = k;
-                    v2 = locations[k];
+                    v2 = locations[static_cast<size_t>(k)];
                   } else {  // update max_dists
                     max_dist2 = static_cast<MT>(-1);
                     for (loop = k + 1; loop < m2; ++loop) {
                       if (dists(k, loop) > max_dist2) {
-                        if (not_removed[loop]) {
+                        if (not_removed[static_cast<size_t>(loop)]) {
                           max_dist2 = dists(k, loop);
                           location = loop;
                         }
                       }
-                      copyof_max_dists[k] = max_dist2;
+                      copyof_max_dists[static_cast<size_t>(k)] = max_dist2;
                     }
                     // repeat check for > max_dist2 with updated max_dists[k]
-                    if (copyof_max_dists[k] > max_dist) {
-                      max_dist = copyof_max_dists[k];
+                    if (copyof_max_dists[static_cast<size_t>(k)] > max_dist) {
+                      max_dist = copyof_max_dists[static_cast<size_t>(k)];
                       v1 = k;
                       v2 = location;
                     }
@@ -349,8 +352,8 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
 
         pos = i * img.cols + j;
         pmag[pos] = max_dist;
-        pgx[pos] = v2 / mask_ - v1 / mask_;
-        pgy[pos] = (v2 % mask_) - (v1 % mask_);
+        pgx[pos] = static_cast<GT>(v2 / mask_ - v1 / mask_);
+        pgy[pos] = static_cast<GT>((v2 % mask_) - (v1 % mask_));
       }
     }
   }
@@ -450,7 +453,7 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
   //! get y derivative
   cv::Mat gy() const { return gy_; }
 
-  GradientRange gradientRange() const { return GradientRange(-mask_, mask_); }
+  GradientRange gradientRange() const { return GradientRange(static_cast<GT>(-mask_), static_cast<GT>(mask_)); }
 
   //! get magnitude
   cv::Mat magnitude() const { return mag_; }
@@ -483,10 +486,10 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     mask_ = m;
     int m2 = m * m;
 
-    max_dists.resize(m2);
-    locations.resize(m2);
-    not_removed.resize(m2);
-    window.resize(m2);
+    max_dists.resize(static_cast<size_t>(m2));
+    locations.resize(static_cast<size_t>(m2));
+    not_removed.resize(static_cast<size_t>(m2));
+    window.resize(static_cast<size_t>(m2));
     dists.create(m2, m2);
   }
 
@@ -584,7 +587,7 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
         // iterate the window
         for (jmask = j - hs; jmask <= j + hs; ++jmask) {  // fill col-1 first
           for (imask = i - hs; imask <= i + hs; ++imask) {
-            window[index] = img.at<IT>(imask, jmask);
+            window[static_cast<size_t>(index)] = img.at<IT>(imask, jmask);
             index++;
           }
         }
@@ -598,10 +601,10 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
 
         max_dist = -1;
         for (k = 0; k < m2 - 1; ++k) {  // m2-1 as last row only -1s
-          if (max_dists[k] > max_dist) {
-            max_dist = max_dists[k];
+          if (max_dists[static_cast<size_t>(k)] > max_dist) {
+            max_dist = max_dists[static_cast<size_t>(k)];
             v1 = k;  // Note: v1 and v2 also needed for direction
-            v2 = locations[k];
+            v2 = locations[static_cast<size_t>(k)];
           }
         }
 
@@ -609,30 +612,31 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
           std::fill(not_removed.begin(), not_removed.end(), 1);
           copyof_max_dists = max_dists;
           for (index = 1; index <= s_; ++index) {
-            not_removed[v1] = 0;
-            not_removed[v2] = 0;
+            not_removed[static_cast<size_t>(v1)] = 0;
+            not_removed[static_cast<size_t>(v2)] = 0;
             max_dist = -1;
             for (k = 0; k < m2 - 1; ++k) {
-              if (not_removed[k]) {
-                if (copyof_max_dists[k] > max_dist) {
-                  if (not_removed[locations[k]]) {  // vector locations[k] not removed
-                    max_dist = copyof_max_dists[k];
+              if (not_removed[static_cast<size_t>(k)]) {
+                if (copyof_max_dists[static_cast<size_t>(k)] > max_dist) {
+                  if (not_removed[static_cast<size_t>(
+                          locations[static_cast<size_t>(k)])]) {  // vector locations[k] not removed
+                    max_dist = copyof_max_dists[static_cast<size_t>(k)];
                     v1 = k;
-                    v2 = locations[k];
+                    v2 = locations[static_cast<size_t>(k)];
                   } else {  // update max_dists
                     max_dist2 = -1;
                     for (loop = k + 1; loop < m2; ++loop) {
                       if (dists(k, loop) > max_dist2) {
-                        if (not_removed[loop]) {
+                        if (not_removed[static_cast<size_t>(loop)]) {
                           max_dist2 = dists(k, loop);
                           location = loop;
                         }
                       }
-                      copyof_max_dists[k] = max_dist2;
+                      copyof_max_dists[static_cast<size_t>(k)] = max_dist2;
                     }
                     // repeat check for > max_dist2 with updated max_dists[k]
-                    if (copyof_max_dists[k] > max_dist) {
-                      max_dist = copyof_max_dists[k];
+                    if (copyof_max_dists[static_cast<size_t>(k)] > max_dist) {
+                      max_dist = copyof_max_dists[static_cast<size_t>(k)];
                       v1 = k;
                       v2 = location;
                     }
@@ -645,8 +649,8 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
 
         pos = i * img.cols + j;
         pmag[pos] = max_dist;
-        pgx[pos] = v2 / mask_ - v1 / mask_;
-        pgy[pos] = (v2 % mask_) - (v1 % mask_);
+        pgx[pos] = static_cast<GT>(v2 / mask_ - v1 / mask_);
+        pgy[pos] = static_cast<GT>((v2 % mask_) - (v1 % mask_));
       }
     }
   }

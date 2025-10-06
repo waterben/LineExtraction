@@ -127,7 +127,8 @@ class ZcApp : public EvalApp {
     auto lap = laplace.laplace();
     auto abs_lap = cv::abs(lap);
 
-    short abs_lap_max = std::max(std::abs(laplace.laplaceRange().upper), std::abs(laplace.laplaceRange().lower));
+    short abs_lap_max =
+        static_cast<short>(std::max(std::abs(laplace.laplaceRange().upper), std::abs(laplace.laplaceRange().lower)));
     ThresholdOtsu<short, 256> otsu_lap(abs_lap_max);
     short otsu_th_lap = otsu_lap.process(abs_lap);
     float otsu_th_lap_n = static_cast<float>(otsu_th_lap) / abs_lap_max / 2;

@@ -116,7 +116,7 @@ class LdBase : public ValueManager {
     const DataDescriptor& data = imageDataDescriptor();
     typename DataDescriptor::const_iterator f =
         find_if(data.begin(), data.end(), [&name](const DataDescriptorEntry& e) { return (e.name == name); });
-    return f != data.end() ? imageData()[f - data.begin()] : cv::Mat();
+    return f != data.end() ? imageData()[static_cast<size_t>(f - data.begin())] : cv::Mat();
   }
 
  protected:

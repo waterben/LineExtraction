@@ -27,20 +27,24 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
 
   static cv::Mat_<FT> createFilter(int rows, int cols, FT spacing, FT s, FT m, KernelType f) {
     cv::Mat_<FT> kernel(rows, cols);
-    FT step = spacing * (cols - 1);
-    FT startx = rows / 2 - static_cast<FT>(0.5), starty = cols / 2 - static_cast<FT>(0.5);
+    FT step = spacing * static_cast<FT>(cols - 1);
+    FT startx = static_cast<FT>(rows) / static_cast<FT>(2) - static_cast<FT>(0.5),
+       starty = static_cast<FT>(cols) / static_cast<FT>(2) - static_cast<FT>(0.5);
     for (int i = 0; i != rows; ++i)
-      for (int j = 0; j != cols; ++j) kernel(i, j) = f((j - starty) / step, (i - startx) / step, s, m);
+      for (int j = 0; j != cols; ++j)
+        kernel(i, j) = f((static_cast<FT>(j) - starty) / step, (static_cast<FT>(i) - startx) / step, s, m);
 
     return kernel;
   }
 
   static cv::Mat_<std::complex<FT>> createFilterC(int rows, int cols, FT spacing, FT s, FT m, KernelTypeC f) {
     cv::Mat_<std::complex<FT>> kernel(rows, cols);
-    FT step = spacing * (cols - 1);
-    FT startx = rows / 2 - static_cast<FT>(0.5), starty = cols / 2 - static_cast<FT>(0.5);
+    FT step = spacing * static_cast<FT>(cols - 1);
+    FT startx = static_cast<FT>(rows) / 2 - static_cast<FT>(0.5),
+       starty = static_cast<FT>(cols) / 2 - static_cast<FT>(0.5);
     for (int i = 0; i != rows; ++i)
-      for (int j = 0; j != cols; ++j) kernel(i, j) = f((j - starty) / step, (i - startx) / step, s, m);
+      for (int j = 0; j != cols; ++j)
+        kernel(i, j) = f((static_cast<FT>(j) - starty) / step, (static_cast<FT>(i) - startx) / step, s, m);
     return kernel;
   }
 

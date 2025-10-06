@@ -29,7 +29,8 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
     width = width / 2;
     cv::Mat_<FT> kernel(width * 2 + 1, width * 2 + 1);
     for (int i = -width; i <= width; ++i)
-      for (int j = -width; j <= width; ++j) kernel(j + width, i + width) = f(i * spacing, j * spacing, s, m);
+      for (int j = -width; j <= width; ++j)
+        kernel(j + width, i + width) = f(static_cast<FT>(i) * spacing, static_cast<FT>(j) * spacing, s, m);
 
     return kernel;
   }

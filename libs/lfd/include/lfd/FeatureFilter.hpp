@@ -157,7 +157,8 @@ class FeatureFilter {
     matches.reserve(lSize * rSize / 10);
     for (size_t i = 0; i != lSize; ++i) {
       for (size_t j = 0; j != rSize; ++j) {
-        if (!this->filter(i, j)) matches.push_back(typename FMV::value_type(i, j));
+        if (!this->filter(static_cast<int>(i), static_cast<int>(j)))
+          matches.push_back(typename FMV::value_type(static_cast<int>(i), static_cast<int>(j)));
       }
     }
   }

@@ -214,7 +214,7 @@ class StereoLineMatcher : public OptionManager {
       for (; idx < dscR.size(); ++idx) relationsR[idx + 1] = relationsR[idx];
     }
 
-    mean /= count;
+    mean /= static_cast<FT>(count);
     mean *= 2;
 
     matches.reserve(candidatesL.size() / 10);

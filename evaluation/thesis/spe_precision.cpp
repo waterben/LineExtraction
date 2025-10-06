@@ -220,9 +220,9 @@ struct GroundTruth {
                                 cv::Vec3b(255, 0, 255), cv::Vec3b(0, 255, 255), cv::Vec3b(255, 255, 255),
                                 cv::Vec3b(0, 0, 255)};
     if (err > 1 || l > 5)
-      setPixel(out, cv::Point(getX(p), getY(p)), color[6]);
+      setPixel(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[6]);
     else
-      setPixel(out, cv::Point(getX(p), getY(p)), color[l]);
+      setPixel(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[l]);
   }
 
   cv::Mat drawGT() const {

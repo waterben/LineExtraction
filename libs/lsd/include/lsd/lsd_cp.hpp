@@ -467,7 +467,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     lsmap_.row(rows_ - 1).setTo(-1);
     lsmap_.col(cols_ - 1).setTo(-1);
 
-    size_t size = static_cast<size_t>(seeds_.size() * th_high_ / th_low_);
+    size_t size = static_cast<size_t>(static_cast<FT>(seeds_.size()) * th_high_ / th_low_);
     points_.clear();
     points_.reserve(size);
     patterns_.clear();
@@ -537,7 +537,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
       char diff = diffmap[static_cast<int>(fs.dir - edir)];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -594,7 +594,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
       char diff = diffmap[static_cast<int>(fs.dir - edir)];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -814,7 +814,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
                 if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
-                  blp.size += blpadd;
+                  blp.size += static_cast<ushort>(blpadd);
                   p.beg = blp.endpos();
                   goto update_lp;
                 }
@@ -973,7 +973,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
                 if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
-                  blp.size += blpadd;
+                  blp.size += static_cast<ushort>(blpadd);
                   p.beg = blp.endpos();
                   goto update_lp;
                 }
@@ -1170,8 +1170,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         FT err = err_dist_ * l2_norm<FT>(n);
 
         PT a = mid - start, a2 = mid2 - start;
-        if (std::abs(getX(n) * getX(a) + getY(n) * getY(a)) > err ||
-            std::abs(getX(n) * getX(a2) + getY(n) * getY(a2)) > err) {
+        if (std::abs(static_cast<FT>(getX(n) * getX(a) + getY(n) * getY(a))) > err ||
+            std::abs(static_cast<FT>(getX(n) * getX(a2) + getY(n) * getY(a2))) > err) {
           ld.pat_size = static_cast<unsigned int>(idx - ld.pat_beg);
           if (ld.size() >= static_cast<size_t>(min_pix_)) {
             lineData_.push_back(ld);
@@ -1266,7 +1266,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       ++end;
 
-      if (max_h > err_dist_ * l2_norm<FT>(n)) {
+      if (static_cast<FT>(max_h) > err_dist_ * l2_norm<FT>(n)) {
         PatternIter max_end = p_idx;
 
         // corner check
@@ -1293,7 +1293,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   }
 
   void computeLines() {
-    lineSegments_.reserve(lineData_.size());
+    lineSegments_.reserve(static_cast<size_t>(lineData_.size()));
     typedef typename PointVector::const_iterator const_iter;
 
     for_each(lineData_.begin(), lineData_.end(), [&](LineData& ldata) {

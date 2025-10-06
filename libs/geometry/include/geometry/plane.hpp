@@ -75,7 +75,7 @@ class Plane {
       n_ = Vec3<FT>(0, 0, 0);
       return;
     }
-    n_ *= 1.0 / norm;
+    n_ *= static_cast<FT>(1.0) / norm;
     // compute distance of plane from point on plane
     d_ = n_.dot(pnt);
   }
@@ -89,7 +89,7 @@ class Plane {
       n_ = Vec3<FT>(0, 0, 0);
       return;
     }
-    n_ *= 1.0 / std::sqrt(n_.dot(n_));
+    n_ *= static_cast<FT>(1.0) / static_cast<FT>(std::sqrt(n_.dot(n_)));
     d_ = n_.dot(p1);
   }
 

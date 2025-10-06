@@ -439,8 +439,10 @@ class NfaBinom : public ValueManager {
   This formula is a good approximation when x > 15.
   */
   static inline FT log_gamma_windschitl(FT x) {
-    return static_cast<FT>(0.918938533204673) + (x - static_cast<FT>(0.5)) * std::log(x) - x +
-           static_cast<FT>(0.5) * x * std::log(x * std::sinh(1 / x) + 1 / (810 * std::pow(x, 6)));
+    return static_cast<FT>(0.918938533204673f) + (x - static_cast<FT>(0.5)) * std::log(x) - x +
+           static_cast<FT>(0.5) * x *
+               std::log(x * std::sinh(static_cast<FT>(1) / x) +
+                        static_cast<FT>(1) / (static_cast<FT>(810) * std::pow(x, static_cast<FT>(6))));
   }
 
 #define log_gamma(x) ((x) > 15.0 ? log_gamma_windschitl(x) : log_gamma_lanczos(x))
@@ -538,8 +540,9 @@ class NfaBinom : public ValueManager {
   }
 
   inline FT eval(const EdgeSegment& seg, const PointVector& points, FT dir) const {
-    return range_ > 0 ? log_nfaNT(seg.size(), aligned(matx_, seg, points, dir, th_, range_), p_, logNT_)
-                      : log_nfaNT(seg.size(), aligned(matx_, maty_, seg, points, dir, th_), p_, logNT_);
+    return range_ > 0
+               ? log_nfaNT(static_cast<int>(seg.size()), aligned(matx_, seg, points, dir, th_, range_), p_, logNT_)
+               : log_nfaNT(static_cast<int>(seg.size()), aligned(matx_, maty_, seg, points, dir, th_), p_, logNT_);
   }
 
   inline FT eval(const EdgeSegment& seg, const PointVector& points, const Line<FT>& line) const {
@@ -646,7 +649,7 @@ class NfaBinom : public ValueManager {
 
   inline static FT angleDiffD(FT a, FT b) {
     FT d = std::abs(a - b);
-    if (d > 360) d -= 360 * static_cast<int>(d / 360);
+    if (d > 360) d -= static_cast<FT>(360) * static_cast<FT>(static_cast<int>(d / 360));
     return d > 180 ? 360 - d : d;
   }
 
@@ -795,7 +798,7 @@ class NfaBinom : public ValueManager {
 
     /* trivial cases */
     if (n == 0 || k == 0) return -logNT;
-    if (n == k) return -logNT - n * std::log10(p);
+    if (n == k) return -logNT - static_cast<FT>(n) * std::log10(p);
 
     /* probability term */
     p_term = p / (1 - p);
@@ -809,13 +812,14 @@ class NfaBinom : public ValueManager {
     We use this to compute the first term. Actually the log of it.
     */
     log1term = log_gamma(static_cast<FT>(n + 1)) - log_gamma(static_cast<FT>(k + 1)) -
-               log_gamma(static_cast<FT>(n - k + 1)) + k * log(p) + (n - k) * std::log(1 - p);
+               log_gamma(static_cast<FT>(n - k + 1)) + static_cast<FT>(k) * log(p) +
+               static_cast<FT>(n - k) * std::log(1 - p);
     term = std::exp(log1term);
 
     /* in some cases no more computations are needed */
-    if (equal(term, 0)) {                   /* the first term is almost zero */
-      if (k > n * p)                        /* at begin or end of the tail?  */
-        return -log1term / MY_LN10 - logNT; /* end: use just the first term  */
+    if (equal(term, 0)) {                              /* the first term is almost zero */
+      if (static_cast<FT>(k) > static_cast<FT>(n) * p) /* at begin or end of the tail?  */
+        return -log1term / MY_LN10 - logNT;            /* end: use just the first term  */
       else
         return -logNT; /* begin: the tail is roughly 1  */
     }
@@ -833,7 +837,7 @@ class NfaBinom : public ValueManager {
       term_i = term_i-1 * (n-i+1)/i * p/(1-p).
       p/(1-p) is computed only once and stored in 'p_term'.
       */
-      bin_term = static_cast<FT>(n - i + 1) / i;
+      bin_term = static_cast<FT>(n - i + 1) / static_cast<FT>(i);
       mult_term = bin_term * p_term;
       term *= mult_term;
       bin_tail += term;
@@ -842,7 +846,7 @@ class NfaBinom : public ValueManager {
         Then, the error on the binomial tail when truncated at
         the i term can be bounded by a geometric series of form
         term_i * sum mult_term_i^j.                            */
-        err = term * ((1 - std::pow(mult_term, (n - i + 1))) / (1 - mult_term) - 1);
+        err = term * ((1 - std::pow(mult_term, static_cast<FT>(n - i + 1))) / (1 - mult_term) - 1);
         /* One wants an error at most of tolerance*final_result, or:
         tolerance * abs(-log10(bin_tail)-logNT).
         Now, the error that can be accepted on bin_tail is
@@ -1010,8 +1014,10 @@ class NfaBinom2 : public ValueManager {
   }
 
   inline FT eval(const EdgeSegment& seg, const PointVector& points, FT dir) const {
-    return range_ > 0 ? log_nfa(seg.size(), NfaBinom<GT, FT, PT>::aligned(matx_, seg, points, dir, th_, range_), p_, N_)
-                      : log_nfa(seg.size(), NfaBinom<GT, FT, PT>::aligned(matx_, maty_, seg, points, dir, th_), p_, N_);
+    return range_ > 0 ? log_nfa(static_cast<int>(seg.size()),
+                                NfaBinom<GT, FT, PT>::aligned(matx_, seg, points, dir, th_, range_), p_, N_)
+                      : log_nfa(static_cast<int>(seg.size()),
+                                NfaBinom<GT, FT, PT>::aligned(matx_, maty_, seg, points, dir, th_), p_, N_);
   }
 
   inline FT eval(const EdgeSegment& seg, const PointVector& points, const Line<FT>& line) const {
@@ -1128,15 +1134,16 @@ class NfaBinom2 : public ValueManager {
   static FT nfa(int n, int k, FT p, int N) {
     CV_Assert(!(n < 0 || k < 0 || k > n || p <= 0 || p >= 1));
 
-    if (n == 0 || k == 0) return N;
-    if (n == k) return N * std::pow(p, n);
+    if (n == 0 || k == 0) return static_cast<FT>(N);
+    if (n == k) return static_cast<FT>(N) * std::pow(p, static_cast<FT>(n));
 
     FT sum = 0;
 
     for (int i = k; i != n; ++i) {
-      sum += binomial(n, i) * std::pow(p, i) * std::pow(p, n - i);
+      sum += static_cast<FT>(binomial(static_cast<uint64>(n), static_cast<uint64>(i))) *
+             std::pow(p, static_cast<FT>(i)) * std::pow(p, static_cast<FT>(n - i));
     }
-    return N * sum;
+    return static_cast<FT>(N) * sum;
   }
 
   static inline FT log_nfa(int n, int k, FT p, int N) { return -std::log10(nfa(n, k, p, N)); }

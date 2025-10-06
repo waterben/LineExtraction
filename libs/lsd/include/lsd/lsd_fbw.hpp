@@ -409,7 +409,7 @@ class LsdFBW : public LsdBase<FT, LPT> {
   }
 
   void findRegions() {
-    size_t size = static_cast<size_t>(seeds_.size() * th_high_ / th_low_);
+    size_t size = static_cast<size_t>(static_cast<FT>(seeds_.size()) * th_high_ / th_low_);
     areas_.clear();
     areas_.reserve(size);
     lineData_.clear();
@@ -430,8 +430,8 @@ class LsdFBW : public LsdBase<FT, LPT> {
       ld.prec = prec_;
       ld.prob = nang_;
       LineSegment l = region2Data(ld);
-      float epnx = sin(rangle);
-      float epny = -cos(rangle);
+      float epnx = static_cast<float>(sin(rangle));
+      float epny = static_cast<float>(-cos(rangle));
       if (epnx * l.normalX() + epny * l.normalY() >= 0) {
         l.normalFlip();
       }

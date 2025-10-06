@@ -43,8 +43,8 @@ int main(int argc, char** argv) {
 
   typedef float MyType;
 
-  LsdCC<MyType> lsd1(0.008, 0.012, 30, 0, 2);
-  LsdCC<MyType> lsd2(0.008, 0.012, 30, 0, 2);
+  LsdCC<MyType> lsd1(0.008f, 0.012f, 30, 0, 2);
+  LsdCC<MyType> lsd2(0.008f, 0.012f, 30, 0, 2);
 
   lsd1.detect(src1);
   lsd2.detect(src2);

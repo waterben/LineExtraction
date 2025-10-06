@@ -516,7 +516,8 @@ cv::Mat drawMatches(const cv::Mat& img1,
   bool useNumbers = (lineNumber.size() > 0);
   int idx = 0;
   for_each(matches.begin(), matches.end(), [&](const DM& m) {
-    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                    static_cast<uchar>(20 + rng.uniform(0, 225)));
 
     char buffer[50];
     sprintf(buffer, "%i", useNumbers ? lineNumber.at(m.queryIdx) : idx);

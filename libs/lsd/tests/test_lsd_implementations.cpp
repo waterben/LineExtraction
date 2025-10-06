@@ -37,7 +37,7 @@ class LSDTest : public ::testing::Test {
 
 TEST_F(LSDTest, LsdCC_Basic) {
   // Test LsdCC (Connected Components)
-  LsdCC<float> lsd_cc(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd_cc(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd_cc.detect(test_img));
 
@@ -55,7 +55,7 @@ TEST_F(LSDTest, LsdCC_Basic) {
 
 TEST_F(LSDTest, LsdCP_Basic) {
   // Test LsdCP (Connected Pairs)
-  LsdCP<float> lsd_cp(0.004, 0.012, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX);
+  LsdCP<float> lsd_cp(0.004f, 0.012f, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd_cp.detect(test_img));
 
@@ -67,7 +67,7 @@ TEST_F(LSDTest, LsdCP_Basic) {
 
 TEST_F(LSDTest, LsdEL_Basic) {
   // Test LsdEL (Edge Linking)
-  LsdEL<float> lsd_el(0.004, 0.012, 10, 3, 10, 4, 0);
+  LsdEL<float> lsd_el(0.004f, 0.012f, 10, 3, 10, 4, 0);
 
   EXPECT_NO_THROW(lsd_el.detect(test_img));
 
@@ -79,7 +79,7 @@ TEST_F(LSDTest, LsdEL_Basic) {
 
 TEST_F(LSDTest, LsdEP_Basic) {
   // Test LsdEP (Edge Pairing)
-  LsdEP<float> lsd_ep(0.004, 0.012, 10, 3, 10, 2, 3, 3, 5, 0);
+  LsdEP<float> lsd_ep(0.004f, 0.012f, 10, 3, 10, 2, 3, 3, 5, 0);
 
   EXPECT_NO_THROW(lsd_ep.detect(test_img));
 
@@ -91,7 +91,7 @@ TEST_F(LSDTest, LsdEP_Basic) {
 
 TEST_F(LSDTest, LsdBurns_Basic) {
   // Test LsdBurns
-  LsdBurns<float> lsd_burns(0.004, 0.012, 10, 12, BURNS_NMS);
+  LsdBurns<float> lsd_burns(0.004f, 0.012f, 10, 12, BURNS_NMS);
 
   EXPECT_NO_THROW(lsd_burns.detect(test_img));
 
@@ -103,7 +103,7 @@ TEST_F(LSDTest, LsdBurns_Basic) {
 
 TEST_F(LSDTest, LsdFBW_Basic) {
   // Test LsdFBW (Fast Burns-White)
-  LsdFBW<float> lsd_fbw(0.004, 0.012, 10, 22.5, FBW_NMS);
+  LsdFBW<float> lsd_fbw(0.004f, 0.012f, 10, 22.5f, FBW_NMS);
 
   EXPECT_NO_THROW(lsd_fbw.detect(test_img));
 
@@ -115,7 +115,7 @@ TEST_F(LSDTest, LsdFBW_Basic) {
 
 TEST_F(LSDTest, LsdFGioi_Basic) {
   // Test LsdFGioi (Fast Gioi)
-  LsdFGioi<float> lsd_fgioi(2, 22.5, 0, 0.7, 1024);
+  LsdFGioi<float> lsd_fgioi(2, 22.5f, 0, 0.7f, 1024);
 
   EXPECT_NO_THROW(lsd_fgioi.detect(test_img));
 
@@ -139,7 +139,7 @@ TEST_F(LSDTest, LsdEDLZ_Basic) {
 
 TEST_F(LSDTest, EmptyImage) {
   // Test behavior with empty image - just verify object creation
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
   // Empty image handling may vary - just test creation succeeds
   EXPECT_TRUE(true);
 }
@@ -148,7 +148,7 @@ TEST_F(LSDTest, UniformImage) {
   // Test behavior with uniform image (no edges)
   Mat uniform_img = Mat::ones(50, 50, CV_8UC1) * 128;
 
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd.detect(uniform_img));
 
@@ -163,7 +163,7 @@ TEST_F(LSDTest, SmallImage) {
   // Add some structure
   cv::line(small_img, cv::Point(0, 5), cv::Point(9, 5), cv::Scalar(200), 1);
 
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd.detect(small_img));
 

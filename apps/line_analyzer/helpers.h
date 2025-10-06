@@ -120,7 +120,8 @@ void segmentSources(const LSD* lsd, ImageSources& src) {
 
     int id = 0;
     for_each(segs.begin(), segs.end(), [&](const lsfm::EdgeSegment& seg) {
-      cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      cv::Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                      static_cast<uchar>(20 + rng.uniform(0, 225)));
       for (size_t i = seg.begin(); i != seg.end(); ++i) lsfm::set<int>(m, indexes[i], id);
       ++id;
     });
@@ -141,7 +142,8 @@ void patternSources(const LSD* lsd, ImageSources& src) {
 
     int id = 0;
     for_each(segs.begin(), segs.end(), [&](const lsfm::EdgeSegment& seg) {
-      cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      cv::Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                      static_cast<uchar>(20 + rng.uniform(0, 225)));
       for (size_t i = seg.begin(); i != seg.end(); ++i) lsfm::set<int>(m, indexes[i], id);
       ++id;
     });

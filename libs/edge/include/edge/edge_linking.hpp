@@ -484,7 +484,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       return;
     }
 
-    std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+    std::reverse(this->points_.begin() + static_cast<typename IndexVector::difference_type>(seg_beg),
+                 this->points_.end());
 
     // do fw
     pdmap = fwdmap;
@@ -732,7 +733,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       return;
     }
 
-    std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+    std::reverse(this->points_.begin() + static_cast<typename IndexVector::difference_type>(seg_beg),
+                 this->points_.end());
 
     // do fw
     pdmap = fwdmap;

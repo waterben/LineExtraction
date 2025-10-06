@@ -12,7 +12,7 @@ class PointUtilitiesTest : public ::testing::Test {
     test_mat = cv::Mat::zeros(10, 10, CV_32F);
     for (int i = 0; i < test_mat.rows; ++i) {
       for (int j = 0; j < test_mat.cols; ++j) {
-        test_mat.at<float>(i, j) = i * 10 + j;  // Set unique values
+        test_mat.at<float>(i, j) = static_cast<float>(i * 10 + j);  // Set unique values
       }
     }
   }

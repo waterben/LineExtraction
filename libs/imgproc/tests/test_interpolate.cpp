@@ -13,7 +13,7 @@ class InterpolateTest : public ::testing::Test {
     test_img = Mat::zeros(5, 5, CV_32F);
     for (int y = 0; y < 5; ++y) {
       for (int x = 0; x < 5; ++x) {
-        test_img.at<float>(y, x) = y * 5 + x;
+        test_img.at<float>(y, x) = static_cast<float>(y * 5 + x);
       }
     }
 
@@ -38,7 +38,7 @@ class InterpolateTest : public ::testing::Test {
 
     // Create test data array
     for (int i = 0; i < 10; ++i) {
-      test_data[i] = i * 2.0f;
+      test_data[i] = static_cast<float>(i) * 2.0f;
     }
   }
 

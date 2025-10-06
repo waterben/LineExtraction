@@ -319,11 +319,11 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     lsmap_.row(rows_ - 1).setTo(-1);
     lsmap_.col(cols_ - 1).setTo(-1);
 
-    size_t size = static_cast<size_t>(seeds_.size() * th_high_ / th_low_);
+    size_t size = static_cast<size_t>(static_cast<FT>(seeds_.size()) * th_high_ / th_low_);
     points_.clear();
     points_.reserve(size);
     segments_.clear();
-    segments_.reserve(size / (min_pix_ * min_pix_) + 100);
+    segments_.reserve(static_cast<size_t>(size / (min_pix_ * min_pix_) + 100));
 
     short dmapStore[28][4] = {{-1, -1, 0, 0},
                               {static_cast<short>(-1 - cols_), -1, -1, 1},
@@ -418,7 +418,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
       char diff = diffmap[static_cast<int>(fs.dir - edir)];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -475,7 +475,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
       char diff = diffmap[static_cast<int>(fs.dir - edir)];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -728,7 +728,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   void splitSeg() {
     typedef typename PointVector::iterator LinePointIter;
     lineData_.clear();
-    lineData_.reserve(segments_.capacity());
+    lineData_.reserve(static_cast<size_t>(segments_.capacity()));
     const LineData* pseg = 0;
     LinePointIter lpbeg = points_.begin();
 
@@ -738,7 +738,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       size_t s = send - sbeg;
       if (s < static_cast<size_t>(min_pix_)) return;
 
-      if (s < 2 * err_dist_) {
+      if (static_cast<FT>(s) < 2 * err_dist_) {
         lineData_.push_back(LineData(pseg->id, sbeg, send, pseg->reverse, &this->points_));
         return;
       }
@@ -816,7 +816,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   }
 
   void computeLines() {
-    lineSegments_.reserve(lineData_.size());
+    lineSegments_.reserve(static_cast<size_t>(lineData_.size()));
     typedef typename PointVector::const_iterator const_iter;
 
     for_each(lineData_.begin(), lineData_.end(), [&](LineData& ldata) {

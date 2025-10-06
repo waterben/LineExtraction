@@ -24,14 +24,14 @@ namespace fs = std::filesystem;
 
 constexpr int runs = 10;
 
-float th_low = 0.004, th_high = 0.012;
+float th_low = 0.004f, th_high = 0.012f;
 typedef DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> Grad;
 typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> NMS;
 typedef EsdLinking<int> Edge;
 typedef std::vector<cv::Point> PointVector;
 Grad sobel;
 NMS nms(th_low, th_high);
-Edge edge(10, 3, 3, sobel.magnitudeThreshold(th_low));
+Edge edge(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
 
 struct EntryBase {
   EntryBase(const std::string& n) : name(n), time(0), images(0) {}
@@ -130,28 +130,28 @@ int main() {
   fit.push_back(EntryPtr(new Entry<MEstimatorFitLine<float, cv::Point>>("MEstimatorFit")));
 
 
-  int rows = fit.size() + 1;
-  int cols = sets.size() + 1;
+  int rows = static_cast<int>(fit.size()) + 1;
+  int cols = static_cast<int>(sets.size()) + 1;
   std::vector<std::vector<std::string>> table;
-  table.resize(rows);
-  for_each(table.begin(), table.end(), [&](std::vector<std::string>& row) { row.resize(cols); });
+  table.resize(static_cast<size_t>(rows));
+  for_each(table.begin(), table.end(), [&](std::vector<std::string>& row) { row.resize(static_cast<size_t>(cols)); });
 
   table[0][0] = "Method";
 
   int row = 1;
-  for_each(fit.begin(), fit.end(), [&](const EntryPtr& e) { table[row++][0] = e->name; });
+  for_each(fit.begin(), fit.end(), [&](const EntryPtr& e) { table[static_cast<size_t>(row++)][0] = e->name; });
 
   int col = 1;
   for_each(sets.begin(), sets.end(), [&](const std::pair<fs::path, std::string>& data) {
     processPath(fit, data);
 
-    table[0][col] = data.second;
+    table[0][static_cast<size_t>(col)] = data.second;
     row = 1;
     for_each(fit.begin(), fit.end(), [&](const EntryPtr& e) {
       std::ostringstream oss;
       oss.setf(std::ios::fixed);
       oss << std::setprecision(3) << (static_cast<double>(e->time * 1000) / (e->images * cv::getTickFrequency()));
-      table[row++][col] = oss.str() + "ms";
+      table[static_cast<size_t>(row++)][static_cast<size_t>(col)] = oss.str() + "ms";
     });
     ++col;
   });

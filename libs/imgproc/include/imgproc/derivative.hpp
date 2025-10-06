@@ -205,12 +205,13 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
     gm.max_1st = gm.max_2nd = gm.max_3rd = 0;
     for (int i = ks / 2 + 1; i != ks; ++i) {
       GT v = kx.at<GT>(i);
-      gm.max_1st += s * v;
-      gm.max_3rd += c * v;
+      gm.max_1st += static_cast<typename DerivativeMax<GT>::grad_type>(s * v);
+      gm.max_3rd += static_cast<typename DerivativeMax<GT>::grad_type>(c * v);
     }
     for (int i = 0; i != ks / 2; ++i) {
-      GT sc = std::abs(kx.at<GT>(i));
-      for (int j = i; j < ks - i - 1; ++j) gm.max_2nd += ky.at<GT>(j) * sc;
+      GT sc = static_cast<GT>(std::abs(kx.at<GT>(i)));
+      for (int j = i; j < ks - i - 1; ++j)
+        gm.max_2nd += static_cast<typename DerivativeMax<GT>::grad_type>(ky.at<GT>(j) * sc);
     }
     ksize_ = ks;
   }
@@ -282,12 +283,13 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
     gm.max_1st = gm.max_2nd = gm.max_3rd = 0;
     for (int i = ksize / 2 + 1; i != ksize; ++i) {
       GT v = kx.at<GT>(i);
-      gm.max_1st += s * v;
-      gm.max_3rd += c * v;
+      gm.max_1st += static_cast<typename DerivativeMax<GT>::grad_type>(s * v);
+      gm.max_3rd += static_cast<typename DerivativeMax<GT>::grad_type>(c * v);
     }
     for (int i = 0; i != ksize / 2; ++i) {
-      GT sc = std::abs(kx.at<GT>(i));
-      for (int j = i; j < ksize - i - 1; ++j) gm.max_2nd += ky.at<GT>(j) * sc;
+      GT sc = static_cast<GT>(std::abs(kx.at<GT>(i)));
+      for (int j = i; j < ksize - i - 1; ++j)
+        gm.max_2nd += static_cast<typename DerivativeMax<GT>::grad_type>(ky.at<GT>(j) * sc);
     }
 
     // std::cout << gm.max_1st << " " << gm.max_2nd << " " << gm.max_3rd << std::endl;

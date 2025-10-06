@@ -61,7 +61,9 @@ void showData(const cv::Mat& src, const Entry<FT>& e) {
   cv::RNG rng(cv::getTickCount());
 
   for_each(e.lsd->lineSegments().begin(), e.lsd->lineSegments().end(), [&](const LineSegment<FT>& l) {
-    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Vec3b color(static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)));
     cv::Scalar scolor(color[0], color[1], color[2]);
     line(img, l, scolor, 1, 8, 10.0, 3.0);
     // Vec2<FT> p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());
@@ -90,13 +92,13 @@ int main(int argc, char** argv) {
 
   std::vector<Entry<FT>> vlsd;
 
-  vlsd.push_back(Entry<FT>(new LsdCC<FT>(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX), "lsd cc"));
-  vlsd.push_back(Entry<FT>(new LsdCP<FT>(0.004, 0.012, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX), "lsd cp"));
-  vlsd.push_back(Entry<FT>(new LsdEL<FT>(0.004, 0.012, 10, 3, 10, 4, 0 /*EL_USE_NFA*/), "lsd el"));
-  vlsd.push_back(Entry<FT>(new LsdEP<FT>(0.004, 0.012, 10, 3, 10, 2, 3, 3, 5, 0), "lsd ep"));
-  vlsd.push_back(Entry<FT>(new LsdBurns<FT>(0.004, 0.012, 10, 12, BURNS_NMS), "lsd burns"));
-  vlsd.push_back(Entry<FT>(new LsdFBW<FT>(0.004, 0.012, 10, 22.5, FBW_NMS), "lsd fbw"));
-  vlsd.push_back(Entry<FT>(new LsdFGioi<FT>(2, 22.5, 0, 0.7, 1024), "lsd fgioi"));
+  vlsd.push_back(Entry<FT>(new LsdCC<FT>(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX), "lsd cc"));
+  vlsd.push_back(Entry<FT>(new LsdCP<FT>(0.004f, 0.012f, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX), "lsd cp"));
+  vlsd.push_back(Entry<FT>(new LsdEL<FT>(0.004f, 0.012f, 10, 3, 10, 4, 0 /*EL_USE_NFA*/), "lsd el"));
+  vlsd.push_back(Entry<FT>(new LsdEP<FT>(0.004f, 0.012f, 10, 3, 10, 2, 3, 3, 5, 0), "lsd ep"));
+  vlsd.push_back(Entry<FT>(new LsdBurns<FT>(0.004f, 0.012f, 10, 12, BURNS_NMS), "lsd burns"));
+  vlsd.push_back(Entry<FT>(new LsdFBW<FT>(0.004f, 0.012f, 10, 22.5f, FBW_NMS), "lsd fbw"));
+  vlsd.push_back(Entry<FT>(new LsdFGioi<FT>(2, 22.5f, 0, 0.7f, 1024), "lsd fgioi"));
   vlsd.push_back(Entry<FT>(new LsdEDLZ<FT>(10, 2, 2, 10, 2, false), "lsd edlz"));
 #ifdef _MSC_VER
   vlsd.push_back(Entry<FT>(new LsdEDTA<FT>, "lsd edta"));
