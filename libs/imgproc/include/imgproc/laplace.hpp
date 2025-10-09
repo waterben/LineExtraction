@@ -118,8 +118,7 @@ class LaplaceSimple : public Laplace<IT, LT> {
   typedef Range<LT> LaplaceRange;
 
   LaplaceSimple(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max())
-      : Laplace<IT, LT>(int_lower, int_upper), anchor(-1, -1) {
-    k_ = cv::Mat_<LT>::ones(3, 3);
+      : Laplace<IT, LT>(int_lower, int_upper), laplace_(), k_(cv::Mat_<LT>::ones(3, 3)), anchor(-1, -1) {
     k_(1, 1) = -8;
   }
 
@@ -203,7 +202,8 @@ class LoG : public LaplaceSimple<IT, LT> {
       : LaplaceSimple<IT, LT>(int_lower, int_upper),
         ksize_(kernel_size),
         kspace_(kernel_spacing),
-        kscale_(kernel_scale) {
+        kscale_(kernel_scale),
+        laplaceRange_() {
     this->add("grad_kernel_size", std::bind(&LoG<IT, LT>::valueKernelSize, this, std::placeholders::_1),
               "Kernel size for LoG-Operator.");
     this->add("grad_kernel_spacing", std::bind(&LoG<IT, LT>::valueKernelSpacing, this, std::placeholders::_1),
@@ -300,7 +300,7 @@ class LaplaceCV : public Laplace<IT, LT> {
   LaplaceCV(int ksize = 5,
             IT int_lower = std::numeric_limits<IT>::lowest(),
             IT int_upper = std::numeric_limits<IT>::max())
-      : Laplace<IT, LT>(int_lower, int_upper), ksize_(ksize) {
+      : Laplace<IT, LT>(int_lower, int_upper), laplaceRange_(), laplace_(), ksize_(ksize) {
     this->add("grad_kernel_size", std::bind(&LaplaceCV<IT, LT>::valueKernelSize, this, std::placeholders::_1),
               "Kernel size for Laplace-Operator.");
     calc_range();

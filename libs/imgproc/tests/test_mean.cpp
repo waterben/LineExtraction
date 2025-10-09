@@ -8,6 +8,8 @@ using namespace cv;
 
 class MeanTest : public ::testing::Test {
  protected:
+  MeanTest() : test_img() {}
+
   void SetUp() override {
     // Create test image with gradient
     test_img = Mat::zeros(10, 10, CV_32F);

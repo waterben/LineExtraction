@@ -109,7 +109,23 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
         rows_ext_(0),
         cols_ext_(0),
         waveL_(waveLength),
-        sigmaOnf_(sigmaOnf) {
+        sigmaOnf_(sigmaOnf),
+        dir_(),
+        phase_(),
+        energy_(),
+        o_(),
+        ox_(),
+        oy_(),
+        e_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energy_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
+        H_(),
+        lgf_() {
     init();
   }
 
@@ -122,7 +138,23 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
         rows_ext_(0),
         cols_ext_(0),
         waveL_(3),
-        sigmaOnf_(static_cast<FT>(0.55)) {
+        sigmaOnf_(static_cast<FT>(0.55)),
+        dir_(),
+        phase_(),
+        energy_(),
+        o_(),
+        ox_(),
+        oy_(),
+        e_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energy_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
+        H_(),
+        lgf_() {
     init();
     value(options);
   }
@@ -136,7 +168,23 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
         rows_ext_(0),
         cols_ext_(0),
         waveL_(3),
-        sigmaOnf_(static_cast<FT>(0.55)) {
+        sigmaOnf_(static_cast<FT>(0.55)),
+        dir_(),
+        phase_(),
+        energy_(),
+        o_(),
+        ox_(),
+        oy_(),
+        e_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energy_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
+        H_(),
+        lgf_() {
     init();
     value(options);
   }

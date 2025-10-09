@@ -882,7 +882,7 @@ class ZeroCrossing : public ValueManager {
   static constexpr int NUM_DIR = ZC::NUM_DIR;
 
   ZeroCrossing(double low = 0.004, double high = 0.012, int border = 2)
-      : th_low_(low), th_high_(high), border_(border) {
+      : dmap_(), seeds_(), th_low_(low), th_high_(high), border_(border) {
     this->add("nms_th_low", std::bind(&ZeroCrossing<GT, LT, DT, ZC>::valueThresholdLow, this, std::placeholders::_1),
               "Lower threshold.");
     this->add("nms_th_high", std::bind(&ZeroCrossing<GT, LT, DT, ZC>::valueThresholdHigh, this, std::placeholders::_1),

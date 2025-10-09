@@ -99,7 +99,7 @@ class FdcGenericLR : public Fdc<FT, GT, LRDescritpor<FT, Helper::dscSize>> {
   typedef LRDescritpor<FT, Helper::dscSize> descriptor_type;
 
   FdcGenericLR(const MatMap& data, FT pos = -1, FT stepDir = 1, FT lstep = 1)
-      : pos_(pos), stepDir_(stepDir), lstep_(lstep) {
+      : data_(), pos_(pos), stepDir_(stepDir), lstep_(lstep) {
     data_.resize(Helper::inputData().size());
     this->setData(data);
   }

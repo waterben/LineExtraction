@@ -130,13 +130,32 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        fe_(),
+        fo_(),
+        imgf_(),
+        o_(),
+        phase_(),
+        dir_(),
+        ox_(),
+        oy_(),
+        e_(),
+        energy_(),
         rows_(0),
         cols_(0),
         rows_ext_(0),
         cols_ext_(0),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
         kspacing_(kernel_spacing),
         scale_(scale),
-        muls_(muls) {
+        muls_(muls),
+        odd_done_(false),
+        energy_done_(false),
+        dir_done_(false),
+        phase_done_(false),
+        even_done_(false),
+        oddxy_done_(false) {
     init();
   }
 
@@ -147,13 +166,32 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        fe_(),
+        fo_(),
+        imgf_(),
+        o_(),
+        phase_(),
+        dir_(),
+        ox_(),
+        oy_(),
+        e_(),
+        energy_(),
         rows_(0),
         cols_(0),
         rows_ext_(0),
         cols_ext_(0),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
         kspacing_(kernel_spacing),
         scale_(scale * pow(l, k)),
-        muls_(pow(l, k - 1) / pow(l, k)) {
+        muls_(pow(l, k - 1) / pow(l, k)),
+        odd_done_(false),
+        energy_done_(false),
+        dir_done_(false),
+        phase_done_(false),
+        even_done_(false),
+        oddxy_done_(false) {
     init();
   }
 
@@ -161,13 +199,35 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        fe_(),
+        fo_(),
+        imgf_(),
+        o_(),
+        phase_(),
+        dir_(),
+        ox_(),
+        oy_(),
+        e_(),
+        energy_(),
         rows_(0),
         cols_(0),
         rows_ext_(0),
         cols_ext_(0),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
         kspacing_(1),
         scale_(1),
-        muls_(2) {
+        muls_(2),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
+        odd_done_(false),
+        energy_done_(false),
+        dir_done_(false),
+        phase_done_(false),
+        even_done_(false),
+        oddxy_done_(false) {
     init();
     value(options);
   }
@@ -176,13 +236,32 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        fe_(),
+        fo_(),
+        imgf_(),
+        o_(),
+        phase_(),
+        dir_(),
+        ox_(),
+        oy_(),
+        e_(),
+        energy_(),
         rows_(0),
         cols_(0),
         rows_ext_(0),
         cols_ext_(0),
+        energyRange_(),
+        oddRange_(),
+        evenRange_(),
         kspacing_(1),
         scale_(1),
-        muls_(2) {
+        muls_(2),
+        odd_done_(false),
+        energy_done_(false),
+        dir_done_(false),
+        phase_done_(false),
+        even_done_(false),
+        oddxy_done_(false) {
     init();
     value(options);
   }

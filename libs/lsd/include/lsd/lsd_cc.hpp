@@ -189,19 +189,23 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         flags_(flags),
         min_pix_(min_pix),
         max_gap_(max_gap),
-        err_dist_(err_dist) {
+        err_dist_(err_dist),
+        lineData_(),
+        segments_() {
     CV_Assert(max_gap >= 0 && min_pix > 1 && th_high <= 1 && th_high > 0 && th_low <= 1 && th_low > 0 &&
               th_high >= th_low && err_dist > 0);
 
     init();
   }
 
-  LsdCC(ValueManager::InitializerList options) {
+  LsdCC(ValueManager::InitializerList options)
+      : flags_(0), min_pix_(10), max_gap_(0), err_dist_(2), lineData_(), segments_() {
     init();
     this->value(options);
   }
 
-  LsdCC(const ValueManager::NameValueVector& options) {
+  LsdCC(const ValueManager::NameValueVector& options)
+      : flags_(0), min_pix_(10), max_gap_(0), err_dist_(2), lineData_(), segments_() {
     init();
     this->value(options);
   }
@@ -211,7 +215,9 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         flags_(rhs.flags_),
         min_pix_(rhs.min_pix_),
         max_gap_(rhs.max_gap_),
-        err_dist_(rhs.err_dist_) {
+        err_dist_(rhs.err_dist_),
+        lineData_(),
+        segments_() {
     CV_Assert(max_gap_ >= 0 && min_pix_ > 1 && th_high_ <= 1 && th_high_ > 0 && th_low_ <= 1 && th_low_ > 0 &&
               th_high_ >= th_low_ && err_dist_ > 0);
 

@@ -52,6 +52,10 @@ namespace lsfm {
 //! stereo line Matcher
 template <class FT, class GV = std::vector<LineSegment<FT>>, class DC_Helper = GchGradImgInterpolate<FT>>
 class StereoLineMatcher : public OptionManager {
+  // Deleted copy operations due to pointer members
+  StereoLineMatcher(const StereoLineMatcher&) = delete;
+  StereoLineMatcher& operator=(const StereoLineMatcher&) = delete;
+
  public:
   typedef FT float_type;
 
@@ -91,7 +95,15 @@ class StereoLineMatcher : public OptionManager {
                     FT distTh = 0,
                     FT r = 0,
                     int kk = 0)
-      : slf(height, maxDist, angleTh, minYOverlap), bfm(r, kk), creatorL(&cL), creatorR(&cR), distTh_(distTh) {
+      : slf(height, maxDist, angleTh, minYOverlap),
+        bfm(r, kk),
+        creatorL(&cL),
+        creatorR(&cR),
+        dscLeft_(),
+        dscRight_(),
+        mLeft_(),
+        mRight_(),
+        distTh_(distTh) {
     CV_Assert(distTh_ >= 0);
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
@@ -112,6 +124,10 @@ class StereoLineMatcher : public OptionManager {
         creatorR(0),
         creatorLPtr(cL),
         creatorRPtr(cR),
+        dscLeft_(),
+        dscRight_(),
+        mLeft_(),
+        mRight_(),
         distTh_(distTh) {
     if (!creatorLPtr.empty()) creatorL = dynamic_cast<descriptor_creator*>(creatorLPtr.operator->());
     if (!creatorRPtr.empty()) creatorR = dynamic_cast<descriptor_creator*>(creatorRPtr.operator->());

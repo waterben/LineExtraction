@@ -7,9 +7,10 @@ using namespace lsfm;
 
 class PointUtilitiesTest : public ::testing::Test {
  protected:
+  PointUtilitiesTest() : test_mat(cv::Mat::zeros(10, 10, CV_32F)) {}
+
   void SetUp() override {
     // Create a test image/matrix
-    test_mat = cv::Mat::zeros(10, 10, CV_32F);
     for (int i = 0; i < test_mat.rows; ++i) {
       for (int j = 0; j < test_mat.cols; ++j) {
         test_mat.at<float>(i, j) = static_cast<float>(i * 10 + j);  // Set unique values

@@ -9,6 +9,8 @@ using namespace cv;
 
 class NMSTest : public ::testing::Test {
  protected:
+  NMSTest() : test_img(), horizontal_edge_img(), gradient() {}
+
   void SetUp() override {
     // Create test images with synthetic edges
 

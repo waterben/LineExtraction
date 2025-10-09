@@ -263,7 +263,7 @@ class EsdBase : public ValueManager {
   virtual std::string name() const = 0;
 
  protected:
-  EsdBase() {}
+  EsdBase() : points_(), segments_() {}
 
   PointVector points_;
   mutable EdgeSegmentVector segments_;

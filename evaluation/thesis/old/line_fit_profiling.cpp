@@ -35,6 +35,7 @@ Edge edge(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
 
 struct EntryBase {
   EntryBase(const std::string& n) : name(n), time(0), images(0) {}
+  virtual ~EntryBase() = default;
 
   std::string name;
   int64 time;

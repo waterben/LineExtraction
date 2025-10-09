@@ -97,14 +97,14 @@ class NfaContrast : public ValueManager {
  public:
   typedef std::vector<PT> PointVector;
 
-  NfaContrast(FT log_e = 0) : log_e_(log_e) { init(); }
+  NfaContrast(FT log_e = 0) : E_(), Nl_(0), h_(), log_e_(log_e) { init(); }
 
-  NfaContrast(const ValueManager::NameValueVector& options) : log_e_(0) {
+  NfaContrast(const ValueManager::NameValueVector& options) : E_(), Nl_(0), h_(), log_e_(0) {
     init();
     this->value(options);
   }
 
-  NfaContrast(ValueManager::InitializerList options) : log_e_(0) {
+  NfaContrast(ValueManager::InitializerList options) : E_(), Nl_(0), h_(), log_e_(0) {
     init();
     this->value(options);
   }
@@ -456,18 +456,19 @@ class NfaBinom : public ValueManager {
  public:
   typedef std::vector<PT> PointVector;
 
-  NfaBinom(FT log_e = 0, FT p = static_cast<FT>(1.0 / 8)) : range_(0), logNT_(0), log_e_(log_e), th_(0), p_(p) {
+  NfaBinom(FT log_e = 0, FT p = static_cast<FT>(1.0 / 8))
+      : matx_(), maty_(), range_(0), logNT_(0), log_e_(log_e), th_(0), p_(p) {
     init();
   }
 
   NfaBinom(const ValueManager::NameValueVector& options)
-      : range_(0), logNT_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)) {
+      : matx_(), maty_(), range_(0), logNT_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)) {
     init();
     this->value(options);
   }
 
   NfaBinom(ValueManager::InitializerList options)
-      : range_(0), logNT_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)) {
+      : matx_(), maty_(), range_(0), logNT_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)) {
     init();
     this->value(options);
   }
@@ -929,15 +930,19 @@ class NfaBinom2 : public ValueManager {
  public:
   typedef std::vector<PT> PointVector;
 
-  NfaBinom2(FT log_e = 0, FT p = static_cast<FT>(1.0 / 8)) : range_(0), log_e_(log_e), th_(0), p_(p), N_(0) { init(); }
+  NfaBinom2(FT log_e = 0, FT p = static_cast<FT>(1.0 / 8))
+      : matx_(), maty_(), range_(0), log_e_(log_e), th_(0), p_(p), N_(0) {
+    init();
+  }
 
   NfaBinom2(const ValueManager::NameValueVector& options)
-      : range_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)), N_(0) {
+      : matx_(), maty_(), range_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)), N_(0) {
     init();
     this->value(options);
   }
 
-  NfaBinom2(ValueManager::InitializerList options) : range_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)), N_(0) {
+  NfaBinom2(ValueManager::InitializerList options)
+      : matx_(), maty_(), range_(0), log_e_(0), th_(0), p_(static_cast<FT>(1.0 / 8)), N_(0) {
     init();
     this->value(options);
   }

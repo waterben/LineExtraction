@@ -20,7 +20,7 @@ constexpr int runs = 1;
 typedef double FT;
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), threshold(), name(), flags(0), images(0), time(0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const cv::Ptr<Threshold<FT>>& t, const std::string& b, int f = 0)
       : filter(a), threshold(t), name(b), flags(f), images(0), time(0) {}

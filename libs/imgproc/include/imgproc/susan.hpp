@@ -348,7 +348,15 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
                 MT max_no = 2650,
                 uchar int_lower = std::numeric_limits<uchar>::lowest(),
                 uchar int_upper = std::numeric_limits<uchar>::max())
-      : Gradient<uchar, GT, MT, dir_type>(int_lower, int_upper), bt_(bt), max_no_(max_no), small_kernel_(small_kernel) {
+      : Gradient<uchar, GT, MT, dir_type>(int_lower, int_upper),
+        bt_(bt),
+        max_no_(max_no),
+        small_kernel_(small_kernel),
+        dir_done_(false),
+        mag_(),
+        dx_(),
+        dy_(),
+        dir_() {
     this->add("grad_brightness_th",
               std::bind(&SusanGradient<GT, MT, DT, DO>::brightnessTh, this, std::placeholders::_1),
               "Brightness threshold [0-256].");

@@ -23,7 +23,8 @@ const int stats_update_period = 10;  // On-screen statistics are updated every 1
 namespace example {
 class Tracker {
  public:
-  Tracker(Ptr<Feature2D> _detector, Ptr<DescriptorMatcher> _matcher) : detector(_detector), matcher(_matcher) {
+  Tracker(Ptr<Feature2D> _detector, Ptr<DescriptorMatcher> _matcher)
+      : detector(_detector), matcher(_matcher), first_frame(), first_desc(), first_kp(), object_bb(), akaze_() {
     akaze_ = AKAZE::create();
     akaze_->setThreshold(akaze_thresh);
   }

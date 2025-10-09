@@ -77,6 +77,8 @@ class MockFeatureDescriptorObj : public FdcObjI<FT, LineSegment<FT>, MockDescrip
 
 class FeatureDescriptorTest : public ::testing::Test {
  protected:
+  FeatureDescriptorTest() : test_lines(), mat_descriptor(), obj_descriptor() {}
+
   void SetUp() override {
     // Create test lines
     test_lines.clear();

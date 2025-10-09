@@ -8,6 +8,8 @@ using namespace cv;
 
 class SusanTest : public ::testing::Test {
  protected:
+  SusanTest() : test_img(), gradient_img(), susan() {}
+
   void SetUp() override {
     // Create test image with some structures
     test_img = Mat::zeros(10, 10, CV_8UC1);

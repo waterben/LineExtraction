@@ -39,7 +39,7 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name(), flags(0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, int f = 0) : filter(a), name(b), flags(f) {}
 

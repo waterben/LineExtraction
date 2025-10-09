@@ -67,7 +67,24 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
               int cn = cv::NORM_L2SQR,
               IT int_lower = std::numeric_limits<IT>::lowest(),
               IT int_upper = std::numeric_limits<IT>::max())
-      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mask_(mask), s_(s), norm_(cn) {
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper),
+        mask_(mask),
+        s_(s),
+        m2_(0),
+        norm_(cn),
+        mag_(),
+        gx_(),
+        gy_(),
+        dir_(),
+        dir_done_(false),
+        locations(),
+        not_removed(),
+        window(),
+        max_dist(0),
+        max_dist2(0),
+        max_dists(),
+        copyof_max_dists(),
+        dists() {
     this->add("grad_mask_size",
               std::bind(&RCMGradient<IT, channels, GT, MT, DT, DO>::maskSize, this, std::placeholders::_1),
               "Window size for differences.");
@@ -394,7 +411,24 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
               int nt = cv::NORM_L2SQR,
               IT int_lower = std::numeric_limits<IT>::lowest(),
               IT int_upper = std::numeric_limits<IT>::max())
-      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mask_(mask), s_(s), norm_(nt) {
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper),
+        mask_(mask),
+        s_(s),
+        m2_(0),
+        norm_(nt),
+        mag_(),
+        gx_(),
+        gy_(),
+        dir_(),
+        dir_done_(false),
+        locations(),
+        not_removed(),
+        window(),
+        max_dist(0),
+        max_dist2(0),
+        max_dists(),
+        copyof_max_dists(),
+        dists() {
     this->add("grad_mask_size", std::bind(&RCMGradient<IT, 1, GT, MT, DT, DO>::maskSize, this, std::placeholders::_1),
               "Window size for differences.");
     this->add("grad_rejection", std::bind(&RCMGradient<IT, 1, GT, MT, DT, DO>::rejection, this, std::placeholders::_1),

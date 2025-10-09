@@ -6,12 +6,13 @@ using namespace lsfm;
 
 class RangeTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    range_int = Range<int>(5, 15);
-    range_float = Range<float>(2.5f, 7.5f);
-    range_negative = Range<double>(-10.0, -3.0);
-    range_reversed = Range<int>(20, 10);
-  }
+  RangeTest()
+      : range_int(Range<int>(5, 15)),
+        range_float(Range<float>(2.5f, 7.5f)),
+        range_negative(Range<double>(-10.0, -3.0)),
+        range_reversed(Range<int>(20, 10)) {}
+
+  void SetUp() override {}
 
   Range<int> range_int;
   Range<float> range_float;

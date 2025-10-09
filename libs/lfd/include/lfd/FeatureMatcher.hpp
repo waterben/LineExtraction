@@ -62,7 +62,7 @@ class FmBruteForce : public OptionManager {
 
 
   struct Graph {
-    Graph(float_type r = 0, int kk = 0) : k(kk), radius(r) {}
+    Graph(float_type r = 0, int kk = 0) : distances(), relations(), k(kk), radius(r) {}
 
     match_vector distances;
     std::vector<size_t> relations;
@@ -72,7 +72,7 @@ class FmBruteForce : public OptionManager {
 
   //! init object with radius (max distance between descriptors) and k (k best matches
   //! for every query descriptor). If radius or k = 0 (default), all matches are stored
-  FmBruteForce(float_type radius = 0, int k = 0) : k_(k), radius_(radius) {
+  FmBruteForce(float_type radius = 0, int k = 0) : graph_(), k_(k), radius_(radius) {
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
     this->options_.push_back(OptionManager::OptionEntry("k", k, "int", "Number of nearest neighbors."));
     this->options_.push_back(OptionManager::OptionEntry("radius", radius, type, "Max distance between descriptors."));

@@ -9,6 +9,8 @@ using namespace lsfm;
 
 class FeatureFilterTest : public ::testing::Test {
  protected:
+  FeatureFilterTest() : feature_matches(), descriptor_matches() {}
+
   void SetUp() override {
     // Create test feature matches
     feature_matches.clear();

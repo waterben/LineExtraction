@@ -98,7 +98,7 @@ class RobertsDerivative : public Derivative<IT, GT> {
   typedef IT img_type;
   typedef GT grad_type;
 
-  RobertsDerivative() : anchor(0, 0) {
+  RobertsDerivative() : kx(), ky(), da(), bc(), anchor(0, 0) {
     kx.create(2, 2, cv::DataType<GT>::type);
     kx.at<GT>(0, 0) = -1;
     kx.at<GT>(1, 1) = 1;
@@ -137,7 +137,7 @@ class PrewittDerivative : public Derivative<IT, GT> {
   typedef IT img_type;
   typedef GT grad_type;
 
-  PrewittDerivative() : anchor(-1, -1) {
+  PrewittDerivative() : kx(), ky(), anchor(-1, -1) {
     kx.create(3, 1, cv::DataType<GT>::type);
     kx.at<GT>(0) = -1;
     kx.at<GT>(1) = 0;
@@ -174,7 +174,7 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
   typedef IT img_type;
   typedef GT grad_type;
 
-  SobelDerivative(int kernel_size = 3) : gm(4, 3, 2), anchor(-1, -1), ksize_(0) {
+  SobelDerivative(int kernel_size = 3) : kx(), ky(), gm(4, 3, 2), anchor(-1, -1), ksize_(0) {
     this->add("grad_kernel_size", std::bind(&SobelDerivative<IT, GT>::valueKernelSize, this, std::placeholders::_1),
               "Kernel size for Sobel-Operator.");
     kernelSize(kernel_size);
@@ -239,7 +239,7 @@ class ScharrDerivative : public Derivative<IT, GT> {
   typedef IT img_type;
   typedef GT grad_type;
 
-  ScharrDerivative() : anchor(-1, -1) {
+  ScharrDerivative() : kx(), ky(), anchor(-1, -1) {
     cv::getDerivKernels(kx, ky, 1, 0, -1, false, std::max<int>(CV_32F, cv::DataType<GT>::type));
     kx.convertTo(kx, cv::DataType<GT>::type);
     ky.convertTo(ky, cv::DataType<GT>::type);
@@ -297,7 +297,7 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
 
  public:
   GaussianDerivative(int kernel_size = 5, double range = 3, double scale = 1)
-      : gm(0, 0, 0), anchor(-1, -1), ksize_(0), range_(range), scale_(scale) {
+      : kx(), ky(), gm(0, 0, 0), anchor(-1, -1), ksize_(0), range_(range), scale_(scale) {
     CV_Assert(kernel_size > 2 && range > 0 && scale > 0);
 
     this->add("grad_kernel_size", std::bind(&GaussianDerivative<IT, GT>::valueKernelSize, this, std::placeholders::_1),

@@ -32,7 +32,7 @@ using namespace std;
 
 template <class FT, template <class> class PT = cv::Point_>
 struct GroundTruth {
-  GroundTruth() {
+  GroundTruth() : segments(), img() {
     cv::Mat tmp(32000, 32000, CV_8U);
     tmp.setTo(0);
 

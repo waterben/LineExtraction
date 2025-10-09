@@ -126,7 +126,7 @@ class EdgeSourceT : public EdgeSourceI {
   }
 
  protected:
-  EdgeSourceT() { init(); }
+  EdgeSourceT() : erf_(), epe_() { init(); }
 
   EdgeSourceT(const ValueManager::NameValueVector& options) {
     init();
@@ -221,7 +221,7 @@ class EdgeSourceZC : public EdgeSourceNMS_ZC<ERF, ZC> {
   using EdgeSourceT<ERF, ZC>::epe_;
   mutable double magMax_;
 
-  EdgeSourceZC() {}
+  EdgeSourceZC() : magMax_(-1) {}
   EdgeSourceZC(const ValueManager::NameValueVector& options) : EdgeSourceNMS_ZC<ERF, ZC>(options), magMax_(-1) {}
   EdgeSourceZC(ValueManager::InitializerList& options) : EdgeSourceNMS_ZC<ERF, ZC>(options), magMax_(-1) {}
 
@@ -666,18 +666,18 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
   typedef typename PCL::dir_type dir_type;
 
   EdgeSourcePCLZC(ESQuadratureOptions quadOps = ESQO_MAG, ESDirectionOptions dirOps = ESDO_NONE)
-      : EdgeSourceQUADZC<PCL, ZC>(quadOps, dirOps) {}
+      : EdgeSourceQUADZC<PCL, ZC>(quadOps, dirOps), dirMap_(), seeds_() {}
   EdgeSourcePCLZC(const ValueManager::NameValueVector& options,
                   ESQuadratureOptions quadOps = ESQO_MAG,
                   ESDirectionOptions dirOps = ESDO_NONE)
-      : EdgeSourceQUADZC<PCL, ZC>(options) {
+      : EdgeSourceQUADZC<PCL, ZC>(options), dirMap_(), seeds_() {
     this->quadOps_ = quadOps;
     this->dirOps_ = dirOps;
   }
   EdgeSourcePCLZC(ValueManager::InitializerList& options,
                   ESQuadratureOptions quadOps = ESQO_MAG,
                   ESDirectionOptions dirOps = ESDO_NONE)
-      : EdgeSourceQUADZC<PCL, ZC>(options) {
+      : EdgeSourceQUADZC<PCL, ZC>(options), dirMap_(), seeds_() {
     this->quadOps_ = quadOps;
     this->dirOps_ = dirOps;
   }

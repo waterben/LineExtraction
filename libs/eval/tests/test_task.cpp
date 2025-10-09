@@ -9,7 +9,8 @@ struct DummyInputData : public lsfm::GenericInputData {
 };
 
 struct DummyTask : public lsfm::Task {
-  DummyTask(const std::string& name, bool verbose = false) : Task(name, verbose), prepared(false), run_count(0) {}
+  DummyTask(const std::string& name, bool verbose = false)
+      : Task(name, verbose), prepared(false), run_count(0), input_name() {}
 
   void prepare(const lsfm::GenericInputData& data) override {
     prepared = true;

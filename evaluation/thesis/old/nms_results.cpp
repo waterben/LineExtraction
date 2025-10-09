@@ -37,7 +37,7 @@ constexpr int ENTRY_NO_5 = 8;
 typedef double FT;
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name(), flags(0), low(0.0), high(0.0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, double l, double h, int f = 0)
       : filter(a), name(b), flags(f), low(l), high(h) {}

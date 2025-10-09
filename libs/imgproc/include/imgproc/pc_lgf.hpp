@@ -142,7 +142,30 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
         deviationGain_(deviationGain),
         T_(0),
         eps_(static_cast<FT>(0.0001)),
-        noiseMethod_(noiseMethod) {
+        noiseMethod_(noiseMethod),
+        weight(),
+        sumAn(),
+        ox_(),
+        oy_(),
+        e_(),
+        zeros(),
+        odd_(),
+        dir_(),
+        phase_(),
+        energy_(),
+        oddSqr_(),
+        pc_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energy_done_(false),
+        oddSqr_done_(false),
+        pc_done_(false),
+        H_(),
+        lgf_(),
+        energyRange_(),
+        oddRange_(),
+        evenRange_() {
     init();
   }
 
@@ -187,7 +210,30 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
         deviationGain_(1.5),
         T_(0),
         eps_(static_cast<FT>(0.0001)),
-        noiseMethod_(-1) {
+        noiseMethod_(-1),
+        weight(),
+        sumAn(),
+        ox_(),
+        oy_(),
+        e_(),
+        zeros(),
+        odd_(),
+        dir_(),
+        phase_(),
+        energy_(),
+        oddSqr_(),
+        pc_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energy_done_(false),
+        oddSqr_done_(false),
+        pc_done_(false),
+        H_(),
+        lgf_(),
+        energyRange_(),
+        oddRange_(),
+        evenRange_() {
     init();
     value(options);
   }

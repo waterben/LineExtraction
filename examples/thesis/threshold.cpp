@@ -65,7 +65,7 @@ class ThresholdApp : public EvalApp {
   ThresholdApp(std::string name = "ThresholdApp",
                std::string description = "Threshold example processing",
                std::string version = "1.0.0")
-      : EvalApp(std::move(name), std::move(description), std::move(version)) {}
+      : EvalApp(std::move(name), std::move(description), std::move(version)), ofs_() {}
 
   using ConsoleAppInterface::run;
 

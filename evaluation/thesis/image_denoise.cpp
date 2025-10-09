@@ -21,7 +21,7 @@ constexpr int runs = 10;
 #endif
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name() {}
 
   Entry(const ImageOperatorPtr& a, const std::string& b) : filter(a), name(b) {}
 

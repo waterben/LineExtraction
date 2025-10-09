@@ -117,11 +117,19 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
   EsdPattern(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5, int pat_tol = 2)
       : EsdBasePattern<MT, index_type>(),
+        dir_(),
+        pdir_(nullptr),
         minPixels_(minPix),
         maxGap_(maxGap),
         patTol_(pat_tol),
         magMul_(magMul),
-        magTh_(magTh) {
+        magTh_(magTh),
+#ifndef NO_ADDED_SEEDS
+        addedSeeds_(),
+#endif
+        patterns_(),
+        patternSegments_(),
+        primitives_() {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;
@@ -268,7 +276,7 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
  private:
   struct Pattern {
-    Pattern(size_t b = 0, size_t e = 0) : seg(b, e) {}
+    Pattern(size_t b = 0, size_t e = 0) : prim(), seg(b, e) {}
 
     Primitive prim;
     EdgeSegment seg;

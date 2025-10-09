@@ -22,7 +22,7 @@ class PhaseCong {
  public:
   // init object and preinit filters
   PhaseCong(int ns = 4, double mw = 3, double ml = 2.1, double sig = 0.55);
-  ~PhaseCong();
+  virtual ~PhaseCong();
 
   PhaseCong(const PhaseCong&) = delete;
   PhaseCong& operator=(const PhaseCong&) = delete;

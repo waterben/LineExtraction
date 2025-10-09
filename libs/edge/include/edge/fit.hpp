@@ -373,11 +373,11 @@ class FitLine : public ValueManager {
   typedef typename fit_type::float_type float_type;
   typedef typename fit_type::point_type point_type;
 
-  FitLine() {}
+  FitLine() : fit_() {}
 
   FitLine(const ValueManager::NameValueVector& options) { static_cast<void>(options); }
 
-  FitLine(ValueManager::InitializerList options) { static_cast<void>(options); }
+  FitLine(ValueManager::InitializerList options) : fit_() { static_cast<void>(options); }
 
   template <class ITER, template <class> class LPT>
   inline void apply(ITER beg, ITER end, Line<float_type, LPT>& l) const {

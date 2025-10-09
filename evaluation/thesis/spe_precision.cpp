@@ -133,7 +133,7 @@ struct GroundTruth {
   static constexpr double scale = 0.01;
   static constexpr int kernel = 201, sigma = 50;
 
-  GroundTruth(const std::string& input = "./spe", bool show_gt = false, bool verbose = false) {
+  GroundTruth(const std::string& input = "./spe", bool show_gt = false, bool verbose = false) : segments(), img() {
     Polygon<FT, PT> poly;
     poly.push_back(PT<FT>(5089, 2023));
     poly.push_back(PT<FT>(29947, 2023));
@@ -248,7 +248,7 @@ struct Data {
   Data& operator=(Data&&) = default;
 
   Data(std::string n, std::vector<PT<FT>>&& p, const GroundTruth<FT, PT>& gt, double rt_nms = 0, double rt_spe = 0)
-      : points(std::move(p)), runtime_nms(rt_nms), runtime_spe(rt_spe), name(std::move(n)) {
+      : points(std::move(p)), error(), runtime_nms(rt_nms), runtime_spe(rt_spe), name(std::move(n)) {
     process(gt);
   }
 
@@ -892,7 +892,7 @@ class SpeApp : public EvalApp {
   SpeApp(std::string name = "SpeApp",
          std::string description = "Subpixel precision evaluation tool",
          std::string version = "1.0.0")
-      : EvalApp(std::move(name), std::move(description), std::move(version)) {}
+      : EvalApp(std::move(name), std::move(description), std::move(version)), gt() {}
 
   using ConsoleAppInterface::run;
 

@@ -101,25 +101,27 @@ class Pyramid {
  public:
   typedef MT mat_type;
 
-  Pyramid() {}
+  Pyramid() : scales_() {}
 
-  Pyramid(int rows, int cols, int scale_num = 0) { create(cv::Mat(rows, cols, type()), scale_num); }
+  Pyramid(int rows, int cols, int scale_num = 0) : scales_() { create(cv::Mat(rows, cols, type()), scale_num); }
 
-  Pyramid(const cv::Size& size, int scale_num = 0) { create(cv::Mat(size, type()), scale_num); }
+  Pyramid(const cv::Size& size, int scale_num = 0) : scales_() { create(cv::Mat(size, type()), scale_num); }
 
-  Pyramid(int rows, int cols, cv::Scalar& fill, int scale_num = 0) {
+  Pyramid(int rows, int cols, cv::Scalar& fill, int scale_num = 0) : scales_() {
     create(cv::Mat(rows, cols, type(), fill), scale_num);
   }
 
-  Pyramid(const cv::Size& size, cv::Scalar& fill, int scale_num = 0) { create(cv::Mat(size, type(), fill), scale_num); }
+  Pyramid(const cv::Size& size, cv::Scalar& fill, int scale_num = 0) : scales_() {
+    create(cv::Mat(size, type(), fill), scale_num);
+  }
 
-  Pyramid(const cv::Mat& data, int scale_num = 0) {
+  Pyramid(const cv::Mat& data, int scale_num = 0) : scales_() {
     cv::Mat tmp = data;
     if (type() != data.type()) data.convertTo(tmp, type());
     create(data, scale_num);
   }
 
-  Pyramid(const Pyramid& p) {
+  Pyramid(const Pyramid& p) : scales_() {
     for (std::size_t i = 0; i < p.size(); ++i) scales_.push_back(p[static_cast<int>(i)].clone());
   }
 

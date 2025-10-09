@@ -260,6 +260,9 @@ class LsdHoughP : public LsdBase<FT, LPT> {
             double minLength = 10,
             double maxGap = 3)
       : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
         rho_(rho),
         theta_(theta),
         minLength_(minLength),
@@ -269,13 +272,29 @@ class LsdHoughP : public LsdBase<FT, LPT> {
   }
 
   LsdHoughP(ValueManager::InitializerList options)
-      : rho_(1.5), theta_(CV_PI / 180), minLength_(10), maxGap_(3), voteThreshold_(150) {
+      : esource_(),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
+        rho_(1.5),
+        theta_(CV_PI / 180),
+        minLength_(10),
+        maxGap_(3),
+        voteThreshold_(150) {
     init();
     this->value(options);
   }
 
   LsdHoughP(ValueManager::NameValueVector options)
-      : rho_(1.5), theta_(CV_PI / 180), minLength_(10), maxGap_(2), voteThreshold_(150) {
+      : esource_(),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
+        rho_(1.5),
+        theta_(CV_PI / 180),
+        minLength_(10),
+        maxGap_(2),
+        voteThreshold_(150) {
     init();
     this->value(options);
   }

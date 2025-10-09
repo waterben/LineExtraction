@@ -15,6 +15,8 @@ using namespace cv;
 
 class LSDTest : public ::testing::Test {
  protected:
+  LSDTest() : test_img() {}
+
   void SetUp() override {
     // Create a simple test image with clear line structures
     test_img = Mat::zeros(100, 100, CV_8UC1);

@@ -9,7 +9,7 @@ using namespace cv;
 // Mock filter implementation for testing
 class MockFilter : public FilterI<float> {
  public:
-  MockFilter() : processed_(false) {}
+  MockFilter() : processed_(false), last_img_size_(), result_data_() {}
 
   IntensityRange intensityRange() const override { return IntensityRange(0.0f, 255.0f); }
 
@@ -41,6 +41,8 @@ class MockFilter : public FilterI<float> {
 
 class FilterTest : public ::testing::Test {
  protected:
+  FilterTest() : test_img(), filter() {}
+
   void SetUp() override {
     // Create test image
     test_img = Mat::zeros(5, 5, CV_32F);

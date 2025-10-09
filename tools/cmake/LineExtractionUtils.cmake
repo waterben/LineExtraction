@@ -28,8 +28,7 @@ function(le_configure_common_settings)
 
     # Set warning flags separately so they can be tuned independently
     if(NOT MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-write-strings -Wno-comment" PARENT_SCOPE)
-        # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Weffc++ -Wmissing-field-initializers -Wno-write-strings -Wno-comment" PARENT_SCOPE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Weffc++ -Wmissing-field-initializers -Wno-write-strings -Wno-comment" PARENT_SCOPE)
     endif()
 
     # Library type

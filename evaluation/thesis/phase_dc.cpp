@@ -41,7 +41,7 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), gt(), ft(), name() {}
 
   Entry(const cv::Ptr<QuadratureI<uchar, double, double, double, double>>& fi,
         const cv::Ptr<QuadratureI<uchar, double, double, double, double>>& g,

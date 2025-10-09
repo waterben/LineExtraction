@@ -540,18 +540,18 @@ class ExtRamerSplit : public ValueManager {
 
  public:
   ExtRamerSplit(float_type dist_low = 2, int minp = 2, float_type dist_high = 6)
-      : dist_low_(dist_low), dist_high_(dist_high), max_len_(0), min_len_(minp), mag_max_(0) {
+      : dist_low_(dist_low), dist_high_(dist_high), max_len_(0), min_len_(minp), mag_max_(0), mag_() {
     init();
   }
 
   ExtRamerSplit(const ValueManager::NameValueVector& options)
-      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0), mag_() {
     init();
     this->value(options);
   }
 
   ExtRamerSplit(ValueManager::InitializerList options)
-      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0), mag_() {
     init();
     this->value(options);
   }
@@ -828,14 +828,14 @@ class LeastSquareSplit : public ValueManager {
   typedef PT point_type;
   typedef std::vector<PT> PointVector;
 
-  LeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp) { init(); }
+  LeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp), mode_(0) { init(); }
 
-  LeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15) {
+  LeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
 
-  LeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15) {
+  LeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
@@ -1163,14 +1163,14 @@ class AdaptiveLeastSquareSplit : public ValueManager {
   typedef PT point_type;
   typedef std::vector<PT> PointVector;
 
-  AdaptiveLeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp) { init(); }
+  AdaptiveLeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp), mode_(0) { init(); }
 
-  AdaptiveLeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15) {
+  AdaptiveLeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
 
-  AdaptiveLeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15) {
+  AdaptiveLeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }

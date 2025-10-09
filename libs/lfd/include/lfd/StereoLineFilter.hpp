@@ -84,7 +84,13 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
 
 
   StereoLineFilter(int height, FT maxDisPx = 10000, FT angleTh = 45, FT minYOverlap = 0.5)
-      : maxDisPx_(maxDisPx), angleTh_(angleTh), minYOverlap_(minYOverlap), height_(height) {
+      : maxDisPx_(maxDisPx),
+        angleTh_(angleTh),
+        minYOverlap_(minYOverlap),
+        height_(height),
+        ldLeft_(),
+        ldRight_(),
+        bins_() {
     CV_Assert(height >= 0 && maxDisPx_ >= 0 && angleTh > 0 && minYOverlap > 0 && minYOverlap <= 1);
 
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");

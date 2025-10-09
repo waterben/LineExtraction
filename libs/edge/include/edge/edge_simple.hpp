@@ -85,6 +85,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
               "Minimal number of support pixels.");
   }
 
+  EsdSimple(const EsdSimple&) = delete;
+  EsdSimple& operator=(const EsdSimple&) = delete;
+
   Value valueMinPixels(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;

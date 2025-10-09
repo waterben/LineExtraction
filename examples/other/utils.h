@@ -65,6 +65,7 @@ vector<Point2f> Points(vector<KeyPoint> keypoints) {
 
 Rect2d selectROI(const String& video_name, const Mat& frame) {
   struct Data {
+    Data() : center(), box() {}
     Point center;
     Rect2d box;
 

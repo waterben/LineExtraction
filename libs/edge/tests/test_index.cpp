@@ -7,6 +7,8 @@ using namespace lsfm;
 
 class IndexTest : public ::testing::Test {
  protected:
+  IndexTest() : test_mat(), cols(0), rows(0) {}
+
   void SetUp() override {
     // Create test matrix 5x4 (5 rows, 4 columns)
     test_mat = cv::Mat::zeros(5, 4, CV_32F);

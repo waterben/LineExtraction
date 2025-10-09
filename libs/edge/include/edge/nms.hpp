@@ -1298,7 +1298,7 @@ class NonMaximaSuppression : public ValueManager {
   static constexpr int NUM_DIR = NMS::NUM_DIR;
 
   NonMaximaSuppression(double low = 0.004, double high = 0.012, int border = 1)
-      : th_low_(low), th_high_(high), mag_max_(0), border_(border) {
+      : dmap_(), seeds_(), th_low_(low), th_high_(high), mag_max_(0), border_(border) {
     this->add("nms_th_low",
               std::bind(&NonMaximaSuppression<GT, MT, DT, NMS>::valueThresholdLow, this, std::placeholders::_1),
               "Lower threshold.");

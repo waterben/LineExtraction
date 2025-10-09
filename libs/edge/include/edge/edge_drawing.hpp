@@ -93,6 +93,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
               "Magnitude threshold.");
   }
 
+  EsdDrawing(const EsdDrawing&) = delete;
+  EsdDrawing& operator=(const EsdDrawing&) = delete;
+
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return minPixels_;

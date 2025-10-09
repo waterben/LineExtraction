@@ -62,9 +62,12 @@ class Polygon {
   typedef PT<FT> point_type;
   typedef std::vector<point_type> VertexVector;
 
-  Polygon(const point_type& piviot = point_type(0, 0)) : piviot_(piviot) {}
+  Polygon(const point_type& piviot = point_type(0, 0)) : piviot_(piviot), verticies_() {}
 
-  Polygon(const LineSegment2Vector<FT, PT>& segments, const point_type& piviot = point_type(0, 0)) : piviot_(piviot) {
+  virtual ~Polygon() = default;
+
+  Polygon(const LineSegment2Vector<FT, PT>& segments, const point_type& piviot = point_type(0, 0))
+      : piviot_(piviot), verticies_() {
     if (segments.size() < 2) {
       return;
     }

@@ -9,6 +9,8 @@ using namespace cv;
 
 class ZCTest : public ::testing::Test {
  protected:
+  ZCTest() : test_img(), horizontal_img(), laplace() {}
+
   void SetUp() override {
     // Create test images with synthetic edges
 

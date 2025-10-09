@@ -14,7 +14,7 @@ using NmsFT = NonMaximaSuppression<FT, FT, FT, FastNMS8<FT, FT, FT>>;
 
 template <class FT>
 struct SpePerformaceData : public TaskData {
-  SpePerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(0.004, 0.012, 2) {
+  SpePerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), grad(), nms(0.004, 0.012, 2) {
     if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
     grad.process(src);
     nms.process(grad);
@@ -62,7 +62,7 @@ class EntryNearest : public Entry<FT> {
   PixelEstimator<FT, cv::Point> pe;
 
  public:
-  EntryNearest() : Entry<FT>("Nearest") {}
+  EntryNearest() : Entry<FT>("Nearest"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -97,7 +97,7 @@ class EntrySpeLin : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeLin() : Entry<FT>("SpeLin") {}
+  EntrySpeLin() : Entry<FT>("SpeLin"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -132,7 +132,7 @@ class EntrySpeQuad : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeQuad() : Entry<FT>("SpeQuad") {}
+  EntrySpeQuad() : Entry<FT>("SpeQuad"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -167,7 +167,7 @@ class EntrySpeCog : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeCog() : Entry<FT>("SpeCog") {}
+  EntrySpeCog() : Entry<FT>("SpeCog"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -202,7 +202,7 @@ class EntrySpeSobel : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeSobel() : Entry<FT>("SpeSobel") {}
+  EntrySpeSobel() : Entry<FT>("SpeSobel"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -237,7 +237,7 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear") {}
+  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -273,7 +273,7 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear") {}
+  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -309,7 +309,7 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear") {}
+  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -345,7 +345,7 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe;
 
  public:
-  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear") {}
+  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -381,7 +381,7 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
   PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>> pe;
 
  public:
-  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic") {}
+  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -417,7 +417,7 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
   PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>> pe;
 
  public:
-  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic") {}
+  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -453,7 +453,7 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
   PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>> pe;
 
  public:
-  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic") {}
+  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,
@@ -489,7 +489,7 @@ class EntrySpeSobelDirIpCubic : public Entry<FT> {
   PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>> pe;
 
  public:
-  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic") {}
+  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic"), pe() {}
   virtual void process(const std::string& src_name,
                        const cv::Mat& src,
                        const GradFT<FT>& g,

@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 
   // init as same line (e.g. diagonal of mat)
   struct Dists {
-    Dists() {}
+    Dists() : id(0), nd(0) {}
     Dists(FT i, FT n = 0) : id(i), nd(n) {}
 
     FT id, nd;  // intersection distance and normal distance

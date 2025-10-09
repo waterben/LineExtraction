@@ -8,6 +8,8 @@ using namespace cv;
 
 class InterpolateTest : public ::testing::Test {
  protected:
+  InterpolateTest() : test_img(), gradient(), peak() {}
+
   void SetUp() override {
     // Create test image
     test_img = Mat::zeros(5, 5, CV_32F);

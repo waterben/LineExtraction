@@ -83,13 +83,11 @@ class ThresholdOtsu {
  public:
   typedef IT img_type;
 
-  explicit ThresholdOtsu(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0) : intensity_range_(r_min, r_max) {
-    scale_ = static_cast<FT>(N) / static_cast<FT>(intensity_range_.size());
-  }
+  explicit ThresholdOtsu(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0)
+      : intensity_range_(r_min, r_max), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
-  explicit ThresholdOtsu(const Range<IT>& r) : intensity_range_(r) {
-    scale_ = static_cast<FT>(N) / static_cast<FT>(intensity_range_.size());
-  }
+  explicit ThresholdOtsu(const Range<IT>& r)
+      : intensity_range_(r), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
   //! Compute threshold
   inline IT process(const cv::Mat& mag) const {

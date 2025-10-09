@@ -83,7 +83,13 @@ class EsdLinking : public EsdBase<MT, index_type> {
 
  public:
   EsdLinking(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5)
-      : EsdBase<MT, index_type>(), minPixels_(minPix), maxGap_(maxGap), magMul_(magMul), magTh_(magTh) {
+      : EsdBase<MT, index_type>(),
+        dir_(),
+        minPixels_(minPix),
+        maxGap_(maxGap),
+        magMul_(magMul),
+        magTh_(magTh),
+        addedSeeds_() {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;

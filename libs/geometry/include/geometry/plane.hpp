@@ -61,6 +61,7 @@ class Plane {
 
  public:
   typedef FT value_type;
+  virtual ~Plane() = default;
 
   Plane() : d_(0), n_(0, 0, 0) {}
 
@@ -81,9 +82,8 @@ class Plane {
   }
 
   //! Init Plane by three points
-  Plane(const Vec3<FT>& p1, const Vec3<FT>& p2, const Vec3<FT>& p3) : d_(0) {
+  Plane(const Vec3<FT>& p1, const Vec3<FT>& p2, const Vec3<FT>& p3) : n_(p2 - p1), d_(0) {
     // compute two directions and normal from this direction
-    n_ = p2 - p1;
     n_ = n_.cross(p3 - p1);
     if (n_.dot(n_) <= LIMITS<FT>::tau()) {
       n_ = Vec3<FT>(0, 0, 0);
@@ -94,8 +94,7 @@ class Plane {
   }
 
   //! Init Plane by Line3 and point
-  Plane(const Vec3<FT>& p, const Line3<FT>& l) : d_(0) {
-    n_ = l.origin() - p;
+  Plane(const Vec3<FT>& p, const Line3<FT>& l) : n_(l.origin() - p), d_(0) {
     n_ = n_.cross(l.direction());
     if (n_.dot(n_) <= LIMITS<FT>::tau()) {
       n_ = Vec3<FT>(0, 0, 0);
