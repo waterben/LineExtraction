@@ -70,12 +70,12 @@ Rect2d selectROI(const String& video_name, const Mat& frame) {
     Rect2d box;
 
     static void mouseHandler(int event, int x, int y, int flags, void* param) {
-      Data* data = (Data*)param;
+      Data* data = static_cast<Data*>(param);
       switch (event) {
         // start to select the bounding box
         case EVENT_LBUTTONDOWN:
           data->box = Rect(x, y, 0, 0);
-          data->center = Point2f((float)x, (float)y);
+          data->center = Point2f(static_cast<float>(x), static_cast<float>(y));
           break;
         // update the selected bounding box
         case EVENT_MOUSEMOVE:

@@ -3127,8 +3127,8 @@ void QCPLineEnding::draw(QCPPainter* painter, const QVector2D& pos, const QVecto
   QVector2D lengthVec(dir.normalized());
   if (lengthVec.isNull()) lengthVec = QVector2D(1, 0);
   QVector2D widthVec(-lengthVec.y(), lengthVec.x());
-  lengthVec *= (float)(mLength * (mInverted ? -1 : 1));
-  widthVec *= (float)(mWidth * 0.5 * (mInverted ? -1 : 1));
+  lengthVec *= static_cast<float>(mLength * (mInverted ? -1 : 1));
+  widthVec *= static_cast<float>(mWidth * 0.5 * (mInverted ? -1 : 1));
 
   QPen penBackup = painter->pen();
   QBrush brushBackup = painter->brush();
@@ -3212,10 +3212,10 @@ void QCPLineEnding::draw(QCPPainter* painter, const QVector2D& pos, const QVecto
         // if drawing with thick (non-cosmetic) pen, shift bar a little in line direction to prevent line from sticking
         // through bar slightly
         painter->drawLine((pos + widthVec + lengthVec * 0.2f * (mInverted ? -1 : 1) +
-                           dir.normalized() * qMax(1.0f, (float)painter->pen().widthF()) * 0.5f)
+                           dir.normalized() * qMax(1.0f, static_cast<float>(painter->pen().widthF())) * 0.5f)
                               .toPointF(),
                           (pos - widthVec - lengthVec * 0.2f * (mInverted ? -1 : 1) +
-                           dir.normalized() * qMax(1.0f, (float)painter->pen().widthF()) * 0.5f)
+                           dir.normalized() * qMax(1.0f, static_cast<float>(painter->pen().widthF())) * 0.5f)
                               .toPointF());
       }
       break;
@@ -4587,7 +4587,7 @@ void QCPAxis::setScaleRatio(const QCPAxis* otherAxis, double ratio) {
   else
     ownPixelSize = axisRect()->height();
 
-  double newRangeSize = ratio * otherAxis->range().size() * ownPixelSize / (double)otherPixelSize;
+  double newRangeSize = ratio * otherAxis->range().size() * ownPixelSize / static_cast<double>(otherPixelSize);
   setRange(range().center(), newRangeSize, Qt::AlignCenter);
 }
 
@@ -4647,16 +4647,18 @@ double QCPAxis::pixelToCoord(double value) const {
   if (orientation() == Qt::Horizontal) {
     if (mScaleType == stLinear) {
       if (!mRangeReversed)
-        return (value - mAxisRect->left()) / (double)mAxisRect->width() * mRange.size() + mRange.lower;
+        return (value - mAxisRect->left()) / static_cast<double>(mAxisRect->width()) * mRange.size() + mRange.lower;
       else
-        return -(value - mAxisRect->left()) / (double)mAxisRect->width() * mRange.size() + mRange.upper;
+        return -(value - mAxisRect->left()) / static_cast<double>(mAxisRect->width()) * mRange.size() + mRange.upper;
     } else  // mScaleType == stLogarithmic
     {
       if (!mRangeReversed)
-        return qPow(mRange.upper / mRange.lower, (value - mAxisRect->left()) / (double)mAxisRect->width()) *
+        return qPow(mRange.upper / mRange.lower,
+                    (value - mAxisRect->left()) / static_cast<double>(mAxisRect->width())) *
                mRange.lower;
       else
-        return qPow(mRange.upper / mRange.lower, (mAxisRect->left() - value) / (double)mAxisRect->width()) *
+        return qPow(mRange.upper / mRange.lower,
+                    (mAxisRect->left() - value) / static_cast<double>(mAxisRect->width())) *
                mRange.upper;
     }
   } else  // orientation() == Qt::Vertical

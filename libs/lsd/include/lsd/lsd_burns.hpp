@@ -284,7 +284,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
  private:
   void segmentationNMS() {
-    const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
 
     // pointer to the magnitude

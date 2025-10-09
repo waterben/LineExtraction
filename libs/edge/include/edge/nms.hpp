@@ -397,7 +397,7 @@ struct FastNMS8 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
     seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
@@ -471,7 +471,7 @@ struct FastNMS8 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
     seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
@@ -845,7 +845,7 @@ struct FastNMS4 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
     seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
@@ -919,7 +919,7 @@ struct FastNMS4 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
     seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));

@@ -742,7 +742,9 @@ class QCP_LIB_DECL QCPLayoutElement : public QCPLayerable {
   QCP::MarginSides autoMargins() const { return mAutoMargins; }
   QSize minimumSize() const { return mMinimumSize; }
   QSize maximumSize() const { return mMaximumSize; }
-  QCPMarginGroup* marginGroup(QCP::MarginSide side) const { return mMarginGroups.value(side, (QCPMarginGroup*)0); }
+  QCPMarginGroup* marginGroup(QCP::MarginSide side) const {
+    return mMarginGroups.value(side, static_cast<QCPMarginGroup*>(0));
+  }
   QHash<QCP::MarginSide, QCPMarginGroup*> marginGroups() const { return mMarginGroups; }
 
   // setters:

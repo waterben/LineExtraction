@@ -8,6 +8,9 @@ add_library(lib_qplot ${LIBRARY_TYPE}
     include/qplot/PlotWindow.h
 )
 
+# Re-enable warnings to fix them properly
+# target_compile_options(lib_qplot PRIVATE -w)
+
 set_target_properties(lib_qplot PROPERTIES
     AUTOMOC ON
 )

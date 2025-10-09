@@ -29,6 +29,9 @@ add_library(lib_qplot3d ${LIBRARY_TYPE}
     include/qplot3d/qwt3d_surfaceplot.h
 )
 
+# Re-enable warnings to fix them properly
+# target_compile_options(lib_qplot3d PRIVATE -w)
+
 set_target_properties(lib_qplot3d PROPERTIES
     AUTOMOC ON
 )

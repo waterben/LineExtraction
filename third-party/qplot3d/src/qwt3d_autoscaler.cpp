@@ -13,14 +13,14 @@ double floorExt(int& exponent, double x, std::vector<double>& sortedmantissi) {
 
   double sign = (x > 0) ? 1.0 : -1.0;
   double lx = log10(fabs(x));
-  exponent = (int)floor(lx);
+  exponent = static_cast<int>(floor(lx));
 
   double fr = pow(10.0, lx - exponent);
   if (fr >= 10.0) {
     fr = 1.0;
     ++exponent;
   } else {
-    for (int i = (int)sortedmantissi.size() - 1; i >= 0; --i) {
+    for (int i = static_cast<int>(sortedmantissi.size()) - 1; i >= 0; --i) {
       if (fr >= sortedmantissi[i]) {
         fr = sortedmantissi[i];
         break;
@@ -112,11 +112,11 @@ int LinearAutoScaler::segments(
   double val = m * pow(10.0, n);
   double delta = (stop - anchor) / val;
 
-  r_intervals = (int)floor(delta);  // right side intervals
+  r_intervals = static_cast<int>(floor(delta));  // right side intervals
 
   delta = (anchor - start) / val;
 
-  l_intervals = (int)floor(delta);  // left side intervals
+  l_intervals = static_cast<int>(floor(delta));  // left side intervals
 
   return r_intervals + l_intervals;
 }

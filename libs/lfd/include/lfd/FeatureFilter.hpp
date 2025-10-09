@@ -111,7 +111,8 @@ class FeatureFilter {
   //! create match set by filter
   template <class FMV>
   void create(size_t lSize, size_t rSize, FMV& matches) const {
-    createDetail(lSize, rSize, matches, (typename std::iterator_traits<typename FMV::iterator>::iterator_category*)0);
+    createDetail(lSize, rSize, matches,
+                 static_cast<typename std::iterator_traits<typename FMV::iterator>::iterator_category*>(0));
   }
 
   //! create match set by filter and mask vectors (inverted masks, != 0 is not masked, == 0 is masked, count the number
@@ -119,7 +120,7 @@ class FeatureFilter {
   template <class FMV, class MV>
   void create(size_t lSize, size_t rSize, FMV& matches, MV& lm, MV& rm) const {
     createDetail(lSize, rSize, matches, lm, rm,
-                 (typename std::iterator_traits<typename FMV::iterator>::iterator_category*)0);
+                 static_cast<typename std::iterator_traits<typename FMV::iterator>::iterator_category*>(0));
   }
 
 

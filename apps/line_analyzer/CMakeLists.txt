@@ -60,3 +60,6 @@ le_add_executable(app_line_analyzer
         le::opencv
         dlib::dlib
 )
+
+# Re-enable warnings to fix them properly
+# target_compile_options(app_line_analyzer PRIVATE -Wno-old-style-cast)

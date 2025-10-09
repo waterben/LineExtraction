@@ -212,7 +212,7 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
 //        /* select lines and descriptors from first octave */
 //        std::vector<KeyLine> octave0_1, octave0_2;
 //        Mat leftDEscr, rightDescr;
-//        for ( int i = 0; i < (int) klsd1.size(); i++ )
+//        for ( int i = 0; i < static_cast<int> klsd1.size(); i++ )
 //        {
 //            if( klsd1[i].octave == 0 )
 //            {
@@ -221,7 +221,7 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
 //            }
 //        }
 
-//        for ( int j = 0; j < (int) klsd2.size(); j++ )
+//        for ( int j = 0; j < static_cast<int> klsd2.size(); j++ )
 //        {
 //            if( klsd2[j].octave == 0 )
 //            {
@@ -240,7 +240,7 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
 //        /* select best matches */
 //        std::vector<DMatch> good_matches;
 //        good_matches.clear();
-//        for ( int i = 0; i < (int) lsd_matches.size(); i++ )
+//        for ( int i = 0; i < static_cast<int> lsd_matches.size(); i++ )
 //        {
 //            if( lsd_matches[i].distance < MATCHES_DIST_THRESHOLD_LM )
 //                good_matches.push_back( lsd_matches[i] );
@@ -256,9 +256,9 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
 //              KeyLine kl = octave0_1[i];
 //              {
 //                /* get a random color */
-//                int R = ( rand() % (int) ( 255 + 1 ) );
-//                int G = ( rand() % (int) ( 255 + 1 ) );
-//                int B = ( rand() % (int) ( 255 + 1 ) );
+//                int R = ( rand() % static_cast<int> ( 255 + 1 ) );
+//                int G = ( rand() % static_cast<int> ( 255 + 1 ) );
+//                int B = ( rand() % static_cast<int> ( 255 + 1 ) );
 
 //                /* get extremes of line */
 //                Point pt1 = Point( kl.startPointX, kl.startPointY );
@@ -306,7 +306,7 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
   /* select best matches */
   std::vector<DMatch> good_matches;
   good_matches.clear();
-  for (int i = 0; i < (int)lsd_matches.size(); i++) {
+  for (int i = 0; i < static_cast<int> lsd_matches.size(); i++) {
     if (lsd_matches[i].distance < MATCHES_DIST_THRESHOLD_LM) good_matches.push_back(lsd_matches[i]);
   }
   //        imshow("Detected matches", drawKeyLineMatches<FT,DescriptorMatch<FT>>(cam0grey, klV0, cam1grey, klV1,

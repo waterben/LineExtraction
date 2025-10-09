@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 
   int hist_w = 512;
   int hist_h = 400;
-  int bin_w = cvRound((double)hist_w / histSize);
+  int bin_w = cvRound(static_cast<double>(hist_w) / histSize);
 
   Mat histImage(hist_h, hist_w, CV_8U, Scalar(0, 0, 0));
 

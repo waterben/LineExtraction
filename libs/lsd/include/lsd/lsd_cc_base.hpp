@@ -186,7 +186,7 @@ class LsdCCBase : public LsdBase<FT, LPT> {
  private:
   // compute non maxima supression
   inline void computeNMS() {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds_.clear();
     seeds_.reserve(static_cast<size_t>(size_ / 3));

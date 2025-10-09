@@ -322,7 +322,7 @@ class LsdFBW : public LsdBase<FT, LPT> {
 
   // Compute threshold filtered magnitude and direction + seeds, using NMS
   void seedsNMS() {
-    const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     const mag_type* pmag = grad_.magnitude().template ptr<mag_type>();
     FT* pth_dir = th_dir_.ptr<FT>();
