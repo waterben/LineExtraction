@@ -160,8 +160,8 @@ int main() {
   std::ofstream ofs;
   ofs.open("line_fit_profiling.csv");
 
-  for_each(table.begin(), table.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table.begin(), table.end(), [&](const std::vector<std::string>& table_row) {
+    for_each(table_row.begin(), table_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });

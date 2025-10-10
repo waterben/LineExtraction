@@ -228,7 +228,7 @@ class FdcCombinedMat : public FdcMat<FT, GT> {
   void addCreator(const Ptr& creator) {
     creators_.push_back(creator);
     size_ = 0;
-    for_each(creators_.begin(), creators_.end(), [&](const Ptr& creator) { this->size_ += creator->size(); });
+    for_each(creators_.begin(), creators_.end(), [&](const Ptr& desc_creator) { this->size_ += desc_creator->size(); });
   }
 
   virtual void create(const GT& input, cv::Mat& dst) {

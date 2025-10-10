@@ -52,7 +52,7 @@ struct Entry : public PerformanceTaskDefault {
                 << "ms" << std::endl;
   }
 
-  void value(const std::string& name, const Value& value) { lsd->value(name, value); }
+  void value(const std::string& param_name, const Value& value) { lsd->value(param_name, value); }
 };
 
 PerformanceTestPtr createLSDPerformanceTest(const lsfm::DataProviderList& provider) {

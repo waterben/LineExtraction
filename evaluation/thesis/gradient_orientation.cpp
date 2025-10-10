@@ -597,8 +597,8 @@ int main() {
   std::ofstream ofs;
   ofs.open("gradient_orientation_box.csv");
 
-  for_each(table_box.begin(), table_box.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table_box.begin(), table_box.end(), [&](const std::vector<std::string>& box_row) {
+    for_each(box_row.begin(), box_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });
@@ -610,8 +610,8 @@ int main() {
 
   ofs.open("gradient_orientation_disk.csv");
 
-  for_each(table_disk.begin(), table_disk.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table_disk.begin(), table_disk.end(), [&](const std::vector<std::string>& disk_row) {
+    for_each(disk_row.begin(), disk_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });

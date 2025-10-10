@@ -104,23 +104,23 @@ void PerformanceTest::run(int runs, bool verbose) {
 }
 
 void PerformanceTest::writeMeasure(const PerformanceMeasure& pm, StringTable& StringTable, size_t col, size_t row) {
-  std::string name;
+  std::string measure_name;
   if (col == 1) {
-    name = pm.sourceName;
-    if (showMegaPixel) name += utility::format(" (%.2f)", (pm.width * pm.height));
+    measure_name = pm.sourceName;
+    if (showMegaPixel) measure_name += utility::format(" (%.2f)", (pm.width * pm.height));
   }
 
   PerformanceResult res = pm.computeResult();
   if (showTotal) {
-    if (col == 1) StringTable(row, 0) = "total:" + name;
+    if (col == 1) StringTable(row, 0) = "total:" + measure_name;
     StringTable(row++, col) = utility::format("%.3f", res.total);
   }
   if (showMean) {
-    if (col == 1) StringTable(row, 0) = "mean:" + name;
+    if (col == 1) StringTable(row, 0) = "mean:" + measure_name;
     StringTable(row++, col) = utility::format("%.3f", res.mean);
   }
   if (showStdDev) {
-    if (col == 1) StringTable(row, 0) = "sdev:" + name;
+    if (col == 1) StringTable(row, 0) = "sdev:" + measure_name;
     StringTable(row, col) = utility::format("%.3f", res.stddev);
   }
 }
@@ -142,12 +142,12 @@ StringTable PerformanceTest::resultTable(bool fullReport) {
   col = 1;
   size_t row = 1;
   // in results we have row by row since each task is a col and the tasks are always written in sequence
-  for_each(results_.begin(), results_.end(), [&](const DataProviderTaskMeasure& data) {
-    PerformanceMeasure pm = data.accumulatedResult();
-    writeMeasure(pm, table, col, row);
+  for_each(results_.begin(), results_.end(), [&](const DataProviderTaskMeasure& provider_data) {
+    PerformanceMeasure accumulated_pm = provider_data.accumulatedResult();
+    writeMeasure(accumulated_pm, table, col, row);
     if (fullReport) {
-      for_each(data.results.begin(), data.results.end(),
-               [&](const PerformanceMeasure& pm) { writeMeasure(pm, table, col, row); });
+      for_each(provider_data.results.begin(), provider_data.results.end(),
+               [&](const PerformanceMeasure& measure_pm) { writeMeasure(measure_pm, table, col, row); });
     }
     ++col;
     if (col >= cols) {

@@ -33,24 +33,27 @@ class QWT3D_EXPORT SurfacePlot : public Plot3D {
   /**
   \deprecated  Use loadFromData instead
   */
-  bool createDataRepresentation(
-      Qwt3D::Triple** data, unsigned int columns, unsigned int rows, bool uperiodic = false, bool vperiodic = false) {
-    return loadFromData(data, columns, rows, uperiodic, vperiodic);
+  bool createDataRepresentation(Qwt3D::Triple** surface_data,
+                                unsigned int columns,
+                                unsigned int rows,
+                                bool uperiodic = false,
+                                bool vperiodic = false) {
+    return loadFromData(surface_data, columns, rows, uperiodic, vperiodic);
   }
   //! Equivalent to loadFromData();
   /**
   \deprecated  Use loadFromData instead
   */
   bool createDataRepresentation(
-      double** data, unsigned int columns, unsigned int rows, double minx, double maxx, double miny, double maxy) {
-    return loadFromData(data, columns, rows, minx, maxx, miny, maxy);
+      double** plot_data, unsigned int columns, unsigned int rows, double minx, double maxx, double miny, double maxy) {
+    return loadFromData(plot_data, columns, rows, minx, maxx, miny, maxy);
   }
   //! Equivalent to loadFromData();
   /**
   \deprecated  Use loadFromData instead
   */
-  bool createDataRepresentation(Qwt3D::TripleField const& data, Qwt3D::CellField const& poly) {
-    return loadFromData(data, poly);
+  bool createDataRepresentation(Qwt3D::TripleField const& field_data, Qwt3D::CellField const& poly) {
+    return loadFromData(field_data, poly);
   }
 
 

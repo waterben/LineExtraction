@@ -471,12 +471,12 @@ class LsdBurns : public LsdBase<FT, LPT> {
     pmap = partitionMap_.ptr<uchar>();
     for (int i = 0; i != part_num_; ++i) {
       part = i + 1;
-      size_t size = static_cast<size_t>(static_cast<double>(seeds_[static_cast<size_t>(i)].size()) * sscale) + 100;
-      if (size > 10000) size = 10000;
+      size_t cc_size = static_cast<size_t>(static_cast<double>(seeds_[static_cast<size_t>(i)].size()) * sscale) + 100;
+      if (cc_size > 10000) cc_size = 10000;
       ccLists_.push_back(CcData(static_cast<uchar>(static_cast<int>(i))));
       // use the CcData struct
       ccdata = &ccLists_.back().data;
-      ccdata->reserve(size);
+      ccdata->reserve(cc_size);
 
       // iterate the seed edges of the partition
       for_each(seeds_[static_cast<size_t>(i)].begin(), seeds_[static_cast<size_t>(i)].end(), [&](index_type idx) {
@@ -489,7 +489,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
           else {
             ccLists_.push_back(CcData(static_cast<uchar>(i)));
             ccdata = &ccLists_.back().data;
-            ccdata->reserve(size);
+            ccdata->reserve(cc_size);
           }
         }
       });
@@ -501,13 +501,13 @@ class LsdBurns : public LsdBase<FT, LPT> {
     pmap = partitionMapShifted_.ptr<uchar>();
     for (int i = 0; i != part_num_; ++i) {
       part = i + 1;
-      size_t size =
+      size_t cc_size_shifted =
           static_cast<size_t>(static_cast<double>(seeds_shifted_[static_cast<size_t>(i)].size()) * sscale) + 100;
-      if (size > 10000) size = 10000;
+      if (cc_size_shifted > 10000) cc_size_shifted = 10000;
       ccListsShifted_.push_back(CcData(static_cast<uchar>(i), true));
       // use the CcData struct
       ccdata = &ccListsShifted_.back().data;
-      ccdata->reserve(size);
+      ccdata->reserve(cc_size_shifted);
 
       // iterate the seed edges of the partition
       for_each(seeds_shifted_[static_cast<size_t>(i)].begin(), seeds_shifted_[static_cast<size_t>(i)].end(),
@@ -521,7 +521,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
                    else {
                      ccListsShifted_.push_back(CcData(static_cast<uchar>(i), true));
                      ccdata = &ccListsShifted_.back().data;
-                     ccdata->reserve(size);
+                     ccdata->reserve(cc_size_shifted);
                    }
                  }
                });

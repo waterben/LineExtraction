@@ -11,7 +11,7 @@ struct TestData : public lsfm::GenericInputData {
 };
 
 struct TestDataProvider : public lsfm::DataProvider<TestData> {
-  TestDataProvider(const std::string& name) : DataProvider(name), data_(), pos_(0) {
+  TestDataProvider(const std::string& provider_name) : DataProvider(provider_name), data_(), pos_(0) {
     // Add some test data
     data_.emplace_back("item1", 10);
     data_.emplace_back("item2", 20);

@@ -69,13 +69,13 @@ typedef std::vector<DataProviderPtr> DataProviderList;
 
 //! Image data set for performance test
 struct FileDataProvider : public DataProviderBase {
-  FileDataProvider(std::string& name) : DataProviderBase(name) {}
-  FileDataProvider(const std::filesystem::path& p, const std::string& name, bool recursive = true)
-      : DataProviderBase(name) {
+  FileDataProvider(std::string& provider_name) : DataProviderBase(provider_name) {}
+  FileDataProvider(const std::filesystem::path& p, const std::string& provider_name, bool recursive = true)
+      : DataProviderBase(provider_name) {
     parse(p, recursive);
   }
-  FileDataProvider(const std::vector<std::filesystem::path>& f, const std::string& name, bool recursive = true)
-      : DataProviderBase(name) {
+  FileDataProvider(const std::vector<std::filesystem::path>& f, const std::string& provider_name, bool recursive = true)
+      : DataProviderBase(provider_name) {
     parse(f, recursive);
   }
 

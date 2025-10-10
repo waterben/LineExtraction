@@ -51,9 +51,11 @@ struct Entry {
   int flags;
   double low, high;
 
-  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
+  Value value(const std::string& param_name) { return dynamic_cast<ValueManager*>(&(*filter))->value(param_name); }
 
-  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
+  void value(const std::string& param_name, const Value& v) {
+    dynamic_cast<ValueManager*>(&(*filter))->value(param_name, v);
+  }
 
 
   inline bool rgb() const { return flags & ENTRY_RGB; }

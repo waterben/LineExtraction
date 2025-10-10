@@ -574,25 +574,25 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     std::function<bool(State & fs)> find_next = find_next_no_gap;
     if (max_gap_ > 0) find_next = find_next_gap;
 
-    auto search_no_cr = [&](State s, char) {
+    auto search_no_cr = [&](State state, char) {
       // set map
-      plsmap[s.idx] = seg.id;
+      plsmap[state.idx] = seg.id;
       // update line point list
-      this->points_.push_back(PT(s.x, s.y));
+      this->points_.push_back(PT(state.x, state.y));
 
-      while (find_next(s)) {
+      while (find_next(state)) {
         // set map
-        plsmap[s.idx] = seg.id;
-        this->points_.push_back(PT(s.x, s.y));
+        plsmap[state.idx] = seg.id;
+        this->points_.push_back(PT(state.x, state.y));
       }
     };
 
-    auto search_cr = [&](State s, char ls_dir) {
+    auto search_cr = [&](State search_state, char ls_dir) {
       State fs, fs2;
 
       // find next pixels
-      while (find_next(fs = s)) {
-        int diff_s = abs_diffmap[static_cast<int>(ls_dir - s.dir)];
+      while (find_next(fs = search_state)) {
+        int diff_s = abs_diffmap[static_cast<int>(ls_dir - search_state.dir)];
         int diff_fs = abs_diffmap[static_cast<int>(ls_dir - fs.dir)];
         //                         |
         // check for hard corner  _|
@@ -609,28 +609,28 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
             //       \     \    __
             // case _/    _/    _/
             if (diff_fs > 2 && diff_fs2 > 2) {
-              // add s to current pattern
+              // add search_state to current pattern
               // set map and add point to list
-              plsmap[s.idx] = seg.id;
-              this->points_.push_back(PT(s.x, s.y));
+              plsmap[search_state.idx] = seg.id;
+              this->points_.push_back(PT(search_state.x, search_state.y));
             }
             return;
           }
           //                            |
           //                           /
           // check for hard corner   _|
-          if (diff_s == 2 && s.dir == fs2.dir) return;
+          if (diff_s == 2 && search_state.dir == fs2.dir) return;
         }
         // set map
-        plsmap[s.idx] = seg.id;
-        this->points_.push_back(PT(s.x, s.y));
-        ls_dir = s.dir;
-        s = fs;
+        plsmap[search_state.idx] = seg.id;
+        this->points_.push_back(PT(search_state.x, search_state.y));
+        ls_dir = search_state.dir;
+        search_state = fs;
       }
 
       // set map
-      plsmap[s.idx] = seg.id;
-      this->points_.push_back(PT(s.x, s.y));
+      plsmap[search_state.idx] = seg.id;
+      this->points_.push_back(PT(search_state.x, search_state.y));
     };
 
 
@@ -642,16 +642,16 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       int idx = static_cast<int>(point2Index(PT(getX(p), getY(p)), cols_));
       if (plsmap[idx]) return;
 
-      State s = State(idx, getX(p), getY(p), pemap[idx]);
-      State ls = s;
+      State initial_state = State(idx, getX(p), getY(p), pemap[idx]);
+      State ls = initial_state;
       seg.p_beg = this->points_.size();
-      // CV_Assert(s.x != 83 | s.y != 61);
+      // CV_Assert(initial_state.x != 83 | initial_state.y != 61);
 
       // rv: <---, fw: --->
       const short(*rvdmap)[4] = dmap + 4;
       const short(*fwdmap)[4] = dmap;
 
-      switch (s.dir) {
+      switch (initial_state.dir) {
         case 0:  // <---x---> : fw: <---, rv: --->
         case 7:
           // just switch fw with rv

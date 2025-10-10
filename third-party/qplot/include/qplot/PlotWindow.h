@@ -214,6 +214,6 @@ inline QCPItemLine* PlotWindow::line(T x1, T y1, T x2, T y2, bool fit_axis, cons
 
 template <typename FT, template <class> class LPT>
 inline QCPItemLine* PlotWindow::line(const lsfm::LineSegment<FT, LPT>& l, bool fit_axis, const QPen pen) {
-  lsfm::Vec<FT, 4> data = l.endPoints();
-  return line(data[0], data[1], data[2], data[3], fit_axis, pen);
+  lsfm::Vec<FT, 4> line_data = l.endPoints();
+  return line(line_data[0], line_data[1], line_data[2], line_data[3], fit_axis, pen);
 }

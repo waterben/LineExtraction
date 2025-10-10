@@ -105,12 +105,12 @@ void ControlWindow::loadImage() {
   sources.clear();
   ui->layout_image_options->setEnabled(false);
 
-  string file = ui->le_image_filename->text().toStdString();
+  string filename = ui->le_image_filename->text().toStdString();
 
-  img = cv::imread(file, cv::IMREAD_UNCHANGED);
+  img = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
   if (img.empty()) {
-    cout << "Can not open " << file << endl;
+    cout << "Can not open " << filename << endl;
     ui->le_image_filename->setText("None");
     return;
   }

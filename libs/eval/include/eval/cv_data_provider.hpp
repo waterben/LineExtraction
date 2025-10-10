@@ -17,13 +17,15 @@ using CVDataProvider = DataProvider<CVData>;
 
 //! Image data set for performance test
 struct FileCVDataProvider : public CVDataProvider {
-  FileCVDataProvider(const std::string& name) : CVDataProvider(name) {}
-  FileCVDataProvider(const std::filesystem::path& p, const std::string& name, bool recursive = true)
-      : CVDataProvider(name) {
+  FileCVDataProvider(const std::string& provider_name) : CVDataProvider(provider_name) {}
+  FileCVDataProvider(const std::filesystem::path& p, const std::string& provider_name, bool recursive = true)
+      : CVDataProvider(provider_name) {
     parse(p, recursive);
   }
-  FileCVDataProvider(const std::vector<std::filesystem::path>& f, const std::string& name, bool recursive = true)
-      : CVDataProvider(name) {
+  FileCVDataProvider(const std::vector<std::filesystem::path>& f,
+                     const std::string& provider_name,
+                     bool recursive = true)
+      : CVDataProvider(provider_name) {
     parse(f, recursive);
   }
 

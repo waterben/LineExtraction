@@ -179,11 +179,11 @@ int main() {
   for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
 
   for (size_t col = 1; col != 6; ++col) {
-    size_t row = 1;
+    size_t inner_row = 1;
     for_each(filter.begin(), filter.end(), [&](Entry& e) {
       double time;
-      table[row][col] = utility::format("%.3f", processError(e, path, static_cast<int>(10 * col), time));
-      table[row++][col + 5] = utility::format("%.3f", time);
+      table[inner_row][col] = utility::format("%.3f", processError(e, path, static_cast<int>(10 * col), time));
+      table[inner_row++][col + 5] = utility::format("%.3f", time);
     });
   }
 

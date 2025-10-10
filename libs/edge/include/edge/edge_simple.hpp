@@ -124,8 +124,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
 
     for_each(seeds.begin(), seeds.end(), [&](index_type idx) {
-      char dir = pdir_[idx];
-      if (dir < 0) return;
+      char direction = pdir_[idx];
+      if (direction < 0) return;
 
       size_t seg_beg = points_.size(), seg_end = points_.size();
 #ifdef DRAW_MODE

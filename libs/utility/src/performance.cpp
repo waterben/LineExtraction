@@ -76,10 +76,10 @@ void PerformanceTest::run(int runs, bool verbose) {
     while (data[pos]->get(src_name, src)) {
       try {
         if (verbose) std::cout << "  Process source: " << src_name << std::endl;
-        std::unique_ptr<TaskData> data = prepareTaskData(src_name, src);
+        std::unique_ptr<TaskData> task_data = prepareTaskData(src_name, src);
         ++providerRecords_;
         for_each(tasks.begin(), tasks.end(), [&, this](PerformanceTaskPtr& task) {
-          task->run(*data, runs, verbose);
+          task->run(*task_data, runs, verbose);
           if (this->visualResults) task->saveResults(verbose);
         });
       } catch (std::exception& e) {
@@ -100,23 +100,23 @@ void PerformanceTest::run(int runs, bool verbose) {
 }
 
 void PerformanceTest::writeMeasure(const PerformanceMeasure& pm, StringTable& StringTable, size_t col, size_t row) {
-  std::string name;
+  std::string measure_name;
   if (col == 1) {
-    name = pm.sourceName;
-    if (showMegaPixel) name += utility::format(" (%.2f)", (pm.width * pm.height));
+    measure_name = pm.sourceName;
+    if (showMegaPixel) measure_name += utility::format(" (%.2f)", (pm.width * pm.height));
   }
 
   PerformanceResult res = pm.computeResult();
   if (showTotal) {
-    if (col == 1) StringTable(row, 0) = "total:" + name;
+    if (col == 1) StringTable(row, 0) = "total:" + measure_name;
     StringTable(row++, col) = utility::format("%.3f", res.total);
   }
   if (showMean) {
-    if (col == 1) StringTable(row, 0) = "mean:" + name;
+    if (col == 1) StringTable(row, 0) = "mean:" + measure_name;
     StringTable(row++, col) = utility::format("%.3f", res.mean);
   }
   if (showStdDev) {
-    if (col == 1) StringTable(row, 0) = "sdev:" + name;
+    if (col == 1) StringTable(row, 0) = "sdev:" + measure_name;
     StringTable(row, col) = utility::format("%.3f", res.stddev);
   }
 }
@@ -137,12 +137,12 @@ StringTable PerformanceTest::resultTable(bool fullReport) {
   col = 1;
   size_t row = 1;
   // in results we have row by row since each task is a col and the tasks are always written in sequence
-  for_each(results_.begin(), results_.end(), [&](const DataProviderTaskMeasure& data) {
-    PerformanceMeasure pm = data.accumulatedResult();
+  for_each(results_.begin(), results_.end(), [&](const DataProviderTaskMeasure& task_result_data) {
+    PerformanceMeasure pm = task_result_data.accumulatedResult();
     writeMeasure(pm, StringTable, col, row);
     if (fullReport) {
-      for_each(data.results.begin(), data.results.end(),
-               [&](const PerformanceMeasure& pm) { writeMeasure(pm, StringTable, col, row); });
+      for_each(task_result_data.results.begin(), task_result_data.results.end(),
+               [&](const PerformanceMeasure& measure) { writeMeasure(measure, StringTable, col, row); });
     }
     ++col;
     if (col >= cols) {

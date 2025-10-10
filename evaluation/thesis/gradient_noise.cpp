@@ -48,9 +48,11 @@ struct Entry {
   std::string name, what;
   int flags;
 
-  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
+  Value value(const std::string& param_name) { return dynamic_cast<ValueManager*>(&(*filter))->value(param_name); }
 
-  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
+  void value(const std::string& param_name, const Value& v) {
+    dynamic_cast<ValueManager*>(&(*filter))->value(param_name, v);
+  }
 
 
   inline bool rgb() const { return flags & ENTRY_RGB; }
@@ -205,9 +207,9 @@ int main(int /*argc*/, char** /*argv*/) {
   for_each(filter.begin(), filter.end(), [&](Entry& e) { table[static_cast<size_t>(row++)][0] = e.name; });
 
   for (int col = 1; col != 6; ++col) {
-    int row = 1;
+    int inner_row = 1;
     for_each(filter.begin(), filter.end(), [&](Entry& e) {
-      table[static_cast<size_t>(row++)][static_cast<size_t>(col)] =
+      table[static_cast<size_t>(inner_row++)][static_cast<size_t>(col)] =
           utility::format("%.3f", processError(e, path, 10 * col));
     });
   }
