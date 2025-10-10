@@ -24,6 +24,7 @@ struct Entry : public PerformanceTaskDefault {
 
   std::shared_ptr<GradientI<uchar, GT, MT, FT>> gradient;
 
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -45,6 +46,7 @@ struct Entry : public PerformanceTaskDefault {
                 << "ms" << std::endl;
   }
 
+  using PerformanceTaskDefault::saveResults;
   void saveResults() {}
 };
 

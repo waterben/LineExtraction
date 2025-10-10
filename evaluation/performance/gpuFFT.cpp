@@ -7,6 +7,7 @@ using namespace lsfm;
 struct EntryFFTCPU : public PerformanceTaskDefault {
   EntryFFTCPU() : PerformanceTaskDefault("FFT CPU") {}
 
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -37,6 +38,7 @@ struct EntryFFTCPU : public PerformanceTaskDefault {
 struct EntryFFTCL : public PerformanceTaskDefault {
   EntryFFTCL() : PerformanceTaskDefault("FFT CL") {}
 
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -73,6 +75,7 @@ struct EntryFFTCL : public PerformanceTaskDefault {
 struct EntryFFTCLNT : public PerformanceTaskDefault {
   EntryFFTCLNT() : PerformanceTaskDefault("FFT CL NT") {}
 
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();

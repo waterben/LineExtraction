@@ -8,6 +8,7 @@ template <int KS>
 struct EntryConvCPU : public PerformanceTaskDefault {
   EntryConvCPU() : PerformanceTaskDefault("Conv CPU " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -33,6 +34,7 @@ template <int KS>
 struct EntryConvCL : public PerformanceTaskDefault {
   EntryConvCL() : PerformanceTaskDefault("Conv CL " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -64,6 +66,7 @@ template <int KS>
 struct EntryConvCLNT : public PerformanceTaskDefault {
   EntryConvCLNT() : PerformanceTaskDefault("Conv CL NT " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();

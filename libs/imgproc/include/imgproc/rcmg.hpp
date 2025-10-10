@@ -433,7 +433,8 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
               "Window size for differences.");
     this->add("grad_rejection", std::bind(&RCMGradient<IT, 1, GT, MT, DT, DO>::rejection, this, std::placeholders::_1),
               "Vector rejection for noise compensation.");
-    this->add("grad_norm_type", std::bind(&RCMGradient<IT, 1, GT, MT, DT, DO>::normType, this, std::placeholders::_1),
+    this->add("grad_norm_type",
+              std::bind(&RCMGradient<IT, 1, GT, MT, DT, DO>::normTypeOption, this, std::placeholders::_1),
               "Norm type: L1 or L2.");
     updateMask(mask);
   }
@@ -448,7 +449,7 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     if (r.type()) s_ = r;
     return s_;
   }
-  Value normType(const Value& nt = Value::NAV()) {
+  Value normTypeOption(const Value& nt = Value::NAV()) {
     if (nt.type()) norm_ = nt;
     return norm_;
   }

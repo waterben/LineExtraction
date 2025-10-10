@@ -14,6 +14,7 @@ class EntryNMS4Fast : public PerformanceTaskDefault {
 
  public:
   EntryNMS4Fast() : PerformanceTaskDefault("NMS4 Fast"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -44,6 +45,7 @@ class EntryNMSFast : public PerformanceTaskDefault {
 
  public:
   EntryNMSFast() : PerformanceTaskDefault("NMS Fast"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -74,6 +76,7 @@ class EntryNMSFastDir : public PerformanceTaskDefault {
 
  public:
   EntryNMSFastDir() : PerformanceTaskDefault("NMS Fast Dir"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -106,6 +109,7 @@ class EntryNMSPreciseLinear : public PerformanceTaskDefault {
 
  public:
   EntryNMSPreciseLinear() : PerformanceTaskDefault("NMS Precise Linear"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -137,6 +141,7 @@ class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
 
  public:
   EntryNMSPreciseLinearDir() : PerformanceTaskDefault("NMS Precise Linear Dir"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -169,6 +174,7 @@ class EntryNMSPreciseCubic : public PerformanceTaskDefault {
 
  public:
   EntryNMSPreciseCubic() : PerformanceTaskDefault("NMS Precise Cubic"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -200,6 +206,7 @@ class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
 
  public:
   EntryNMSPreciseCubicDir() : PerformanceTaskDefault("NMS Precise Cubic Dir"), sobel(), nms() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -232,6 +239,7 @@ class EntryZCNoDir : public PerformanceTaskDefault {
 
  public:
   EntryZCNoDir() : PerformanceTaskDefault("ZC No Dir"), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -262,6 +270,7 @@ class EntryZCFast : public PerformanceTaskDefault {
 
  public:
   EntryZCFast() : PerformanceTaskDefault("ZC Fast"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -293,6 +302,7 @@ class EntryZCFastDir : public PerformanceTaskDefault {
 
  public:
   EntryZCFastDir() : PerformanceTaskDefault("ZC Fast Dir"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -326,6 +336,7 @@ class EntryZCPreciseLinear : public PerformanceTaskDefault {
 
  public:
   EntryZCPreciseLinear() : PerformanceTaskDefault("ZC Precise Linear"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -357,6 +368,7 @@ class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
 
  public:
   EntryZCPreciseLinearDir() : PerformanceTaskDefault("ZC Precise Linear Dir"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -390,6 +402,7 @@ class EntryZCPreciseCubic : public PerformanceTaskDefault {
 
  public:
   EntryZCPreciseCubic() : PerformanceTaskDefault("ZC Precise Cubic"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -420,7 +433,8 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
   ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator, PolarCV>> zc;
 
  public:
-  EntryZCPreciseCubicDir() : PerformanceTaskDefault("ZC Precise Cubic dir"), sobel(), laplace(), zc() {}
+  EntryZCPreciseCubicDir() : PerformanceTaskDefault("ZC Precise Cubic Dir"), sobel(), laplace(), zc() {}
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
