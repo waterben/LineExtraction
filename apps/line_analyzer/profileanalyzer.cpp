@@ -43,7 +43,7 @@ ProfileAnalyzer::ProfileAnalyzer(QWidget* parent)
   sprofile_plot = plot->qplot->addGraph();
   sprofile_plot->setPen(QPen(Qt::red, 2));
 
-  pa_indicator = 0;
+  pa_indicator = nullptr;
 
   createX();
 }
@@ -179,7 +179,7 @@ void ProfileAnalyzer::fitProfile() {
 }
 
 void ProfileAnalyzer::updatePlot() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_profile_show->isChecked()) {
     createProfile();
@@ -200,7 +200,7 @@ void ProfileAnalyzer::updatePlot() {
 }
 
 void ProfileAnalyzer::updateProfile() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_profile_show->isChecked()) {
     createProfile();
@@ -216,7 +216,7 @@ void ProfileAnalyzer::updateProfile() {
 }
 
 void ProfileAnalyzer::updateSProfile() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_single->isChecked()) {
     createSProfile();
@@ -325,7 +325,7 @@ void create_profile(const cv::Mat_<mat_type>& src,
 }
 
 void ProfileAnalyzer::createProfile() {
-  if (sources == 0 || sources->empty()) return;
+  if (sources == nullptr || sources->empty()) return;
   bool variance = ui->chb_std_dev->isChecked();
   bool sampled = ui->chb_line_dist->isChecked();
   float_type param = ui->spin_line_dist->value();
@@ -404,7 +404,7 @@ void create_sprofile(const cv::Mat_<mat_type>& src,
 }
 
 void ProfileAnalyzer::createSProfile() {
-  if (sources == 0 || sources->empty()) return;
+  if (sources == nullptr || sources->empty()) return;
   float_type pos = ui->spin_profile_pos->value();
   const int sourceIndex = ui->cb_data_source->currentData().toInt();
   if (sourceIndex < 0) return;

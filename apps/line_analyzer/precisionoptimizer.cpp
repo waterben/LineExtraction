@@ -4,7 +4,11 @@ using namespace lsfm;
 using namespace std;
 
 PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
-    : LATool("Precision Optimizer", parent), ui(new Ui::PrecisionOptimizer), sources(0), lines(0), lineSel(-1) {
+    : LATool("Precision Optimizer", parent),
+      ui(new Ui::PrecisionOptimizer),
+      sources(nullptr),
+      lines(nullptr),
+      lineSel(-1) {
   setWindowTitle("Precision Optimizer");
   ui->setupUi(this);
 
@@ -110,7 +114,7 @@ typename lsfm::MeanHelper<double, cv::Point_>::func_type getMean(int idx, bool s
 }
 
 void PrecisionOptimizer::optimizeLine() {
-  if (lineSel < 0 || lines == 0 || sources == 0) return;
+  if (lineSel < 0 || lines == nullptr || sources == nullptr) return;
   float_type d = 0, a = 0;
   double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
   Line& l = (*lines)[static_cast<std::size_t>(lineSel)];
@@ -378,7 +382,7 @@ void PrecisionOptimizer::optimizeLine() {
 }
 
 void PrecisionOptimizer::optimizeAllLines() {
-  if (lines == 0 || sources == 0) return;
+  if (lines == nullptr || sources == nullptr) return;
 
   double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
 

@@ -71,7 +71,7 @@ template <class EDGE, class NFA>
 void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(static_cast<uint64_t>(time(0)));
+  cv::RNG rng(static_cast<uint64_t>(time(nullptr)));
 
   std::vector<float> n;
   EdgeSegmentVector out;

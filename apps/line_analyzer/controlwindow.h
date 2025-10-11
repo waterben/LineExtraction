@@ -54,7 +54,8 @@ class ControlWindow : public QMainWindow {
   };
 
   struct Line {
-    Line(const LineSegment& l = LineSegment(), const LineMod& m = LineMod()) : segment(l), mod(m), line(0), normal(0) {}
+    Line(const LineSegment& l = LineSegment(), const LineMod& m = LineMod())
+        : segment(l), mod(m), line(nullptr), normal(nullptr) {}
     Line(const Line&) = default;
     Line& operator=(const Line&) = default;
 
@@ -99,7 +100,7 @@ class ControlWindow : public QMainWindow {
   LineVector quiver;
 
  public:
-  explicit ControlWindow(QWidget* parent = 0);
+  explicit ControlWindow(QWidget* parent = nullptr);
   ~ControlWindow();
 
   void addDetector(const DetectorPtr& detector);

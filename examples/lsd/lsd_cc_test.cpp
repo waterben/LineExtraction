@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   std::cout << lines.size() << " line segments found. For " << duration_ms / run << " ms." << std::endl;
 
   DataDescriptor idd = lsd.imageDataDescriptor();
-  cv::RNG rng(static_cast<uint64>(time(0)));
+  cv::RNG rng(static_cast<uint64>(time(nullptr)));
 
   cv::Mat emap = lsd.imageData()[3];
   cv::Mat emapImg;

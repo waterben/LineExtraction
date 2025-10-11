@@ -74,7 +74,7 @@ class Value {
       release();
     else
       type_ = STRING;
-    if (data == 0) {
+    if (data == nullptr) {
       data_.str = new char[1];
       data_.str[0] = 0;
     } else {
@@ -362,7 +362,7 @@ class Value {
   inline operator bool() const {
     return type_ == FLOAT                    ? data_.fval != 0
            : (type_ == INT || type_ == BOOL) ? data_.ival != 0
-           : type_ == STRING                 ? data_.str != 0
+           : type_ == STRING                 ? data_.str != nullptr
                                              : false;
   }
 };

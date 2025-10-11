@@ -33,7 +33,7 @@ class ProfileAnalyzer : public LATool {
   QCPItemLine* pa_indicator{nullptr};
 
  public:
-  explicit ProfileAnalyzer(QWidget* parent = 0);
+  explicit ProfileAnalyzer(QWidget* parent = nullptr);
   ~ProfileAnalyzer();
   void connectTools(ControlWindow* w);
 

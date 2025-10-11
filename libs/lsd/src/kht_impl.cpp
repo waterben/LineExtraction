@@ -853,7 +853,7 @@ class visited_map_t {
   inline void set_visited(const size_t rho_index, size_t theta_index) { m_map[theta_index][rho_index] = true; }
 
   // Class constructor.
-  visited_map_t() : m_map(0), m_rho_capacity(0), m_theta_capacity(0) {}
+  visited_map_t() : m_map(nullptr), m_rho_capacity(0), m_theta_capacity(0) {}
 
   visited_map_t(const visited_map_t&) = delete;
   visited_map_t& operator=(const visited_map_t&) = delete;

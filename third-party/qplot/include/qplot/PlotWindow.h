@@ -44,7 +44,7 @@ class PlotWindow : public QMainWindow {
   }
 
  public:
-  explicit PlotWindow(const char* title = "", QWidget* parent = 0);
+  explicit PlotWindow(const char* title = "", QWidget* parent = nullptr);
   ~PlotWindow();
   // direct access to custom plot
   QCustomPlot* qplot{nullptr};

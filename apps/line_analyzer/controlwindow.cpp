@@ -79,7 +79,7 @@ ControlWindow::ControlWindow(QWidget* parent)
   nmPen = QPen(QColor(50, 178, 255, 200));
   iPen = QPen(QColor(0, 255, 0, 200));
 
-  indicator = 0;
+  indicator = nullptr;
 
   ui->le_image_filename->setText("../../images/office1_low.JPG");
   ui->pb_pre->setEnabled(true);
@@ -668,7 +668,7 @@ void ControlWindow::processData() {
 void ControlWindow::clearLines() {
   lines.clear();
   lplot->qplot->clearItems();
-  indicator = 0;
+  indicator = nullptr;
 }
 
 void ControlWindow::setLines(const LineSegmentVector& ls) {

@@ -98,15 +98,15 @@ class accumulator_t {
  public:
   // Class constructor.
   accumulator_t()
-      : m_bins(0),
+      : m_bins(nullptr),
         m_delta(0),
         m_height(0),
         m_image_height(0),
         m_image_width(0),
-        m_rho(0),
+        m_rho(nullptr),
         m_rho_bounds(0, 0),
         m_rho_capacity(0),
-        m_theta(0),
+        m_theta(nullptr),
         m_theta_bounds(0, 0),
         m_theta_capacity(0),
         m_width(0) {}
@@ -119,15 +119,15 @@ class accumulator_t {
 
   // Class constructor.
   accumulator_t(const size_t image_width, const size_t image_height, const double delta)
-      : m_bins(0),
+      : m_bins(nullptr),
         m_delta(0),
         m_height(0),
         m_image_height(0),
         m_image_width(0),
-        m_rho(0),
+        m_rho(nullptr),
         m_rho_bounds(0, 0),
         m_rho_capacity(0),
-        m_theta(0),
+        m_theta(nullptr),
         m_theta_bounds(0, 0),
         m_theta_capacity(0),
         m_width(0) {

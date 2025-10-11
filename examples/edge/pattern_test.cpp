@@ -50,7 +50,7 @@ template <class EDGE>
 void showPattern(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(static_cast<uint64_t>(time(0)));
+  cv::RNG rng(static_cast<uint64_t>(time(nullptr)));
 
   for_each(edge.patternSegments().begin(), edge.patternSegments().end(), [&](const EdgeSegment& seg) {
     for (size_t p = seg.begin(); p != seg.end(); ++p) {

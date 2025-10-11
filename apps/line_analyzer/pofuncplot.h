@@ -228,7 +228,7 @@ class POFuncPlot : public LATool {
   LineSegment line;
 
  public:
-  explicit POFuncPlot(QWidget* parent = 0);
+  explicit POFuncPlot(QWidget* parent = nullptr);
   ~POFuncPlot();
 
   void connectTools(ControlWindow* w);

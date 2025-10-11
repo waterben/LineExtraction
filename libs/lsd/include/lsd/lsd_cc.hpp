@@ -739,7 +739,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     typedef typename PointVector::iterator LinePointIter;
     lineData_.clear();
     lineData_.reserve(static_cast<size_t>(segments_.capacity()));
-    const LineData* pseg = 0;
+    const LineData* pseg = nullptr;
     LinePointIter lpbeg = points_.begin();
 
     // recursive solution

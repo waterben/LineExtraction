@@ -9,7 +9,7 @@ class PreProcessing : public QMainWindow {
   Q_DISABLE_COPY(PreProcessing)
 
  public:
-  explicit PreProcessing(QWidget* parent = 0);
+  explicit PreProcessing(QWidget* parent = nullptr);
   ~PreProcessing();
 
   Ui::PreProcessing* ui{nullptr};

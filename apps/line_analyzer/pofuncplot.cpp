@@ -18,19 +18,19 @@ POFuncPlot::POFuncPlot(QWidget* parent)
   ui->cb_profile_interp->blockSignals(false);
 
   ui->cb_coord_style->blockSignals(true);
-  ui->cb_coord_style->addItem("No Coord", QVariant(Qwt3D::NOCOORD));
-  ui->cb_coord_style->addItem("Box", QVariant(Qwt3D::BOX));
-  ui->cb_coord_style->addItem("Frame", QVariant(Qwt3D::FRAME));
+  ui->cb_coord_style->addItem("No Coord", QVariant(static_cast<uint>(Qwt3D::NOCOORD)));
+  ui->cb_coord_style->addItem("Box", QVariant(static_cast<uint>(Qwt3D::BOX)));
+  ui->cb_coord_style->addItem("Frame", QVariant(static_cast<uint>(Qwt3D::FRAME)));
   ui->cb_coord_style->setCurrentIndex(1);
   ui->cb_coord_style->blockSignals(false);
 
   ui->cb_plot_style->blockSignals(true);
-  ui->cb_plot_style->addItem("No Plot", QVariant(Qwt3D::NOPLOT));
-  ui->cb_plot_style->addItem("Wireframe", QVariant(Qwt3D::WIREFRAME));
-  ui->cb_plot_style->addItem("Hidden Line", QVariant(Qwt3D::HIDDENLINE));
-  ui->cb_plot_style->addItem("Filled", QVariant(Qwt3D::FILLED));
-  ui->cb_plot_style->addItem("Filled Mesh", QVariant(Qwt3D::FILLEDMESH));
-  ui->cb_plot_style->addItem("Points", QVariant(Qwt3D::POINTS));
+  ui->cb_plot_style->addItem("No Plot", QVariant(static_cast<uint>(Qwt3D::NOPLOT)));
+  ui->cb_plot_style->addItem("Wireframe", QVariant(static_cast<uint>(Qwt3D::WIREFRAME)));
+  ui->cb_plot_style->addItem("Hidden Line", QVariant(static_cast<uint>(Qwt3D::HIDDENLINE)));
+  ui->cb_plot_style->addItem("Filled", QVariant(static_cast<uint>(Qwt3D::FILLED)));
+  ui->cb_plot_style->addItem("Filled Mesh", QVariant(static_cast<uint>(Qwt3D::FILLEDMESH)));
+  ui->cb_plot_style->addItem("Points", QVariant(static_cast<uint>(Qwt3D::POINTS)));
   ui->cb_plot_style->setCurrentIndex(4);
   ui->cb_plot_style->blockSignals(false);
 }

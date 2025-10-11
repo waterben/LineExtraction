@@ -120,8 +120,8 @@ class StereoLineMatcher : public OptionManager {
                     int kk = 0)
       : slf(height, maxDist, angleTh, minYOverlap),
         bfm(r, kk),
-        creatorL(0),
-        creatorR(0),
+        creatorL(nullptr),
+        creatorR(nullptr),
         creatorLPtr(cL),
         creatorRPtr(cR),
         dscLeft_(),
@@ -148,7 +148,7 @@ class StereoLineMatcher : public OptionManager {
   }
 
   void match(const geometric_vector& left, const geometric_vector& right, match_vector& matches) {
-    CV_Assert(creatorL != 0 && creatorR != 0);
+    CV_Assert(creatorL != nullptr && creatorR != nullptr);
     match_vector candidates;
     slf.create(left, right, candidates, mLeft_, mRight_);
     creatorL->createList(left, mLeft_, dscLeft_);

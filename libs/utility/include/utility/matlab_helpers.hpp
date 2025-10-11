@@ -1111,7 +1111,7 @@ T rayleighMode(const cv::Mat& src, int nbins = 50) {
   cv::Mat_<T> edges = range<T>(0, static_cast<T>(vmax), static_cast<T>(vmax / nbins));
   cv::Mat_<int> h = hist<T>(src, edges);
   cv::Point midx;
-  cv::minMaxLoc(h, 0, 0, 0, &midx);
+  cv::minMaxLoc(h, nullptr, nullptr, nullptr, &midx);
   return (edges(midx) + edges(0, midx.x + 1)) / 2;
 }
 

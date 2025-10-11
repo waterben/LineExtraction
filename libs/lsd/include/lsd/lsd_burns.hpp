@@ -425,8 +425,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
     ccListsShifted_.reserve(static_cast<size_t>(size));
 
 
-    uchar* pmap = 0;
-    IndexVector* ccdata = 0;
+    uchar* pmap = nullptr;
+    IndexVector* ccdata = nullptr;
     int part = 0;
 
     // get the connected components area for partition

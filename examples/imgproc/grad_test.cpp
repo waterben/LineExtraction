@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
   const float* histRange = {range};
 
   cv::Mat hist;
-  cv::calcHist(&mag, 1, 0, Mat(), hist, 1, &histSize, &histRange, true, false);
+  cv::calcHist(&mag, 1, nullptr, Mat(), hist, 1, &histSize, &histRange, true, false);
 
   int hist_w = 512;
   int hist_h = 400;

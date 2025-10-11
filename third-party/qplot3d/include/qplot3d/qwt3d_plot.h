@@ -25,9 +25,9 @@ class QWT3D_EXPORT Plot3D : public QGLWidget
 
  public:
 #if QT_VERSION >= 0x050400
-  Plot3D(QWidget* parent = 0);
+  Plot3D(QWidget* parent = nullptr);
 #else
-  Plot3D(QWidget* parent = 0, const QGLWidget* shareWidget = 0);
+  Plot3D(QWidget* parent = nullptr, const QGLWidget* shareWidget = nullptr);
 #endif
   virtual ~Plot3D();
 

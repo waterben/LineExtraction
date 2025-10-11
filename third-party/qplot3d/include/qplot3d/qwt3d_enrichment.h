@@ -24,7 +24,7 @@ class QWT3D_EXPORT Enrichment {
     VOXELENRICHMENT
   };  //!< Type of the Enrichment - only VERTEXENRICHMENT's are defined at this moment.
 
-  Enrichment() : plot(0) {}
+  Enrichment() : plot(nullptr) {}
   Enrichment(const Enrichment&) = default;
   Enrichment& operator=(const Enrichment&) = default;
   virtual ~Enrichment() {}

@@ -21,7 +21,7 @@ class PrecisionOptimizer : public LATool {
   int lineSel = -1;
 
  public:
-  explicit PrecisionOptimizer(QWidget* parent = 0);
+  explicit PrecisionOptimizer(QWidget* parent = nullptr);
   ~PrecisionOptimizer();
 
   void connectTools(ControlWindow* w);

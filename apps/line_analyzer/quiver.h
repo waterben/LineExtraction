@@ -13,7 +13,7 @@ class Quiver : public QMainWindow {
   QColorDialog* color_dia;
 
  public:
-  explicit Quiver(QWidget* parent = 0);
+  explicit Quiver(QWidget* parent = nullptr);
   ~Quiver();
 
   Ui::Quiver* ui;

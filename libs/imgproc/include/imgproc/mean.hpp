@@ -175,7 +175,7 @@ struct FastMean {
     tl.trim2Box(cols, rows, IP::BorderStart, IP::BorderStart);
     PT<FT> start = l.startPoint(), end = l.endPoint();
 
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;
@@ -266,7 +266,7 @@ struct FastMean {
     const int rows = mag.rows - 2;
     int matStepY = static_cast<int>(mag.step[0] / sizeof(MT));
     PT<FT> start = l.startPoint(), end = l.endPoint();
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;
@@ -362,7 +362,7 @@ struct FastMean {
     FT nstep, nx = fabs(l.normalX()), ny = fabs(l.normalY());
     int cols = mag.cols - 2, rows = mag.rows - 2, matStepY = mag.step[0] / sizeof(MT);
     PT<FT> start = l.startPoint(), end = l.endPoint();
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;

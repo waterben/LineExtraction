@@ -46,7 +46,7 @@ template <class EDGE>
 void showEdge(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(static_cast<uint64>(time(0)));
+  cv::RNG rng(static_cast<uint64>(time(nullptr)));
 
   for_each(edge.segments().begin(), edge.segments().end(), [&](const EdgeSegment& seg) {
     Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
