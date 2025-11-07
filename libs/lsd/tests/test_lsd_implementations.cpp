@@ -161,7 +161,8 @@ TEST_F(LSDTest, UniformImage) {
 
 TEST_F(LSDTest, SmallImage) {
   // Test behavior with small image
-  Mat small_img = Mat::ones(10, 10, CV_8UC1) * 100;
+  Mat small_img = Mat::ones(10, 10, CV_8UC1);
+  small_img *= 100;
   // Add some structure
   cv::line(small_img, cv::Point(0, 5), cv::Point(9, 5), cv::Scalar(200), 1);
 

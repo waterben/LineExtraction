@@ -18,6 +18,10 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+.vscode/debug_target
+.vscode/debug_test_target
+.vscode/.last_debug
+.vscode/.last_debug_test
 
 # bazel related settings
 MODULE.bazel.lock

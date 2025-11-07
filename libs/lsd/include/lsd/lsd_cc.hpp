@@ -660,7 +660,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           [[fallthrough]];
         case 3:  // <---x---> : rv: <---, fw: --->
         case 4: {
-          State ps = s;
+          State ps = initial_state;
           pdmap = fwdmap;
           // check for fw points
           if (!find_next_no_check(ps)) {
@@ -677,7 +677,7 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
           // check for rv points
           if (!find_next_no_check(ps = ls)) {
-            s = ls;
+            initial_state = ls;
             // if no rv points found, jump to normal fw search
             goto fw;
           }
@@ -688,15 +688,15 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           search(ps, ls.dir);
 
           // closed check
-          if (this->points_.back() == PT(s.x, s.y)) {
+          if (this->points_.back() == PT(initial_state.x, initial_state.y)) {
             seg.reverse = fwdmap != dmap;
           } else {
             std::reverse(this->points_.begin() + static_cast<std::ptrdiff_t>(seg.p_beg), this->points_.end());
 
             // do fw
             pdmap = fwdmap;
-            s.dir = ls.dir;
-            search(s, ps.dir);
+            initial_state.dir = ls.dir;
+            search(initial_state, ps.dir);
 
             seg.reverse = fwdmap == dmap;
           }
@@ -706,10 +706,10 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         case 2:  // rv
         rv:
           pdmap = rvdmap;
-          plsmap[s.idx] = seg.id;
-          this->points_.push_back(PT(s.x, s.y));
+          plsmap[initial_state.idx] = seg.id;
+          this->points_.push_back(PT(initial_state.x, initial_state.y));
 
-          if (find_next_no_check(s)) search(s, ls.dir);
+          if (find_next_no_check(initial_state)) search(initial_state, ls.dir);
 
           seg.p_end = this->points_.size();
           seg.reverse = fwdmap != dmap;
@@ -718,10 +718,10 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         case 6:  // fw
         fw:
           pdmap = fwdmap;
-          plsmap[s.idx] = seg.id;
-          this->points_.push_back(PT(s.x, s.y));
+          plsmap[initial_state.idx] = seg.id;
+          this->points_.push_back(PT(initial_state.x, initial_state.y));
 
-          if (find_next_no_check(s)) search(s, ls.dir);
+          if (find_next_no_check(initial_state)) search(initial_state, ls.dir);
 
           seg.p_end = this->points_.size();
           seg.reverse = fwdmap == dmap;

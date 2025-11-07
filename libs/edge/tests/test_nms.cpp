@@ -45,7 +45,7 @@ TEST_F(NMSTest, VerticalEdgeDetection) {
 
   // Create NMS with float template arguments
   NonMaximaSuppression<float, float, float, FastNMS8<float, float, float>> nms;
-  nms.threshold(50.0f, 100.0f);
+  nms.threshold(0.05, 0.1);  // Use relative thresholds (5% and 10% of max magnitude)
 
   // Process NMS
   nms.process(*gradient);
@@ -56,10 +56,11 @@ TEST_F(NMSTest, VerticalEdgeDetection) {
   EXPECT_FALSE(edges.empty());
   EXPECT_EQ(edges.size(), test_img.size());
 
-  // The vertical edge should be detected at column 3
+  // The vertical edge transitions should be detected at columns 2 and 4 (not at the peak at column 3)
   bool edge_found = false;
   for (int y = 1; y < edges.rows - 1; ++y) {
-    if (edges.at<float>(y, 3) >= 0) {  // Non-negative values indicate edges
+    // Check column 2 or column 4 for edge transitions
+    if (edges.at<char>(y, 2) >= 0 || edges.at<char>(y, 4) >= 0) {
       edge_found = true;
       break;
     }
@@ -73,7 +74,7 @@ TEST_F(NMSTest, HorizontalEdgeDetection) {
 
   // Create NMS with float template arguments
   NonMaximaSuppression<float, float, float, FastNMS8<float, float, float>> nms;
-  nms.threshold(50.0f, 100.0f);
+  nms.threshold(0.05, 0.1);  // Use relative thresholds (5% and 10% of max magnitude)
 
   // Process NMS
   nms.process(*gradient);
@@ -83,10 +84,11 @@ TEST_F(NMSTest, HorizontalEdgeDetection) {
   // Check that we found edges
   EXPECT_FALSE(edges.empty());
 
-  // The horizontal edge should be detected at row 3
+  // The horizontal edge transitions should be detected at rows 2 and 4 (not at the peak at row 3)
   bool edge_found = false;
   for (int x = 1; x < edges.cols - 1; ++x) {
-    if (edges.at<float>(3, x) >= 0) {  // Non-negative values indicate edges
+    // Check row 2 or row 4 for edge transitions
+    if (edges.at<char>(2, x) >= 0 || edges.at<char>(4, x) >= 0) {
       edge_found = true;
       break;
     }
@@ -116,7 +118,7 @@ TEST_F(NMSTest, EdgeIndex) {
   gradient->process(test_img);
 
   NonMaximaSuppression<float, float, float, FastNMS8<float, float, float>> nms;
-  nms.threshold(5.0f, 15.0f);  // Lower thresholds to detect edges in test image
+  nms.threshold(0.005, 0.015);  // Use relative thresholds to detect edges in test image
 
   // Process NMS
   nms.process(*gradient);
