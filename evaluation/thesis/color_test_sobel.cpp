@@ -72,7 +72,7 @@ double test(const std::vector<fs::path>& files,
     nms.process(grad, th_low, th_high);
     tmp2.setTo(1, nms.hysteresis() > -1);
 
-    int cRGB = static_cast<size_t>(sum(tmp2)[0]);
+    int cRGB = static_cast<int>(sum(tmp2)[0]);
 
 
     cv::Mat kernel = cv::Mat_<uchar>::ones(dilation, dilation);
@@ -82,7 +82,7 @@ double test(const std::vector<fs::path>& files,
     cv::Mat tmp3(src.rows, src.cols, CV_8U);
     tmp3.setTo(0);
     tmp3.setTo(1, (tmp2 - d) > 0);
-    int cDiff = static_cast<size_t>(sum(tmp3)[0]);
+    int cDiff = static_cast<int>(sum(tmp3)[0]);
 
     // std::cout << cG << ", " << cRGB << ", " << cDiff << std::endl;
     data.push_back(MyData(cG, cRGB, cDiff));
@@ -148,16 +148,16 @@ int main(int argc, char** argv) {
   f.open("data.csv");
   f << "Blur (Sigma);Lower Threshold;Upper Threshold;Dilation Size;Information Gain" << std::endl;
   int count = 0;
-  double res = test(files, sobel, nms, 1, 0.03, 0.06, 3, true);
+  double res = test(files, sobel, nms, 1, 0.03f, 0.06f, 3, true);
 
-  res = test(files, sobel, nms, 0.6, 0.004, 0.012, 3);
+  res = test(files, sobel, nms, 0.6, 0.004f, 0.012f, 3);
   mean += res;
   ++count;
   f << "0.6;0.004;0.012;3;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.004, 0.012, 3);
   // mean += res; ++count;
   // f << "0.8;0.004;0.012;3;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.004, 0.012, 3);
+  res = test(files, sobel, nms, 1.0, 0.004f, 0.012f, 3);
   mean += res;
   ++count;
   f << "1.0;0.004;0.012;3;" << res << std::endl;
@@ -165,14 +165,14 @@ int main(int argc, char** argv) {
   // mean += res; ++count;
   // f << "1.2;0.004;0.012;3;" << res << std::endl;
 
-  res = test(files, sobel, nms, 0.6, 0.01, 0.03, 3);
+  res = test(files, sobel, nms, 0.6, 0.01f, 0.03f, 3);
   mean += res;
   ++count;
   f << "0.6;0.01;0.03;3;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.01, 0.03, 3);
   // mean += res; ++count;
   // f << "0.8;0.01;0.03;3;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.01, 0.03, 3);
+  res = test(files, sobel, nms, 1.0, 0.01f, 0.03f, 3);
   mean += res;
   ++count;
   f << "1.0;0.01;0.03;3;" << res << std::endl;
@@ -180,14 +180,14 @@ int main(int argc, char** argv) {
   // mean += res; ++count;
   // f << "1.2;0.01;0.03;3;" << res << std::endl;
 
-  res = test(files, sobel, nms, 0.6, 0.03, 0.06, 3);
+  res = test(files, sobel, nms, 0.6, 0.03f, 0.06f, 3);
   mean += res;
   ++count;
   f << "0.6;0.03;0.06;3;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.03, 0.06, 3);
   // mean += res; ++count;
   // f << "0.8;0.03;0.06;3;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.03, 0.06, 3);
+  res = test(files, sobel, nms, 1.0, 0.03f, 0.06f, 3);
   mean += res;
   ++count;
   f << "1.0;0.03;0.06;3;" << res << std::endl;
@@ -208,14 +208,14 @@ int main(int argc, char** argv) {
    mean += res; ++count;
    f << "1.2;0.05;0.1;3;" << res << std::endl;*/
 
-  res = test(files, sobel, nms, 0.6, 0.004, 0.012, 5);
+  res = test(files, sobel, nms, 0.6, 0.004f, 0.012f, 5);
   mean += res;
   ++count;
   f << "0.6;0.004;0.012;5;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.004, 0.012, 5);
   // mean += res; ++count;
   // f << "0.8;0.004;0.012;5;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.004, 0.012, 5);
+  res = test(files, sobel, nms, 1.0, 0.004f, 0.012f, 5);
   mean += res;
   ++count;
   f << "1.0;0.004;0.012;5;" << res << std::endl;
@@ -223,14 +223,14 @@ int main(int argc, char** argv) {
   // mean += res; ++count;
   // f << "1.2;0.004;0.012;5;" << res << std::endl;
 
-  res = test(files, sobel, nms, 0.6, 0.01, 0.03, 5);
+  res = test(files, sobel, nms, 0.6, 0.01f, 0.03f, 5);
   mean += res;
   ++count;
   f << "0.6;0.01;0.03;5;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.01, 0.03, 5);
   // mean += res; ++count;
   // f << "0.8;0.01;0.03;5;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.01, 0.03, 5);
+  res = test(files, sobel, nms, 1.0, 0.01f, 0.03f, 5);
   mean += res;
   ++count;
   f << "1.0;0.01;0.03;5;" << res << std::endl;
@@ -238,14 +238,14 @@ int main(int argc, char** argv) {
   // mean += res; ++count;
   // f << "1.2;0.01;0.03;5;" << res << std::endl;
 
-  res = test(files, sobel, nms, 0.6, 0.03, 0.06, 5);
+  res = test(files, sobel, nms, 0.6, 0.03f, 0.06f, 5);
   mean += res;
   ++count;
   f << "0.6;0.03;0.06;5;" << res << std::endl;
   // res = test(files, sobel, nms, 0.8, 0.03, 0.06, 5);
   // mean += res; ++count;
   // f << "0.8;0.03;0.06;5;" << res << std::endl;
-  res = test(files, sobel, nms, 1.0, 0.03, 0.06, 5);
+  res = test(files, sobel, nms, 1.0, 0.03f, 0.06f, 5);
   mean += res;
   ++count;
   f << "1.0;0.03;0.06;5;" << res << std::endl;

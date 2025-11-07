@@ -4,7 +4,11 @@ using namespace lsfm;
 using namespace std;
 
 PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
-    : LATool("Precision Optimizer", parent), ui(new Ui::PrecisionOptimizer), sources(0), lines(0), lineSel(-1) {
+    : LATool("Precision Optimizer", parent),
+      ui(new Ui::PrecisionOptimizer),
+      sources(nullptr),
+      lines(nullptr),
+      lineSel(-1) {
   setWindowTitle("Precision Optimizer");
   ui->setupUi(this);
 
@@ -110,12 +114,16 @@ typename lsfm::MeanHelper<double, cv::Point_>::func_type getMean(int idx, bool s
 }
 
 void PrecisionOptimizer::optimizeLine() {
-  if (lineSel < 0 || lines == 0 || sources == 0) return;
+  if (lineSel < 0 || lines == nullptr || sources == nullptr) return;
   float_type d = 0, a = 0;
   double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
-  Line& l = (*lines)[lineSel];
+  Line& l = (*lines)[static_cast<std::size_t>(lineSel)];
 
-  ImageSource src = (*sources)[ui->cb_data_source->currentData().toInt()];
+  const int sourceIndex = ui->cb_data_source->currentData().toInt();
+  if (sourceIndex < 0) return;
+  if (static_cast<std::size_t>(sourceIndex) >= sources->size()) return;
+
+  ImageSource src = (*sources)[static_cast<std::size_t>(sourceIndex)];
   double stime = double(cv::getTickCount());
   if (src.data.type() == cv::DataType<float_type>::type) {
     MeanHelper<double, cv::Point_>::func_type meanp = getMean<float_type>(
@@ -131,7 +139,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -142,7 +150,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -157,7 +165,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -168,7 +176,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -183,7 +191,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -194,7 +202,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -215,7 +223,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -226,7 +234,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -241,7 +249,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -252,7 +260,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -267,7 +275,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -277,7 +285,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -295,7 +303,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -306,7 +314,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -321,7 +329,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -332,7 +340,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -347,7 +355,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -357,7 +365,7 @@ void PrecisionOptimizer::optimizeLine() {
                 ui->edit_deri_delta->text().toDouble(), meanp, dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                            .be_verbose()
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble()).be_verbose()));
             break;
@@ -374,11 +382,15 @@ void PrecisionOptimizer::optimizeLine() {
 }
 
 void PrecisionOptimizer::optimizeAllLines() {
-  if (lines == 0 || sources == 0) return;
+  if (lines == nullptr || sources == nullptr) return;
 
   double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
 
-  ImageSource src = (*sources)[ui->cb_data_source->currentData().toInt()];
+  const int sourceIndex = ui->cb_data_source->currentData().toInt();
+  if (sourceIndex < 0) return;
+  if (static_cast<std::size_t>(sourceIndex) >= sources->size()) return;
+
+  ImageSource src = (*sources)[static_cast<std::size_t>(sourceIndex)];
   double stime = double(cv::getTickCount());
   if (src.data.type() == cv::DataType<float_type>::type) {
     MeanHelper<double, cv::Point_>::func_type meanp = getMean<float_type>(
@@ -393,7 +405,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -402,7 +414,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }
@@ -415,7 +427,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -424,7 +436,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }
@@ -437,7 +449,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -446,7 +458,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }
@@ -465,7 +477,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -474,7 +486,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::bfgs_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }
@@ -487,7 +499,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -496,7 +508,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::lbfgs_search_strategy(10),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }
@@ -509,7 +521,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                           ui->spin_max_iter->value())
+                                                           static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::objective_delta_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
           case 1:
@@ -518,7 +530,7 @@ void PrecisionOptimizer::optimizeAllLines() {
                 dlib::cg_search_strategy(),
                 (ui->chb_max_iter->isChecked()
                      ? dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble(),
-                                                         ui->spin_max_iter->value())
+                                                         static_cast<unsigned long>(ui->spin_max_iter->value()))
                      : dlib::gradient_norm_stop_strategy(ui->edit_stop_delta->text().toDouble())));
             break;
         }

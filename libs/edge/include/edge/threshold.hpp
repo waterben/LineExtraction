@@ -179,7 +179,7 @@ class LocalThresholdTiles : public Threshold<IT> {
 
   LocalThresholdTiles(
       int tiles_x, int tiles_y, IT r_max = std::numeric_limits<IT>::max(), float scale = 1.0f, IT r_min = 0)
-      : th_(r_max, r_min), tiles_x_(tiles_x), tiles_y_(tiles_y), scale_(scale) {}
+      : th_(r_max, r_min), scale_(scale), tiles_x_(tiles_x), tiles_y_(tiles_y) {}
 
 
   //! Compute local threshold

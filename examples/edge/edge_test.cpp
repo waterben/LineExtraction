@@ -35,7 +35,9 @@ void testEdge(GRAD& grad, NMS& nms, EDGE& edge, const std::string& name) {
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << "nms - " << name << ": " << edge.points().size() / ((rt * 1000.0 / cv::getTickFrequency()) / runs)
+  std::cout << "nms - " << name << ": "
+            << static_cast<double>(edge.points().size()) /
+                   ((static_cast<double>(rt) * 1000.0 / cv::getTickFrequency()) / runs)
             << " pixels per ms" << std::endl;
 }
 
@@ -44,10 +46,11 @@ template <class EDGE>
 void showEdge(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(time(0));
+  cv::RNG rng(static_cast<uint64>(time(nullptr)));
 
   for_each(edge.segments().begin(), edge.segments().end(), [&](const EdgeSegment& seg) {
-    Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                static_cast<uchar>(20 + rng.uniform(0, 225)));
     for (size_t i = seg.begin(); i != seg.end(); ++i) setPixel(edgeImg, edge.points()[i], color);
 
     if (circles) {
@@ -85,17 +88,17 @@ int main(int argc, char** argv) {
 
   imshow("img", src);
 
-  float th_low = 0.004, th_high = 0.012;
+  float th_low = 0.004f, th_high = 0.012f;
   DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
   NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
 
 
   EsdSimple<int> simple;
-  EsdDrawing<int> draw(10, 3, sobel.magnitudeThreshold(th_low));
-  EsdLinking<int> link(10, 3, 3, sobel.magnitudeThreshold(th_low));
-  EsdLinking<int, 8, true> linkc(10, 3, 3, sobel.magnitudeThreshold(th_low));
-  EsdPattern<int> pattern(10, 3, 3, sobel.magnitudeThreshold(th_low));
-  EsdPattern<int, 8, true> patternc(10, 3, 3, sobel.magnitudeThreshold(th_low));
+  EsdDrawing<int> draw(10, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
+  EsdLinking<int> link(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
+  EsdLinking<int, 8, true> linkc(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
+  EsdPattern<int> pattern(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
+  EsdPattern<int, 8, true> patternc(10, 3, 3, static_cast<float>(sobel.magnitudeThreshold(th_low)));
 
 
   sobel.process(src);

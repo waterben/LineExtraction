@@ -5,11 +5,10 @@ cmake_minimum_required(VERSION 3.5...3.27)
 le_add_library(lib_utility
     AUTO_TESTS
     PUBLIC_DEPS
-        ${OpenCV_LIBS}
+        le::opencv
         Eigen3::Eigen
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${OpenCV_INCLUDE_DIR}
     TEST_DEPS
         ${CMAKE_THREAD_LIBS_INIT}
 )

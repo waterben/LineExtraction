@@ -1,6 +1,8 @@
 
 #include <utility/response_convert.hpp>
 
+#include <limits>
+
 namespace lsfm {
 
 cv::Mat convertMag(const cv::Mat& src) {
@@ -12,10 +14,23 @@ cv::Mat convertMag(const cv::Mat& src) {
 cv::Mat convertMag(const cv::Mat& src, const Range<double>& range) { return convertMag(src, range.lower, range.upper); }
 
 cv::Mat convertMag(const cv::Mat& src, double vmin, double vmax) {
-  cv::Mat mag = src.clone();
-  mag.convertTo(mag, CV_32F);
-  mag /= vmax;
-  mag *= 255;
+  cv::Mat mag;
+  src.convertTo(mag, CV_32F);
+
+  const double range = vmax - vmin;
+  if (range > std::numeric_limits<double>::epsilon()) {
+    mag -= static_cast<float>(vmin);
+    mag /= static_cast<float>(range);
+  } else {
+    // Degenerate range: we have no contrast to scale, so return zeros for now.
+    // Alternative options: keep the original values or warn the caller to provide
+    // a sensible range if preserving contrast is required.
+    mag.setTo(0);
+  }
+
+  cv::max(mag, 0.f, mag);
+  cv::min(mag, 1.f, mag);
+  mag *= 255.f;
   mag.convertTo(mag, CV_8U);
   return mag;
 }

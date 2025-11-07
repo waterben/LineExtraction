@@ -62,7 +62,7 @@ double test(const std::vector<fs::path>& files,
     nms.process(rcmg, th_low, th_high);
     tmp2.setTo(1, nms.hysteresis() > -1);
 
-    int cRGB = static_cast<size_t>(sum(tmp2)[0]);
+    int cRGB = static_cast<int>(sum(tmp2)[0]);
     cv::Mat tmp3(src.rows, src.cols, CV_8U);
     cv::Mat d;
     if (dilation > 0) {
@@ -76,7 +76,7 @@ double test(const std::vector<fs::path>& files,
       tmp3.setTo(0);
       tmp3.setTo(1, (tmp2 - tmp) > 0);
     }
-    int cDiff = static_cast<size_t>(sum(tmp3)[0]);
+    int cDiff = static_cast<int>(sum(tmp3)[0]);
 
     data.push_back(MyData(cG, cRGB, cDiff));
 
@@ -146,62 +146,62 @@ int main(int argc, char** argv) {
   f << "Blur (Sigma);Lower Threshold;Upper Threshold;Dilation Size;Information Gain" << std::endl;
   int count = 0;
 
-  double res = test(files, rcmg, rmg, nms, 0.6, 0.004, 0.012, 0);
+  double res = test(files, rcmg, rmg, nms, 0.6, 0.004f, 0.012f, 0);
   mean += res;
   ++count;
   f << "0.6;0.004;0.012;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.004, 0.012, 0);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.004f, 0.012f, 0);
   mean += res;
   ++count;
   f << "1.0;0.004;0.012;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 0.6, 0.01, 0.03, 0);
+  res = test(files, rcmg, rmg, nms, 0.6, 0.01f, 0.03f, 0);
   mean += res;
   ++count;
   f << "0.6;0.01;0.03;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.01, 0.03, 0);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.01f, 0.03f, 0);
   mean += res;
   ++count;
   f << "1.0;0.01;0.03;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 0.6, 0.03, 0.06, 0);
+  res = test(files, rcmg, rmg, nms, 0.6, 0.03f, 0.06f, 0);
   mean += res;
   ++count;
   f << "0.6;0.03;0.06;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.03, 0.06, 0);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.03f, 0.06f, 0);
   mean += res;
   ++count;
   f << "1.0;0.03;0.06;0;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 0.6, 0.004, 0.012, 3);
+  res = test(files, rcmg, rmg, nms, 0.6, 0.004f, 0.012f, 3);
   mean += res;
   ++count;
   f << "0.6;0.004;0.012;3;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.004, 0.012, 3);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.004f, 0.012f, 3);
   mean += res;
   ++count;
   f << "1.0;0.004;0.012;3;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 0.6, 0.01, 0.03, 3);
+  res = test(files, rcmg, rmg, nms, 0.6, 0.01f, 0.03f, 3);
   mean += res;
   ++count;
   f << "0.6;0.01;0.03;3;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.01, 0.03, 3);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.01f, 0.03f, 3);
   mean += res;
   ++count;
   f << "1.0;0.01;0.03;3;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 0.6, 0.03, 0.06, 3);
+  res = test(files, rcmg, rmg, nms, 0.6, 0.03f, 0.06f, 3);
   mean += res;
   ++count;
   f << "0.6;0.03;0.06;3;" << res << std::endl;
 
-  res = test(files, rcmg, rmg, nms, 1.0, 0.03, 0.06, 3);
+  res = test(files, rcmg, rmg, nms, 1.0, 0.03f, 0.06f, 3);
   mean += res;
   ++count;
   f << "1.0;0.03;0.06;3;" << res << std::endl;

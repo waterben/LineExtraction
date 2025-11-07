@@ -47,30 +47,32 @@
 
 #include <edge/edge_segment.hpp>
 
+#include <cstddef>
+
 namespace lsfm {
 
 template <class MT, int NUM_DIR = 8>
 class EsdDrawing : public EsdBase<MT, index_type> {
-  cv::Mat dir_;
-  char* pdir_;
+  cv::Mat dir_{};
+  char* pdir_{nullptr};
 
 #ifdef DRAW_MODE
-  cv::Mat draw;
-  cv::Vec3b col;
+  cv::Mat draw{};
+  cv::Vec3b col{};
 #endif
 
-  short dmapStore_[20];
+  short dmapStore_[20]{};
 
-  const short* dmap;
-  const short* pdmap;
-  const short* rvdmap;
-  const short* fwdmap;
-  const MT* pmag_;
+  const short* dmap{nullptr};
+  const short* pdmap{nullptr};
+  const short* rvdmap{nullptr};
+  const short* fwdmap{nullptr};
+  const MT* pmag_{nullptr};
 
-  int minPixels_;
-  float magTh_, magMul_;
+  int minPixels_{};
+  float magTh_{}, magMul_{};
 #ifndef NO_ADDED_SEEDS
-  IndexVector addedSeeds_;
+  IndexVector addedSeeds_{};
 #endif
 
   using EsdBase<MT, index_type>::points_;
@@ -78,7 +80,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
  public:
   EsdDrawing(int minPix = 10, float magMul = 3, float magTh = 5)
-      : EsdBase<MT, index_type>(), minPixels_(minPix), magMul_(magMul), magTh_(magTh) {
+      : EsdBase<MT, index_type>(), minPixels_(minPix), magTh_(magTh), magMul_(magMul) {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;
@@ -90,6 +92,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     this->add("edge_mag_th", std::bind(&EsdDrawing<MT, NUM_DIR>::valueMagThreshold, this, std::placeholders::_1),
               "Magnitude threshold.");
   }
+
+  EsdDrawing(const EsdDrawing&) = delete;
+  EsdDrawing& operator=(const EsdDrawing&) = delete;
 
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
@@ -168,9 +173,15 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     char dirn = dir - 1;
     char dirp = dir + 1;
 
-    index_type nidx = idx + pdmap[dir];
-    index_type nidxn = idx + pdmap[dirn];
-    index_type nidxp = idx + pdmap[dirp];
+    const int dirIndex = static_cast<int>(dir);
+    const int dirnIndex = static_cast<int>(dirn);
+    const int dirpIndex = static_cast<int>(dirp);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    const ptrdiff_t offsetN = pdmap[dirnIndex];
+    const ptrdiff_t offsetP = pdmap[dirpIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
+    index_type nidxn = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetN);
+    index_type nidxp = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetP);
 
     MT v = pmag_[nidx];
     MT vn = pmag_[nidxn];
@@ -199,7 +210,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     }
 
     // is pixel already used or border or no magnitude
-    if (v < magTh_ || pdir_[nidx] < -1 || v > magMul_ * pmag_[idx]) return 0;
+    const float vFloat = static_cast<float>(v);
+    const float baseMag = static_cast<float>(pmag_[idx]);
+    if (vFloat < magTh_ || pdir_[nidx] < -1 || vFloat > magMul_ * baseMag) return 0;
 
     return nidx;
   }
@@ -208,7 +221,9 @@ class EsdDrawing : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < -1) return;
     pdir_[nidx] = -4;
   }
@@ -272,7 +287,8 @@ class EsdDrawing : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -285,7 +301,7 @@ class EsdDrawing : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -295,17 +311,19 @@ class EsdDrawing : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
-    std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+    std::reverse(this->points_.begin() + static_cast<typename std::vector<index_type>::difference_type>(seg_beg),
+                 this->points_.end());
 
     // do fw
     pdmap = fwdmap;
     extractSegment(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 };
 

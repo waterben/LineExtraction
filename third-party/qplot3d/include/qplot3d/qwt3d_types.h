@@ -216,7 +216,7 @@ minVertex.z <= maxVertex.z\n
 */
 struct QWT3D_EXPORT ParallelEpiped {
   //! Construct non-initialized Parallelepiped
-  ParallelEpiped() {}
+  ParallelEpiped() : minVertex(), maxVertex() {}
 
   //! Construct initialized Parallelepiped
   /**
@@ -234,7 +234,7 @@ struct QWT3D_EXPORT ParallelEpiped {
     FreeVectors represent objects like normal vectors and other vector fields inside R^3
     */
 struct QWT3D_EXPORT FreeVector {
-  FreeVector() {}
+  FreeVector() : base(), top() {}
 
   //! Construct initialized vector
   /**
@@ -282,7 +282,7 @@ typedef std::vector<DataRow> DataMatrix;
 class Data {
  public:
   Qwt3D::DATATYPE datatype;
-  Data() { datatype = Qwt3D::POLYGON; }
+  Data() : datatype(Qwt3D::POLYGON), hull_p() {}
   virtual ~Data() {}
   virtual void clear() = 0;        //!< destroy content
   virtual bool empty() const = 0;  //!< no data
@@ -319,14 +319,15 @@ class GridData : public Data {
   bool vperiodic() const { return vperiodic_; }
 
  private:
-  bool uperiodic_, vperiodic_;
+  bool uperiodic_ = false;
+  bool vperiodic_ = false;
 };
 
 
 //! Implements a graph-like cell structure with limit access functions
 class CellData : public Data {
  public:
-  CellData() { datatype = Qwt3D::POLYGON; }
+  CellData() : Data(), cells(), nodes(), normals() {}
   ~CellData() { clear(); }
 
   void clear();  //!< destroy content

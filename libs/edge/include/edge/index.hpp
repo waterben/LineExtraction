@@ -34,12 +34,12 @@ inline MT get(const cv::Mat& m, index_type i) {
 
 template <class T>
 inline T getX(index_type idx, int cols) {
-  return idx % cols;
+  return static_cast<T>(idx % static_cast<index_type>(cols));
 }
 
 template <class T>
 inline T getY(index_type idx, int cols) {
-  return idx / cols;
+  return static_cast<T>(idx / static_cast<index_type>(cols));
 }
 
 template <class PT>
@@ -56,9 +56,13 @@ inline void index2Point(const index_type* beg, const index_type* end, PT* data, 
   }
 }
 
-inline void point2Index(const cv::Point& p, index_type& idx, int cols) { idx = p.y * cols + p.x; }
+inline void point2Index(const cv::Point& p, index_type& idx, int cols) {
+  idx = static_cast<index_type>(p.y) * static_cast<index_type>(cols) + static_cast<index_type>(p.x);
+}
 
-inline void point2Index(const Vec2i& p, index_type& idx, int cols) { idx = p.y() * cols + p.x(); }
+inline void point2Index(const Vec2i& p, index_type& idx, int cols) {
+  idx = static_cast<index_type>(p.y()) * static_cast<index_type>(cols) + static_cast<index_type>(p.x());
+}
 
 template <class PT>
 inline void point2Index(const PT& p, index_type& idx, int cols) {
@@ -66,13 +70,18 @@ inline void point2Index(const PT& p, index_type& idx, int cols) {
 }
 
 
-inline index_type point2Index(const cv::Point& p, int cols) { return p.y * cols + p.x; }
+inline index_type point2Index(const cv::Point& p, int cols) {
+  return static_cast<index_type>(p.y) * static_cast<index_type>(cols) + static_cast<index_type>(p.x);
+}
 
-inline index_type point2Index(const Vec2i& p, int cols) { return p.y() * cols + p.x(); }
+inline index_type point2Index(const Vec2i& p, int cols) {
+  return static_cast<index_type>(p.y()) * static_cast<index_type>(cols) + static_cast<index_type>(p.x());
+}
 
 template <class PT>
 inline index_type point2Index(const PT& p, int cols) {
-  return std::round(getY(p)) * cols + std::round(getX(p));
+  return static_cast<index_type>(round(getY(p))) * static_cast<index_type>(cols) +
+         static_cast<index_type>(round(getX(p)));
 }
 
 template <class PT>
@@ -194,7 +203,7 @@ struct IndexConvert {
   }
 
   static inline void convert(
-      const index_type* beg, const index_type* end, PT* data, const cv::Mat& mag, const cv::Mat& dmap = cv::Mat()) {
+      const index_type* beg, const index_type* end, PT* data, const cv::Mat& mag, const cv::Mat& = cv::Mat()) {
     for (; beg != end; ++beg, ++data) toPoint(*beg, *data, mag);
   }
 
@@ -207,9 +216,9 @@ struct IndexConvert {
 // specialization for index to index
 template <>
 struct IndexConvert<index_type> {
-  static inline void toPoint(index_type idx, index_type& p, int cols) { p = idx; }
+  static inline void toPoint(index_type idx, index_type& p, int /*cols*/) { p = idx; }
 
-  static inline void toPoint(index_type idx, index_type& p, const cv::Mat& tmp) { p = idx; }
+  static inline void toPoint(index_type idx, index_type& p, const cv::Mat& /*tmp*/) { p = idx; }
 
   template <class COL>
   static inline index_type toPoint(index_type idx, const COL& cols) {
@@ -261,13 +270,13 @@ struct IndexConvert<index_type> {
     return ret;
   }
 
-  static inline void toIndex(const index_type& p, index_type& idx, int cols) { idx = p; }
+  static inline void toIndex(const index_type& p, index_type& idx, int /*cols*/) { idx = p; }
 
-  static inline index_type toIndex(const index_type& p, int cols) { return p; }
+  static inline index_type toIndex(const index_type& p, int /*cols*/) { return p; }
 
-  static inline void toIndex(const index_type& p, index_type& idx, const cv::Mat& tmp) { idx = p; }
+  static inline void toIndex(const index_type& p, index_type& idx, const cv::Mat& /*tmp*/) { idx = p; }
 
-  static inline index_type toIndex(const index_type& p, const cv::Mat& tmp) { return p; }
+  static inline index_type toIndex(const index_type& p, const cv::Mat& /*tmp*/) { return p; }
 
   template <class COL>
   static inline void toIndex(const index_type* beg, const index_type* end, index_type* data, const COL& cols) {
@@ -318,7 +327,7 @@ struct IndexConvert<index_type> {
                              const index_type* end,
                              index_type* data,
                              const cv::Mat& mag,
-                             const cv::Mat& dmap = cv::Mat()) {
+                             const cv::Mat& /*dmap*/ = cv::Mat()) {
     for (; beg != end; ++beg, ++data) toPoint(*beg, *data, mag);
   }
 
@@ -343,7 +352,7 @@ inline const Vec2<T>& toVec2(const Vec2<T>& v) {
 }
 
 template <class T>
-inline const void toVec2(const Vec2<T>& v, Vec2<T>& ret) {
+inline void toVec2(const Vec2<T>& v, Vec2<T>& ret) {
   ret = v;
 }
 

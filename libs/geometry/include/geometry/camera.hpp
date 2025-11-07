@@ -153,6 +153,16 @@ class Camera : public Pose<FT> {
   Camera(const Camera<FT>& cam)
       : Pose<FT>(cam.trans_, cam.rot_), focal_(cam.focal_), offset_(cam.offset_), imageSize_(cam.imageSize_) {}
 
+  Camera& operator=(const Camera<FT>& cam) {
+    if (this != &cam) {
+      this->pose(cam);
+      focal_ = cam.focal_;
+      offset_ = cam.offset_;
+      imageSize_ = cam.imageSize_;
+    }
+    return *this;
+  }
+
   //! test for empty camera (f = 0)
   virtual bool empty() const { return (focal_.x() == 0 && focal_.y() == 0); }
 
@@ -375,6 +385,9 @@ class Camera : public Pose<FT> {
       return true;
     }
   }
+
+  //! Virtual destructor for proper inheritance
+  virtual ~Camera() = default;
 };
 
 template <class FT>
@@ -426,27 +439,24 @@ class CameraHom : public Camera<FT> {
             const Vec2<FT>& imageSize,
             const Vec3<FT>& trans = Vec3<FT>(0, 0, 0),
             const Vec3<FT>& rot = Vec3<FT>(0, 0, 0))
-      : Camera<FT>(fov, imageSize, trans, rot) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_);
-  }
+      : Camera<FT>(fov, imageSize, trans, rot),
+        proj_(Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_)) {}
 
   CameraHom(const Vec2<FT>& focal,
             const Vec2<FT>& offset,
             const Vec2<FT>& imageSize = Vec2<FT>(0, 0),
             const Vec3<FT>& trans = Vec3<FT>(0, 0, 0),
             const Vec3<FT>& rot = Vec3<FT>(0, 0, 0))
-      : Camera<FT>(focal, offset, imageSize, trans, rot) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_);
-  }
+      : Camera<FT>(focal, offset, imageSize, trans, rot),
+        proj_(Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_)) {}
 
   CameraHom(const Vec2<FT>& focal,
             const Vec2<FT>& offset,
             const Vec2<FT>& imageSize,
             const Vec3<FT>& trans,
             const Matx33<FT>& rot)
-      : Camera<FT>(focal, offset, imageSize, trans, rot) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot);
-  }
+      : Camera<FT>(focal, offset, imageSize, trans, rot),
+        proj_(Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot)) {}
 
   CameraHom(const Matx33<FT>& cam,
             const Vec3<FT>& trans,
@@ -559,7 +569,7 @@ class CameraHom : public Camera<FT> {
       // Create temporary matrices with correct layout
       Eigen::Matrix<FT, Eigen::Dynamic, 3> pts_matrix(vh.size(), 3);
       for (size_t i = 0; i < vh.size(); ++i) {
-        pts_matrix.row(i) << vh[i].x(), vh[i].y(), vh[i].z();
+        pts_matrix.row(static_cast<Eigen::Index>(i)) << vh[i].x(), vh[i].y(), vh[i].z();
       }
 
       Eigen::Matrix<FT, Eigen::Dynamic, 2> res_matrix(vh.size(), 2);
@@ -569,10 +579,13 @@ class CameraHom : public Camera<FT> {
 
       // Copy back to result vector
       for (size_t i = 0; i < vh.size(); ++i) {
-        ret[i] = Vec2<FT>(res_matrix(i, 0), res_matrix(i, 1));
+        ret[i] = Vec2<FT>(res_matrix(static_cast<Eigen::Index>(i), 0), res_matrix(static_cast<Eigen::Index>(i), 1));
       }
     }
   }
+
+  //! Virtual destructor for proper inheritance
+  virtual ~CameraHom() = default;
 };
 
 typedef CameraHom<float> CameraHomf;
@@ -622,29 +635,27 @@ class CameraPluecker : public CameraHom<FT> {
                  const Vec2<FT>& imageSize,
                  const Vec3<FT>& trans = Vec3<FT>(FT(0), FT(0), FT(0)),
                  const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
-      : CameraHom<FT>(fov, imageSize, trans, rot) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(fov, imageSize, trans, rot),
+        rotMt_(rodrigues(Vec3<FT>(-rot_))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(focal_, offset_)) {}
 
   CameraPluecker(const Vec2<FT>& focal,
                  const Vec2<FT>& offset,
                  const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)),
                  const Vec3<FT>& trans = Vec3<FT>(FT(0), FT(0), FT(0)),
                  const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
-      : CameraHom<FT>(focal, offset, imageSize, trans, rot) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(focal, offset, imageSize, trans, rot),
+        rotMt_(rodrigues(Vec3<FT>(-rot_))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(focal_, offset_)) {}
 
   CameraPluecker(const Vec2<FT>& focal,
                  const Vec2<FT>& offset,
                  const Vec2<FT>& imageSize,
                  const Vec3<FT>& trans,
                  const Matx33<FT>& rot)
-      : CameraHom<FT>(focal, offset, imageSize, trans, rot), rotMt_(rot.transpose()) {
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(focal, offset, imageSize, trans, rot),
+        rotMt_(rot.transpose()),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(focal_, offset_)) {}
 
   CameraPluecker(const Matx33<FT>& cam,
                  const Vec3<FT>& trans,

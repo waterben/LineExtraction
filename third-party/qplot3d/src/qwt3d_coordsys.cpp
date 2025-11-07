@@ -175,7 +175,7 @@ void CoordinateSystem::chooseAxes() {
             double y = min(min(end[rem_x].y, end[i].y), min(beg[rem_x].y, beg[i].y));
             choice_x = (y == beg[i].y || y == end[i].y) ? i : rem_x;
 
-            other_x = (choice_x == (int)i) ? rem_x : (int)i;
+            other_x = (choice_x == static_cast<int>(i)) ? rem_x : static_cast<int>(i);
             left = (beg[choice_x].x < beg[other_x].x || end[choice_x].x < end[other_x].x) ? true : false;
 
             autoDecorateExposedAxis(axes[choice_x], left);
@@ -190,7 +190,7 @@ void CoordinateSystem::chooseAxes() {
             double y = min(min(end[rem_y].y, end[i].y), min(beg[rem_y].y, beg[i].y));
             choice_y = (y == beg[i].y || y == end[i].y) ? i : rem_y;
 
-            other_y = (choice_y == (int)i) ? rem_y : (int)i;
+            other_y = (choice_y == static_cast<int>(i)) ? rem_y : static_cast<int>(i);
             left = (beg[choice_y].x < beg[other_y].x || end[choice_y].x < end[other_y].x) ? true : false;
             autoDecorateExposedAxis(axes[choice_y], left);
 
@@ -204,7 +204,7 @@ void CoordinateSystem::chooseAxes() {
             double z = max(max(end[rem_z].z, end[i].z), max(beg[rem_z].z, beg[i].z));
             choice_z = (z == beg[i].z || z == end[i].z) ? i : rem_z;
 
-            other_z = (choice_z == (int)i) ? rem_z : (int)i;
+            other_z = (choice_z == static_cast<int>(i)) ? rem_z : static_cast<int>(i);
 
             rem_z = -1;
 
@@ -238,7 +238,8 @@ void CoordinateSystem::chooseAxes() {
 
   if (style() == FRAME) {
     for (i = 0; i != axes.size(); ++i) {
-      if ((int)i != choice_x && (int)i != choice_y && (int)i != choice_z) detach(&axes[i]);
+      if (static_cast<int>(i) != choice_x && static_cast<int>(i) != choice_y && static_cast<int>(i) != choice_z)
+        detach(&axes[i]);
     }
   }
 }

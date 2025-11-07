@@ -74,7 +74,8 @@ void Plot3D::blowout(unsigned light) {
   Sets GL material properties
   */
 void Plot3D::setMaterialComponent(GLenum property, double r, double g, double b, double a) {
-  GLfloat rgba[4] = {(GLfloat)r, (GLfloat)g, (GLfloat)b, (GLfloat)a};
+  GLfloat rgba[4] = {static_cast<GLfloat>(r), static_cast<GLfloat>(g), static_cast<GLfloat>(b),
+                     static_cast<GLfloat>(a)};
   makeCurrent();
   glMaterialfv(GL_FRONT_AND_BACK, property, rgba);
 }
@@ -99,7 +100,8 @@ void Plot3D::setShininess(double exponent) {
   Sets GL light properties for light 'light'
   */
 void Plot3D::setLightComponent(GLenum property, double r, double g, double b, double a, unsigned light) {
-  GLfloat rgba[4] = {(GLfloat)r, (GLfloat)g, (GLfloat)b, (GLfloat)a};
+  GLfloat rgba[4] = {static_cast<GLfloat>(r), static_cast<GLfloat>(g), static_cast<GLfloat>(b),
+                     static_cast<GLfloat>(a)};
   makeCurrent();
   glLightfv(lightEnum(light), property, rgba);
 }

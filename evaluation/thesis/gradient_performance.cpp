@@ -98,7 +98,7 @@ void processPath(std::vector<Entry<GT, MT, DT>>& entries, const std::pair<fs::pa
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::cout << "start gradient performance eval..." << std::endl;
 
   std::vector<std::pair<fs::path, std::string>> sets;
@@ -261,18 +261,21 @@ int main(int argc, char** argv) {
   std::vector<Entry<double, double, double>> gradD;
   gradD.push_back(Entry<double, double, double>(new GradientPC<PCMatlab<uchar>>, "PC ML"));
 
-  int cols = gradI.size() + gradF.size() + gradD.size() + 1;
-  int rows = sets.size() + 1;
+  int cols = static_cast<int>(gradI.size() + gradF.size() + gradD.size()) + 1;
+  int rows = static_cast<int>(sets.size()) + 1;
   std::vector<std::vector<std::string>> table;
-  table.resize(cols);
-  for_each(table.begin(), table.end(), [&](std::vector<std::string>& row) { row.resize(rows); });
+  table.resize(static_cast<size_t>(cols));
+  for_each(table.begin(), table.end(), [&](std::vector<std::string>& row) { row.resize(static_cast<size_t>(rows)); });
 
   table[0][0] = "Method";
 
   int row = 1;
-  for_each(gradI.begin(), gradI.end(), [&](const Entry<short, int, float>& e) { table[row++][0] = e.name; });
-  for_each(gradF.begin(), gradF.end(), [&](const Entry<float, float, float>& e) { table[row++][0] = e.name; });
-  for_each(gradD.begin(), gradD.end(), [&](const Entry<double, double, double>& e) { table[row++][0] = e.name; });
+  for_each(gradI.begin(), gradI.end(),
+           [&](const Entry<short, int, float>& e) { table[static_cast<size_t>(row++)][0] = e.name; });
+  for_each(gradF.begin(), gradF.end(),
+           [&](const Entry<float, float, float>& e) { table[static_cast<size_t>(row++)][0] = e.name; });
+  for_each(gradD.begin(), gradD.end(),
+           [&](const Entry<double, double, double>& e) { table[static_cast<size_t>(row++)][0] = e.name; });
 
   int col = 1;
   for_each(sets.begin(), sets.end(), [&](const std::pair<fs::path, std::string>& data) {
@@ -280,14 +283,14 @@ int main(int argc, char** argv) {
     processPath(gradF, data);
     processPath(gradD, data);
 
-    table[0][col] = data.second;
+    table[0][static_cast<size_t>(col)] = data.second;
     row = 1;
     for_each(gradI.begin(), gradI.end(), [&](const Entry<short, int, float>& e) {
       {
         std::ostringstream oss;
         oss.setf(std::ios::fixed);
         oss << std::setprecision(3) << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-        table[row++][col] = oss.str() + "ms";
+        table[static_cast<size_t>(row++)][static_cast<size_t>(col)] = oss.str() + "ms";
       }
     });
 
@@ -296,7 +299,7 @@ int main(int argc, char** argv) {
         std::ostringstream oss;
         oss.setf(std::ios::fixed);
         oss << std::setprecision(3) << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-        table[row++][col] = oss.str() + "ms";
+        table[static_cast<size_t>(row++)][static_cast<size_t>(col)] = oss.str() + "ms";
       }
     });
 
@@ -305,7 +308,7 @@ int main(int argc, char** argv) {
         std::ostringstream oss;
         oss.setf(std::ios::fixed);
         oss << std::setprecision(3) << (static_cast<double>(e.time * 1000) / (e.images * cv::getTickFrequency()));
-        table[row++][col] = oss.str() + "ms";
+        table[static_cast<size_t>(row++)][static_cast<size_t>(col)] = oss.str() + "ms";
       }
     });
     ++col;
@@ -314,8 +317,8 @@ int main(int argc, char** argv) {
   std::ofstream ofs;
   ofs.open("gradient_profiling.csv");
 
-  for_each(table.begin(), table.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table.begin(), table.end(), [&](const std::vector<std::string>& table_row) {
+    for_each(table_row.begin(), table_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });

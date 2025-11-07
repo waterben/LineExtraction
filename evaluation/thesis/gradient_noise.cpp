@@ -38,7 +38,7 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name(), what(), flags(0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, const std::string& w, int f = 0)
       : filter(a), name(b), what(w), flags(f) {}
@@ -48,9 +48,11 @@ struct Entry {
   std::string name, what;
   int flags;
 
-  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
+  Value value(const std::string& param_name) { return dynamic_cast<ValueManager*>(&(*filter))->value(param_name); }
 
-  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
+  void value(const std::string& param_name, const Value& v) {
+    dynamic_cast<ValueManager*>(&(*filter))->value(param_name, v);
+  }
 
 
   inline bool rgb() const { return flags & ENTRY_RGB; }
@@ -124,7 +126,7 @@ double processError(Entry& e, const fs::path& path, int n) {
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   fs::path path = "../../images/MDB/MiddEval3-Q";
 
   std::vector<Entry> filter;
@@ -188,11 +190,11 @@ int main(int argc, char** argv) {
   filter.push_back(
       Entry(dynamic_cast<LaplaceI<uchar, FT>*>(new PCLSqf<uchar, FT>(1.0, 2.0, 1.2)), "Laplace SQFF", "pclmag"));
 
-  int rows = filter.size() + 1;
+  int rows = static_cast<int>(filter.size()) + 1;
   int cols = 6;
   std::vector<std::vector<std::string>> table;
-  table.resize(rows);
-  for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(cols); });
+  table.resize(static_cast<size_t>(rows));
+  for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(static_cast<size_t>(cols)); });
 
   table[0][0] = "Method";
   table[0][1] = "noise 10";
@@ -202,12 +204,14 @@ int main(int argc, char** argv) {
   table[0][5] = "noise 50";
 
   int row = 1;
-  for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
+  for_each(filter.begin(), filter.end(), [&](Entry& e) { table[static_cast<size_t>(row++)][0] = e.name; });
 
   for (int col = 1; col != 6; ++col) {
-    int row = 1;
-    for_each(filter.begin(), filter.end(),
-             [&](Entry& e) { table[row++][col] = utility::format("%.3f", processError(e, path, 10 * col)); });
+    int inner_row = 1;
+    for_each(filter.begin(), filter.end(), [&](Entry& e) {
+      table[static_cast<size_t>(inner_row++)][static_cast<size_t>(col)] =
+          utility::format("%.3f", processError(e, path, 10 * col));
+    });
   }
 
   std::ofstream ofs;

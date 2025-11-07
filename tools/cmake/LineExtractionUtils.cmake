@@ -17,13 +17,21 @@ function(le_configure_common_settings)
     if(BUILD_DEBUG)
         set(CMAKE_BUILD_TYPE DEBUG PARENT_SCOPE)
         if(NOT MSVC)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -pg" PARENT_SCOPE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -pg" PARENT_SCOPE)
         endif()
     else()
         set(CMAKE_BUILD_TYPE RELEASE PARENT_SCOPE)
         if(NOT MSVC)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-write-strings -O3 -ffast-math" PARENT_SCOPE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3 -ffast-math" PARENT_SCOPE)
         endif()
+    endif()
+
+    # Set warning flags separately so they can be tuned independently
+    if(NOT MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Weffc++\
+        -Wmissing-field-initializers -Wcast-align -Wcast-qual -Wold-style-cast -Woverloaded-virtual -Wdangling-else\
+        -Wformat-security -Wshadow -Wsign-promo -Wundef -Wzero-as-null-pointer-constant -Wno-write-strings -Wreorder\
+        -Wdelete-non-virtual-dtor -Wno-comment -Wnoexcept-type -Wnon-virtual-dtor -Werror" PARENT_SCOPE)
     endif()
 
     # Library type
@@ -44,6 +52,7 @@ function(le_setup_core_dependencies)
         add_library(Eigen3::Eigen INTERFACE IMPORTED)
         set_target_properties(Eigen3::Eigen PROPERTIES
             INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
         )
     endif()
 
@@ -53,12 +62,22 @@ function(le_setup_core_dependencies)
         add_library(dlib::dlib INTERFACE IMPORTED)
         set_target_properties(dlib::dlib PROPERTIES
             INTERFACE_INCLUDE_DIRECTORIES "${DLIB_INCLUDE_DIR}"
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${DLIB_INCLUDE_DIR}"
             INTERFACE_LINK_LIBRARIES "${DLIB_LIBRARY}"
+            INTERFACE_COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>"
         )
     endif()
 
     # OpenCV
     include(extern_opencv)
+    if(NOT TARGET le_opencv)
+        add_library(le_opencv INTERFACE)
+        target_include_directories(le_opencv SYSTEM INTERFACE ${OpenCV_INCLUDE_DIR})
+        target_link_libraries(le_opencv INTERFACE ${OpenCV_LIBS})
+    endif()
+    if(NOT TARGET le::opencv)
+        add_library(le::opencv ALIAS le_opencv)
+    endif()
 
     # OpenGL/GLUT (optional)
     find_package(GLUT QUIET)
@@ -122,6 +141,16 @@ function(le_setup_testing)
 
     find_package(Threads REQUIRED)
     include(extern_gtest)
+    if(GTEST_FOUND)
+        if(NOT TARGET le_gtest)
+            add_library(le_gtest INTERFACE)
+            target_include_directories(le_gtest SYSTEM INTERFACE ${GTEST_INCLUDE_DIR})
+            target_link_libraries(le_gtest INTERFACE ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+        endif()
+        if(NOT TARGET le::gtest)
+            add_library(le::gtest ALIAS le_gtest)
+        endif()
+    endif()
     # Note: enable_testing() is now called at top level in main CMakeLists.txt
 endfunction()
 
@@ -130,7 +159,7 @@ function(le_add_library target_name)
     cmake_parse_arguments(LE
         "HEADER_ONLY;AUTO_TESTS"  # boolean options
         "TYPE"         # single value args
-        "SOURCES;HEADERS;PUBLIC_DEPS;PRIVATE_DEPS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;COMPILE_DEFS;TEST_DEPS;EXCLUDED_SOURCES"  # multi-value args
+        "SOURCES;HEADERS;PUBLIC_DEPS;PRIVATE_DEPS;PUBLIC_INCLUDES;PRIVATE_INCLUDES;PUBLIC_SYSTEM_INCLUDES;PRIVATE_SYSTEM_INCLUDES;COMPILE_DEFS;TEST_DEPS;EXCLUDED_SOURCES"  # multi-value args
         ${ARGN}
     )
 
@@ -178,6 +207,14 @@ function(le_add_library target_name)
                 $<INSTALL_INTERFACE:include>
             )
         endif()
+
+        if(LE_PUBLIC_SYSTEM_INCLUDES)
+            target_include_directories(${target_name} SYSTEM INTERFACE ${LE_PUBLIC_SYSTEM_INCLUDES})
+        endif()
+
+        if(LE_PRIVATE_SYSTEM_INCLUDES)
+            target_include_directories(${target_name} SYSTEM INTERFACE ${LE_PRIVATE_SYSTEM_INCLUDES})
+        endif()
     else()
         if(LE_PUBLIC_INCLUDES)
             target_include_directories(${target_name} PUBLIC ${LE_PUBLIC_INCLUDES})
@@ -190,6 +227,14 @@ function(le_add_library target_name)
 
         if(LE_PRIVATE_INCLUDES)
             target_include_directories(${target_name} PRIVATE ${LE_PRIVATE_INCLUDES})
+        endif()
+
+        if(LE_PUBLIC_SYSTEM_INCLUDES)
+            target_include_directories(${target_name} SYSTEM PUBLIC ${LE_PUBLIC_SYSTEM_INCLUDES})
+        endif()
+
+        if(LE_PRIVATE_SYSTEM_INCLUDES)
+            target_include_directories(${target_name} SYSTEM PRIVATE ${LE_PRIVATE_SYSTEM_INCLUDES})
         endif()
     endif()
 
@@ -240,7 +285,7 @@ function(le_add_auto_tests library_target)
     endif()
 
     # Only proceed if we have test files and gtest is available
-    if(test_files AND GTEST_LIBRARY AND GTEST_MAIN_LIBRARY AND ENABLE_UNIT_TEST)
+    if(test_files AND TARGET le::gtest AND ENABLE_UNIT_TEST)
         foreach(test_file ${test_files})
             # Extract test name from filename
             get_filename_component(test_name_full ${test_file} NAME_WE)
@@ -248,16 +293,11 @@ function(le_add_auto_tests library_target)
             # Create test executable
             add_executable(${test_name_full} ${test_file})
 
-            # Set include directories for gtest
-            if(GTEST_INCLUDE_DIR)
-                target_include_directories(${test_name_full} PRIVATE ${GTEST_INCLUDE_DIR})
-            endif()
-
             # Link to the library being tested
             target_link_libraries(${test_name_full} PRIVATE ${library_target})
 
             # Link to gtest
-            target_link_libraries(${test_name_full} PRIVATE ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+            target_link_libraries(${test_name_full} PRIVATE le::gtest)
 
             # Link to additional test dependencies
             if(LE_TEST_TEST_DEPS)
@@ -272,7 +312,7 @@ function(le_add_auto_tests library_target)
                 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             )
         endforeach()
-    elseif(test_files AND NOT (GTEST_LIBRARY AND GTEST_MAIN_LIBRARY))
+    elseif(test_files AND NOT TARGET le::gtest)
         message(STATUS "Tests found for ${library_target} but gtest not available. Skipping test generation.")
     endif()
 endfunction()

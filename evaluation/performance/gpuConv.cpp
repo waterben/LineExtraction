@@ -8,22 +8,24 @@ template <int KS>
 struct EntryConvCPU : public PerformanceTaskDefault {
   EntryConvCPU() : PerformanceTaskDefault("Conv CPU " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp;
-    uint64 start;
+    int64 start = 0;
     cv::GaussianBlur(src, tmp, cv::Size(KS, KS), 0);
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       cv::GaussianBlur(src, tmp, cv::Size(KS, KS), 0);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((cv::getTickCount() - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -32,11 +34,12 @@ template <int KS>
 struct EntryConvCL : public PerformanceTaskDefault {
   EntryConvCL() : PerformanceTaskDefault("Conv CL " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    int64 start = 0;
     cv::Mat tmp2;
     cv::UMat in = src.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
@@ -49,12 +52,13 @@ struct EntryConvCL : public PerformanceTaskDefault {
       cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
       tmp.copyTo(tmp2);  // to RAM
 
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((cv::getTickCount() - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -62,6 +66,7 @@ template <int KS>
 struct EntryConvCLNT : public PerformanceTaskDefault {
   EntryConvCLNT() : PerformanceTaskDefault("Conv CL NT " + std::to_string(KS)) {}
 
+  using PerformanceTaskDefault::run;
   void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -70,19 +75,20 @@ struct EntryConvCLNT : public PerformanceTaskDefault {
     cv::Mat tmp2;
     cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
     tmp.copyTo(tmp2);  // to RAM
-    uint64 start;
+    int64 start = 0;
     for (int i = 0; i != runs; ++i) {
       in = src.getUMat(cv::ACCESS_READ);
       start = cv::getTickCount();
       cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
 
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
       tmp.copyTo(tmp2);  // to RAM
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((cv::getTickCount() - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -97,7 +103,7 @@ struct EntryConvCuda : public PerformanceTaskDefault {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp2;
-    uint64 start;
+    int64 start = 0;
     cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
     cv::cuda::GpuMat in, tmp;
     in.upload(src);
@@ -112,8 +118,9 @@ struct EntryConvCuda : public PerformanceTaskDefault {
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((cv::getTickCount() - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -125,7 +132,7 @@ struct EntryConvCudaNT : public PerformanceTaskDefault {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    int64 start = 0;
     cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
     cv::cuda::GpuMat in, tmp;
     in.upload(src);
@@ -137,8 +144,9 @@ struct EntryConvCudaNT : public PerformanceTaskDefault {
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((cv::getTickCount() - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 #endif

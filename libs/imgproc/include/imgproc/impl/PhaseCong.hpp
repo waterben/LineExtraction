@@ -22,8 +22,14 @@ class PhaseCong {
  public:
   // init object and preinit filters
   PhaseCong(int ns = 4, double mw = 3, double ml = 2.1, double sig = 0.55);
-  ~PhaseCong();
-  // process phase congruency with preinited filters -> image size must match filter size...
+  virtual ~PhaseCong();
+
+  PhaseCong(const PhaseCong&) = delete;
+  PhaseCong& operator=(const PhaseCong&) = delete;
+  PhaseCong(PhaseCong&&) = delete;
+  PhaseCong& operator=(PhaseCong&&) =
+      delete;  // Consider refactoring raw pointers into RAII wrappers if move semantics become necessary.
+               // process phase congruency with preinited filters -> image size must match filter size...
   void run(const cv::Mat& img,
            cv::Mat& e,
            cv::Mat& ox,

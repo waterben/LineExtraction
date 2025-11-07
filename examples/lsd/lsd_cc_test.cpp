@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   std::cout << lines.size() << " line segments found. For " << duration_ms / run << " ms." << std::endl;
 
   DataDescriptor idd = lsd.imageDataDescriptor();
-  cv::RNG rng(time(0));
+  cv::RNG rng(static_cast<uint64>(time(nullptr)));
 
   cv::Mat emap = lsd.imageData()[3];
   cv::Mat emapImg;
@@ -140,7 +140,9 @@ int main(int argc, char** argv) {
   cv::Mat img;
   cvtColor(src, img, CV_GRAY2BGR);
   for_each(lines.begin(), lines.end(), [&](const LineSegment<FT>& l) {
-    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Vec3b color(static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)),
+                    static_cast<unsigned char>(20 + rng.uniform(0, 225)));
     cv::Scalar scolor(color[0], color[1], color[2]);
     line(img, l, scolor);
     // Vec2<FT> p1 = l.normalLineDist(0, l.centerPoint()), p2 = l.normalLineDist(10, l.centerPoint());

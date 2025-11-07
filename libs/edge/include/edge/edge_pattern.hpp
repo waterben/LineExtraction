@@ -46,6 +46,9 @@
 #pragma once
 
 #include <edge/edge_segment.hpp>
+
+#include <cmath>
+#include <cstddef>
 // #define NO_EDGE_THICK_CHECK
 // #define NO_GRADIENT_MAX_CHECK
 // #define NO_ADDED_SEEDS
@@ -55,7 +58,7 @@ namespace lsfm {
 template <class MT, int NUM_DIR = 8, bool USE_CORNER_RULE = false>
 class EsdPattern : public EsdBasePattern<MT, index_type> {
   cv::Mat dir_;
-  char* pdir_;
+  char* pdir_{nullptr};
 
 #ifdef DRAW_MODE
   cv::Mat draw;
@@ -65,11 +68,11 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
   short dmapStore_[20];
   char abs_diffmapStore_[15];
 
-  const short* dmap;
-  const short* pdmap;
-  const short* rvdmap;
-  const short* fwdmap;
-  const MT* pmag_;
+  const short* dmap{nullptr};
+  const short* pdmap{nullptr};
+  const short* rvdmap{nullptr};
+  const short* fwdmap{nullptr};
+  const MT* pmag_{nullptr};
 
   int minPixels_, maxGap_, patTol_;
   float magMul_, magTh_;
@@ -114,11 +117,19 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
   EsdPattern(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5, int pat_tol = 2)
       : EsdBasePattern<MT, index_type>(),
+        dir_(),
+        pdir_(nullptr),
         minPixels_(minPix),
         maxGap_(maxGap),
+        patTol_(pat_tol),
         magMul_(magMul),
         magTh_(magTh),
-        patTol_(pat_tol) {
+#ifndef NO_ADDED_SEEDS
+        addedSeeds_(),
+#endif
+        patterns_(),
+        patternSegments_(),
+        primitives_() {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;
@@ -139,6 +150,9 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
               std::bind(&EsdPattern<MT, NUM_DIR, USE_CORNER_RULE>::valuePatThreshold, this, std::placeholders::_1),
               "Pattern tolerance.");
   }
+
+  EsdPattern(const EsdPattern&) = delete;
+  EsdPattern& operator=(const EsdPattern&) = delete;
 
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
@@ -262,7 +276,7 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
  private:
   struct Pattern {
-    Pattern(size_t b = 0, size_t e = 0) : seg(b, e) {}
+    Pattern(size_t b = 0, size_t e = 0) : prim(), seg(b, e) {}
 
     Primitive prim;
     EdgeSegment seg;
@@ -270,7 +284,9 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
   // check for vaild adjacent pixel by given direction and retun new index
   inline index_type checkAdjacent(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     char ndir = pdir_[nidx];
     // is pixel already used / not set and direction is -+1
     // if (ndir < 0 || absDiff<NUM_DIR>(dir-ndir) > 1)
@@ -290,9 +306,15 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
     char dirn = dir - 1;
     char dirp = dir + 1;
 
-    index_type nidx = idx + pdmap[dir];
-    index_type nidxn = idx + pdmap[dirn];
-    index_type nidxp = idx + pdmap[dirp];
+    const int dirIndex = static_cast<int>(dir);
+    const int dirnIndex = static_cast<int>(dirn);
+    const int dirpIndex = static_cast<int>(dirp);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    const ptrdiff_t offsetN = pdmap[dirnIndex];
+    const ptrdiff_t offsetP = pdmap[dirpIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
+    index_type nidxn = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetN);
+    index_type nidxp = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetP);
 
     MT v = pmag_[nidx];
     MT vn = pmag_[nidxn];
@@ -320,7 +342,9 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
     }
 
     // is pixel already used or border or no magnitude
-    if (v < magTh_ || pdir_[nidx] < -1 || v > magMul_ * pmag_[idx]) return 0;
+    const float vf = static_cast<float>(v);
+    const float vmag = static_cast<float>(pmag_[idx]);
+    if (vf < magTh_ || pdir_[nidx] < -1 || vf > magMul_ * vmag) return 0;
     dir = dirn;
     return nidx;
   }
@@ -329,14 +353,16 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < 0) return;
     pdir_[nidx] = -4;
   }
 
   // check for thick lines and remove pixels
   inline void checkThickMag(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < -1) return;
     pdir_[nidx] = -4;
   }
@@ -546,9 +572,10 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
         } else if (lp.prim.match(p.prim, patTol_)) {
           // current pattern equals last pattern, update lp size and prim size
           if (lp.prim.dir_next == p.prim.dir_next) {
-            float repeat = static_cast<float>(lp.seg.size()) / lp.prim.size + 1;
+            const double repeat = static_cast<double>(lp.seg.size()) / lp.prim.size + 1.0;
             lp.seg.end(points_.size());
-            lp.prim.size = static_cast<ushort>(round(lp.seg.size() / repeat));
+            const double newSize = static_cast<double>(lp.seg.size()) / repeat;
+            lp.prim.size = static_cast<ushort>(std::lround(newSize));
           }
           // no more repeat, but current element fits to last, add last pattern and reset to no last pattern
           else {
@@ -567,10 +594,13 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
             EdgeSegment& blps = patterns_.back();
             Primitive& blpp = primitives_.back();
             if (lp.prim.dir == blpp.dir) {
-              unsigned int s = blpp.size + p.prim.size;
-              if (lp_size <= s + 2 * patTol_ && lp_size >= s - 2 * patTol_) {
-                unsigned int blpadd =
-                    static_cast<unsigned int>(round(static_cast<double>(lp.seg.size() * blpp.size) / s));
+              const unsigned int s = blpp.size + p.prim.size;
+              const int tolerance = patTol_ * 2;
+              const int lpInt = static_cast<int>(lp_size);
+              const int sum = static_cast<int>(s);
+              if (lpInt <= sum + tolerance && lpInt >= sum - tolerance) {
+                const double numerator = static_cast<double>(lp.seg.size()) * static_cast<double>(blpp.size);
+                const unsigned int blpadd = static_cast<unsigned int>(std::lround(numerator / static_cast<double>(s)));
                 blps.end(blps.end() + blpadd);
                 p.seg.begin(blps.end());
                 goto update_lp;
@@ -608,7 +638,9 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
   void pattern_reverse(EdgeSegmentVector::iterator beg, EdgeSegmentVector::iterator end) {
     size_t po_beg = beg->begin();
     size_t po_end = (end - 1)->end();
-    std::reverse(points_.begin() + po_beg, points_.begin() + po_end);
+    auto first = points_.begin() + static_cast<std::ptrdiff_t>(po_beg);
+    auto last = points_.begin() + static_cast<std::ptrdiff_t>(po_end);
+    std::reverse(first, last);
     while (beg < end) {
       --end;
       EdgeSegment tmp = *beg;
@@ -639,7 +671,8 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       // no fw points found, do rv search
       pdmap = rvdmap;
       extractSegment(idx, lp, p, ls_dir);
-      if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > minPixels_)
+      if (patterns_.size() > pat_seg_beg &&
+          points_.size() - point_seg_beg > static_cast<size_t>(std::max(minPixels_, 0)))
         patternSegments_.push_back(EdgeSegment(pat_seg_beg, patterns_.size(), ES_REVERSE));
       return;
     }
@@ -651,7 +684,8 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       // if no rv points found, do fw search
       pdmap = fwdmap;
       extractSegment(idx, lp, p, ls_dir);
-      if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > minPixels_)
+      if (patterns_.size() > pat_seg_beg &&
+          points_.size() - point_seg_beg > static_cast<size_t>(std::max(minPixels_, 0)))
         patternSegments_.push_back(EdgeSegment(pat_seg_beg, patterns_.size()));
       return;
     }
@@ -661,13 +695,16 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
 
     // closed check
     if (points_.back() == idx) {
-      if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > minPixels_)
+      if (patterns_.size() > pat_seg_beg &&
+          points_.size() - point_seg_beg > static_cast<size_t>(std::max(minPixels_, 0)))
         patternSegments_.push_back(EdgeSegment(pat_seg_beg, patterns_.size(), ES_REVERSE | ES_CLOSED));
       return;
     }
 
-    pattern_reverse(patterns_.begin() + pat_seg_beg, patterns_.end());
-    std::reverse(primitives_.begin() + pat_seg_beg, primitives_.end());
+    pattern_reverse(patterns_.begin() + static_cast<typename std::vector<EdgeSegment>::difference_type>(pat_seg_beg),
+                    patterns_.end());
+    std::reverse(primitives_.begin() + static_cast<typename std::vector<Primitive>::difference_type>(pat_seg_beg),
+                 primitives_.end());
 
     // get current pattern
     p.seg = patterns_.back();
@@ -680,12 +717,13 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
     // do fw
     pdmap = fwdmap;
     extractSegment(idx, lp, p, ls_dir);
-    if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > minPixels_)
+    if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > static_cast<size_t>(std::max(minPixels_, 0)))
       patternSegments_.push_back(EdgeSegment(pat_seg_beg, patterns_.size()));
   }
 
   inline void addPatternSegments(size_t pat_seg_beg, size_t point_seg_beg, int flags = 0) {
-    if (patterns_.size() > pat_seg_beg && points_.size() - point_seg_beg > minPixels_) {
+    if (patterns_.size() > pat_seg_beg &&
+        points_.size() - point_seg_beg > static_cast<size_t>(std::max(minPixels_, 0))) {
       if (patterns_.size() - pat_seg_beg == 1)
         patternSegments_.push_back(EdgeSegment(pat_seg_beg, patterns_.size(), flags));
       else if (patterns_.size() - pat_seg_beg == 2) {
@@ -758,8 +796,10 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       return;
     }
 
-    pattern_reverse(patterns_.begin() + pat_seg_beg, patterns_.end());
-    std::reverse(primitives_.begin() + pat_seg_beg, primitives_.end());
+    pattern_reverse(patterns_.begin() + static_cast<typename std::vector<EdgeSegment>::difference_type>(pat_seg_beg),
+                    patterns_.end());
+    std::reverse(primitives_.begin() + static_cast<typename std::vector<Primitive>::difference_type>(pat_seg_beg),
+                 primitives_.end());
 
     // get current pattern
     p.seg = patterns_.back();

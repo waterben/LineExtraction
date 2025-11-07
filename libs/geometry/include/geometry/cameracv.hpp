@@ -93,10 +93,9 @@ class CameraCV : public CameraHom<FT> {
            const Vec2<FT>& imageSize,
            const Vec3<FT>& trans = Vec3<FT>(FT(0), FT(0), FT(0)),
            const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
-      : CameraHom<FT>(fov, imageSize, trans, rot) {
-    camM_ = cv::Matx33<FT>(Camera<FT>::composeCameraMatrix(focal_, offset_).data());
-    transCV_ = cv::Vec3<FT>(Vec3<FT>(-rodrigues(rot_).transpose() * trans_).data());
-  }
+      : CameraHom<FT>(fov, imageSize, trans, rot),
+        camM_(cv::Matx33<FT>(Camera<FT>::composeCameraMatrix(focal_, offset_).data())),
+        transCV_(cv::Vec3<FT>(Vec3<FT>(-rodrigues(rot_).transpose() * trans_).data())) {}
 
   CameraCV(const Vec2<FT>& focal,
            const Vec2<FT>& offset,
@@ -266,6 +265,9 @@ class CameraCV : public CameraHom<FT> {
       ret.push_back(LineSegment<FT>(endpoints2[i], endpoints2[i + 1]));
     }
   }
+
+  //! Virtual destructor for proper inheritance
+  virtual ~CameraCV() = default;
 };
 
 typedef CameraCV<float> CameraCVf;

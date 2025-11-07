@@ -20,7 +20,7 @@ constexpr int runs = 1;
 typedef double FT;
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), threshold(), name(), flags(0), images(0), time(0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const cv::Ptr<Threshold<FT>>& t, const std::string& b, int f = 0)
       : filter(a), threshold(t), name(b), flags(f), images(0), time(0) {}
@@ -135,7 +135,7 @@ void processPath(std::vector<Entry>& entries, const std::pair<fs::path, std::str
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::vector<std::pair<fs::path, std::string>> sets;
   // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
   sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));
@@ -163,7 +163,9 @@ int main(int argc, char** argv) {
   });
 
   for_each(filter.begin(), filter.end(), [&](Entry& e) {
-    std::cout << e.name << ": " << e.time * 1000 / (e.images * cv::getTickFrequency()) << "ms" << std::endl;
+    std::cout << e.name << ": "
+              << static_cast<double>(e.time) * 1000.0 / (static_cast<double>(e.images) * cv::getTickFrequency()) << "ms"
+              << std::endl;
   });
 
   return 0;

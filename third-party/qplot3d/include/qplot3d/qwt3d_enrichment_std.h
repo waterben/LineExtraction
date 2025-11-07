@@ -49,6 +49,8 @@ class QWT3D_EXPORT Cone : public VertexEnrichment {
  public:
   Cone();
   Cone(double rad, unsigned quality);
+  Cone(const Cone& other);
+  Cone& operator=(const Cone& other);
   ~Cone();
 
   Qwt3D::Enrichment* clone() const { return new Cone(*this); }
@@ -62,6 +64,8 @@ class QWT3D_EXPORT Cone : public VertexEnrichment {
   unsigned quality_;
   double radius_;
   GLboolean oldstate_;
+
+  void initQuadrics();
 };
 
 //! 3D vector field.
@@ -73,6 +77,8 @@ class QWT3D_EXPORT Cone : public VertexEnrichment {
 class QWT3D_EXPORT Arrow : public VertexEnrichment {
  public:
   Arrow();
+  Arrow(const Arrow& other);
+  Arrow& operator=(const Arrow& other);
   ~Arrow();
 
   Qwt3D::Enrichment* clone() const { return new Arrow(*this); }
@@ -101,6 +107,8 @@ class QWT3D_EXPORT Arrow : public VertexEnrichment {
 
   Qwt3D::Triple top_;
   Qwt3D::RGBA rgba_;
+
+  void initQuadrics();
 };
 
 }  // namespace Qwt3D

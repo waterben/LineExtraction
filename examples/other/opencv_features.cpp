@@ -23,7 +23,8 @@ const int stats_update_period = 10;  // On-screen statistics are updated every 1
 namespace example {
 class Tracker {
  public:
-  Tracker(Ptr<Feature2D> _detector, Ptr<DescriptorMatcher> _matcher) : detector(_detector), matcher(_matcher) {
+  Tracker(Ptr<Feature2D> _detector, Ptr<DescriptorMatcher> _matcher)
+      : detector(_detector), matcher(_matcher), first_frame(), first_desc(), first_kp(), object_bb(), akaze_() {
     akaze_ = AKAZE::create();
     akaze_->setThreshold(akaze_thresh);
   }
@@ -54,7 +55,7 @@ void Tracker::setFirstFrame(const Mat frame, vector<Point2f> bb, string title, S
   cv::fillPoly(matMask, &ptContain, &iSize, 1, cv::Scalar::all(255));
   akaze_->detect(first_frame, first_kp, matMask);
   detector->compute(first_frame, first_kp, first_desc);
-  stats.keypoints = (int)first_kp.size();
+  stats.keypoints = static_cast<int>(first_kp.size());
   drawBoundingBox(first_frame, bb);
   putText(first_frame, title, Point(0, 60), FONT_HERSHEY_PLAIN, 5, Scalar::all(0), 4);
   object_bb = bb;
@@ -68,18 +69,18 @@ Mat Tracker::process(const Mat frame, Stats& stats) {
   int64 start = cv::getTickCount();
   detector->compute(frame, kp, desc);
   stats.time = cv::getTickCount() - start;
-  stats.keypoints = (int)kp.size();
+  stats.keypoints = static_cast<int>(kp.size());
 
   vector<vector<DMatch> > matches;
   vector<KeyPoint> matched1, matched2;
   matcher->knnMatch(first_desc, desc, matches, 2);
   for (unsigned i = 0; i < matches.size(); i++) {
     if (matches[i][0].distance < nn_match_ratio * matches[i][1].distance) {
-      matched1.push_back(first_kp[matches[i][0].queryIdx]);
-      matched2.push_back(kp[matches[i][0].trainIdx]);
+      matched1.push_back(first_kp[static_cast<size_t>(matches[i][0].queryIdx)]);
+      matched2.push_back(kp[static_cast<size_t>(matches[i][0].trainIdx)]);
     }
   }
-  stats.matches = (int)matched1.size();
+  stats.matches = static_cast<int>(matched1.size());
 
   Mat inlier_mask, homography;
   vector<KeyPoint> inliers1, inliers2;
@@ -96,14 +97,14 @@ Mat Tracker::process(const Mat frame, Stats& stats) {
     return res;
   }
   for (unsigned i = 0; i < matched1.size(); i++) {
-    if (inlier_mask.at<uchar>(i)) {
+    if (inlier_mask.at<uchar>(static_cast<int>(i))) {
       int new_i = static_cast<int>(inliers1.size());
       inliers1.push_back(matched1[i]);
       inliers2.push_back(matched2[i]);
       inlier_matches.push_back(DMatch(new_i, new_i, 0));
     }
   }
-  stats.inliers = (int)inliers1.size();
+  stats.inliers = static_cast<int>(inliers1.size());
   stats.ratio = stats.inliers * 1.0 / stats.matches;
 
   vector<Point2f> new_bb;

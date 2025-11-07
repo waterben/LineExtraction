@@ -72,31 +72,31 @@ inline void hysteresis_map(cv::Mat& map, const cv::Mat& dmap, IndexVector& edgel
     }
     if (m[1] > -1) {
       m[1] = -1;
-      edgels.push_back(i + 1);
+      edgels.push_back(static_cast<size_t>(i + 1));
     }
     if (m[-mapstep - 1] > -1) {
       m[-mapstep - 1] = -1;
-      edgels.push_back(i - mapstep - 1);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) - mapstep - 1));
     }
     if (m[-mapstep] > -1) {
       m[-mapstep] = -1;
-      edgels.push_back(i - mapstep);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) - mapstep));
     }
     if (m[-mapstep + 1] > -1) {
       m[-mapstep + 1] = -1;
-      edgels.push_back(i - mapstep + 1);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) - mapstep + 1));
     }
     if (m[mapstep - 1] > -1) {
       m[mapstep - 1] = -1;
-      edgels.push_back(i + mapstep - 1);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) + mapstep - 1));
     }
     if (m[mapstep] > -1) {
       m[mapstep] = -1;
-      edgels.push_back(i + mapstep);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) + mapstep));
     }
     if (m[mapstep + 1] > -1) {
       m[mapstep + 1] = -1;
-      edgels.push_back(i + mapstep + 1);
+      edgels.push_back(static_cast<size_t>(static_cast<ptrdiff_t>(i) + mapstep + 1));
     }
   }
 }
@@ -133,41 +133,41 @@ inline cv::Mat hysteresis_binary(const cv::Mat& dmap, IndexVector& edgels, uchar
 
   // now track the edges (hysteresis thresholding)
   while (visited != edgels.size()) {
-    index_type i = edgels[visited];
+    ptrdiff_t i = static_cast<ptrdiff_t>(edgels[visited]);
     uint8_t* m = pmap + i;
     ++visited;
 
     if (m[-1]) {
       m[-1] = 0;
-      edgels.push_back(i - 1);
+      edgels.push_back(static_cast<size_t>(i - 1));
     }
     if (m[1]) {
       m[1] = 0;
-      edgels.push_back(i + 1);
+      edgels.push_back(static_cast<size_t>(i + 1));
     }
     if (m[-mapstep - 1]) {
       m[-mapstep - 1] = 0;
-      edgels.push_back(i - mapstep - 1);
+      edgels.push_back(static_cast<size_t>(i - mapstep - 1));
     }
     if (m[-mapstep]) {
       m[-mapstep] = 0;
-      edgels.push_back(i - mapstep);
+      edgels.push_back(static_cast<size_t>(i - mapstep));
     }
     if (m[-mapstep + 1]) {
       m[-mapstep + 1] = 0;
-      edgels.push_back(i - mapstep + 1);
+      edgels.push_back(static_cast<size_t>(i - mapstep + 1));
     }
     if (m[mapstep - 1]) {
       m[mapstep - 1] = 0;
-      edgels.push_back(i + mapstep - 1);
+      edgels.push_back(static_cast<size_t>(i + mapstep - 1));
     }
     if (m[mapstep]) {
       m[mapstep] = 0;
-      edgels.push_back(i + mapstep);
+      edgels.push_back(static_cast<size_t>(i + mapstep));
     }
     if (m[mapstep + 1]) {
       m[mapstep + 1] = 0;
-      edgels.push_back(i + mapstep + 1);
+      edgels.push_back(static_cast<size_t>(i + mapstep + 1));
     }
   }
   map.setTo(0);

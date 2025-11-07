@@ -41,7 +41,7 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), gt(), ft(), name() {}
 
   Entry(const cv::Ptr<QuadratureI<uchar, double, double, double, double>>& fi,
         const cv::Ptr<QuadratureI<uchar, double, double, double, double>>& g,
@@ -106,7 +106,7 @@ double processError(Entry& e, const fs::path& path) {
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   fs::path path = "../../images/MDB/MiddEval3-Q";
 
   cv::Ptr<QuadratureI<uchar, double, double, double, double>> gt(new QuadratureSF<uchar, FT>(1, 2, 1.2));
@@ -131,24 +131,24 @@ int main(int argc, char** argv) {
   filter.push_back(Entry(new QuadratureS<uchar, FT, FT>(1, 2, 749, 1.2), gt, ft, "SQF Po (749x749)"));
 
 
-  int rows = filter.size() + 1;
+  int rows = static_cast<int>(filter.size()) + 1;
   int cols = 2;
   std::vector<std::vector<std::string>> table;
-  table.resize(rows);
-  for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(cols); });
+  table.resize(static_cast<size_t>(rows));
+  for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(static_cast<size_t>(cols)); });
 
   table[0][0] = "Method";
   table[0][1] = "Error";
 
   int row = 1;
-  for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
+  for_each(filter.begin(), filter.end(), [&](Entry& e) { table[static_cast<size_t>(row++)][0] = e.name; });
 
   row = 1;
   for_each(filter.begin(), filter.end(), [&](Entry& e) {
     std::ostringstream oss;
     oss.setf(std::ios::fixed);
     oss << std::setprecision(3) << processError(e, path);
-    table[row++][1] = oss.str();
+    table[static_cast<size_t>(row++)][1] = oss.str();
   });
 
   std::ofstream ofs;

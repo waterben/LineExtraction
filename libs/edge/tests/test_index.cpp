@@ -7,6 +7,8 @@ using namespace lsfm;
 
 class IndexTest : public ::testing::Test {
  protected:
+  IndexTest() : test_mat(), cols(0), rows(0) {}
+
   void SetUp() override {
     // Create test matrix 5x4 (5 rows, 4 columns)
     test_mat = cv::Mat::zeros(5, 4, CV_32F);
@@ -14,7 +16,7 @@ class IndexTest : public ::testing::Test {
     rows = test_mat.rows;  // 5
 
     // Fill with unique values
-    for (int i = 0; i < test_mat.total(); ++i) {
+    for (std::size_t i = 0; i < test_mat.total(); ++i) {
       test_mat.ptr<float>()[i] = static_cast<float>(i);
     }
   }
@@ -173,7 +175,7 @@ TEST_F(IndexTest, RoundTripConversion) {
 
 TEST_F(IndexTest, EdgeCases) {
   // Test first and last valid indices
-  index_type last_idx = rows * cols - 1;  // 19 for 5x4 matrix
+  index_type last_idx = static_cast<index_type>(rows * cols - 1);  // 19 for 5x4 matrix
 
   cv::Point p;
   index2Point(last_idx, p, cols);

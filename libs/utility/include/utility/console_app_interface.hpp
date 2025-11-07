@@ -11,6 +11,8 @@ class ConsoleAppInterface {
   explicit ConsoleAppInterface(std::string name, std::string description = "", std::string version = "1.0.0")
       : name_(std::move(name)), description_(std::move(description)), version_(std::move(version)) {}
 
+  virtual ~ConsoleAppInterface() = default;
+
   /// @brief Main entry point for application
   /// @param argc main argc
   /// @param argv main argv

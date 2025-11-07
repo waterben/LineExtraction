@@ -30,7 +30,7 @@ struct TaskBase {
   virtual ~TaskBase() {}
 
   virtual void run(const TaskData& data, int loops, bool verbose) = 0;
-  virtual void saveResults(bool verbose) {}
+  virtual void saveResults(bool /*verbose*/) {}
 
   // name of task
   std::string name;
@@ -46,7 +46,7 @@ struct TaskBase {
     return 0;
   }
 
-  virtual void value(const std::string& name, const lsfm::Value& value) {}
+  virtual void value(const std::string& /*name*/, const lsfm::Value& /*value*/) {}
 };
 
 //! Data provider for performance test
@@ -69,13 +69,13 @@ typedef std::vector<DataProviderPtr> DataProviderList;
 
 //! Image data set for performance test
 struct FileDataProvider : public DataProviderBase {
-  FileDataProvider(std::string& name) : DataProviderBase(name) {}
-  FileDataProvider(const std::filesystem::path& p, const std::string& name, bool recursive = true)
-      : DataProviderBase(name), pos_(0) {
+  FileDataProvider(std::string& provider_name) : DataProviderBase(provider_name) {}
+  FileDataProvider(const std::filesystem::path& p, const std::string& provider_name, bool recursive = true)
+      : DataProviderBase(provider_name) {
     parse(p, recursive);
   }
-  FileDataProvider(const std::vector<std::filesystem::path>& f, const std::string& name, bool recursive = true)
-      : DataProviderBase(name), pos_(0) {
+  FileDataProvider(const std::vector<std::filesystem::path>& f, const std::string& provider_name, bool recursive = true)
+      : DataProviderBase(provider_name) {
     parse(f, recursive);
   }
 
@@ -97,14 +97,14 @@ struct FileDataProvider : public DataProviderBase {
   }
 
  private:
-  size_t pos_;
-  std::vector<std::filesystem::path> files_;
+  size_t pos_{0};
+  std::vector<std::filesystem::path> files_{};
 };
 
 //! Task loader
 struct TaskLoader {
   TaskLoader(const std::string& n = std::string()) : name(n) {}
-  virtual ~TaskLoader() {}
+  virtual ~TaskLoader() = default;
 
   std::string name;
 

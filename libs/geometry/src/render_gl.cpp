@@ -39,17 +39,17 @@ void forcePThreadLink() {
 #endif
 
 /* Return random float in [0,1] */
-static float Random(void) {
+float Random() {
   int i = rand();
-  return (float)(i % 1000) / 1000.0;
+  return static_cast<float>(i % 1000) / 1000.0f;
 }
 
 
-static void DrawBallNumber(int k) {
+void DrawBallNumber(int k) {
   char str[100];
   int i, n;
   sprintf(str, "%d", k);
-  n = strlen(str);
+  n = static_cast<int>(strlen(str));  // Safe: string length from sprintf is always small
   for (i = 0; i < n; i++) {
     glutBitmapCharacter(GLUT_BITMAP_8_BY_13, str[i]);
   }
@@ -57,7 +57,7 @@ static void DrawBallNumber(int k) {
 
 
 /* Draw my stuff */
-static void DrawScene(TRcontext* tr) {
+void DrawScene(TRcontext* tr) {
   int i;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -66,7 +66,7 @@ static void DrawScene(TRcontext* tr) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, BallColor[i]);
     glPushMatrix();
     glTranslatef(BallPos[i][0], BallPos[i][1], BallPos[i][2]);
-    t = 12 + (int)(BallSize[i] * 12);
+    t = 12 + static_cast<int>(BallSize[i] * 12);
     glutSolidSphere(BallSize[i], t, t);
 
     glDisable(GL_LIGHTING);
@@ -81,7 +81,7 @@ static void DrawScene(TRcontext* tr) {
 
 
 /* Do a demonstration of tiled rendering */
-static void Display(void) {
+void Display(void) {
   GLubyte* image;
   int tileCount = 0;
   TRcontext* tr;
@@ -89,9 +89,9 @@ static void Display(void) {
 
   /* Generate random balls */
   for (i = 0; i < NUMBALLS; i++) {
-    BallPos[i][0] = -2.0 + 4.0 * Random();
-    BallPos[i][1] = -2.0 + 4.0 * Random();
-    BallPos[i][2] = -2.0 + 4.0 * Random();
+    BallPos[i][0] = -2.0f + 4.0f * Random();
+    BallPos[i][1] = -2.0f + 4.0f * Random();
+    BallPos[i][2] = -2.0f + 4.0f * Random();
     BallSize[i] = Random();
     BallColor[i][0] = Random();
     BallColor[i][1] = Random();
@@ -101,7 +101,8 @@ static void Display(void) {
 
   /* allocate final image buffer */
   // image = malloc(WindowWidth * WindowHeight * 4 * sizeof(GLubyte));
-  image = static_cast<uint8_t*>(std::malloc(WindowWidth * WindowHeight * 4 * sizeof(GLubyte)));
+  image = static_cast<uint8_t*>(
+      std::malloc(static_cast<size_t>(WindowWidth) * static_cast<size_t>(WindowHeight) * 4 * sizeof(GLubyte)));
   if (!image) {
     printf("Malloc failed!\n");
     return;
@@ -158,7 +159,7 @@ static void Display(void) {
 }
 
 
-static void Reshape(int width, int height) {
+void Reshape(int width, int height) {
   WindowWidth = width;
   WindowHeight = height;
   glViewport(0, 0, width, height);
@@ -174,7 +175,7 @@ static void Reshape(int width, int height) {
 }
 
 
-static void Key(unsigned char key, int x, int y) {
+void Key(unsigned char key, int x, int y) {
   (void)x;
   (void)y;
   switch (key) {
@@ -186,7 +187,7 @@ static void Key(unsigned char key, int x, int y) {
 }
 
 
-static void Init(void) {
+void Init(void) {
   static GLfloat pos[4] = {0.0, 0.0, 10.0, 0.0};
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);

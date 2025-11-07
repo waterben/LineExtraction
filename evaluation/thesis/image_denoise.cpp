@@ -21,7 +21,7 @@ constexpr int runs = 10;
 #endif
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name() {}
 
   Entry(const ImageOperatorPtr& a, const std::string& b) : filter(a), name(b) {}
 
@@ -98,7 +98,7 @@ double processError(Entry& e, const fs::path& path, int n, double& time) {
     for (int i = 0; i != runs; ++i) {
       start = cv::getTickCount();
       res = e.process(src_n);
-      time += cv::getTickCount() - start;
+      time += static_cast<double>(cv::getTickCount() - start);
     }
 
 #ifdef WRITE_IMAGE_FILES
@@ -122,7 +122,7 @@ double processError(Entry& e, const fs::path& path, int n, double& time) {
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   char c;
   std::cin >> c;
 
@@ -157,8 +157,8 @@ int main(int argc, char** argv) {
   filter.push_back(Entry(FastNlMeansOperator::create(15), "nlmean 15"));
   filter.push_back(Entry(FastNlMeansOperator::create(20), "nlmean 20"));
 
-  int rows = filter.size() + 1;
-  int cols = 11;
+  size_t rows = filter.size() + 1;
+  size_t cols = 11;
   std::vector<std::vector<std::string>> table;
   table.resize(rows);
   for_each(table.begin(), table.end(), [&](std::vector<std::string>& col) { col.resize(cols); });
@@ -175,15 +175,15 @@ int main(int argc, char** argv) {
   table[0][9] = "n40 time";
   table[0][10] = "n50 time";
 
-  int row = 1;
+  size_t row = 1;
   for_each(filter.begin(), filter.end(), [&](Entry& e) { table[row++][0] = e.name; });
 
-  for (int col = 1; col != 6; ++col) {
-    int row = 1;
+  for (size_t col = 1; col != 6; ++col) {
+    size_t inner_row = 1;
     for_each(filter.begin(), filter.end(), [&](Entry& e) {
       double time;
-      table[row][col] = utility::format("%.3f", processError(e, path, 10 * col, time));
-      table[row++][col + 5] = utility::format("%.3f", time);
+      table[inner_row][col] = utility::format("%.3f", processError(e, path, static_cast<int>(10 * col), time));
+      table[inner_row++][col + 5] = utility::format("%.3f", time);
     });
   }
 

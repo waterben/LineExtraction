@@ -53,6 +53,8 @@
 
 namespace lsfm {
 
+inline void addSeed(IndexVector& seeds, int idx) { seeds.push_back(static_cast<IndexVector::value_type>(idx)); }
+
 // expected gradient direction are:
 //           bright
 //             ^ gy < 0->-pi/2
@@ -65,7 +67,7 @@ namespace lsfm {
 //           bright                                        |
 //                                                         |
 // The gradient is orthogonal to the line direction  -------------> line direction
-// line direction = gradiend direction + pi/2
+// line direction = gradient direction + pi/2
 // Since the positive y axis is from top to bottom, the positive rotation is clockwise
 // For 8 region NMS we define following tags:
 //
@@ -74,8 +76,8 @@ namespace lsfm {
 //    \ | /
 //  4 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 //
 // The 4 region NMS only uses the positive part
@@ -85,8 +87,8 @@ namespace lsfm {
 //    \ | /
 //  0 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 // gradient to map ids:
 //
@@ -118,7 +120,7 @@ struct EMap8 {
     }
   }
 
-  static inline const char type() { return '8'; }
+  static inline char type() { return '8'; }
 };
 
 template <class DT>
@@ -136,7 +138,7 @@ struct EMap4 {
     }
   }
 
-  static inline const char type() { return '4'; }
+  static inline char type() { return '4'; }
 };
 
 template <class MT>
@@ -286,7 +288,7 @@ struct PreciseNMS {
                      cv::Mat& dmap,
                      int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8S);
     int borderStart = std::max(Interpolate<DT, MT>::BorderStart + 1, border),
         borderEnd = std::max(Interpolate<DT, MT>::BorderEnd + 1, border);
@@ -315,12 +317,12 @@ struct PreciseNMS {
           DT xs = pgx[idx];
           DT ys = pgy[idx];
 
-          size_t x = idx % mag.cols;
-          size_t y = idx / mag.cols;
+          int x = idx % mag.cols;
+          int y = idx / mag.cols;
 
-          if (m > Interpolate<DT, MT>::getNB(mag, x - xs, y - ys) &&
-              m >= Interpolate<DT, MT>::getNB(mag, x + xs, y + ys)) {
-            if (m > high) seeds.push_back(idx);
+          if (static_cast<DT>(m) > Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) - xs, static_cast<DT>(y) - ys) &&
+              static_cast<DT>(m) >= Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) + xs, static_cast<DT>(y) + ys)) {
+            if (m > high) addSeed(seeds, idx);
 
             EM<DT>::map(pdmap[idx], xs, ys);
           }
@@ -339,7 +341,7 @@ struct PreciseNMS {
                      cv::Mat& dmap,
                      int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8S);
     int borderStart = Interpolate<DT, MT>::BorderStart + border, borderEnd = Interpolate<DT, MT>::BorderEnd + border;
     setBorder<char>(dmap, borderStart, borderEnd, -1);
@@ -367,12 +369,12 @@ struct PreciseNMS {
           DT xs = pgx[idx];
           DT ys = pgy[idx];
 
-          size_t x = idx % mag.cols;
-          size_t y = idx / mag.cols;
+          size_t x = static_cast<size_t>(idx) % static_cast<size_t>(mag.cols);
+          size_t y = static_cast<size_t>(idx) / static_cast<size_t>(mag.cols);
 
-          if (m > Interpolate<DT, MT>::getNB(mag, x - xs, y - ys) &&
-              m >= Interpolate<DT, MT>::getNB(mag, x + xs, y + ys)) {
-            if (m > phigh[idx]) seeds.push_back(idx);
+          if (m > Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) - xs, static_cast<DT>(y) - ys) &&
+              m >= Interpolate<DT, MT>::getNB(mag, static_cast<DT>(x) + xs, static_cast<DT>(y) + ys)) {
+            if (m > phigh[idx]) addSeed(seeds, idx);
 
             EM<DT>::map(pdmap[idx], xs, ys);
           }
@@ -395,10 +397,10 @@ struct FastNMS8 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -434,7 +436,7 @@ struct FastNMS8 {
           {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = (xs < 0) ? 6 : 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             // int tg67x = tg22x + (axs << 16));
@@ -443,14 +445,14 @@ struct FastNMS8 {
             {
               if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
                 pdmap[idx] = (ys < 0) ? 0 : 4;
-                if (m > high) seeds.push_back(idx);
+                if (m > high) addSeed(seeds, idx);
               }
             } else {  // \ or /
                       // int s = (xs ^ ys) < 0 ? -1 : 1;
               int s = neg_sign(xs, ys) ? -1 : 1;
               if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
                 pdmap[idx] = (s > 0 ? (xs < 0 ? 7 : 3) : (xs < 0 ? 5 : 1));
-                if (m > high) seeds.push_back(idx);
+                if (m > high) addSeed(seeds, idx);
               }
             }
           }
@@ -469,10 +471,10 @@ struct FastNMS8 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -496,7 +498,7 @@ struct FastNMS8 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           MT xs = static_cast<MT>(pgx[idx]);
           MT ys = static_cast<MT>(pgy[idx]);
           MT axs = std::abs(xs);
@@ -509,7 +511,7 @@ struct FastNMS8 {
           {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = (xs < 0) ? 6 : 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             // int tg67x = tg22x + (axs << 16));
@@ -518,14 +520,14 @@ struct FastNMS8 {
             {
               if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
                 pdmap[idx] = (ys < 0) ? 0 : 4;
-                if (m > high) seeds.push_back(idx);
+                if (m > high_val) addSeed(seeds, idx);
               }
             } else {  // \ or /
                       // int s = (xs ^ ys) < 0 ? -1 : 1;
               int s = neg_sign(xs, ys) ? -1 : 1;
               if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
                 pdmap[idx] = (s > 0 ? (xs < 0 ? 7 : 3) : (xs < 0 ? 5 : 1));
-                if (m > high) seeds.push_back(idx);
+                if (m > high_val) addSeed(seeds, idx);
               }
             }
           }
@@ -546,7 +548,7 @@ struct FastNMS8 {
                     cv::Mat& dmap,
                     int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -572,7 +574,7 @@ struct FastNMS8 {
                     cv::Mat& dmap,
                     int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -620,23 +622,23 @@ struct FastNMS8 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 6;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = (ad == d ? 4 : 0);
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 5) : (ad < border2 ? 1 : 7));
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           }
         }
@@ -678,7 +680,7 @@ struct FastNMS8 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           DT d = pdir[idx];
           if (d > r2) d = d - r_size;
           DT ad = std::abs(d);
@@ -686,23 +688,23 @@ struct FastNMS8 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 6;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = (ad == d ? 4 : 0);
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 5) : (ad < border2 ? 1 : 7));
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           }
         }
@@ -741,23 +743,23 @@ struct FastNMS8 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 6;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = (ad == d ? 4 : 0);
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 5) : (ad < border2 ? 1 : 7));
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           }
         }
@@ -798,30 +800,30 @@ struct FastNMS8 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           DT d = pdir[idx];
           DT ad = std::abs(d);
 
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 6;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = (ad == d ? 4 : 0);
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 5) : (ad < border2 ? 1 : 7));
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           }
         }
@@ -843,10 +845,10 @@ struct FastNMS4 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -876,29 +878,29 @@ struct FastNMS4 {
           // MT ays = std::abs(ys) << 15;
           MT ays = std::abs(ys) * 32768;
 
-          int tg22x = axs * TG22;
+          int tg22x = static_cast<int>(axs * TG22);
 
-          if (ays < tg22x)  // |
+          if (ays < static_cast<MT>(tg22x))  // |
           {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             // int tg67x = tg22x + (axs << 16);
-            MT tg67x = tg22x + (axs * 65536);
+            MT tg67x = static_cast<MT>(tg22x) + (axs * static_cast<MT>(65536));
             if (ays > tg67x)  // -
             {
               if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
                 pdmap[idx] = 0;
-                if (m > high) seeds.push_back(idx);
+                if (m > high) addSeed(seeds, idx);
               }
             } else {  // \ or /
                       // int s = (xs ^ ys) < 0 ? -1 : 1;
               int s = neg_sign(xs, ys) ? -1 : 1;
               if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
                 pdmap[idx] = (s > 0 ? 3 : 1);
-                if (m > high) seeds.push_back(idx);
+                if (m > high) addSeed(seeds, idx);
               }
             }
           }
@@ -917,10 +919,10 @@ struct FastNMS4 {
                     IndexVector& seeds,
                     cv::Mat& dmap,
                     int border = 1) {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -944,7 +946,7 @@ struct FastNMS4 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           MT xs = static_cast<MT>(pgx[idx]);
           MT ys = static_cast<MT>(pgy[idx]);
           MT axs = std::abs(xs);
@@ -957,7 +959,7 @@ struct FastNMS4 {
           {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             // int tg67x = tg22x + (axs << 16);
@@ -966,14 +968,14 @@ struct FastNMS4 {
             {
               if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
                 pdmap[idx] = 0;
-                if (m > high) seeds.push_back(idx);
+                if (m > high_val) addSeed(seeds, idx);
               }
             } else {  // \ or /
                       // int s = (xs ^ ys) < 0 ? -1 : 1;
               int s = neg_sign(xs, ys) ? -1 : 1;
               if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
                 pdmap[idx] = (s > 0 ? 3 : 1);
-                if (m > high) seeds.push_back(idx);
+                if (m > high_val) addSeed(seeds, idx);
               }
             }
           }
@@ -994,7 +996,7 @@ struct FastNMS4 {
                     cv::Mat& dmap,
                     int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -1020,7 +1022,7 @@ struct FastNMS4 {
                     cv::Mat& dmap,
                     int border = 1) {
     seeds.clear();
-    seeds.reserve(mag.rows * mag.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(mag.total() / 3));
     dmap.create(mag.rows, mag.cols, CV_8SC1);
     setBorder<char>(dmap, border, -1);
 
@@ -1068,23 +1070,23 @@ struct FastNMS4 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = 0;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 1) : (ad < border2 ? 1 : 3));
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           }
         }
@@ -1126,7 +1128,7 @@ struct FastNMS4 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           DT d = pdir[idx];
           if (d > r2) d = d - r_size;
           DT ad = std::abs(d);
@@ -1134,23 +1136,23 @@ struct FastNMS4 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = 0;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 1) : (ad < border2 ? 1 : 3));
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           }
         }
@@ -1189,23 +1191,23 @@ struct FastNMS4 {
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = 0;
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 1) : (ad < border2 ? 1 : 3));
-              if (m > high) seeds.push_back(idx);
+              if (m > high) addSeed(seeds, idx);
             }
           }
         }
@@ -1246,30 +1248,30 @@ struct FastNMS4 {
         pdmap[idx] = -1;
 
         if (m > plow[idx]) {
-          MT high = phigh[idx];
+          MT high_val = phigh[idx];
           DT d = pdir[idx];
           DT ad = std::abs(d);
 
           if (ad < border1) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad >= border4) {
             if (m > pmag[idx - 1] && m >= pmag[idx + 1]) {
               pdmap[idx] = 2;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else if (ad < border3 && ad >= border2) {
             if (m > pmag[idx - mag.cols] && m >= pmag[idx + mag.cols]) {
               pdmap[idx] = 0;
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           } else {
             int s = d > 0 ? (ad < border2 ? 1 : -1) : (ad < border2 ? -1 : 1);
             if (m > pmag[idx - mag.cols - s] && m > pmag[idx + mag.cols + s]) {
               pdmap[idx] = (d > 0 ? (ad < border2 ? 3 : 1) : (ad < border2 ? 1 : 3));
-              if (m > high) seeds.push_back(idx);
+              if (m > high_val) addSeed(seeds, idx);
             }
           }
         }
@@ -1296,7 +1298,7 @@ class NonMaximaSuppression : public ValueManager {
   static constexpr int NUM_DIR = NMS::NUM_DIR;
 
   NonMaximaSuppression(double low = 0.004, double high = 0.012, int border = 1)
-      : th_low_(low), th_high_(high), mag_max_(0), border_(border) {
+      : dmap_(), seeds_(), th_low_(low), th_high_(high), mag_max_(0), border_(border) {
     this->add("nms_th_low",
               std::bind(&NonMaximaSuppression<GT, MT, DT, NMS>::valueThresholdLow, this, std::placeholders::_1),
               "Lower threshold.");

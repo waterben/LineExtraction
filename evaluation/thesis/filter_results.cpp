@@ -39,7 +39,7 @@ typedef double FT;
 constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name(), flags(0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, int f = 0) : filter(a), name(b), flags(f) {}
 
@@ -48,9 +48,11 @@ struct Entry {
   std::string name;
   int flags;
 
-  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
+  Value value(const std::string& param_name) { return dynamic_cast<ValueManager*>(&(*filter))->value(param_name); }
 
-  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
+  void value(const std::string& param_name, const Value& v) {
+    dynamic_cast<ValueManager*>(&(*filter))->value(param_name, v);
+  }
 
 
   inline bool rgb() const { return flags & ENTRY_RGB; }
@@ -224,7 +226,7 @@ void processPath(std::vector<Entry>& entries, const std::pair<fs::path, std::str
   });
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   std::vector<std::pair<fs::path, std::string>> sets;
   // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
   sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));

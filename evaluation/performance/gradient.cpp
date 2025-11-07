@@ -24,6 +24,7 @@ struct Entry : public PerformanceTaskDefault {
 
   std::shared_ptr<GradientI<uchar, GT, MT, FT>> gradient;
 
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -31,19 +32,21 @@ struct Entry : public PerformanceTaskDefault {
     gradient->process(src);
     gradient->magnitude();
     cv::Mat tmp;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != loops; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       gradient->process(src);
       tmp = gradient->magnitude();
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (loops * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (loops * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
+  using PerformanceTaskDefault::saveResults;
   void saveResults() {}
 };
 

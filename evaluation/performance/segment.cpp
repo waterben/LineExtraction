@@ -14,7 +14,7 @@ typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms
 
 constexpr float th_low = 0.004f, th_high = 0.012f;
 struct SegPerformaceData : public TaskData {
-  SegPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), nms(th_low, th_high) {
+  SegPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), grad(), nms(th_low, th_high) {
     if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
     grad.process(src);
     nms.process(grad);
@@ -46,16 +46,17 @@ struct Entry : public PerformanceTaskBase {
     this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       edge->detect(pdata.grad, pdata.nms);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   cv::Ptr<EsdBase<int>> edge;
@@ -77,16 +78,18 @@ PerformanceTestPtr createSegmentPerformanceTest(const lsfm::DataProviderList& pr
   Grad grad;
 
   test->tasks.push_back(PerformanceTaskPtr(new Entry(new EsdSimple<int>, "ESD Simple")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdDrawing<int>(10, 3, grad.magnitudeThreshold(th_low)), "ESD Drawing")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdLinking<int>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Linking")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry(new EsdPattern<int>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Pattern")));
   test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdLinking<int, 8, true>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Linking Corner")));
+      new Entry(new EsdDrawing<int>(10, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Drawing")));
   test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdPattern<int, 8, true>(10, 3, 3, grad.magnitudeThreshold(th_low)), "ESD Pattern Corner")));
+      new Entry(new EsdLinking<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Linking")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdPattern<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Pattern")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdLinking<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
+                "ESD Linking Corner")));
+  test->tasks.push_back(PerformanceTaskPtr(
+      new Entry(new EsdPattern<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
+                "ESD Pattern Corner")));
   return test;
 }
 

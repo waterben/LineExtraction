@@ -39,16 +39,17 @@ struct Entry : public PerformanceTaskDefault {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     lsd->detect(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       lsd->detect(src);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   void value(const std::string& name, const Value& value) { lsd->value(name, value); }

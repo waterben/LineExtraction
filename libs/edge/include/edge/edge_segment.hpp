@@ -148,11 +148,23 @@ class EdgeSegment {
 
   inline void size(size_t s) { end_ = beg_ + s; }
 
-  inline void moveTo(size_t p) { move(p - beg_); }
+  inline void moveTo(size_t p) {
+    if (p >= beg_)
+      move(static_cast<ptrdiff_t>(p - beg_));
+    else
+      move(-static_cast<ptrdiff_t>(beg_ - p));
+  }
 
   inline void move(ptrdiff_t m) {
-    beg_ += m;
-    end_ += m;
+    if (m >= 0) {
+      const size_t offset = static_cast<size_t>(m);
+      beg_ += offset;
+      end_ += offset;
+    } else {
+      const size_t offset = static_cast<size_t>(-m);
+      beg_ -= offset;
+      end_ -= offset;
+    }
   }
 
   inline size_t first() const { return reverse() ? end_ - 1 : beg_; }
@@ -251,7 +263,7 @@ class EsdBase : public ValueManager {
   virtual std::string name() const = 0;
 
  protected:
-  EsdBase() {}
+  EsdBase() : points_(), segments_() {}
 
   PointVector points_;
   mutable EdgeSegmentVector segments_;
@@ -334,13 +346,13 @@ inline cv::Point_<T> dir2Vec8(char dir) {
 inline char fixDir4(char dir) {
   static char dirs[] = {1, 2, 3, 0, 1, 2, 3};
   static const char* pdirs = dirs + 3;
-  return pdirs[dir % 4];
+  return pdirs[static_cast<unsigned char>(dir) & 3];
 }
 
 inline char fixDir8(char dir) {
   static char dirs[] = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
   static const char* pdirs = dirs + 7;
-  return pdirs[dir % 8];
+  return pdirs[static_cast<unsigned char>(dir) & 7];
 }
 
 template <int NUM_DIR>
@@ -359,13 +371,13 @@ inline char fixDir<4>(char dir) {
 inline char absDiff8(char dir) {
   static char absDiffMap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
   static const char* pdiff = absDiffMap + 7;
-  return pdiff[dir];
+  return pdiff[static_cast<unsigned char>(dir)];
 }
 
 inline char absDiff4(char dir) {
   static char absDiffMap[] = {1, 2, 1, 0, 1, 2, 1};
   static const char* pdiff = absDiffMap + 3;
-  return pdiff[dir];
+  return pdiff[static_cast<unsigned char>(dir)];
 }
 
 template <int NUM_DIR>

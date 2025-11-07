@@ -4,6 +4,8 @@
 #include <eval/task.hpp>
 #include <utility/string_table.hpp>
 
+#include <cstdint>
+
 
 namespace lsfm {
 
@@ -21,10 +23,10 @@ struct PerformanceMeasure {
   /// Name of performed task/filter/algorithm
   std::string task_name;
   // measurements in ns
-  std::vector<uint64> measures;
+  std::vector<std::int64_t> measures;
 
   PerformanceResult computeResult() const { return computeResult(measures); }
-  static PerformanceResult computeResult(const std::vector<uint64>& data);
+  static PerformanceResult computeResult(const std::vector<std::int64_t>& data);
 };
 
 //! PerformanceTask

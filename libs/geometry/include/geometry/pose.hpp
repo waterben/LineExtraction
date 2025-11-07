@@ -230,6 +230,9 @@ class Pose {
     newPose.orientation(rot);
     this->pose(newPose);
   }
+
+  //! Virtual destructor for proper inheritance
+  virtual ~Pose() = default;
 };
 
 template <class FT>

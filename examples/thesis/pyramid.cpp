@@ -29,7 +29,7 @@ cv::Mat showOp(const cv::Mat& src) {
   return mag;
 }
 
-int main(int argc, char** argv) {
+int main() {
   GaussianBlurOperator gaussian5(5);
   GaussianBlurOperator gaussian11(11);
   std::string file("../../images/windmill.jpg");

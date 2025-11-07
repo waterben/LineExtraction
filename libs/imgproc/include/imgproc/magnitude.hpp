@@ -80,7 +80,9 @@ struct QuadraticMagnitude {
     CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
               gx.rows == gy.rows && gx.cols == gy.cols);
     qmag.create(gx.size(), CV_MAKETYPE(cv::DataType<MT>::type, gx.channels()));
-    QuadraticMagnitude<GT, MT>::process(gx.ptr<GT>(), gy.ptr<GT>(), qmag.ptr<MT>(), gx.rows * gx.cols * gx.channels());
+    QuadraticMagnitude<GT, MT>::process(
+        gx.ptr<GT>(), gy.ptr<GT>(), qmag.ptr<MT>(),
+        static_cast<size_t>(gx.rows) * static_cast<size_t>(gx.cols) * static_cast<size_t>(gx.channels()));
   }
 
   inline static MT max(const DerivativeMax<GT>& dm, GT intensity = 1) {

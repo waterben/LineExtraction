@@ -18,7 +18,10 @@ constexpr float th_low = 0.004f, th_high = 0.012f;
 
 struct SplitPerformaceData : public TaskData {
   SplitPerformaceData(const std::string& n, const cv::Mat& s)
-      : TaskData(n, s), nms(th_low, th_high), edge(10, 3, 3, grad.magnitudeThreshold(th_low)) {
+      : TaskData(n, s),
+        grad(),
+        nms(th_low, th_high),
+        edge(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))) {
     if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
     grad.process(src);
     nms.process(grad);
@@ -60,17 +63,18 @@ struct Entry : public PerformanceTaskBase {
     pdata.edge.segments();
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start;
+    uint64 start = 0;
     split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       split.apply(pdata.edge, points, out);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   SPLIT split;
@@ -90,17 +94,18 @@ struct EntryPattern : public PerformanceTaskBase {
     EdgeSegmentVector out;
     std::vector<Vec2i> points;
     PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start;
+    uint64 start = 0;
     split.setup(pdata.grad, pdata.nms);
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       split.applyP(pdata.edge, points, out);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   SPLIT split;

@@ -106,7 +106,7 @@ class test_function {
   could then be used to find the parameters that minimized the error.
   */
  public:
-  test_function(const column_vector& input) { target = input; }
+  test_function(const column_vector& input) : target(input) {}
 
   double operator()(const column_vector& arg) const {
     // return the mean squared error between the target vector and the input vector

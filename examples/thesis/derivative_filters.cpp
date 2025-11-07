@@ -34,7 +34,7 @@ cv::Mat showOpLapalce(const cv::Mat& src) {
   return showOpMag(lap);
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   DerivativeGradient<uchar, short, float, float, SobelDerivative> sobel;
   LaplaceSimple<uchar, short> laplace;
 

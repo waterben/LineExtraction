@@ -302,14 +302,27 @@ inline void iota(ForwardIterator first, ForwardIterator last, T value) {
 template <class T>
 cv::Mat_<T> ifftshift(const cv::Mat& src) {
   cv::Mat_<T> tmp = src.clone();
-  int cx = src.cols / 2, cy = src.rows / 2;  // i.e., floor(x/2)
-  std::vector<int> xvals(src.cols, 0), yvals(src.rows, 0);
-  lsfm::iota(yvals.begin(), yvals.begin() + (src.rows - cy), cy);
-  lsfm::iota(yvals.begin() + (src.rows - cy), yvals.end(), 0);
-  lsfm::iota(xvals.begin(), xvals.begin() + (src.cols - cx), cx);
-  lsfm::iota(xvals.begin() + (src.cols - cx), xvals.end(), 0);
-  for (int y = 0; y < src.rows; y++)
-    for (int x = 0; x < src.cols; x++) tmp(y, x) = src.at<T>(yvals[y], xvals[x]);
+  const int cx = src.cols / 2;
+  const int cy = src.rows / 2;  // i.e., floor(x/2)
+  const std::size_t cols = static_cast<std::size_t>(src.cols);
+  const std::size_t rows = static_cast<std::size_t>(src.rows);
+  std::vector<int> xvals(cols, 0), yvals(rows, 0);
+
+  using diff_t = std::vector<int>::difference_type;
+  const diff_t row_offset = static_cast<diff_t>(src.rows - cy);
+  const diff_t col_offset = static_cast<diff_t>(src.cols - cx);
+  lsfm::iota(yvals.begin(), yvals.begin() + row_offset, cy);
+  lsfm::iota(yvals.begin() + row_offset, yvals.end(), 0);
+  lsfm::iota(xvals.begin(), xvals.begin() + col_offset, cx);
+  lsfm::iota(xvals.begin() + col_offset, xvals.end(), 0);
+
+  for (int y = 0; y < src.rows; ++y) {
+    const auto yi = static_cast<std::size_t>(y);
+    for (int x = 0; x < src.cols; ++x) {
+      const auto xi = static_cast<std::size_t>(x);
+      tmp(y, x) = src.at<T>(yvals[yi], xvals[xi]);
+    }
+  }
   return tmp;
 }
 
@@ -331,14 +344,27 @@ inline void ifftshiftT(const cv::Mat_<T>& src, cv::Mat_<T>& dst) {
 template <class T>
 cv::Mat_<T> fftshift(const cv::Mat& src) {
   cv::Mat_<T> tmp = src.clone();
-  int cx = (src.cols + 1) / 2, cy = (src.rows + 1) / 2;  // i.e., ceil(x/2)
-  std::vector<int> xvals(src.cols), yvals(src.rows);
-  lsfm::iota(yvals.begin(), yvals.begin() + (src.rows - cy), cy);
-  lsfm::iota(yvals.begin() + (src.rows - cy), yvals.end(), 0);
-  lsfm::iota(xvals.begin(), xvals.begin() + (src.cols - cx), cx);
-  lsfm::iota(xvals.begin() + (src.cols - cx), xvals.end(), 0);
-  for (int y = 0; y < src.rows; y++)
-    for (int x = 0; x < src.cols; x++) tmp(y, x) = src.at<T>(yvals[y], xvals[x]);
+  const int cx = (src.cols + 1) / 2;
+  const int cy = (src.rows + 1) / 2;  // i.e., ceil(x/2)
+  const std::size_t cols = static_cast<std::size_t>(src.cols);
+  const std::size_t rows = static_cast<std::size_t>(src.rows);
+  std::vector<int> xvals(cols), yvals(rows);
+
+  using diff_t = std::vector<int>::difference_type;
+  const diff_t row_offset = static_cast<diff_t>(src.rows - cy);
+  const diff_t col_offset = static_cast<diff_t>(src.cols - cx);
+  lsfm::iota(yvals.begin(), yvals.begin() + row_offset, cy);
+  lsfm::iota(yvals.begin() + row_offset, yvals.end(), 0);
+  lsfm::iota(xvals.begin(), xvals.begin() + col_offset, cx);
+  lsfm::iota(xvals.begin() + col_offset, xvals.end(), 0);
+
+  for (int y = 0; y < src.rows; ++y) {
+    const auto yi = static_cast<std::size_t>(y);
+    for (int x = 0; x < src.cols; ++x) {
+      const auto xi = static_cast<std::size_t>(x);
+      tmp(y, x) = src.at<T>(yvals[yi], xvals[xi]);
+    }
+  }
   return tmp;
 }
 
@@ -967,7 +993,7 @@ void perfft2(const cv::Mat& src, cv::Mat& P, cv::Mat& S) {
       cv::copyMakeBorder(data, data, 0, r - src.rows, 0, c - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
   }
 
-  cv::Mat_<FT> s = cv::Mat_<FT>::zeros(data.size()), cx, cy, tmp;
+  cv::Mat_<FT> s(data.size(), FT{}), cx, cy, tmp;
   s.row(0) = data.row(0) - data.row(data.rows - 1);
   s.row(data.rows - 1) = -s.row(0);
 
@@ -1085,7 +1111,7 @@ T rayleighMode(const cv::Mat& src, int nbins = 50) {
   cv::Mat_<T> edges = range<T>(0, static_cast<T>(vmax), static_cast<T>(vmax / nbins));
   cv::Mat_<int> h = hist<T>(src, edges);
   cv::Point midx;
-  cv::minMaxLoc(h, 0, 0, 0, &midx);
+  cv::minMaxLoc(h, nullptr, nullptr, nullptr, &midx);
   return (edges(midx) + edges(0, midx.x + 1)) / 2;
 }
 

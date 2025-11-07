@@ -54,13 +54,13 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     rows_ext_ = cv::getOptimalDFTSize(img.rows);
     cols_ext_ = cv::getOptimalDFTSize(img.cols);
 
-    fe_.resize(nscale_);
-    fo_.resize(nscale_);
+    fe_.resize(static_cast<size_t>(nscale_));
+    fo_.resize(static_cast<size_t>(nscale_));
     for (int i = 0; i != nscale_; ++i) {
-      fe_[i] = ifftshift(QuadratureSF<IT, FT, P>::createFilter(rows_ext_, cols_ext_, kspacing_, scale_ + i, muls_,
-                                                               QuadratureSF<IT, FT, P>::dopf));
-      fo_[i] = ifftshift(QuadratureSF<IT, FT, P>::createFilterC(rows_ext_, cols_ext_, kspacing_, scale_ + i, muls_,
-                                                                QuadratureSF<IT, FT, P>::docpf));
+      fe_[static_cast<size_t>(i)] = ifftshift(QuadratureSF<IT, FT, P>::createFilter(
+          rows_ext_, cols_ext_, kspacing_, scale_ + static_cast<FT>(i), muls_, QuadratureSF<IT, FT, P>::dopf));
+      fo_[static_cast<size_t>(i)] = ifftshift(QuadratureSF<IT, FT, P>::createFilterC(
+          rows_ext_, cols_ext_, kspacing_, scale_ + static_cast<FT>(i), muls_, QuadratureSF<IT, FT, P>::docpf));
     }
 
     sumAn = cv::Mat_<FT>::zeros(rows_, cols_);
@@ -109,13 +109,21 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
       : QuadratureSF<IT, FT, P>(scale, muls, kernel_spacing, int_lower, int_upper),
-        nscale_(nscale),
+        fo_(),
+        fe_(),
+        weight(),
+        sumAn(),
+        zeros(),
+        pc_done_(false),
+        pc_(),
         k_(kn),
-        cutOff_(cutOff),
         g_(g),
+        cutOff_(cutOff),
         dGain_(deviationGain),
-        nMethod_(noiseMethod),
-        eps_(static_cast<FT>(0.0001)) {
+        nMethod_(static_cast<FT>(noiseMethod)),
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(nscale) {
     init();
   }
 
@@ -132,13 +140,21 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
       : QuadratureSF<IT, FT, P>(scale, l, k, kernel_spacing, int_lower, int_upper),
-        nscale_(nscale),
+        fo_(),
+        fe_(),
+        weight(),
+        sumAn(),
+        zeros(),
+        pc_done_(false),
+        pc_(),
         k_(kn),
-        cutOff_(cutOff),
         g_(g),
+        cutOff_(cutOff),
         dGain_(deviationGain),
         nMethod_(noiseMethod),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(nscale) {
     init();
   }
 
@@ -146,13 +162,21 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
       : QuadratureSF<IT, FT, P>(static_cast<FT>(1), static_cast<FT>(2), static_cast<FT>(1), int_lower, int_upper),
-        nscale_(4),
+        fo_(),
+        fe_(),
+        weight(),
+        sumAn(),
+        zeros(),
+        pc_done_(false),
+        pc_(),
         k_(3),
-        cutOff_(0.5),
         g_(10),
+        cutOff_(0.5),
         dGain_(1.5),
         nMethod_(-1),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(4) {
     init();
     value(options);
   }
@@ -161,13 +185,21 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
       : QuadratureSF<IT, FT, P>(static_cast<FT>(1), static_cast<FT>(2), static_cast<FT>(1), int_lower, int_upper),
-        nscale_(4),
+        fo_(),
+        fe_(),
+        weight(),
+        sumAn(),
+        zeros(),
+        pc_done_(false),
+        pc_(),
         k_(3),
-        cutOff_(0.5),
         g_(10),
+        cutOff_(0.5),
         dGain_(1.5),
         nMethod_(-1),
-        eps_(static_cast<FT>(0.0001)) {
+        eps_(static_cast<FT>(0.0001)),
+        T_(0),
+        nscale_(4) {
     init();
     value(options);
   }
@@ -237,8 +269,8 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
 #endif
 
     for (int s = 0; s != nscale_; ++s) {
-      e = real(ifft2(multiply(imgf_, fe_[s])));
-      tmpc = ifft2(multiply(imgf_, fo_[s]));
+      e = real(ifft2(multiply(imgf_, fe_[static_cast<size_t>(s)])));
+      tmpc = ifft2(multiply(imgf_, fo_[static_cast<size_t>(s)]));
 
       if (cols_ < cols_ext_ || rows_ < rows_ext_) {
         e.adjustROI(0, rows_ - rows_ext_, 0, cols_ - cols_ext_);
@@ -273,7 +305,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     if (nMethod_ >= 0)
       T_ = static_cast<FT>(nMethod_);
     else {
-      FT totalTau = tau * (1 - std::pow((1 / muls_), nscale_)) / (1 - (1 / muls_));
+      FT totalTau = tau * (1 - std::pow(static_cast<FT>(1 / muls_), static_cast<FT>(nscale_))) / (1 - (1 / muls_));
       FT EstNoiseEnergyMean = totalTau * std::sqrt(static_cast<FT>(CV_PI) / 2);
       FT EstNoiseEnergySigma = totalTau * std::sqrt((4 - static_cast<FT>(CV_PI)) / 2);
 
@@ -416,7 +448,15 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
          FT kernel_spacing = 1,
          IT int_lower = std::numeric_limits<IT>::lowest(),
          IT int_upper = std::numeric_limits<IT>::max())
-      : QuadratureSF<IT, FT, P>(scale, muls, kernel_spacing, int_lower, int_upper) {}
+      : QuadratureSF<IT, FT, P>(scale, muls, kernel_spacing, int_lower, int_upper),
+        dfe_(),
+        dfo_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {}
 
   PCLSqf(FT scale,
          FT l,
@@ -424,17 +464,41 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
          FT kernel_spacing,
          IT int_lower = std::numeric_limits<IT>::lowest(),
          IT int_upper = std::numeric_limits<IT>::max())
-      : QuadratureSF<IT, FT, P>(scale, l, k, kernel_spacing, int_lower, int_upper) {}
+      : QuadratureSF<IT, FT, P>(scale, l, k, kernel_spacing, int_lower, int_upper),
+        dfe_(),
+        dfo_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {}
 
   PCLSqf(const ValueManager::NameValueVector& options,
          img_type int_lower = std::numeric_limits<img_type>::lowest(),
          img_type int_upper = std::numeric_limits<img_type>::max())
-      : QuadratureSF<IT, FT, P>(options, int_lower, int_upper) {}
+      : QuadratureSF<IT, FT, P>(options, int_lower, int_upper),
+        dfe_(),
+        dfo_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {}
 
   PCLSqf(ValueManager::InitializerList options,
          img_type int_lower = std::numeric_limits<img_type>::lowest(),
          img_type int_upper = std::numeric_limits<img_type>::max())
-      : QuadratureSF<IT, FT, P>(options, int_lower, int_upper) {}
+      : QuadratureSF<IT, FT, P>(options, int_lower, int_upper),
+        dfe_(),
+        dfo_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {}
 
   virtual void process(const cv::Mat& img) {
     plaplace_done_ = false;
@@ -628,7 +692,16 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
         FT kernel_scale = 1,
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
-      : QuadratureS<IT, GT, FT, P>(scale, muls, kernel_size, kernel_spacing, kernel_scale, int_lower, int_upper) {
+      : QuadratureS<IT, GT, FT, P>(scale, muls, kernel_size, kernel_spacing, kernel_scale, int_lower, int_upper),
+        koxds_(),
+        koyds_(),
+        keds_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {
     create_kernels();
   }
 
@@ -640,21 +713,48 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
         FT kernel_scale = 1,
         IT int_lower = std::numeric_limits<IT>::lowest(),
         IT int_upper = std::numeric_limits<IT>::max())
-      : QuadratureS<IT, GT, FT, P>(scale, l, k, kernel_size, kernel_spacing, kernel_scale, int_lower, int_upper) {
+      : QuadratureS<IT, GT, FT, P>(scale, l, k, kernel_size, kernel_spacing, kernel_scale, int_lower, int_upper),
+        koxds_(),
+        koyds_(),
+        keds_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {
     create_kernels();
   }
 
   PCLSq(const ValueManager::NameValueVector& options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
-      : QuadratureS<IT, GT, FT, P>(options, int_lower, int_upper) {
+      : QuadratureS<IT, GT, FT, P>(options, int_lower, int_upper),
+        koxds_(),
+        koyds_(),
+        keds_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {
     create_kernels();
   }
 
   PCLSq(ValueManager::InitializerList options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
-      : QuadratureS<IT, GT, FT, P>(options, int_lower, int_upper) {
+      : QuadratureS<IT, GT, FT, P>(options, int_lower, int_upper),
+        koxds_(),
+        koyds_(),
+        keds_(),
+        plaplace_done_(false),
+        oxds_(),
+        oyds_(),
+        eds_(),
+        lx_(),
+        ly_() {
     create_kernels();
   }
 

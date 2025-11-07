@@ -140,10 +140,8 @@ class Stereo {
     rotR_ = camR_.rotM();
   }
 
-  Stereo(const Camera<FT>& camL, const Camera<FT>& camR) : camL_(camL), camR_(camR) {
-    rotL_ = camL_.rotM();
-    rotR_ = camR_.rotM();
-  }
+  Stereo(const Camera<FT>& camL, const Camera<FT>& camR)
+      : camL_(camL), camR_(camR), rotL_(camL_.rotM()), rotR_(camR_.rotM()) {}
 
   //! compute 3d point from two rays from camera origin through corresponding stereo pixels
   inline Vec3<FT> triangulate(const Vec2<FT>& pointL, const Vec2<FT>& pointR) const {

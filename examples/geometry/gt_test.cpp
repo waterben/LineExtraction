@@ -14,7 +14,7 @@ using namespace cv;
 typedef double FT;
 
 
-int main(int argc, char** argv) {
+int main() {
   // rodrigues(rodrigues(lsfm::Vec3<FT>(0,0,CV_PI/2)) * rodrigues(lsfm::Vec3<FT>(CV_PI,0,0)));
   //  camera parameters
   lsfm::Vec3<FT> originL(0, -0.7, 10);

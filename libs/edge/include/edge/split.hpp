@@ -104,7 +104,10 @@ class RamerSplit : public ValueManager {
   void minLength(int p) { min_len_ = p; }
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 
@@ -149,12 +152,13 @@ class RamerSplit : public ValueManager {
     size_t beg = seg.begin(), end = seg.end(), s = end - beg;
     if (s < static_cast<size_t>(min_len_)) return;
 
-    if (s < 2 * dist_) {
+    if (static_cast<float_type>(s) < 2 * dist_) {
       out.push_back(seg);
       return;
     }
 
-    size_t max_point, max_count = 0;
+    size_t max_point = seg.begin();
+    size_t max_count = 0;
 
     const PT& first = points[beg];
     bool no_gap = true;
@@ -301,7 +305,7 @@ class RamerSplit : public ValueManager {
     PT n, a, b, d;
     FT max_h = 0;
     for (; beg < end; ++beg) {
-      if (beg->size() < dist_) {
+      if (static_cast<float_type>(beg->size()) < dist_) {
         out.push_back(*beg);
         continue;
       }
@@ -314,7 +318,7 @@ class RamerSplit : public ValueManager {
       b = points[(beg + 1)->begin()] - d;
       d = a - b;
 
-      if ((beg + 1)->size() < dist_ || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
+      if (static_cast<float_type>((beg + 1)->size()) < dist_ || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
         out.push_back(*beg);
         ++beg;
         out.push_back(*beg);
@@ -353,6 +357,13 @@ struct SimpleSplitCheck {
                            FT dist_high,
                            mat_type mag_max,
                            const cv::Mat& data) {
+    static_cast<void>(max_point);
+    static_cast<void>(first);
+    static_cast<void>(last);
+    static_cast<void>(max_len);
+    static_cast<void>(dist_high);
+    static_cast<void>(mag_max);
+    static_cast<void>(data);
     return max_h > dist_low * norm;
   }
 };
@@ -384,7 +395,7 @@ struct ExtSplitCheck {
     const MT* pmag = &data.at<MT>(getY(max_point) - 1, getX(max_point) - 1);
     FT f1 = static_cast<FT>(pmag[0] + pmag[1] + pmag[2] + pmag[data.cols] + pmag[data.cols + 1] + pmag[data.cols + 2] +
                             pmag[2 * data.cols] + pmag[2 * data.cols + 1] + pmag[2 * data.cols + 2]) /
-            mag_max;
+            static_cast<FT>(mag_max);
     // if signal is strong, split
     if (f1 >= 1) return true;
 
@@ -395,7 +406,6 @@ struct ExtSplitCheck {
     if (f2 > 1) f2 = 1;
     FT f3 = l2_norm<FT, PT>(last - max_point) / max_len;
     if (f3 > 1) f3 = 1;
-    FT tmp = add * std::cbrt(f1 * f2 * f3);
     return (max_h > (dist_low + add * std::cbrt(f1 * f2 * f3)) * norm);
   }
 };
@@ -417,6 +427,12 @@ struct NoMerge {
                            float_type dist_high,
                            mat_type mag_max,
                            const cv::Mat& data) {
+    static_cast<void>(points);
+    static_cast<void>(max_len);
+    static_cast<void>(dist_low);
+    static_cast<void>(dist_high);
+    static_cast<void>(mag_max);
+    static_cast<void>(data);
     out.insert(out.end(), in.begin(), in.end());
   }
 };
@@ -448,7 +464,7 @@ struct SimpleMerge {
     point_type n, a, b, d, max_point;
     float_type max_h = 0, tmp;
     for (; beg < end; ++beg) {
-      if (beg->size() < dist_low) {
+      if (static_cast<float_type>(beg->size()) < dist_low) {
         out.push_back(*beg);
         continue;
       }
@@ -464,7 +480,7 @@ struct SimpleMerge {
 
       d = a - b;
 
-      if ((beg + 1)->size() < dist_low || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
+      if (static_cast<float_type>((beg + 1)->size()) < dist_low || std::abs(getX(d)) > 1 || std::abs(getY(d)) > 1) {
         out.push_back(*beg);
         ++beg;
         out.push_back(*beg);
@@ -524,18 +540,18 @@ class ExtRamerSplit : public ValueManager {
 
  public:
   ExtRamerSplit(float_type dist_low = 2, int minp = 2, float_type dist_high = 6)
-      : dist_low_(dist_low), dist_high_(dist_high), min_len_(minp), max_len_(0), mag_max_(0) {
+      : dist_low_(dist_low), dist_high_(dist_high), max_len_(0), min_len_(minp), mag_max_(0), mag_() {
     init();
   }
 
   ExtRamerSplit(const ValueManager::NameValueVector& options)
-      : dist_low_(2), dist_high_(6), min_len_(2), max_len_(0), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0), mag_() {
     init();
     this->value(options);
   }
 
   ExtRamerSplit(ValueManager::InitializerList options)
-      : dist_low_(2), dist_high_(6), min_len_(2), max_len_(0), mag_max_(0) {
+      : dist_low_(2), dist_high_(6), max_len_(0), min_len_(2), mag_max_(0), mag_() {
     init();
     this->value(options);
   }
@@ -619,7 +635,7 @@ class ExtRamerSplit : public ValueManager {
     size_t beg = seg.begin(), end = seg.end(), s = end - beg;
     if (s < static_cast<size_t>(min_len_)) return;
 
-    if (s < 2 * dist_low_) {
+    if (static_cast<float_type>(s) < 2 * dist_low_) {
       out.push_back(seg);
       return;
     }
@@ -734,7 +750,11 @@ class ExtRamerSplit : public ValueManager {
     const point_type& last = points[units[end - 1].end() - 1];
 
     // get direction of line
-    point_type n = last - first, a = points[units[beg].end() - 1], b, max_point, tmp;
+    point_type n = last - first;
+    point_type a = points[units[beg].end() - 1];
+    point_type b = a;
+    point_type max_point = first;
+    point_type tmp;
     // get normal
     float_type max_h = 0, h;
     set(n, -getY(n), getX(n));
@@ -770,12 +790,12 @@ class ExtRamerSplit : public ValueManager {
 
 template <class FT, class PT>
 inline FT distanceCheck(const Line<FT>& line, const PT& point) {
-  return std::abs(line.distance(getX(point), getY(point)));
+  return std::abs(line.distance(static_cast<FT>(getX(point)), static_cast<FT>(getY(point))));
 }
 
 template <class FT, class PT>
 inline FT distanceCheck(const Vec2<FT>& normal, const PT& point) {
-  return std::abs(getX(normal) * getX(point) + getY(normal) * getY(point));
+  return std::abs(getX(normal) * static_cast<FT>(getX(point)) + getY(normal) * static_cast<FT>(getY(point)));
 }
 
 template <class FT>
@@ -785,7 +805,8 @@ inline FT distanceCheck(const Vec2<FT>& normal, const Vec2<FT>& point) {
 
 template <class FT, class PT>
 inline FT distanceCheck(const Vec2<FT>& normal, const Vec2<FT>& line_point, const PT& point) {
-  return distanceCheck(normal, Vec2<FT>(getX(point) - line_point.x(), getY(point) - line_point.y()));
+  return distanceCheck(
+      normal, Vec2<FT>(static_cast<FT>(getX(point)) - line_point.x(), static_cast<FT>(getY(point)) - line_point.y()));
 }
 
 template <class FT, class PT = Vec2i, bool LINE_MODE = true, class FIT = EigenFit<FT, PT>>
@@ -807,14 +828,14 @@ class LeastSquareSplit : public ValueManager {
   typedef PT point_type;
   typedef std::vector<PT> PointVector;
 
-  LeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp) { init(); }
+  LeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp), mode_(0) { init(); }
 
-  LeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15) {
+  LeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
 
-  LeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15) {
+  LeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
@@ -841,7 +862,10 @@ class LeastSquareSplit : public ValueManager {
 
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 
@@ -925,9 +949,9 @@ class LeastSquareSplit : public ValueManager {
  private:
   void applyM1(const EdgeSegment& seg, const PointVector& points, EdgeSegmentVector& out, int id) const {
     const PT* pPoints = points.data();
-    const PT* pbeg;
-    const PT* pend;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    const PT* pbeg = nullptr;
+    const PT* pend = nullptr;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
     Line<FT> line;
@@ -944,7 +968,7 @@ class LeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
 
     // add points
     for (; end2 != end; ++end2) {
@@ -959,11 +983,13 @@ class LeastSquareSplit : public ValueManager {
     const PT* pPoints = points.data();
     const PT* pbeg;
     const PT* pend;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
-    Vec2<FT> normal, centroid;
-    FT max_dist, dist_norm;
+    Vec2<FT> normal = Vec2<FT>::Zero();
+    Vec2<FT> centroid = Vec2<FT>::Zero();
+    FT max_dist = 0;
+    FT dist_norm = 0;
     for (; beg < end; ++beg) {
       pbeg = pPoints + beg;
       pend = pbeg + min_len_;
@@ -978,7 +1004,7 @@ class LeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
 
     // add points
     for (; end2 != end; ++end2) {
@@ -1065,11 +1091,13 @@ class LeastSquareSplit : public ValueManager {
 
     size_t unit_size = units[beg].size(), pos = beg + 1;
 
-    const PT* pbeg;
-    const PT* pend;
+    const PT* pbeg = nullptr;
+    const PT* pend = nullptr;
 
-    Vec2<FT> normal, centroid;
-    FT max_dist, dist_norm;
+    Vec2<FT> normal = Vec2<FT>::Zero();
+    Vec2<FT> centroid = Vec2<FT>::Zero();
+    FT max_dist = 0;
+    FT dist_norm = 0;
     // try to get initial fit
     for (; beg < end; ++beg) {
       while (unit_size < static_cast<size_t>(min_len_) && pos != end) {
@@ -1085,10 +1113,10 @@ class LeastSquareSplit : public ValueManager {
 
       // if only one pattern is included, a fit is found
       if (beg + 1 == pos) {
-        normal[0] = getX(*(pend - 1)) - getX(*pbeg);
-        normal[1] = getY(*(pend - 1)) - getY(*pbeg);
-        centroid[0] = getX(*pbeg);
-        centroid[1] = getY(*pbeg);
+        normal[0] = static_cast<FT>(getX(*(pend - 1)) - getX(*pbeg));
+        normal[1] = static_cast<FT>(getY(*(pend - 1)) - getY(*pbeg));
+        centroid[0] = static_cast<FT>(getX(*pbeg));
+        centroid[1] = static_cast<FT>(getY(*pbeg));
         dist_norm = dist_ * l2_norm<FT>(normal);
         break;
       }
@@ -1135,14 +1163,14 @@ class AdaptiveLeastSquareSplit : public ValueManager {
   typedef PT point_type;
   typedef std::vector<PT> PointVector;
 
-  AdaptiveLeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp) { init(); }
+  AdaptiveLeastSquareSplit(FT dist = 1, int minp = 15) : dist_(dist), min_len_(minp), mode_(0) { init(); }
 
-  AdaptiveLeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15) {
+  AdaptiveLeastSquareSplit(const ValueManager::NameValueVector& options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
 
-  AdaptiveLeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15) {
+  AdaptiveLeastSquareSplit(ValueManager::InitializerList options) : dist_(1), min_len_(15), mode_(0) {
     init();
     this->value(options);
   }
@@ -1166,7 +1194,10 @@ class AdaptiveLeastSquareSplit : public ValueManager {
   void minLength(int p) { min_len_ = p; }
 
   template <class GRAD, class NMS>
-  void setup(const GRAD& grad, const NMS& nms) {}
+  void setup(const GRAD& grad, const NMS& nms) {
+    static_cast<void>(grad);
+    static_cast<void>(nms);
+  }
 
   void setup(const EdgeSourceI&) {}
 
@@ -1196,7 +1227,7 @@ class AdaptiveLeastSquareSplit : public ValueManager {
     const PT* pPoints = points.data();
     const PT* pbeg;
     const PT* pend;
-    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - min_len_;
+    size_t beg = seg.begin(), end = seg.end(), s = end - beg, end2 = end - static_cast<size_t>(min_len_);
     if (s < static_cast<size_t>(min_len_)) return;
 
     Line<FT> line;
@@ -1214,7 +1245,7 @@ class AdaptiveLeastSquareSplit : public ValueManager {
     // nothing found
     if (beg == end2) return;
 
-    end2 = beg + min_len_;
+    end2 = beg + static_cast<size_t>(min_len_);
     pbeg = pPoints + beg;
     pend = pPoints + end2;
 

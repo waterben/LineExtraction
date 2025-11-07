@@ -8,11 +8,10 @@ using namespace std;
 
 ProfileAnalyzer::ProfileAnalyzer(QWidget* parent)
     : LATool("Profile Analyzer", parent),
-      ui(new Ui::ProfileAnalyzer),
       plot(new PlotWindow("Profile Plot", parent)),
-      sources(0),
-      cw(0),
-      linePos(0) {
+      sources(nullptr),
+      cw(nullptr),
+      ui(new Ui::ProfileAnalyzer) {
   setWindowTitle("Line Profile Analyzer");
   ui->setupUi(this);
 
@@ -44,7 +43,7 @@ ProfileAnalyzer::ProfileAnalyzer(QWidget* parent)
   sprofile_plot = plot->qplot->addGraph();
   sprofile_plot->setPen(QPen(Qt::red, 2));
 
-  pa_indicator = 0;
+  pa_indicator = nullptr;
 
   createX();
 }
@@ -180,7 +179,7 @@ void ProfileAnalyzer::fitProfile() {
 }
 
 void ProfileAnalyzer::updatePlot() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_profile_show->isChecked()) {
     createProfile();
@@ -201,7 +200,7 @@ void ProfileAnalyzer::updatePlot() {
 }
 
 void ProfileAnalyzer::updateProfile() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_profile_show->isChecked()) {
     createProfile();
@@ -217,7 +216,7 @@ void ProfileAnalyzer::updateProfile() {
 }
 
 void ProfileAnalyzer::updateSProfile() {
-  if (sources == 0) return;
+  if (sources == nullptr) return;
 
   if (ui->chb_single->isChecked()) {
     createSProfile();
@@ -240,7 +239,6 @@ void ProfileAnalyzer::updateX() {
 void ProfileAnalyzer::createX() {
   int subdiv = ui->spin_subdiv->value();
   int steps = static_cast<int>(ui->spin_profile_range->value() * subdiv);
-  float_type range = static_cast<float_type>(steps) / subdiv;
   float_type step = 1.0 / subdiv;
   X.clear();
   X.reserve(2 * steps + 1);
@@ -327,11 +325,15 @@ void create_profile(const cv::Mat_<mat_type>& src,
 }
 
 void ProfileAnalyzer::createProfile() {
-  if (sources == 0 || sources->empty()) return;
+  if (sources == nullptr || sources->empty()) return;
   bool variance = ui->chb_std_dev->isChecked();
   bool sampled = ui->chb_line_dist->isChecked();
   float_type param = ui->spin_line_dist->value();
-  cv::Mat src = (*sources)[ui->cb_data_source->currentData().toInt()].data;
+  const int sourceIndex = ui->cb_data_source->currentData().toInt();
+  if (sourceIndex < 0) return;
+  if (static_cast<std::size_t>(sourceIndex) >= sources->size()) return;
+
+  const cv::Mat& src = sources->at(static_cast<std::size_t>(sourceIndex)).data;
   switch (src.type()) {
     case CV_8S:
       create_profile(reinterpret_cast<const cv::Mat_<char>&>(src), line, X, profile, std_dev, param,
@@ -402,9 +404,13 @@ void create_sprofile(const cv::Mat_<mat_type>& src,
 }
 
 void ProfileAnalyzer::createSProfile() {
-  if (sources == 0 || sources->empty()) return;
+  if (sources == nullptr || sources->empty()) return;
   float_type pos = ui->spin_profile_pos->value();
-  cv::Mat src = (*sources)[ui->cb_data_source->currentData().toInt()].data;
+  const int sourceIndex = ui->cb_data_source->currentData().toInt();
+  if (sourceIndex < 0) return;
+  if (static_cast<std::size_t>(sourceIndex) >= sources->size()) return;
+
+  const cv::Mat& src = sources->at(static_cast<std::size_t>(sourceIndex)).data;
   switch (src.type()) {
     case CV_8S:
       create_sprofile(reinterpret_cast<const cv::Mat_<char>&>(src), line, X, single_profile, pos,

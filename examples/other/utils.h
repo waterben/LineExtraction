@@ -35,7 +35,7 @@ void drawStatistics(Mat image, const Stats& stats) {
   str1 << "Matches: " << stats.matches;
   str2 << "Inliers: " << stats.inliers;
   str3 << "Inlier ratio: " << setprecision(2) << stats.ratio;
-  str4 << "Time: " << setprecision(2) << stats.time * 1000.0 / cv::getTickFrequency() << "ms";
+  str4 << "Time: " << setprecision(2) << static_cast<double>(stats.time) * 1000.0 / cv::getTickFrequency() << "ms";
 
   putText(image, str1.str(), Point(0, image.rows - 120), font, 2, Scalar::all(255), 3);
   putText(image, str2.str(), Point(0, image.rows - 90), font, 2, Scalar::all(255), 3);
@@ -51,7 +51,7 @@ void printStatistics(string name, Stats stats) {
   cout << "Inliers " << stats.inliers << endl;
   cout << "Inlier ratio " << setprecision(2) << stats.ratio << endl;
   cout << "Keypoints " << stats.keypoints << endl;
-  cout << "Time " << stats.time * 1000.0 / cv::getTickFrequency() << "ms" << endl;
+  cout << "Time " << static_cast<double>(stats.time) * 1000.0 / cv::getTickFrequency() << "ms" << endl;
   cout << endl;
 }
 
@@ -65,16 +65,17 @@ vector<Point2f> Points(vector<KeyPoint> keypoints) {
 
 Rect2d selectROI(const String& video_name, const Mat& frame) {
   struct Data {
+    Data() : center(), box() {}
     Point center;
     Rect2d box;
 
     static void mouseHandler(int event, int x, int y, int flags, void* param) {
-      Data* data = (Data*)param;
+      Data* data = static_cast<Data*>(param);
       switch (event) {
         // start to select the bounding box
         case EVENT_LBUTTONDOWN:
           data->box = Rect(x, y, 0, 0);
-          data->center = Point2f((float)x, (float)y);
+          data->center = Point2f(static_cast<float>(x), static_cast<float>(y));
           break;
         // update the selected bounding box
         case EVENT_MOUSEMOVE:

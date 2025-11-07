@@ -66,33 +66,33 @@ class LsdBurns : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::endPoints_;
   using LsdBase<FT, LPT>::lineSegments_;
 
-  GRAD grad_;  // gradient object
+  GRAD grad_{};  // gradient object
 
   // segmentation components
-  cv::Mat partitionMap_;                    // CV_8U, 0, pixels with partition indicies
-  cv::Mat partitionMapShifted_;             // CV_8U, 0, pixels with shifted partition indicies
-  std::vector<IndexVector> seeds_;          // edge points sorted by partition
-  std::vector<IndexVector> seeds_shifted_;  // edge points sorted by shifted partition
+  cv::Mat partitionMap_{};                    // CV_8U, 0, pixels with partition indicies
+  cv::Mat partitionMapShifted_{};             // CV_8U, 0, pixels with shifted partition indicies
+  std::vector<IndexVector> seeds_{};          // edge points sorted by partition
+  std::vector<IndexVector> seeds_shifted_{};  // edge points sorted by shifted partition
 
   // connected components
   struct CcData {
     CcData(uchar part = 0, bool sh = false) : partition(part), accepted(false), shifted(sh){};
 
-    IndexVector data;
-    uchar partition;
-    bool accepted;
-    bool shifted;
+    IndexVector data{};
+    uchar partition{};
+    bool accepted{};
+    bool shifted{};
   };
   typedef std::vector<CcData> CcDataVector;  // vector of connected components
 
-  CcDataVector ccLists_, ccListsShifted_;
+  CcDataVector ccLists_{}, ccListsShifted_{};
 
-  cv::Mat voteMap_;
+  cv::Mat voteMap_{};
 
-  int pixel_count_, rows_, cols_, min_pix_, part_num_, flags_;
-  FT th_low_, th_high_;
+  int pixel_count_{}, rows_{}, cols_{}, min_pix_{}, part_num_{}, flags_{};
+  FT th_low_{}, th_high_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   void init() {
     this->addManager(grad_);
@@ -141,7 +141,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
   //! @param flags Flags for line direction estimation
   //!                   BURNS_NMS - Use Non Maxima Supression for burns detector
   LsdBurns(FT th_low = 0.004, FT th_high = 0.012, int min_pix = 5, int part_num = 12, int flags = 0)
-      : flags_(flags), th_high_(th_high), th_low_(th_low), part_num_(part_num), min_pix_(min_pix) {
+      : min_pix_(min_pix), part_num_(part_num), flags_(flags), th_low_(th_low), th_high_(th_high) {
     CV_Assert(part_num_ < 256 && part_num_ > 3 && th_low <= 1 && th_low > 0 && th_high <= 1 && th_high > 0 &&
               th_high >= th_low && min_pix > 1);
     init();
@@ -234,16 +234,16 @@ class LsdBurns : public LsdBase<FT, LPT> {
     partitionMapShifted_.setTo(0);
 
     // reserve for the point vectors
-    seeds_.resize(part_num_);
-    seeds_shifted_.resize(part_num_);
+    seeds_.resize(static_cast<size_t>(part_num_));
+    seeds_shifted_.resize(static_cast<size_t>(part_num_));
     int size = static_cast<int>(pixel_count_ / part_num_ / 100 * (1.0 - sqrt(th_high_))) + 100;
     // cap capacy to 10000, even for large images
     if (size > 10000) size = 10000;
     for (int seg = 0; seg < part_num_; ++seg) {
-      seeds_[seg].clear();
-      seeds_[seg].reserve(size);
-      seeds_shifted_[seg].clear();
-      seeds_shifted_[seg].reserve(size);
+      seeds_[static_cast<size_t>(seg)].clear();
+      seeds_[static_cast<size_t>(seg)].reserve(static_cast<size_t>(size));
+      seeds_shifted_[static_cast<size_t>(seg)].clear();
+      seeds_shifted_[static_cast<size_t>(seg)].reserve(static_cast<size_t>(size));
     }
 
     // the algorithm
@@ -284,7 +284,7 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
  private:
   void segmentationNMS() {
-    const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
 
     // pointer to the magnitude
@@ -325,17 +325,21 @@ class LsdBurns : public LsdBase<FT, LPT> {
           } else {
             mag_type tg67x = tg22x + x * 65536;
             if (y > tg67x) {
-              if (m > pmag[idx - cols_] && m >= pmag[idx + cols_]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_)] && m >= pmag[idx + static_cast<size_t>(cols_)])
+                goto maxima;
             } else {
               int s = neg_sign(xs, ys) ? -1 : 1;
-              if (m > pmag[idx - cols_ - s] && m > pmag[idx + cols_ + s]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_) - static_cast<size_t>(s)] &&
+                  m > pmag[idx + static_cast<size_t>(cols_) + static_cast<size_t>(s)])
+                goto maxima;
             }
           }
           continue;
           // only get here if we have a maxima, else continue will jump to next iteration
         maxima:
           // compute the partition of the pixel
-          float part = cv::fastAtan2(static_cast<float>(xs), static_cast<float>(-ys)) / 360 * part_num_;
+          float part =
+              cv::fastAtan2(static_cast<float>(xs), static_cast<float>(-ys)) / 360.0f * static_cast<float>(part_num_);
 
           // get partition number and shifted partition number
           int part_num = static_cast<int>(part);
@@ -345,13 +349,13 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
           // set pixel in the segment map and shifted segment map
           // increment by 1 for map (0 is reserved for no data)
-          ppmap[idx] = static_cast<char>(part_num + 1);
-          ppmaps[idx] = static_cast<char>(part_num_shift + 1);
+          ppmap[idx] = static_cast<uchar>(part_num + 1);
+          ppmaps[idx] = static_cast<uchar>(part_num_shift + 1);
 
           if (m > high) {
             // add index to according partition lists as seeds
-            seeds_[part_num].push_back(idx);
-            seeds_shifted_[part_num_shift].push_back(idx);
+            seeds_[static_cast<size_t>(part_num)].push_back(idx);
+            seeds_shifted_[static_cast<size_t>(part_num_shift)].push_back(idx);
           }
         }
       }
@@ -387,7 +391,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
         // threshold by 16 corresponds to 4 colorsteps change
         if (mag > low) {
           // the partition of the pixel
-          float part = cv::fastAtan2(static_cast<float>(pgx[idx]), static_cast<float>(-pgy[idx])) / 360 * part_num_;
+          float part = cv::fastAtan2(static_cast<float>(pgx[idx]), static_cast<float>(-pgy[idx])) / 360.0f *
+                       static_cast<float>(part_num_);
 
           // get partition number and shifted partition number
           int part_num = static_cast<int>(part);
@@ -396,13 +401,13 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
           // set pixel in the segment map and shifted segment map
           // increment by 1 for map (1-part_num, 0 is reserved for no data)
-          ppmap[idx] = static_cast<char>(part_num + 1);
-          ppmaps[idx] = static_cast<char>(part_num_shift + 1);
+          ppmap[idx] = static_cast<uchar>(part_num + 1);
+          ppmaps[idx] = static_cast<uchar>(part_num_shift + 1);
 
           if (mag > high) {
             // add index to according partition list as seeds
-            seeds_[part_num].push_back(idx);
-            seeds_shifted_[part_num_shift].push_back(idx);
+            seeds_[static_cast<size_t>(part_num)].push_back(idx);
+            seeds_shifted_[static_cast<size_t>(part_num_shift)].push_back(idx);
           }
         }
       }
@@ -416,12 +421,12 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
     int size = pixel_count_ / (min_pix_ * min_pix_) + 100;
     if (size > 10000) size = 10000;
-    ccLists_.reserve(size);
-    ccListsShifted_.reserve(size);
+    ccLists_.reserve(static_cast<size_t>(size));
+    ccListsShifted_.reserve(static_cast<size_t>(size));
 
 
-    uchar* pmap = 0;
-    IndexVector* ccdata = 0;
+    uchar* pmap = nullptr;
+    IndexVector* ccdata = nullptr;
     int part = 0;
 
     // get the connected components area for partition
@@ -450,12 +455,12 @@ class LsdBurns : public LsdBase<FT, LPT> {
         for (int m = 0; m < 3; ++m) {
           // test the three pixels in y-1
           if (pmap[upper + m] == part) {
-            ccdata->push_back(upper + m);
+            ccdata->push_back(static_cast<size_t>(upper + m));
             pmap[upper + m] = 0;
           }
           // test the three pixels in y+1
           if (pmap[lower + m] == part) {
-            ccdata->push_back(lower + m);
+            ccdata->push_back(static_cast<size_t>(lower + m));
             pmap[lower + m] = 0;
           }
         }
@@ -466,60 +471,62 @@ class LsdBurns : public LsdBase<FT, LPT> {
     pmap = partitionMap_.ptr<uchar>();
     for (int i = 0; i != part_num_; ++i) {
       part = i + 1;
-      size_t size = static_cast<size_t>(seeds_[i].size() * sscale) + 100;
-      if (size > 10000) size = 10000;
-      ccLists_.push_back(CcData(i));
+      size_t cc_size = static_cast<size_t>(static_cast<double>(seeds_[static_cast<size_t>(i)].size()) * sscale) + 100;
+      if (cc_size > 10000) cc_size = 10000;
+      ccLists_.push_back(CcData(static_cast<uchar>(static_cast<int>(i))));
       // use the CcData struct
       ccdata = &ccLists_.back().data;
-      ccdata->reserve(size);
+      ccdata->reserve(cc_size);
 
       // iterate the seed edges of the partition
-      for_each(seeds_[i].begin(), seeds_[i].end(), [&](index_type idx) {
+      for_each(seeds_[static_cast<size_t>(i)].begin(), seeds_[static_cast<size_t>(i)].end(), [&](index_type idx) {
         if (pmap[idx] == part) {
           // get all elements of the area and add them to the vectors
 
           getArea(idx);
-          if (ccdata->size() < this->min_pix_)
+          if (ccdata->size() < static_cast<size_t>(this->min_pix_))
             ccdata->clear();
           else {
-            ccLists_.push_back(CcData(i));
+            ccLists_.push_back(CcData(static_cast<uchar>(i)));
             ccdata = &ccLists_.back().data;
-            ccdata->reserve(size);
+            ccdata->reserve(cc_size);
           }
         }
       });
 
       // raise the area count
-      if (ccdata->size() < this->min_pix_) ccLists_.pop_back();
+      if (ccdata->size() < static_cast<size_t>(this->min_pix_)) ccLists_.pop_back();
     }
 
     pmap = partitionMapShifted_.ptr<uchar>();
     for (int i = 0; i != part_num_; ++i) {
       part = i + 1;
-      size_t size = static_cast<size_t>(seeds_shifted_[i].size() * sscale) + 100;
-      if (size > 10000) size = 10000;
-      ccListsShifted_.push_back(CcData(i, true));
+      size_t cc_size_shifted =
+          static_cast<size_t>(static_cast<double>(seeds_shifted_[static_cast<size_t>(i)].size()) * sscale) + 100;
+      if (cc_size_shifted > 10000) cc_size_shifted = 10000;
+      ccListsShifted_.push_back(CcData(static_cast<uchar>(i), true));
       // use the CcData struct
       ccdata = &ccListsShifted_.back().data;
-      ccdata->reserve(size);
+      ccdata->reserve(cc_size_shifted);
 
       // iterate the seed edges of the partition
-      for_each(seeds_shifted_[i].begin(), seeds_shifted_[i].end(), [&](index_type idx) {
-        if (pmap[idx] == part) {
-          // get all elements of the area and add them to the vectors
-          getArea(idx);
-          // raise the area count
-          if (ccdata->size() < this->min_pix_)
-            ccdata->clear();
-          else {
-            ccListsShifted_.push_back(CcData(i, true));
-            ccdata = &ccListsShifted_.back().data;
-            ccdata->reserve(size);
-          }
-        }
-      });
+      for_each(seeds_shifted_[static_cast<size_t>(i)].begin(), seeds_shifted_[static_cast<size_t>(i)].end(),
+               [&](index_type idx) {
+                 if (pmap[idx] == part) {
+                   // get all elements of the area and add them to the vectors
+                   getArea(idx);
+                   // raise the area count
+                   if (ccdata->size() < static_cast<size_t>(this->min_pix_))
+                     ccdata->clear();
+                   else {
+                     ccListsShifted_.push_back(CcData(static_cast<uchar>(i), true));
+                     ccdata = &ccListsShifted_.back().data;
+                     ccdata->reserve(cc_size_shifted);
+                   }
+                 }
+               });
       // raise the area count
-      if (ccdata->size() < this->min_pix_) ccListsShifted_.pop_back();
+      if (ccdata->size() < static_cast<size_t>(this->min_pix_)) ccListsShifted_.pop_back();
     }
   }
 
@@ -586,12 +593,12 @@ class LsdBurns : public LsdBase<FT, LPT> {
       const PT* first = &tmp[0];
       const PT* last = &tmp[0];
       FT bx = -l.normalY(), by = l.normalX();
-      FT dNegMax = getX(*first) * bx + getY(*first) * by;
+      FT dNegMax = static_cast<FT>(getX(*first)) * bx + static_cast<FT>(getY(*first)) * by;
       FT dPosMax = dNegMax;
 
       // compute the distance to the centroid for each point
       for_each(tmp.begin(), tmp.end(), [&](const PT& p) {
-        FT dist = getX(p) * bx + getY(p) * by;
+        FT dist = static_cast<FT>(getX(p)) * bx + static_cast<FT>(getY(p)) * by;
 
         if (dist < dNegMax) {
           dNegMax = dist;

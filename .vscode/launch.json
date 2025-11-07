@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug CMake Binary",
+            "name": "Debug Compiled CMake Binary",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
@@ -28,10 +28,64 @@
             }
         },
         {
-            "name": "Debug CMake Binary 2",
+            "name": "Debug Last Built Target",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Debug/bin/${input:cmakeDebugBinaries}",
+            "program": "${input:cmakeLastDebugTarget}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug CMake Target",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.vscode/debug_target",
+            "preLaunchTask": "build-and-copy-cmake-target",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly flavor to Intel",
+                    "text": "-gdb-set dissassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/proc/self/cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug CMake Test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.vscode/debug_test_target",
+            "preLaunchTask": "build-and-copy-cmake-test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -73,7 +127,7 @@
             "name": "Debug binary target",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${python.defaultInterpreterPath}",
+            "program": "${workspaceFolder}/bazel-bin/${input:bazelBinaryTargets}",
             "preLaunchTask": "build-binary-debug",
             "args": [],
             "stopAtEntry": false,
@@ -220,6 +274,15 @@
             "args": {
                 "command": "cd ${workspaceFolder}/ && bash ${workspaceFolder}/.vscode/find_debug_targets.sh launch py_test",
                 "description": "Please select a launch target"
+            }
+        },
+        {
+            "id": "cmakeLastDebugTarget",
+            "type": "command",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "if [ -f ${workspaceFolder}/.vscode/.last_debug_target ]; then TARGET=$(cat ${workspaceFolder}/.vscode/.last_debug_target); echo \"${workspaceFolder}/build/Debug/bin/$TARGET\"; else echo \"${workspaceFolder}/build/Debug/bin/app_line_analyzer\"; fi",
+                "description": "Get path to last built debug target"
             }
         }
     ]

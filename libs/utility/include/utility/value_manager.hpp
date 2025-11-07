@@ -57,17 +57,16 @@ class ValueManager {
   typedef std::function<Value(const Value& v)> Functor;
 
   struct ValueEntry {
-    ValueEntry() {}
+    std::string description{};
+    Functor func{};
 
+    ValueEntry() = default;
 
-    ValueEntry(const Functor& f, const std::string& dsc = std::string()) : func(f), description(dsc) {}
-
-    std::string description;
-    Functor func;
+    ValueEntry(Functor f, std::string dsc = std::string()) : description(std::move(dsc)), func(std::move(f)) {}
   };
 
   typedef std::map<std::string, ValueEntry> ValueMap;
-  ValueMap values_;
+  ValueMap values_{};
 
   ValueManager() {}
 
@@ -87,13 +86,16 @@ class ValueManager {
 
 
  public:
-  struct NameValuePair {
-    NameValuePair() {}
-    NameValuePair(const std::string& n, const Value& v, const std::string& d = std::string())
-        : name(n), description(d), value(v) {}
+  virtual ~ValueManager() = default;
 
-    std::string name, description;
-    Value value;
+  struct NameValuePair {
+    std::string name{};
+    std::string description{};
+    Value value{};
+
+    NameValuePair() = default;
+    NameValuePair(std::string n, Value v, std::string d = std::string())
+        : name(std::move(n)), description(std::move(d)), value(std::move(v)) {}
   };
 
 

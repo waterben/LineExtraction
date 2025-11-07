@@ -37,13 +37,13 @@ constexpr int ENTRY_NO_5 = 8;
 typedef double FT;
 
 struct Entry {
-  Entry() {}
+  Entry() : filter(), name(), flags(0), low(0.0), high(0.0) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, double l, double h, int f = 0)
-      : filter(a), name(b), low(l), high(h), flags(f) {}
+      : filter(a), name(b), flags(f), low(l), high(h) {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const std::string& b, int f = 0)
-      : filter(a), name(b), low(0.01), high(0.03), flags(f) {}
+      : filter(a), name(b), flags(f), low(0.01), high(0.03) {}
 
 
   cv::Ptr<FilterI<uchar>> filter;
@@ -51,9 +51,11 @@ struct Entry {
   int flags;
   double low, high;
 
-  Value value(const std::string& name) { return dynamic_cast<ValueManager*>(&(*filter))->value(name); }
+  Value value(const std::string& param_name) { return dynamic_cast<ValueManager*>(&(*filter))->value(param_name); }
 
-  void value(const std::string& name, const Value& v) { dynamic_cast<ValueManager*>(&(*filter))->value(name, v); }
+  void value(const std::string& param_name, const Value& v) {
+    dynamic_cast<ValueManager*>(&(*filter))->value(param_name, v);
+  }
 
 
   inline bool rgb() const { return flags & ENTRY_RGB; }
@@ -96,6 +98,8 @@ void saveResults(const lsfm::FilterResults& results,
                  double th_high,
                  bool sqr = false,
                  int border = 0) {
+  static_cast<void>(sqr);
+  static_cast<void>(border);
   ZeroCrossing<FT, FT, FT, FastZC<FT, FT, FT>> zc;
   NonMaximaSuppression<FT, FT, FT, FastNMS8<FT, FT, FT>> nms;
   lsfm::FilterResults::const_iterator f;
@@ -284,7 +288,7 @@ void processPath(std::vector<Entry>& entries, const std::pair<fs::path, std::str
   });
 }
 
-int main(int argc, char** argv) {
+int main() {
   std::vector<std::pair<fs::path, std::string>> sets;
   // sets.push_back(std::pair<fs::path, std::string>("../../images/noise", "noise"));
   sets.push_back(std::pair<fs::path, std::string>("../../images/Selection", "Selection"));

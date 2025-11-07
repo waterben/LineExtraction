@@ -61,12 +61,12 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
 
   std::for_each(beg, end, [&](const PT& lp) {
     ++count;
-    sum_x += getX(lp);
-    sum_y += getY(lp);
+    sum_x += static_cast<FT>(getX(lp));
+    sum_y += static_cast<FT>(getY(lp));
   });
 
-  cx = static_cast<FT>(sum_x) / count;
-  cy = static_cast<FT>(sum_y) / count;
+  cx = sum_x / static_cast<FT>(count);
+  cy = sum_y / static_cast<FT>(count);
   sx = 0;
   sy = 0;
   sxy = 0;
@@ -92,8 +92,8 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
   if (data.empty()) {
     std::for_each(beg, end, [&](const PT& lp) {
       ++count;
-      sum_x += getX(lp);
-      sum_y += getY(lp);
+      sum_x += static_cast<FT>(getX(lp));
+      sum_y += static_cast<FT>(getY(lp));
     });
 
     cx = static_cast<FT>(sum_x) / count;
@@ -111,8 +111,8 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
     std::for_each(beg, end, [&](const PT& lp) {
       FT m = static_cast<FT>(data.at<DT>(getY(lp), getX(lp)));
       count += m;
-      sum_x += getX(lp) * m;
-      sum_y += getY(lp) * m;
+      sum_x += static_cast<FT>(getX(lp)) * m;
+      sum_y += static_cast<FT>(getY(lp)) * m;
     });
 
     cx = static_cast<FT>(sum_x) / count;
@@ -373,11 +373,11 @@ class FitLine : public ValueManager {
   typedef typename fit_type::float_type float_type;
   typedef typename fit_type::point_type point_type;
 
-  FitLine() {}
+  FitLine() : fit_() {}
 
-  FitLine(const ValueManager::NameValueVector& options) {}
+  FitLine(const ValueManager::NameValueVector& options) { static_cast<void>(options); }
 
-  FitLine(ValueManager::InitializerList options) {}
+  FitLine(ValueManager::InitializerList options) : fit_() { static_cast<void>(options); }
 
   template <class ITER, template <class> class LPT>
   inline void apply(ITER beg, ITER end, Line<float_type, LPT>& l) const {
@@ -561,7 +561,7 @@ class MEstimatorFit<FT, cv::Point> {
   template <template <class> class LPT>
   void fit(const cv::Point* beg, const cv::Point* end, Line<FT, LPT>& l) const {
     cv::Vec<float, 4> res;
-    cv::Mat tmp(end - beg, 2, CV_32SC1, const_cast<cv::Point*>(beg));
+    cv::Mat tmp(static_cast<int>(end - beg), 2, CV_32SC1, const_cast<cv::Point*>(beg));
     cv::fitLine(tmp, res, dist, param, reps, aeps);
     l = Line<FT, LPT>(-res[1], res[0], res[2], res[3]);
   }

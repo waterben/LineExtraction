@@ -8,11 +8,11 @@ using lsfm::Range;
 
 TEST(RangeTest, SizeAndSwap) {
   Range<int> r(2, 10);
-  EXPECT_EQ(r.size(), 8);
+  EXPECT_EQ(r.size(), static_cast<decltype(r.size())>(8));
   r.swap();
   EXPECT_EQ(r.lower, 10);
   EXPECT_EQ(r.upper, 2);
-  EXPECT_EQ(r.size(), 8);
+  EXPECT_EQ(r.size(), static_cast<decltype(r.size())>(8));
 }
 
 TEST(LimitsTest, TauAndEps) {

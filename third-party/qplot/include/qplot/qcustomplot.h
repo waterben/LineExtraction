@@ -487,7 +487,7 @@ class QCP_LIB_DECL QCPLayerable : public QObject {
   Q_PROPERTY(bool antialiased READ antialiased WRITE setAntialiased)
   /// \endcond
  public:
-  QCPLayerable(QCustomPlot* plot, QString targetLayer = QString(), QCPLayerable* parentLayerable = 0);
+  QCPLayerable(QCustomPlot* plot, QString targetLayer = QString(), QCPLayerable* parentLayerable = nullptr);
   ~QCPLayerable();
 
   // getters:
@@ -504,7 +504,7 @@ class QCP_LIB_DECL QCPLayerable : public QObject {
   void setAntialiased(bool enabled);
 
   // introduced virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // non-property methods:
   bool realVisibility() const;
@@ -730,7 +730,7 @@ class QCP_LIB_DECL QCPLayoutElement : public QCPLayerable {
   };
   Q_ENUMS(UpdatePhase)
 
-  explicit QCPLayoutElement(QCustomPlot* parentPlot = 0);
+  explicit QCPLayoutElement(QCustomPlot* parentPlot = nullptr);
   virtual ~QCPLayoutElement();
 
   // getters:
@@ -742,7 +742,9 @@ class QCP_LIB_DECL QCPLayoutElement : public QCPLayerable {
   QCP::MarginSides autoMargins() const { return mAutoMargins; }
   QSize minimumSize() const { return mMinimumSize; }
   QSize maximumSize() const { return mMaximumSize; }
-  QCPMarginGroup* marginGroup(QCP::MarginSide side) const { return mMarginGroups.value(side, (QCPMarginGroup*)0); }
+  QCPMarginGroup* marginGroup(QCP::MarginSide side) const {
+    return mMarginGroups.value(side, static_cast<QCPMarginGroup*>(0));
+  }
   QHash<QCP::MarginSide, QCPMarginGroup*> marginGroups() const { return mMarginGroups; }
 
   // setters:
@@ -763,7 +765,7 @@ class QCP_LIB_DECL QCPLayoutElement : public QCPLayerable {
   virtual QList<QCPLayoutElement*> elements(bool recursive) const;
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  protected:
   // property members:
@@ -934,7 +936,7 @@ class QCP_LIB_DECL QCPLayoutInset : public QCPLayout {
   virtual QCPLayoutElement* takeAt(int index);
   virtual bool take(QCPLayoutElement* element);
   virtual void simplify() {}
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // non-virtual methods:
   void addElement(QCPLayoutElement* element, Qt::Alignment alignment);
@@ -1023,6 +1025,7 @@ Q_DECLARE_TYPEINFO(QCPLineEnding, Q_MOVABLE_TYPE);
 
 class QCP_LIB_DECL QCPGrid : public QCPLayerable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPGrid)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(bool subGridVisible READ subGridVisible WRITE setSubGridVisible)
   Q_PROPERTY(bool antialiasedSubGrid READ antialiasedSubGrid WRITE setAntialiasedSubGrid)
@@ -1309,7 +1312,7 @@ class QCP_LIB_DECL QCPAxis : public QCPLayerable {
   void setUpperEnding(const QCPLineEnding& ending);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // non-property methods:
   Qt::Orientation orientation() const { return mOrientation; }
@@ -1430,6 +1433,7 @@ Q_DECLARE_METATYPE(QCPAxis::SelectablePart)
 
 
 class QCPAxisPainterPrivate {
+  Q_DISABLE_COPY(QCPAxisPainterPrivate)
  public:
   explicit QCPAxisPainterPrivate(QCustomPlot* parentPlot);
   virtual ~QCPAxisPainterPrivate();
@@ -1543,7 +1547,7 @@ class QCP_LIB_DECL QCPAbstractPlottable : public QCPLayerable {
 
   // introduced virtual methods:
   virtual void clearData() = 0;
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const = 0;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const = 0;
   virtual bool addToLegend();
   virtual bool removeFromLegend() const;
 
@@ -1631,7 +1635,7 @@ class QCP_LIB_DECL QCPItemAnchor {
   QSet<QCPItemPosition*> mChildrenX, mChildrenY;
 
   // introduced virtual methods:
-  virtual QCPItemPosition* toQCPItemPosition() { return 0; }
+  virtual QCPItemPosition* toQCPItemPosition() { return nullptr; }
 
   // non-virtual methods:
   void addChildX(QCPItemPosition* pos);     // called from pos when this anchor is set as parent
@@ -1743,7 +1747,7 @@ class QCP_LIB_DECL QCPAbstractItem : public QCPLayerable {
   Q_SLOT void setSelected(bool selected);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const = 0;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const = 0;
 
   // non-virtual methods:
   QList<QCPItemPosition*> positions() const { return mPositions; }
@@ -1792,6 +1796,7 @@ class QCP_LIB_DECL QCPAbstractItem : public QCPLayerable {
 
 class QCP_LIB_DECL QCustomPlot : public QWidget {
   Q_OBJECT
+  Q_DISABLE_COPY(QCustomPlot)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QRect viewport READ viewport WRITE setViewport)
   Q_PROPERTY(QPixmap background READ background WRITE setBackground)
@@ -1831,7 +1836,7 @@ class QCP_LIB_DECL QCustomPlot : public QWidget {
             ///< QCP::phForceRepaint is set, see \ref setPlottingHints.
   };
 
-  explicit QCustomPlot(QWidget* parent = 0);
+  explicit QCustomPlot(QWidget* parent = nullptr);
   virtual ~QCustomPlot();
 
   // getters:
@@ -1885,7 +1890,7 @@ class QCP_LIB_DECL QCustomPlot : public QWidget {
   // specialized interface for QCPGraph:
   QCPGraph* graph(int index) const;
   QCPGraph* graph() const;
-  QCPGraph* addGraph(QCPAxis* keyAxis = 0, QCPAxis* valueAxis = 0);
+  QCPGraph* addGraph(QCPAxis* keyAxis = nullptr, QCPAxis* valueAxis = nullptr);
   bool removeGraph(QCPGraph* graph);
   bool removeGraph(int index);
   int clearGraphs();
@@ -1911,7 +1916,7 @@ class QCP_LIB_DECL QCustomPlot : public QWidget {
   bool setCurrentLayer(const QString& name);
   bool setCurrentLayer(QCPLayer* layer);
   int layerCount() const;
-  bool addLayer(const QString& name, QCPLayer* otherLayer = 0, LayerInsertMode insertMode = limAbove);
+  bool addLayer(const QString& name, QCPLayer* otherLayer = nullptr, LayerInsertMode insertMode = limAbove);
   bool removeLayer(QCPLayer* layer);
   bool moveLayer(QCPLayer* layer, QCPLayer* otherLayer, LayerInsertMode insertMode = limAbove);
 
@@ -2011,7 +2016,7 @@ class QCP_LIB_DECL QCustomPlot : public QWidget {
 
   // non-virtual methods:
   void updateLayerIndices() const;
-  QCPLayerable* layerableAt(const QPointF& pos, bool onlySelectable, QVariant* selectionDetails = 0) const;
+  QCPLayerable* layerableAt(const QPointF& pos, bool onlySelectable, QVariant* selectionDetails = nullptr) const;
   void drawBackground(QCPPainter* painter);
 
   friend class QCPLegend;
@@ -2159,7 +2164,7 @@ class QCP_LIB_DECL QCPAxisRect : public QCPLayoutElement {
   QCPAxis* axis(QCPAxis::AxisType type, int index = 0) const;
   QList<QCPAxis*> axes(QCPAxis::AxisTypes types) const;
   QList<QCPAxis*> axes() const;
-  QCPAxis* addAxis(QCPAxis::AxisType type, QCPAxis* axis = 0);
+  QCPAxis* addAxis(QCPAxis::AxisType type, QCPAxis* axis = nullptr);
   QList<QCPAxis*> addAxes(QCPAxis::AxisTypes types);
   bool removeAxis(QCPAxis* axis);
   QCPLayoutInset* insetLayout() const { return mInsetLayout; }
@@ -2258,7 +2263,7 @@ class QCP_LIB_DECL QCPAbstractLegendItem : public QCPLayoutElement {
   Q_SLOT void setSelected(bool selected);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  signals:
   void selectionChanged(bool selected);
@@ -2291,6 +2296,7 @@ class QCP_LIB_DECL QCPAbstractLegendItem : public QCPLayoutElement {
 
 class QCP_LIB_DECL QCPPlottableLegendItem : public QCPAbstractLegendItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPPlottableLegendItem)
  public:
   QCPPlottableLegendItem(QCPLegend* parent, QCPAbstractPlottable* plottable);
 
@@ -2383,7 +2389,7 @@ class QCP_LIB_DECL QCPLegend : public QCPLayoutGrid {
   void setSelectedTextColor(const QColor& color);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // non-virtual methods:
   QCPAbstractLegendItem* item(int index) const;
@@ -2472,7 +2478,7 @@ class QCP_LIB_DECL QCPPlotTitle : public QCPLayoutElement {
   Q_SLOT void setSelected(bool selected);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  signals:
   void selectionChanged(bool selected);
@@ -2508,6 +2514,7 @@ class QCP_LIB_DECL QCPPlotTitle : public QCPLayoutElement {
 
 class QCPColorScaleAxisRectPrivate : public QCPAxisRect {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPColorScaleAxisRectPrivate)
  public:
   explicit QCPColorScaleAxisRectPrivate(QCPColorScale* parentColorScale);
 
@@ -2633,6 +2640,7 @@ typedef QMutableMapIterator<double, QCPData> QCPDataMutableMapIterator;
 
 class QCP_LIB_DECL QCPGraph : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPGraph)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
   Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
@@ -2737,7 +2745,7 @@ class QCP_LIB_DECL QCPGraph : public QCPAbstractPlottable {
 
   // reimplemented virtual methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
   using QCPAbstractPlottable::rescaleAxes;
   using QCPAbstractPlottable::rescaleKeyAxis;
   using QCPAbstractPlottable::rescaleValueAxis;
@@ -2831,6 +2839,7 @@ typedef QMutableMapIterator<double, QCPCurveData> QCPCurveDataMutableMapIterator
 
 class QCP_LIB_DECL QCPCurve : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPCurve)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QCPScatterStyle scatterStyle READ scatterStyle WRITE setScatterStyle)
   Q_PROPERTY(LineStyle lineStyle READ lineStyle WRITE setLineStyle)
@@ -2874,7 +2883,7 @@ class QCP_LIB_DECL QCPCurve : public QCPAbstractPlottable {
 
   // reimplemented virtual methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  protected:
   // property members:
@@ -3028,6 +3037,7 @@ typedef QMutableMapIterator<double, QCPBarData> QCPBarDataMutableMapIterator;
 
 class QCP_LIB_DECL QCPBars : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPBars)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(double width READ width WRITE setWidth)
   Q_PROPERTY(WidthType widthType READ widthType WRITE setWidthType)
@@ -3086,7 +3096,7 @@ class QCP_LIB_DECL QCPBars : public QCPAbstractPlottable {
 
   // reimplemented virtual methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  protected:
   // property members:
@@ -3172,7 +3182,7 @@ class QCP_LIB_DECL QCPStatisticalBox : public QCPAbstractPlottable {
 
   // non-property methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  protected:
   // property members:
@@ -3190,7 +3200,7 @@ class QCP_LIB_DECL QCPStatisticalBox : public QCPAbstractPlottable {
   virtual QCPRange getValueRange(bool& foundRange, SignDomain inSignDomain = sdBoth) const;
 
   // introduced virtual methods:
-  virtual void drawQuartileBox(QCPPainter* painter, QRectF* quartileBox = 0) const;
+  virtual void drawQuartileBox(QCPPainter* painter, QRectF* quartileBox = nullptr) const;
   virtual void drawMedian(QCPPainter* painter) const;
   virtual void drawWhiskers(QCPPainter* painter) const;
   virtual void drawOutliers(QCPPainter* painter) const;
@@ -3250,6 +3260,7 @@ class QCP_LIB_DECL QCPColorMapData {
 
 class QCP_LIB_DECL QCPColorMap : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPColorMap)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QCPRange dataRange READ dataRange WRITE setDataRange NOTIFY dataRangeChanged)
   Q_PROPERTY(QCPAxis::ScaleType dataScaleType READ dataScaleType WRITE setDataScaleType NOTIFY dataScaleTypeChanged)
@@ -3287,7 +3298,7 @@ class QCP_LIB_DECL QCPColorMap : public QCPAbstractPlottable {
 
   // reimplemented virtual methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
  signals:
   void dataRangeChanged(QCPRange newRange);
@@ -3347,6 +3358,7 @@ typedef QMutableMapIterator<double, QCPFinancialData> QCPFinancialDataMutableMap
 
 class QCP_LIB_DECL QCPFinancial : public QCPAbstractPlottable {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPFinancial)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(ChartStyle chartStyle READ chartStyle WRITE setChartStyle)
   Q_PROPERTY(double width READ width WRITE setWidth)
@@ -3414,7 +3426,7 @@ class QCP_LIB_DECL QCPFinancial : public QCPAbstractPlottable {
 
   // reimplemented virtual methods:
   virtual void clearData();
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // static methods:
   static QCPFinancialDataMap timeSeriesToOhlc(const QVector<double>& time,
@@ -3460,6 +3472,7 @@ class QCP_LIB_DECL QCPFinancial : public QCPAbstractPlottable {
 
 class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemStraightLine)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3477,7 +3490,7 @@ class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem {
   void setSelectedPen(const QPen& pen);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const point1;
   QCPItemPosition* const point2;
@@ -3498,6 +3511,7 @@ class QCP_LIB_DECL QCPItemStraightLine : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemLine)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3521,7 +3535,7 @@ class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem {
   void setTail(const QCPLineEnding& tail);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const start;
   QCPItemPosition* const end;
@@ -3542,6 +3556,7 @@ class QCP_LIB_DECL QCPItemLine : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemCurve)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3565,7 +3580,7 @@ class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem {
   void setTail(const QCPLineEnding& tail);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const start;
   QCPItemPosition* const startDir;
@@ -3587,6 +3602,7 @@ class QCP_LIB_DECL QCPItemCurve : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemRect)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3610,7 +3626,7 @@ class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem {
   void setSelectedBrush(const QBrush& brush);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const topLeft;
   QCPItemPosition* const bottomRight;
@@ -3640,6 +3656,7 @@ class QCP_LIB_DECL QCPItemRect : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemText : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemText)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QColor color READ color WRITE setColor)
   Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor)
@@ -3690,7 +3707,7 @@ class QCP_LIB_DECL QCPItemText : public QCPAbstractItem {
   void setPadding(const QMargins& padding);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const position;
   QCPItemAnchor* const topLeft;
@@ -3731,6 +3748,7 @@ class QCP_LIB_DECL QCPItemText : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemEllipse)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3754,7 +3772,7 @@ class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem {
   void setSelectedBrush(const QBrush& brush);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const topLeft;
   QCPItemPosition* const bottomRight;
@@ -3797,6 +3815,7 @@ class QCP_LIB_DECL QCPItemEllipse : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemPixmap)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPixmap pixmap READ pixmap WRITE setPixmap)
   Q_PROPERTY(bool scaled READ scaled WRITE setScaled)
@@ -3826,7 +3845,7 @@ class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem {
   void setSelectedPen(const QPen& pen);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const topLeft;
   QCPItemPosition* const bottomRight;
@@ -3854,13 +3873,14 @@ class QCP_LIB_DECL QCPItemPixmap : public QCPAbstractItem {
 
   // non-virtual methods:
   void updateScaledPixmap(QRect finalRect = QRect(), bool flipHorz = false, bool flipVert = false);
-  QRect getFinalRect(bool* flippedHorz = 0, bool* flippedVert = 0) const;
+  QRect getFinalRect(bool* flippedHorz = nullptr, bool* flippedVert = nullptr) const;
   QPen mainPen() const;
 };
 
 
 class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemTracer)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3917,7 +3937,7 @@ class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem {
   void setInterpolating(bool enabled);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   // non-virtual methods:
   void updatePosition();
@@ -3945,6 +3965,7 @@ class QCP_LIB_DECL QCPItemTracer : public QCPAbstractItem {
 
 class QCP_LIB_DECL QCPItemBracket : public QCPAbstractItem {
   Q_OBJECT
+  Q_DISABLE_COPY(QCPItemBracket)
   /// \cond INCLUDE_QPROPERTIES
   Q_PROPERTY(QPen pen READ pen WRITE setPen)
   Q_PROPERTY(QPen selectedPen READ selectedPen WRITE setSelectedPen)
@@ -3978,7 +3999,7 @@ class QCP_LIB_DECL QCPItemBracket : public QCPAbstractItem {
   void setStyle(BracketStyle style);
 
   // reimplemented virtual methods:
-  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = 0) const;
+  virtual double selectTest(const QPointF& pos, bool onlySelectable, QVariant* details = nullptr) const;
 
   QCPItemPosition* const left;
   QCPItemPosition* const right;

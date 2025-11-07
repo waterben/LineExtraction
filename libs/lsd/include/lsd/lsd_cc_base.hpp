@@ -114,17 +114,17 @@ class LsdCCBase : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::imageData;
 
  protected:
-  cv::Mat img_,  // image data
-      emap_,     // edge map, indicating if pixel is on edge or not (also giving direction 0-7)
-      lsmap_;    // line segment map, indicating which pixel corresponds to which segment
+  cv::Mat img_{},  // image data
+      emap_{},     // edge map, indicating if pixel is on edge or not (also giving direction 0-7)
+      lsmap_{};    // line segment map, indicating which pixel corresponds to which segment
 
-  int rows_,  // number of image rows
-      cols_,  // number of image cols
-      size_;  // image size (cols*rows)
+  int rows_{},  // number of image rows
+      cols_{},  // number of image cols
+      size_{};  // image size (cols*rows)
 
-  mutable ImageData imageData_;
+  mutable ImageData imageData_{};
 
-  FT th_low_, th_high_;
+  FT th_low_{}, th_high_{};
 
   LsdCCBase(FT th_low = 0.004, FT th_high = 0.012) : th_low_(th_low), th_high_(th_high) {
     this->addManager(grad_);
@@ -163,13 +163,13 @@ class LsdCCBase : public LsdBase<FT, LPT> {
 
 
   // index list of edge pixels from NonMaximaSupression
-  std::vector<PT> seeds_;
+  std::vector<PT> seeds_{};
 
   // list of all line points sorted by segments
-  PointVector points_;
+  PointVector points_{};
 
-  GRAD grad_;
-  FIT fit_;
+  GRAD grad_{};
+  FIT fit_{};
 
 
   // compute gradient, magnitude and nms
@@ -186,10 +186,10 @@ class LsdCCBase : public LsdBase<FT, LPT> {
  private:
   // compute non maxima supression
   inline void computeNMS() {
-    static const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     seeds_.clear();
-    seeds_.reserve(size_ / 3);
+    seeds_.reserve(static_cast<size_t>(size_ / 3));
     emap_.create(rows_, cols_, CV_8SC1);
     emap_.row(0).setTo(-1);
     emap_.row(rows_ - 1).setTo(-1);

@@ -33,25 +33,26 @@ struct Entry : public PerformanceTaskDefault {
 
   std::shared_ptr<LsdBase<FT>> lsd;
 
-
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     lsd->detect(src);
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       lsd->detect(src);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
-  void value(const std::string& name, const Value& value) { lsd->value(name, value); }
+  void value(const std::string& param_name, const Value& value) { lsd->value(param_name, value); }
 };
 
 PerformanceTestPtr createLSDPerformanceTest(const lsfm::DataProviderList& provider) {

@@ -44,7 +44,7 @@
 #include <lsd/lsd_base.hpp>
 
 struct LS {
-  double sx, sy, ex, ey;  // Start & end coordinates of the line segment
+  double sx{}, sy{}, ex{}, ey{};  // Start & end coordinates of the line segment
 };
 
 // from EDLinesLib.lib

@@ -94,8 +94,8 @@ class Line {
   //! Init Line by start and end points (as two point_type)
   template <class APT>
   Line(const APT& beg, const APT& end) : nx_(0), ny_(0), d_(0) {
-    nx_ = getY(beg) - getY(end);  //-y
-    ny_ = getX(end) - getX(beg);  // x
+    nx_ = static_cast<FT>(getY(beg) - getY(end));  //-y
+    ny_ = static_cast<FT>(getX(end) - getX(beg));  // x
     FT norm = detail::hypot(nx_, ny_);
 
     if (norm < LIMITS<FT>::eps()) {
@@ -105,7 +105,7 @@ class Line {
     }
     nx_ /= norm;
     ny_ /= norm;
-    d_ = normalProject(getX(beg), getY(beg));
+    d_ = normalProject(static_cast<FT>(getX(beg)), static_cast<FT>(getY(beg)));
   }
 
   //! Init Line by start and end points (as Vec<FT,4>)
@@ -354,7 +354,7 @@ class Line {
   //! rotate line by angle (radian) at line origin (shortes point of line to origin ->
   //! just rotate normal)
   inline void rotate(FT angle) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     FT tmp = nx_ * ca - ny_ * sa;
     ny_ = ny_ * ca + nx_ * sa;
     nx_ = tmp;
@@ -408,7 +408,7 @@ class Line {
 
   //! rotate line around point (radian) impl
   virtual void rotateImpl(FT angle, const point_type& pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     point_type p = origin();
     p -= pivot;
     p = point_type(getX(p) * ca - getY(p) * sa, getY(p) * ca + getX(p) * sa);
@@ -424,7 +424,7 @@ class Line {
 
   //! rotate line around line point (radian)
   virtual void rotateImpl(FT angle, FT pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // get point for pivot
     point_type p = lineDist(pivot, origin());
@@ -449,6 +449,10 @@ class Line {
   //! draw line
   virtual void drawImpl(
       cv::Mat& img, cv::Scalar color, int thickness, int lineType, double normalLength, double tipLength) const;
+
+ public:
+  //! Virtual destructor for proper inheritance
+  virtual ~Line() = default;
 };
 
 template <class FT, template <class> class PT = Vec2>
@@ -700,11 +704,27 @@ class LineSegment : public Line<FT, PT> {
     }
 
     // get endpoints
-    point_type pb, pe;
+    point_type pb;
+    point_type pe;
     this->endPoints(pb, pe);
 
     // compute intersections with box lines
-    point_type ihl, ihu, ivl, ivr;
+    point_type ihl;
+    point_type ihu;
+    point_type ivl;
+    point_type ivr;
+
+    auto zeroPoint = [](point_type& p) {
+      setX(p, FT(0));
+      setY(p, FT(0));
+    };
+
+    zeroPoint(pb);
+    zeroPoint(pe);
+    zeroPoint(ihl);
+    zeroPoint(ihu);
+    zeroPoint(ivl);
+    zeroPoint(ivr);
 
     // lower horizontal line
     this->intersection(Line<FT, PT>(FT(0), FT(1), min_y), ihl);
@@ -870,7 +890,7 @@ class LineSegment : public Line<FT, PT> {
 
   //! rotate line around point (radian)
   virtual void rotateImpl(FT angle, const point_type& pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // rotate point on line segment
     point_type p = this->startPoint();
@@ -894,7 +914,7 @@ class LineSegment : public Line<FT, PT> {
 
   //! rotate line around line point (radian)
   virtual void rotateImpl(FT angle, FT pivot) {
-    FT sa = sin(angle), ca = cos(angle);
+    FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
     // get point for pivot
     point_type p = this->lineDist(pivot, this->origin());
@@ -970,6 +990,10 @@ class LineSegment : public Line<FT, PT> {
 
   template <class U>
   friend std::ostream& operator<<(std::ostream& os, const LineSegment<U>& ls);
+
+ public:
+  //! Virtual destructor for proper inheritance
+  virtual ~LineSegment() = default;
 };
 
 template <class FT>

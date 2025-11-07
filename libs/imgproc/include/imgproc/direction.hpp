@@ -73,7 +73,9 @@ struct Direction {
     CV_Assert(gx.type() == gy.type() && (gx.type() & CV_MAT_DEPTH_MASK) == cv::DataType<GT>::type &&
               gx.rows == gy.rows && gx.cols == gy.cols);
     dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
-    Direction<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows * gx.cols * gx.channels());
+    Direction<GT, DT>::process(
+        gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(),
+        static_cast<size_t>(gx.rows) * static_cast<size_t>(gx.cols) * static_cast<size_t>(gx.channels()));
   }
 
   //! Get direction range (-PI,PI)
@@ -121,7 +123,9 @@ struct FastDirection {
       cv::phase(gx, gy, dir, true);
     else {
       dir.create(gx.size(), CV_MAKETYPE(cv::DataType<DT>::type, gx.channels()));
-      FastDirection<GT, DT>::process(gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(), gx.rows * gx.cols * gx.channels());
+      FastDirection<GT, DT>::process(
+          gx.ptr<GT>(), gy.ptr<GT>(), dir.ptr<DT>(),
+          static_cast<size_t>(gx.rows) * static_cast<size_t>(gx.cols) * static_cast<size_t>(gx.channels()));
     }
   }
 

@@ -36,6 +36,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <memory.h>
+#include <vector>
 
 // Allocates 2D memory blocks.
 void* malloc_2d(const size_t size1, const size_t size2, const size_t data_size);
@@ -54,10 +55,7 @@ class accumulator_t {
     double lower;
     double upper;
 
-    bounds_t(double _lower, double _upper) {
-      lower = _lower;
-      upper = _upper;
-    }
+    bounds_t(double _lower, double _upper) : lower(_lower), upper(_upper) {}
   };
 
  private:
@@ -100,30 +98,36 @@ class accumulator_t {
  public:
   // Class constructor.
   accumulator_t()
-      : m_bins(0),
+      : m_bins(nullptr),
         m_delta(0),
         m_height(0),
         m_image_height(0),
         m_image_width(0),
-        m_rho(0),
+        m_rho(nullptr),
         m_rho_bounds(0, 0),
         m_rho_capacity(0),
-        m_theta(0),
+        m_theta(nullptr),
         m_theta_bounds(0, 0),
         m_theta_capacity(0),
         m_width(0) {}
 
+  accumulator_t(const accumulator_t&) = delete;
+  accumulator_t& operator=(const accumulator_t&) = delete;
+  accumulator_t(accumulator_t&&) = delete;
+  accumulator_t& operator=(accumulator_t&&) =
+      delete;  // Consider migrating ownership to RAII helpers if move support is required.
+
   // Class constructor.
   accumulator_t(const size_t image_width, const size_t image_height, const double delta)
-      : m_bins(0),
+      : m_bins(nullptr),
         m_delta(0),
         m_height(0),
         m_image_height(0),
         m_image_width(0),
-        m_rho(0),
+        m_rho(nullptr),
         m_rho_bounds(0, 0),
         m_rho_capacity(0),
-        m_theta(0),
+        m_theta(nullptr),
         m_theta_bounds(0, 0),
         m_theta_capacity(0),
         m_width(0) {
@@ -224,76 +228,48 @@ class accumulator_t {
 template <typename item_type, size_t capacity_inc>
 class list {
  private:
-  // Specifies the size of allocated storage for the container.
-  size_t m_capacity;
-
-  // Specifies the list of items.
-  item_type* m_items;
-
-  // Counts the number of elements.
-  size_t m_size;
+  std::vector<item_type> m_items;
 
  public:
-  // Erases the elements of the list.
-  inline void clear() { m_size = 0; }
+  inline void clear() { m_items.clear(); }
 
-  // Tests if the list is empty.
-  inline bool empty() const { return (m_size == 0); }
+  inline bool empty() const { return m_items.empty(); }
 
-  // Returns a pointer to the list of items.
-  inline item_type* items() { return m_items; }
+  inline item_type* items() { return m_items.data(); }
 
-  // Returns a pointer to the list of items.
-  inline const item_type* items() const { return m_items; }
+  inline const item_type* items() const { return m_items.data(); }
 
-  // Class constructor.
-  list() : m_capacity(0), m_items(0), m_size(0) {}
+  list() : m_items() {}
+  ~list() = default;
 
-  // Class destructor.
-  ~list() { free(m_items); };
+  inline void pop_back() { m_items.pop_back(); }
 
-  // Deletes the element at the end of the list.
-  inline void pop_back() { m_size--; }
-
-  // Adds a new last element and returns a reference to it.
   inline item_type& push_back() {
-    if (m_capacity == m_size) {
-      m_items = (item_type*)realloc(m_items, (m_capacity += capacity_inc) * sizeof(item_type));
-      memset(&m_items[m_size], 0, capacity_inc * sizeof(item_type));
+    if (m_items.size() == m_items.capacity()) {
+      const size_t next_capacity = m_items.capacity() > 0 ? m_items.capacity() + capacity_inc : capacity_inc;
+      m_items.reserve(next_capacity);
     }
-    return m_items[m_size++];
+
+    m_items.emplace_back();
+    return m_items.back();
   }
 
-  // Specifies a new capacity for a list.
   inline void reserve(const size_t capacity) {
-    if (m_capacity < capacity) {
-      size_t first = m_capacity;
-      m_items = (item_type*)realloc(m_items, (m_capacity = capacity) * sizeof(item_type));
-      memset(&m_items[first], 0, (capacity - first) * sizeof(item_type));
+    if (m_items.capacity() < capacity) {
+      m_items.reserve(capacity);
     }
 
-    if (m_size > capacity) {
-      m_size = capacity;
+    if (m_items.size() > capacity) {
+      m_items.resize(capacity);
     }
   }
 
-  // Specifies a new size for a list.
-  inline void resize(const size_t size) {
-    if (m_capacity < size) {
-      size_t first = m_capacity;
-      m_items = (item_type*)realloc(m_items, (m_capacity = size) * sizeof(item_type));
-      memset(&m_items[first], 0, (size - first) * sizeof(item_type));
-    }
-    m_size = size;
-  }
+  inline void resize(const size_t size) { m_items.resize(size); }
 
-  // Returns the number of elements.
-  inline size_t size() const { return m_size; }
+  inline size_t size() const { return m_items.size(); }
 
-  // Returns a reference to the list element at a specified position.
   inline item_type& operator[](const size_t index) { return m_items[index]; }
 
-  // Returns a reference to the list element at a specified position.
   inline const item_type& operator[](const size_t index) const { return m_items[index]; }
 };
 

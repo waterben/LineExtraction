@@ -159,12 +159,11 @@ cv::Mat drawGeometry(const vector<LineSegment2<FT>>& edges1L,
   return ret;
 }
 
-int main(int argc, char** argv) {
+int main() {
   // camera parameters
   Vec3<FT> originL(-1, 0, 10);
   Vec3<FT> originR(1, 0, 10);
   Vec3<FT> orientation(CV_PI, 0, 0);
-  FT fov = 50.0 / 180.0 * CV_PI;
   Vec2<FT> size(4608 / 10.0, 3456 / 10.0);
   Vec2<FT> focal(3250.3 / 10.0, 3334 / 10.0);
   Vec2<FT> offset(2287.2 / 10.0, 2272.8 / 10.0);
