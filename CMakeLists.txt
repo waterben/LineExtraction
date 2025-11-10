@@ -71,6 +71,7 @@ if(NOT TARGET Eigen3::Eigen)
     add_library(Eigen3::Eigen INTERFACE IMPORTED)
     set_target_properties(Eigen3::Eigen PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${EIGEN3_INCLUDE_DIRS}"
     )
 endif()
 
@@ -80,12 +81,22 @@ if(NOT TARGET dlib::dlib)
     add_library(dlib::dlib INTERFACE IMPORTED)
     set_target_properties(dlib::dlib PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${DLIB_INCLUDE_DIR}"
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${DLIB_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "${DLIB_LIBRARY}"
+        INTERFACE_COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>"
     )
 endif()
 
 # OpenCV
 include(extern_opencv)
+if(NOT TARGET le_opencv)
+    add_library(le_opencv INTERFACE)
+    target_include_directories(le_opencv SYSTEM INTERFACE ${OpenCV_INCLUDE_DIR})
+    target_link_libraries(le_opencv INTERFACE ${OpenCV_LIBS})
+endif()
+if(NOT TARGET le::opencv)
+    add_library(le::opencv ALIAS le_opencv)
+endif()
 
 # Setup Qt dependencies if enabled - do this after OpenCV setup
 if(ENABLE_QT)

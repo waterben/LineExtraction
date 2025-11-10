@@ -67,8 +67,8 @@ namespace lsfm {
 //    \ | /
 //  4 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 //
 // The 4 region NMS only uses the positive part
@@ -78,8 +78,8 @@ namespace lsfm {
 //    \ | /
 //  0 --+-- 0
 //    / | \
-    //   /  |  \
-    //  3   2   1
+//   /  |  \
+//  3   2   1
 //
 // gradient to map ids:
 //
@@ -169,7 +169,7 @@ struct EZCMap8 {
       FastZC8<LT,DT>::process(l,low,high,seeds,dmap);
   }*/
 
-  static inline const char type() { return '8'; }
+  static inline char type() { return '8'; }
 };
 
 template <class LT, class DT>
@@ -214,13 +214,14 @@ struct EZCMap4 {
       FastZC4<LT,DT>::process(l,low,high,seeds,dmap);
   }*/
 
-  static inline const char type() { return '4'; }
+  static inline char type() { return '4'; }
 };
 
 template <class LT, class FT, template <class> class NCC, template <class, class> class EM>
 void zc_base(const cv::Mat& l, LT low, LT high, IndexVector& seeds, cv::Mat& dmap, int border = 2) {
   seeds.clear();
-  seeds.reserve(l.rows * l.cols / 3);
+  const auto reserveCount = static_cast<IndexVector::size_type>(l.total() / 3);
+  seeds.reserve(reserveCount);
   dmap.create(l.rows, l.cols, CV_8S);
   dmap.setTo(-1);
 
@@ -256,20 +257,20 @@ void zc_base(const cv::Mat& l, LT low, LT high, IndexVector& seeds, cv::Mat& dma
                   ? lp - ly
                   : 0;
 
-      idxm = idx + 1;
-      mdiff = std::abs(xdiff);
-      if (std::abs(ydiff) > mdiff) {
-        mdiff = std::abs(ydiff);
-        idxm = idx + l.cols;
+      idxm = static_cast<size_t>(idx) + 1;
+      mdiff = static_cast<LT>(std::abs(xdiff));
+      if (static_cast<LT>(std::abs(ydiff)) > mdiff) {
+        mdiff = static_cast<LT>(std::abs(ydiff));
+        idxm = static_cast<size_t>(idx) + static_cast<size_t>(l.cols);
         lx = ly;
       }
 
       if (mdiff > low) {
-        idx2 = idx;
+        idx2 = static_cast<size_t>(idx);
         NCC<LT>::test(idx2, idxm, lp, lx);
         EM<LT, FT>::mapDiff(pdmap[idx2], xdiff, ydiff);
         pdmap[idxm] = -2;
-        if (mdiff > high) seeds.push_back(idx2);
+        if (mdiff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx2));
       }
     }
   }
@@ -279,7 +280,8 @@ template <class LT, class FT, template <class> class NCC, template <class, class
 void zc_base(
     const cv::Mat& l, const cv::Mat& low, const cv::Mat& high, IndexVector& seeds, cv::Mat& dmap, int border = 2) {
   seeds.clear();
-  seeds.reserve(l.rows * l.cols / 3);
+  const auto reserveCount = static_cast<IndexVector::size_type>(l.total() / 3);
+  seeds.reserve(reserveCount);
   dmap.create(l.rows, l.cols, CV_8S);
   dmap.setTo(-1);
 
@@ -315,20 +317,20 @@ void zc_base(
                   ? lp - ly
                   : 0;
 
-      idxm = idx + 1;
-      mdiff = std::abs(xdiff);
-      if (std::abs(ydiff) > mdiff) {
-        mdiff = std::abs(ydiff);
-        idxm = idx + l.cols;
+      idxm = static_cast<size_t>(idx) + 1;
+      mdiff = static_cast<LT>(std::abs(xdiff));
+      if (static_cast<LT>(std::abs(ydiff)) > mdiff) {
+        mdiff = static_cast<LT>(std::abs(ydiff));
+        idxm = static_cast<size_t>(idx) + static_cast<size_t>(l.cols);
         lx = ly;
       }
 
       if (mdiff > plow[idx]) {
-        idx2 = idx;
+        idx2 = static_cast<size_t>(idx);
         NCC<LT>::test(idx2, idxm, lp, lx);
         EM<LT, FT>::mapDiff(pdmap[idx2], xdiff, ydiff);
         pdmap[idxm] = -2;
-        if (mdiff > phigh[idx]) seeds.push_back(idx2);
+        if (mdiff > phigh[idx]) seeds.push_back(static_cast<IndexVector::value_type>(idx2));
       }
     }
   }
@@ -354,7 +356,8 @@ struct PreciseZC {
                       cv::Mat& dmap,
                       int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    const auto reserveCount = static_cast<IndexVector::size_type>(l.total() / 3);
+    seeds.reserve(reserveCount);
     dmap.create(l.rows, l.cols, CV_8S);
     int borderStart = std::max(Interpolate<FT, LT>::BorderStart + 1, border),
         borderEnd = std::max(Interpolate<FT, LT>::BorderEnd + 1, border);
@@ -382,14 +385,14 @@ struct PreciseZC {
         ys /= n;
 
         FT l1 = pl[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           FT diff = std::abs(l1 - l2);
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > high) seeds.push_back(idx);
+            if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -406,7 +409,7 @@ struct PreciseZC {
                       cv::Mat& dmap,
                       int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     int borderStart = std::max(Interpolate<FT, LT>::BorderStart + 1, border),
         borderEnd = std::max(Interpolate<FT, LT>::BorderEnd + 1, border);
@@ -435,14 +438,14 @@ struct PreciseZC {
         ys /= n;
 
         FT l1 = pl[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           FT diff = std::abs(l1 - l2);
           if (diff > plow[idx]) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > phigh[idx]) seeds.push_back(idx);
+            if (diff > phigh[idx]) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -459,7 +462,8 @@ struct PreciseZC {
                        cv::Mat& dmap,
                        int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    const auto reserveCount = static_cast<IndexVector::size_type>(l.total() / 3);
+    seeds.reserve(reserveCount);
     dmap.create(l.rows, l.cols, CV_8S);
     int borderStart = std::max(Interpolate<FT, LT>::BorderStart + 1, border),
         borderEnd = std::max(Interpolate<FT, LT>::BorderEnd + 1, border);
@@ -482,14 +486,14 @@ struct PreciseZC {
         FT l1 = pl[idx];
         FT xs = pgx[idx];
         FT ys = pgy[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           FT diff = std::abs(l1 - l2);
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > high) seeds.push_back(idx);
+            if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -506,7 +510,7 @@ struct PreciseZC {
                        cv::Mat& dmap,
                        int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     int borderStart = std::max(Interpolate<FT, LT>::BorderStart + 1, border),
         borderEnd = std::max(Interpolate<FT, LT>::BorderEnd + 1, border);
@@ -529,14 +533,14 @@ struct PreciseZC {
         FT l1 = pl[idx];
         FT xs = pgx[idx];
         FT ys = pgy[idx];
-        FT l2 = Interpolate<FT, LT>::getNB(l, idx % l.cols + xs, idx / l.cols + ys);
+        FT l2 = Interpolate<FT, LT>::getNB(l, static_cast<FT>(idx % l.cols) + xs, static_cast<FT>(idx / l.cols) + ys);
         pdmap[idx] = -1;
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           FT diff = std::abs(l1 - l2);
           if (diff > plow[idx]) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > phigh[idx]) seeds.push_back(idx);
+            if (diff > phigh[idx]) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -616,7 +620,7 @@ struct FastZC {
                       cv::Mat& dmap,
                       int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -645,13 +649,13 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys)) * l.cols)];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
-          LT diff = std::abs(l1 - l2);
+          LT diff = static_cast<LT>(std::abs(l1 - l2));
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > high) seeds.push_back(idx);
+            if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -668,7 +672,7 @@ struct FastZC {
                       cv::Mat& dmap,
                       int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -697,13 +701,13 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys)) * l.cols)];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           LT diff = std::abs(l1 - l2);
           if (diff > plow[idx]) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > phigh[idx]) seeds.push_back(idx);
+            if (diff > phigh[idx]) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -720,7 +724,7 @@ struct FastZC {
                        cv::Mat& dmap,
                        int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -745,13 +749,13 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys * static_cast<FT>(l.cols))))];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
-          LT diff = std::abs(l1 - l2);
+          LT diff = static_cast<LT>(std::abs(l1 - l2));
           if (diff > low) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > high) seeds.push_back(idx);
+            if (diff > high) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -768,7 +772,7 @@ struct FastZC {
                        cv::Mat& dmap,
                        int border = 2) {
     seeds.clear();
-    seeds.reserve(l.rows * l.cols / 3);
+    seeds.reserve(static_cast<IndexVector::size_type>(l.total() / 3));
     dmap.create(l.rows, l.cols, CV_8S);
     setBorder<char>(dmap, border, -1);
 
@@ -793,13 +797,13 @@ struct FastZC {
 
         LT l1 = pl[idx];
         LT l2 = pl[static_cast<index_type>(idx + static_cast<int>(std::round(xs)) +
-                                           static_cast<int>(std::round(ys) * l.cols))];
+                                           static_cast<int>(std::round(ys * static_cast<FT>(l.cols))))];
 
         if (neg_sign(l1, l2) && !eps_zero(l1) && !eps_zero(l2)) {
           LT diff = std::abs(l1 - l2);
           if (diff > plow[idx]) {
             EM<LT, FT>::map(pdmap[idx], xs, ys);
-            if (diff > phigh[idx]) seeds.push_back(idx);
+            if (diff > phigh[idx]) seeds.push_back(static_cast<IndexVector::value_type>(idx));
           }
         }
       }
@@ -878,7 +882,7 @@ class ZeroCrossing : public ValueManager {
   static constexpr int NUM_DIR = ZC::NUM_DIR;
 
   ZeroCrossing(double low = 0.004, double high = 0.012, int border = 2)
-      : th_low_(low), th_high_(high), border_(border) {
+      : dmap_(), seeds_(), th_low_(low), th_high_(high), border_(border) {
     this->add("nms_th_low", std::bind(&ZeroCrossing<GT, LT, DT, ZC>::valueThresholdLow, this, std::placeholders::_1),
               "Lower threshold.");
     this->add("nms_th_high", std::bind(&ZeroCrossing<GT, LT, DT, ZC>::valueThresholdHigh, this, std::placeholders::_1),

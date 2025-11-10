@@ -9,6 +9,8 @@ using namespace lsfm;
 
 class FeatureFilterTest : public ::testing::Test {
  protected:
+  FeatureFilterTest() : feature_matches(), descriptor_matches() {}
+
   void SetUp() override {
     // Create test feature matches
     feature_matches.clear();
@@ -149,7 +151,7 @@ TEST_F(FeatureFilterTest, DescriptorMatchMaskedFiltering) {
     }
   }
 
-  EXPECT_EQ(non_masked.size(), 4);  // All except the one with FS_MASKED
+  EXPECT_EQ(non_masked.size(), static_cast<size_t>(4));  // All except the one with FS_MASKED
 
   // Check that the masked one is not included
   for (const auto& match : non_masked) {

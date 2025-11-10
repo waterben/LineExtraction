@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "configure-cmake-debug",
+      "label": "build-and-copy-cmake-target",
       "type": "shell",
-      "command": "cmake -S ${workspaceFolder} -B ${workspaceFolder}/build/Debug -DCMAKE_BUILD_TYPE=Debug",
+      "command": "TARGET=\"${input:cmakeBuildTargetInput}\" && echo \"Building and preparing target for debug: $TARGET\" && mkdir -p ${workspaceFolder}/.vscode && echo \"$TARGET\" > ${workspaceFolder}/.vscode/.last_debug_target && cmake -S ${workspaceFolder} -B ${workspaceFolder}/build/Debug -DCMAKE_BUILD_TYPE=Debug -DBUILD_DEBUG=ON && cmake --build ${workspaceFolder}/build/Debug --config Debug --target \"$TARGET\" && cp \"${workspaceFolder}/build/Debug/bin/$TARGET\" \"${workspaceFolder}/.vscode/debug_target\" && echo \"Target $TARGET built and copied to debug_target. Ready for debugging.\"",
       "group": {
         "kind": "build",
         "isDefault": false
@@ -18,14 +18,14 @@
         "showReuseMessage": false,
         "clear": true,
       },
-      "detail": "Configure CMake project for Debug builds"
+      "detail": "Build CMake target and copy to fixed debug location"
     },
     {
-      "label": "build-cmake-debug-run",
+      "label": "build-and-copy-cmake-test",
       "type": "shell",
-      "command": "cmake --build ${workspaceFolder}/build/Debug --config Debug --target ${input:cmakeBuildTarget}",
+      "command": "TEST=\"${input:cmakeTestTargetInput}\" && echo \"Building and preparing test for debug: $TEST\" && mkdir -p ${workspaceFolder}/.vscode && echo \"$TEST\" > ${workspaceFolder}/.vscode/.last_debug_test && cmake -S ${workspaceFolder} -B ${workspaceFolder}/build/Debug -DCMAKE_BUILD_TYPE=Debug -DBUILD_DEBUG=ON && cmake --build ${workspaceFolder}/build/Debug --config Debug --target \"$TEST\" && cp \"${workspaceFolder}/build/Debug/bin/$TEST\" \"${workspaceFolder}/.vscode/debug_test_target\" && echo \"Test $TEST built and copied to debug_test_target. Ready for debugging.\"",
       "group": {
-        "kind": "build",
+        "kind": "test",
         "isDefault": false
       },
       "presentation": {
@@ -37,32 +37,7 @@
         "showReuseMessage": false,
         "clear": true,
       },
-      "detail": "Build CMake Debug target"
-    },
-    {
-      "label": "build-cmake-debug",
-      "type": "shell",
-      "command": "echo \"configure-cmake-debug && build-cmake-debug-run\"",
-      "dependsOrder": "sequence",
-      "dependsOn": [
-        "configure-cmake-debug",
-        "build-cmake-debug-run"
-      ],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "revealProblems": "onProblem",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": false,
-        "clear": true,
-      },
-      "problemMatcher": [],
-      "detail": "Configure and build CMake Debug target"
+      "detail": "Build CMake test and copy to fixed debug location"
     },
     {
       "label": "build",
@@ -169,10 +144,22 @@
   ],
   "inputs": [
     {
-      "id": "cmakeBuildTarget",
-      "type": "promptString",
-      "description": "CMake target to build (use 'all' for the default target)",
-      "default": "all"
+      "id": "cmakeBuildTargetInput",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "bash ${workspaceFolder}/.vscode/find_cmake_targets.sh ${workspaceFolder}",
+        "description": "Please select a CMake target to build"
+      }
+    },
+    {
+      "id": "cmakeTestTargetInput",
+      "type": "command",
+      "command": "shellCommand.execute",
+      "args": {
+        "command": "bash ${workspaceFolder}/.vscode/find_cmake_test_targets.sh ${workspaceFolder}",
+        "description": "Please select a CMake test to build"
+      }
     },
     {
       "id": "bazelBinaryTargetsTask",

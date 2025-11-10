@@ -37,6 +37,8 @@ class QWT3D_EXPORT StandardColor : public Color {
  public:
   //! Initializes with data and set up a ColorVector with a size of 100 z values (default);
   explicit StandardColor(Qwt3D::Plot3D* data, unsigned size = 100);
+  Q_DISABLE_COPY(StandardColor)
+  using Color::operator();
   Qwt3D::RGBA operator()(double x, double y, double z) const;  //!< Receives z-dependend color from ColorVector
   void setColorVector(Qwt3D::ColorVector const& cv);
   void reset(unsigned size = 100);  //!< Resets the standard colors;
@@ -54,7 +56,7 @@ class QWT3D_EXPORT StandardColor : public Color {
 
  protected:
   Qwt3D::ColorVector colors_;
-  Qwt3D::Plot3D* data_;
+  Qwt3D::Plot3D* data_{nullptr};
 };
 
 }  // namespace Qwt3D

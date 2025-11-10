@@ -74,7 +74,10 @@
         "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
         "python.autoComplete.extraPaths": [
           "/opt/venv/deps/python/lib/python3.11/site-packages"
-        ]
+        ],
+        "cmake.configureOnOpen": false,
+        "cmake.configureOnEdit": false,
+        "cmake.automaticReconfigure": false
       },
       "extensions": [
         "openai.chatgpt",

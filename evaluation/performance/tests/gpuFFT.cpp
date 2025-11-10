@@ -18,17 +18,18 @@ struct EntryFFTCPU : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -47,24 +48,25 @@ struct EntryFFTCL : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
 
     cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
     tmp.copyTo(tmp2);  // to RAM
 
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
       cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
       tmp.copyTo(tmp2);  // to RAM
 
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -85,18 +87,19 @@ struct EntryFFTCLNT : public PerformanceTaskDefault {
     cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
 
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
       tmp.copyTo(tmp2);  // to RAM
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -116,22 +119,23 @@ struct EntryFFTCuda : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::cuda::GpuMat in, tmp;
     in.upload(complexI);
     cv::cuda::dft(in, tmp, in.size());
     tmp.download(tmp2);
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       in.upload(complexI);
       cv::cuda::dft(in, tmp, in.size());
       tmp.download(tmp2);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 
@@ -149,19 +153,20 @@ struct EntryFFTCudaNT : public PerformanceTaskDefault {
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
     cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start;
+    uint64 start = 0;
     cv::cuda::GpuMat in, tmp;
     in.upload(complexI);
     cv::cuda::dft(in, tmp, in.size());
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       cv::cuda::dft(in, tmp, in.size());
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 };
 #endif

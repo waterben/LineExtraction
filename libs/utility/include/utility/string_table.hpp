@@ -8,17 +8,18 @@ namespace lsfm {
 
 /// @brief A 2D table of strings with CSV export capabilities
 class StringTable {
-  size_t rows_, cols_;
-  std::vector<std::string> data_;
+  size_t rows_{0};
+  size_t cols_{0};
+  std::vector<std::string> data_{};
 
  public:
   /// @brief Default constructor
-  StringTable() : rows_(0), cols_(0) {}
+  StringTable() = default;
 
   /// @brief Constructor with dimensions
   /// @param rows Number of rows
   /// @param cols Number of columns
-  StringTable(size_t rows, size_t cols = 1) : rows_(rows), cols_(cols) { data_.resize(rows_ * cols_); }
+  StringTable(size_t rows, size_t cols = 1) : rows_(rows), cols_(cols), data_(rows_ * cols_) {}
 
   /// @brief Get number of rows
   /// @return Number of rows
@@ -66,7 +67,9 @@ class StringTable {
   /// @param r Row index
   /// @return Vector of strings in row r
   std::vector<std::string> row(size_t r) const {
-    return std::vector<std::string>(data_.begin() + r * cols_, data_.begin() + r + 1 * cols_);
+    return std::vector<std::string>(
+        data_.begin() + static_cast<std::ptrdiff_t>(r * cols_),
+        data_.begin() + static_cast<std::ptrdiff_t>(r + 1) * static_cast<std::ptrdiff_t>(cols_));
   }
 
   /// @brief Get all elements in a column

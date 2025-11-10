@@ -31,7 +31,10 @@ inline void setPixel(cv::Mat& dst, const lsfm::Vec2i& idx, const Vec3b& color) {
 }
 
 inline void setCircle(cv::Mat& dst, index_type idx, const Vec3b& color, int r) {
-  circle(dst, cv::Point(idx % dst.cols, idx / dst.cols), r, Scalar(color[0], color[1], color[2]));
+  circle(dst,
+         cv::Point(static_cast<int>(idx % static_cast<index_type>(dst.cols)),
+                   static_cast<int>(idx / static_cast<index_type>(dst.cols))),
+         r, Scalar(color[0], color[1], color[2]));
 }
 
 inline void setCircle(cv::Mat& dst, const cv::Point& idx, const Vec3b& color, int r) {
@@ -45,14 +48,14 @@ inline void setCircle(cv::Mat& dst, const lsfm::Vec2i& idx, const Vec3b& color, 
 
 template <class EDGE>
 void showPattern(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
-  typedef typename EDGE::point_type point_type;
   Mat edgeImg;
   cvtColor(src, edgeImg, CV_GRAY2BGR);
-  cv::RNG rng(time(0));
+  cv::RNG rng(static_cast<uint64_t>(time(nullptr)));
 
   for_each(edge.patternSegments().begin(), edge.patternSegments().end(), [&](const EdgeSegment& seg) {
     for (size_t p = seg.begin(); p != seg.end(); ++p) {
-      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                  static_cast<uchar>(20 + rng.uniform(0, 225)));
       for (size_t i = edge.patterns()[p].begin(); i != edge.patterns()[p].end(); ++i)
         setPixel(edgeImg, edge.points()[i], color);
     }
@@ -92,12 +95,12 @@ int main(int argc, char** argv) {
 
   // imshow("img", src);
 
-  float th_low = 0.004, th_high = 0.012;
+  float th_low = 0.004f, th_high = 0.012f;
   DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
   NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms(th_low, th_high);
 
 
-  EsdPattern<int, 8, true> pattern(10, 3, 3, sobel.magnitudeThreshold(th_low), 2);
+  EsdPattern<int, 8, true> pattern(10, 3, 3, static_cast<int>(static_cast<float>(sobel.magnitudeThreshold(th_low))), 2);
 
 
   sobel.process(src);

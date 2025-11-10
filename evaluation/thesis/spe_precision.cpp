@@ -133,7 +133,7 @@ struct GroundTruth {
   static constexpr double scale = 0.01;
   static constexpr int kernel = 201, sigma = 50;
 
-  GroundTruth(const std::string& input = "./spe", bool show_gt = false, bool verbose = false) {
+  GroundTruth(const std::string& input = "./spe", bool show_gt = false, bool verbose = false) : segments(), img() {
     Polygon<FT, PT> poly;
     poly.push_back(PT<FT>(5089, 2023));
     poly.push_back(PT<FT>(29947, 2023));
@@ -220,9 +220,9 @@ struct GroundTruth {
                                 cv::Vec3b(255, 0, 255), cv::Vec3b(0, 255, 255), cv::Vec3b(255, 255, 255),
                                 cv::Vec3b(0, 0, 255)};
     if (err > 1 || l > 5)
-      setPixel(out, cv::Point(getX(p), getY(p)), color[6]);
+      setPixel(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[6]);
     else
-      setPixel(out, cv::Point(getX(p), getY(p)), color[l]);
+      setPixel(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[l]);
   }
 
   cv::Mat drawGT() const {
@@ -248,7 +248,7 @@ struct Data {
   Data& operator=(Data&&) = default;
 
   Data(std::string n, std::vector<PT<FT>>&& p, const GroundTruth<FT, PT>& gt, double rt_nms = 0, double rt_spe = 0)
-      : points(std::move(p)), name(std::move(n)), runtime_nms(rt_nms), runtime_spe(rt_spe) {
+      : points(std::move(p)), error(), runtime_nms(rt_nms), runtime_spe(rt_spe), name(std::move(n)) {
     process(gt);
   }
 
@@ -371,7 +371,7 @@ class Entry {
         const std::string& n,
         int f,
         cv::Mat odir = cv::Mat())
-      : gt(gt_in), name(n), filter(fil), flags(f) {}
+      : gt(gt_in), name(n), filter(fil), optional_dir(odir), flags(f) {}
 
  public:
   using MyData = Data<FT, PT>;
@@ -389,7 +389,8 @@ class Entry {
   void process() { process(gt.img); }
 
   template <class ZC>
-  void processZC(const std::string& name, std::string type, const cv::Mat& l, double th_low, double th_high, ZC& zc) {
+  void processZC(
+      const std::string& method_name, std::string type, const cv::Mat& l, double th_low, double th_high, ZC& zc) {
     if (type.size() && type[0] != ' ') {
       type.insert(0, 1, ' ');
     }
@@ -398,28 +399,28 @@ class Entry {
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
-    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
         spe_linear;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name + " spe lin" + type, l, th_low, th_high, zc, spe_linear);
-    processZC(name + " spe cub" + type, l, th_low, th_high, zc, spe_cubic);
+    processZC(method_name + " spe lin" + type, l, th_low, th_high, zc, spe_linear);
+    processZC(method_name + " spe cub" + type, l, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
-  void processZC(const std::string& name, const cv::Mat& l, double th_low, double th_high, ZC& zc, SPE& spe) {
+  void processZC(const std::string& method_name, const cv::Mat& l, double th_low, double th_high, ZC& zc, SPE& spe) {
     auto rt_nms = performanceNMS(zc, l, th_low, th_high);
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
-    allData.emplace_back(MyData{name, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class ZC>
-  void processZC(const std::string& name,
+  void processZC(const std::string& method_name,
                  std::string type,
                  const cv::Mat& l,
                  const cv::Mat& dir,
@@ -434,14 +435,14 @@ class Entry {
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
-    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    if (name != "zc fast") {
+    if (method_name != "zc fast") {
       rt_nms = performanceNMS(zc, dir, l, th_low, th_high, -CV_PI, CV_PI);
       idxs = zc.hysteresis_edgels();
       pts.clear();
       rt_spe = performanceSPE(pe, idxs, pts, l, zc.directionMap());
-      allData.emplace_back(MyData{name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+      allData.emplace_back(MyData{method_name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
     }
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
@@ -449,12 +450,12 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name, "spe lin", type, l, dir, th_low, th_high, zc, spe_linear);
-    processZC(name, "spe cub", type, l, dir, th_low, th_high, zc, spe_cubic);
+    processZC(method_name, "spe lin", type, l, dir, th_low, th_high, zc, spe_linear);
+    processZC(method_name, "spe cub", type, l, dir, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
-  void processZC(const std::string& name,
+  void processZC(const std::string& method_name,
                  std::string spe_type,
                  std::string type,
                  const cv::Mat& l,
@@ -473,22 +474,22 @@ class Entry {
     IndexVector idxs = zc.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
-    allData.emplace_back(MyData{name + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
 
     pts.clear();
     rt_spe = performanceSPE_DIR(spe, idxs, pts, l, dir);
-    allData.emplace_back(MyData{name + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
 
-    if (name != "zc fast") {
+    if (method_name != "zc fast") {
       rt_nms = performanceNMS(zc, dir, l, th_low, th_high, -CV_PI, CV_PI);
       idxs = zc.hysteresis_edgels();
       pts.clear();
       rt_spe = performanceSPE_DIR(spe, idxs, pts, l, dir);
-      allData.emplace_back(MyData{name + " dir" + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
+      allData.emplace_back(MyData{method_name + " dir" + spe_type + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
 
       pts.clear();
       rt_spe = performanceSPE(spe, idxs, pts, l, zc.directionMap());
-      allData.emplace_back(MyData{name + " dir" + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
+      allData.emplace_back(MyData{method_name + " dir" + spe_type + type, std::move(pts), gt, rt_nms, rt_spe});
     }
   }
 
@@ -518,7 +519,7 @@ class Entry {
   }
 
   template <class ZC>
-  void processZC(const std::string& name,
+  void processZC(const std::string& method_name,
                  std::string type,
                  const cv::Mat& lx,
                  const cv::Mat& ly,
@@ -539,7 +540,7 @@ class Entry {
     auto rt_spe = performanceSPE(pe, idxsx, pts, lx, dir);
     rt_spe += performanceSPE(pe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
-    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
     rt_nms = performanceNMS(zc, dir, lx, th_low, th_high, -CV_PI, CV_PI);
     idxsx = filterDirX(zc.hysteresis_edgels(), dir);
@@ -549,19 +550,19 @@ class Entry {
     rt_spe = performanceSPE(pe, idxsx, pts, lx, dir);
     rt_spe += performanceSPE(pe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
-    allData.emplace_back(MyData{name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " dir spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, LinearInterpolator>>
         spe_linear;
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelZCEstimate, CubicInterpolator>>
         spe_cubic;
 
-    processZC(name, "spe lin dir" + type, lx, ly, dir, th_low, th_high, zc, spe_linear);
-    processZC(name, "spe cub dir" + type, lx, ly, dir, th_low, th_high, zc, spe_cubic);
+    processZC(method_name, "spe lin dir" + type, lx, ly, dir, th_low, th_high, zc, spe_linear);
+    processZC(method_name, "spe cub dir" + type, lx, ly, dir, th_low, th_high, zc, spe_cubic);
   }
 
   template <class ZC, class SPE>
-  void processZC(const std::string& name,
+  void processZC(const std::string& method_name,
                  std::string type,
                  const cv::Mat& lx,
                  const cv::Mat& ly,
@@ -582,7 +583,7 @@ class Entry {
     auto rt_spe = performanceSPE_DIR(spe, idxsx, pts, lx, dir);
     rt_spe += performanceSPE_DIR(spe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
-    allData.emplace_back(MyData{name + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + type, std::move(pts), gt, rt_nms, rt_spe});
 
     rt_nms = performanceNMS(zc, dir, lx, th_low, th_high, -CV_PI, CV_PI);
     idxsx = filterDirX(zc.hysteresis_edgels(), dir);
@@ -593,11 +594,11 @@ class Entry {
     rt_spe += performanceSPE_DIR(spe, idxsy, tmp, ly, dir);
     pts.insert(pts.end(), tmp.begin(), tmp.end());
 
-    allData.emplace_back(MyData{name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class NMS>
-  void processNMS(const std::string& name,
+  void processNMS(const std::string& method_name,
                   std::string type,
                   const cv::Mat& gx,
                   const cv::Mat& gy,
@@ -616,7 +617,7 @@ class Entry {
     IndexVector idxs = nms.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(pe, idxs, pts, mag, nms.directionMap());
-    allData.emplace_back(MyData{name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " spe near" + type, std::move(pts), gt, rt_nms, rt_spe});
 
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>>
@@ -624,9 +625,9 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>>
         spe_cubic_est_lin;
 
-    processNMS(name + " spe lin", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_lin,
+    processNMS(method_name + " spe lin", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_lin,
                force_dir);
-    processNMS(name + " spe cub", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_lin,
+    processNMS(method_name + " spe cub", "est lin" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_lin,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
@@ -634,9 +635,9 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>>
         spe_cubic_est_quad;
 
-    processNMS(name + " spe lin", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_quad,
+    processNMS(method_name + " spe lin", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_quad,
                force_dir);
-    processNMS(name + " spe cub", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_quad,
+    processNMS(method_name + " spe cub", "est quad" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_quad,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>>
@@ -644,9 +645,9 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>>
         spe_cubic_est_cog;
 
-    processNMS(name + " spe lin", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_cog,
+    processNMS(method_name + " spe lin", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_cog,
                force_dir);
-    processNMS(name + " spe cub", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_cog,
+    processNMS(method_name + " spe cub", "est cog" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_cog,
                force_dir);
 
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>>
@@ -654,14 +655,14 @@ class Entry {
     PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>>
         spe_cubic_est_sobel;
 
-    processNMS(name + " spe lin", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_sobel,
+    processNMS(method_name + " spe lin", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_linear_est_sobel,
                force_dir);
-    processNMS(name + " spe cub", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_sobel,
+    processNMS(method_name + " spe cub", "est sob" + type, gx, gy, mag, dir, th_low, th_high, nms, spe_cubic_est_sobel,
                force_dir);
   }
 
   template <class NMS, class SPE>
-  void processNMS(const std::string& name,
+  void processNMS(const std::string& method_name,
                   std::string type,
                   const cv::Mat& gx,
                   const cv::Mat& gy,
@@ -680,11 +681,11 @@ class Entry {
     IndexVector idxs = nms.hysteresis_edgels();
     std::vector<PT<FT>> pts;
     auto rt_spe = performanceSPE(spe, idxs, pts, mag, nms.directionMap());
-    allData.emplace_back(MyData{name + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + type, std::move(pts), gt, rt_nms, rt_spe});
 
     pts.clear();
     rt_spe = performanceSPE_DIR(spe, idxs, pts, mag, dir);
-    allData.emplace_back(MyData{name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
+    allData.emplace_back(MyData{method_name + " dir" + type, std::move(pts), gt, rt_nms, rt_spe});
   }
 
   template <class NMS, class ZC>
@@ -800,13 +801,13 @@ class EntryT : public Entry<FT, PT> {
   double th_low_, th_high_;
 
  public:
-  EntryT(const GroundTruth<FT, PT>& gt,
+  EntryT(const GroundTruth<FT, PT>& ground_truth,
          const cv::Ptr<FilterI<uchar>>& fil,
          const std::string& n,
          int f = 0,
          double th_low = 0.1,
          double th_high = 0.2)
-      : Entry<FT, PT>(gt, fil, n, f), th_low_(th_low), th_high_(th_high) {}
+      : Entry<FT, PT>(ground_truth, fil, n, f), th_low_(th_low), th_high_(th_high) {}
 
   using Entry<FT, PT>::process;
 
@@ -834,12 +835,12 @@ class EntryTreshT : public Entry<FT, PT> {
   double th_{};
 
  public:
-  EntryTreshT(const GroundTruth<FT, PT>& gt,
+  EntryTreshT(const GroundTruth<FT, PT>& ground_truth,
               const cv::Ptr<FilterI<uchar>>& fil,
               const std::string& n,
               int f = 0,
               double th = 0.3)
-      : Entry<FT, PT>(gt, fil, n, f), th_(th) {}
+      : Entry<FT, PT>(ground_truth, fil, n, f), th_(th) {}
 
   using Entry<FT, PT>::process;
   using MyData = typename Entry<FT, PT>::MyData;
@@ -857,7 +858,7 @@ class EntryTreshT : public Entry<FT, PT> {
 
     int runs = global_runs;
     int64 rt{}, tmp{};
-    for (size_t i = 0; i != runs; ++i) {
+    for (int i = 0; i != runs; ++i) {
       tmp = cv::getTickCount();
       cv::Mat mag_th = global_th_mag.process(mag);
       edge_pix = thinImage(mag_th);
@@ -868,7 +869,7 @@ class EntryTreshT : public Entry<FT, PT> {
     std::vector<PT<FT>> edge_pts;
     rt = 0;
     tmp = 0;
-    for (size_t i = 0; i != runs; ++i) {
+    for (int i = 0; i != runs; ++i) {
       tmp = cv::getTickCount();
       edge_pts.clear();
       cv::findNonZero(edge_pix, edge_pts);
@@ -892,7 +893,7 @@ class SpeApp : public EvalApp {
   SpeApp(std::string name = "SpeApp",
          std::string description = "Subpixel precision evaluation tool",
          std::string version = "1.0.0")
-      : EvalApp(std::move(name), std::move(description), std::move(version)) {}
+      : EvalApp(std::move(name), std::move(description), std::move(version)), gt() {}
 
   using ConsoleAppInterface::run;
 

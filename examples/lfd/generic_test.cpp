@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
   // compute mean distance
   MyFloat mean = 0;
   for_each(bfmatches.begin(), bfmatches.end(), [&](const DescriptorMatch<MyFloat>& data) { mean += data.distance; });
-  mean /= bfmatches.size();
+  mean /= static_cast<MyFloat>(bfmatches.size());
 
   // output results
   std::cout << "mean distance: " << mean << std::endl;

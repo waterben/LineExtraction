@@ -13,7 +13,7 @@ using namespace lsfm;
 using namespace cv;
 
 
-int main(int argc, char** argv) {
+int main() {
   double r = 0;
   do {
     Mat_<double> sg1 = SteerGaussianD1<double>(r, 501, 5);

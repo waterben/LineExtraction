@@ -378,10 +378,13 @@ inline bool next(
 
   for (size_t i = 0; i != 8; ++i) {
     x = x_seed + X_OFFSET[i];
-    if ((0 <= x) && (x < image_width)) {
+    if (x >= 0 && static_cast<size_t>(x) < image_width) {
       y = y_seed + Y_OFFSET[i];
-      if ((0 <= y) && (y < image_height)) {
-        if (binary_image[y * image_width + x]) {
+      if (y >= 0 && static_cast<size_t>(y) < image_height) {
+        const size_t xi = static_cast<size_t>(x);
+        const size_t yi = static_cast<size_t>(y);
+        const size_t idx = yi * image_width + xi;
+        if (binary_image[idx]) {
           x_seed = x;
           y_seed = y;
           return true;
@@ -424,7 +427,10 @@ inline void linking_procedure(string_t& string,
     p.x = x - half_width;
     p.y = y - half_height;
 
-    binary_image[y * image_width + x] = 0;
+    const size_t xi = static_cast<size_t>(x);
+    const size_t yi = static_cast<size_t>(y);
+    const size_t idx = yi * image_width + xi;
+    binary_image[idx] = 0;
   } while (next(x, y, binary_image, image_width, image_height));
 
   pixel_t temp;
@@ -447,7 +453,10 @@ inline void linking_procedure(string_t& string,
       p.x = x - half_width;
       p.y = y - half_height;
 
-      binary_image[y * image_width + x] = 0;
+      const size_t xi = static_cast<size_t>(x);
+      const size_t yi = static_cast<size_t>(y);
+      const size_t idx = yi * image_width + xi;
+      binary_image[idx] = 0;
     } while (next(x, y, binary_image, image_width, image_height));
   }
 }
@@ -458,14 +467,15 @@ void find_strings(strings_list_t& strings,
                   const size_t image_width,
                   const size_t image_height,
                   const size_t min_size) {
-  const double half_width = 0.5 * image_width;
-  const double half_height = 0.5 * image_height;
+  const double half_width = 0.5 * static_cast<double>(image_width);
+  const double half_height = 0.5 * static_cast<double>(image_height);
 
   strings.clear();
 
   for (size_t y = 1, y_end = image_height - 1; y != y_end; ++y) {
     for (size_t x = 1, x_end = image_width - 1; x != x_end; ++x) {
-      if (binary_image[y * image_width + x]) {
+      const size_t idx = y * image_width + x;
+      if (binary_image[idx]) {
         string_t& string = strings.push_back();
 
         linking_procedure(string, binary_image, image_width, image_height, static_cast<int>(x), static_cast<int>(y),
@@ -581,6 +591,8 @@ inline void vote(accumulator_t& accumulator,
   int** bins = accumulator.bins();
 
   const size_t rho_size = accumulator.width(), theta_size = accumulator.height();
+  const int rho_size_int = static_cast<int>(rho_size);
+  const int theta_size_int = static_cast<int>(theta_size);
   const double delta = accumulator.delta();
   const double inc_rho = delta * inc_rho_index, inc_theta = delta * inc_theta_index;
 
@@ -592,29 +604,31 @@ inline void vote(accumulator_t& accumulator,
   bool theta_voted;
   double rho, theta;
   int votes, theta_not_voted = 0;
-  size_t rho_index, theta_index, theta_count = 0;
+  int rho_index, theta_index, theta_count = 0;
+  int rho_start_idx = static_cast<int>(rho_start_index);
+  int theta_start_idx = static_cast<int>(theta_start_index);
 
   // Loop for the theta coordinates of the parameter space.
-  theta_index = theta_start_index;
+  theta_index = theta_start_idx;
   theta = theta_start;
   do {
     // Test if the kernel exceeds the parameter space limits.
-    if ((theta_index == 0) || (theta_index == (theta_size + 1))) {
-      rho_start_index = rho_size - rho_start_index + 1;
-      theta_index = (theta_index == 0) ? theta_size : 1;
+    if ((theta_index == 0) || (theta_index == (theta_size_int + 1))) {
+      rho_start_idx = rho_size_int - rho_start_idx + 1;
+      theta_index = (theta_index == 0) ? theta_size_int : 1;
       inc_rho_index = -inc_rho_index;
     }
 
     // Loop for the rho coordinates of the parameter space.
     theta_voted = false;
 
-    rho_index = rho_start_index;
+    rho_index = rho_start_idx;
     rho = rho_start;
     while (
         ((votes = static_cast<int>(
               (gauss(rho, theta, sigma2_rho, sigma2_theta, sigma_rho_sigma_theta, two_r, a, b) * scale) + 0.5)) > 0) &&
-        (rho_index >= 1) && (rho_index <= rho_size)) {
-      bins[theta_index][rho_index] += votes;
+        (rho_index >= 1) && (rho_index <= rho_size_int)) {
+      bins[static_cast<size_t>(theta_index)][static_cast<size_t>(rho_index)] += votes;
       theta_voted = true;
 
       rho_index += inc_rho_index;
@@ -628,7 +642,7 @@ inline void vote(accumulator_t& accumulator,
     theta_index += inc_theta_index;
     theta += inc_theta;
     theta_count++;
-  } while ((theta_not_voted != 2) && (theta_count < theta_size));
+  } while ((theta_not_voted != 2) && (theta_count < theta_size_int));
 }
 
 // Performs the proposed Hough transform voting scheme.
@@ -670,8 +684,8 @@ void voting(accumulator_t& accumulator,
       mean.x += cluster.pixels[i].x;
       mean.y += cluster.pixels[i].y;
     }
-    mean.x /= cluster.size;
-    mean.y /= cluster.size;
+    mean.x /= static_cast<double>(cluster.size);
+    mean.y /= static_cast<double>(cluster.size);
 
     Sxx = Syy = Sxy = 0.0;
     for (size_t i = 0; i != cluster.size; ++i) {
@@ -717,7 +731,7 @@ void voting(accumulator_t& accumulator,
       aux += (x * x);
     }
 
-    matrix_t lambda = {1.0 / aux, 0.0, 0.0, 1.0 / cluster.size};
+    matrix_t lambda = {1.0 / aux, 0.0, 0.0, 1.0 / static_cast<double>(cluster.size)};
 
     // Uncertainty from sigma^2_m' and sigma^2_b' to sigma^2_rho,  sigma^2_theta and sigma_rho_theta.
     solve(kernel.lambda, nabla, lambda);
@@ -839,7 +853,13 @@ class visited_map_t {
   inline void set_visited(const size_t rho_index, size_t theta_index) { m_map[theta_index][rho_index] = true; }
 
   // Class constructor.
-  visited_map_t() : m_map(0), m_rho_capacity(0), m_theta_capacity(0) {}
+  visited_map_t() : m_map(nullptr), m_rho_capacity(0), m_theta_capacity(0) {}
+
+  visited_map_t(const visited_map_t&) = delete;
+  visited_map_t& operator=(const visited_map_t&) = delete;
+  visited_map_t(visited_map_t&&) = delete;
+  visited_map_t& operator=(visited_map_t&&) =
+      delete;  // If sharing is needed later, migrate to std::vector to manage lifetime safely.
 
   // Class destructor()
   ~visited_map_t() { free(m_map); }
@@ -853,9 +873,7 @@ class visited_map_t {
   }
 };
 
-inline int compare_bins(const bin_t* bin1, const bin_t* bin2) {
-  return (bin1->votes < bin2->votes) ? 1 : ((bin1->votes > bin2->votes) ? -1 : 0);
-}
+inline bool compare_bins(const bin_t& bin1, const bin_t& bin2) { return bin1.votes > bin2.votes; }
 
 // Computes the convolution of the given cell with a (discrete) 3x3 Gaussian kernel.
 inline int convolution(const int** bins, const int rho_index, const int theta_index) {
@@ -909,7 +927,8 @@ void peak_detection(lines_list_t& lines, const accumulator_t& accumulator) {
   }
 
   // Sort the list in descending order according to the result of the convolution.
-  std::qsort(used_bins.items(), used_bins_count, sizeof(bin_t), (int (*)(const void*, const void*))compare_bins);
+  bin_t* const used_bins_begin = used_bins.items();
+  std::sort(used_bins_begin, used_bins_begin + static_cast<std::ptrdiff_t>(used_bins_count), compare_bins);
 
   // Use a sweep plane that visits each cell of the list.
   static visited_map_t visited;

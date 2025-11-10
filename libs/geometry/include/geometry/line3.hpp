@@ -62,6 +62,7 @@ class Line3 {
 
  public:
   typedef FT float_type;
+  virtual ~Line3() = default;
 
   Line3() : p_(FT(0), FT(0), FT(0)), v_(FT(0), FT(0), FT(0)) {}
 

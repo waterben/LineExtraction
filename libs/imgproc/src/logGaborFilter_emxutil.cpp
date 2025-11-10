@@ -1,3 +1,11 @@
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wold-style-cast"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
 //
 // Academic License - for use in teaching, academic research, and meeting
 // course requirements at degree granting institutions only.  Not for
@@ -14,6 +22,8 @@
 #include "logGaborFilter.h"
 #include "phasecong.h"
 #include "rt_nonfinite.h"
+
+#include <cstddef>
 
 // Function Definitions
 
@@ -116,7 +126,8 @@ void emxInit_creal_T(emxArray_creal_T** pEmxArray, int numDimensions) {
   emxArray = *pEmxArray;
   emxArray->data = (creal_T*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int*)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -136,7 +147,8 @@ void emxInit_int32_T(emxArray_int32_T** pEmxArray, int numDimensions) {
   emxArray = *pEmxArray;
   emxArray->data = (int*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int*)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -156,7 +168,8 @@ void emxInit_real_T(emxArray_real_T** pEmxArray, int numDimensions) {
   emxArray = *pEmxArray;
   emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int*)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -176,7 +189,8 @@ void emxInit_real_T1(emxArray_real_T** pEmxArray, int numDimensions) {
   emxArray = *pEmxArray;
   emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int*)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -196,7 +210,8 @@ void emxInit_real_T2(emxArray_real_T** pEmxArray, int numDimensions) {
   emxArray = *pEmxArray;
   emxArray->data = (double*)NULL;
   emxArray->numDimensions = numDimensions;
-  emxArray->size = (int*)malloc((unsigned int)(sizeof(int) * numDimensions));
+  const size_t dims = numDimensions > 0 ? static_cast<size_t>(numDimensions) : 0U;
+  emxArray->size = (int*)malloc(sizeof(int) * dims);
   emxArray->allocatedSize = 0;
   emxArray->canFreeData = true;
   for (i = 0; i < numDimensions; i++) {
@@ -209,3 +224,9 @@ void emxInit_real_T2(emxArray_real_T** pEmxArray, int numDimensions) {
 //
 // [EOF]
 //
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif

@@ -10,19 +10,30 @@ class ProfileAnalyzer;
 
 class ProfileAnalyzer : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(ProfileAnalyzer)
 
-  PlotWindow* plot;
-  const ImageSources* sources;
-  ControlWindow* cw;
-  lsfm::LineSegment2d line;
+  PlotWindow* plot{nullptr};
+  const ImageSources* sources{nullptr};
+  ControlWindow* cw{nullptr};
+  lsfm::LineSegment2d line{};
 
-  QVector<double> X, profile, std_dev, single_profile;
-  double linePos, p_min, p_max, sp_min, sp_max;
-  QCPGraph *profile_plot, *sprofile_plot, *std_dev_upper, *std_dev_lower;
-  QCPItemLine* pa_indicator;
+  QVector<double> X{};
+  QVector<double> profile{};
+  QVector<double> std_dev{};
+  QVector<double> single_profile{};
+  double linePos{0.0};
+  double p_min{0.0};
+  double p_max{0.0};
+  double sp_min{0.0};
+  double sp_max{0.0};
+  QCPGraph* profile_plot{nullptr};
+  QCPGraph* sprofile_plot{nullptr};
+  QCPGraph* std_dev_upper{nullptr};
+  QCPGraph* std_dev_lower{nullptr};
+  QCPItemLine* pa_indicator{nullptr};
 
  public:
-  explicit ProfileAnalyzer(QWidget* parent = 0);
+  explicit ProfileAnalyzer(QWidget* parent = nullptr);
   ~ProfileAnalyzer();
   void connectTools(ControlWindow* w);
 
@@ -41,7 +52,7 @@ class ProfileAnalyzer : public LATool {
 
 
  private:
-  Ui::ProfileAnalyzer* ui;
+  Ui::ProfileAnalyzer* ui{nullptr};
 
   void createX();
   void createProfile();

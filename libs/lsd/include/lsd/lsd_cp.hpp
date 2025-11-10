@@ -69,8 +69,8 @@ template <class FT,
           class GRAD = DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude>,
           class FIT = FitLine<EigenFit<FT, PT>>>
 class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
-  int flags_, min_pix_, max_gap_, pat_tol_;
-  FT err_dist_;
+  int flags_{}, min_pix_{}, max_gap_{}, pat_tol_{};
+  FT err_dist_{};
 
   void init() {
     this->add("edge_min_pixels", std::bind(&LsdCP<FT, LPT, PT, GRAD, FIT>::valueMinPixel, this, std::placeholders::_1),
@@ -124,11 +124,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     PatternPrimitive(ushort s = 0, char d = -1, char dn = -1) : size(s), dir(d), dir_next(dn) {}
 
     // primitive size
-    ushort size;
+    ushort size{};
     // primitive direction
-    char dir;
+    char dir{};
     // direction change to next primitive
-    char dir_next;
+    char dir_next{};
 
     //! match PatternPrimitive by tolerance
     inline bool match(const PatternPrimitive& rhs, int tol) const {
@@ -145,26 +145,26 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     //! convert direction d to x,y steps
     static const short* dir_step(char d) {
       static short steps[9][2] = {{0, 0}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
-      return steps[d];
+      return steps[static_cast<int>(d)];
     }
 
     //! convert direction difference to cyclic difference (e.g. 0 - 7 is not -7 but same as 0 - -1 = 1)
-    static const char dir_diff(char diff) {
+    static char dir_diff(char diff) {
       static char diffmap[] = {1, 2, 3, -4, -3, -2, -1, 0, 1, 2, 3, 4, -3, -2, -1};
-      return diffmap[diff + 7];
+      return diffmap[static_cast<int>(diff) + 7];
     }
 
     //! convert direction difference to cyclic difference
-    static const char dir_diff(char a, char b) { return dir_diff(a - b); }
+    static char dir_diff(char a, char b) { return dir_diff(static_cast<char>(a - b)); }
 
     //! convert direction difference to cyclic absolute difference
-    static const char dir_abs_diff(char diff) {
+    static char dir_abs_diff(char diff) {
       static char diffmap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
-      return diffmap[diff + 7];
+      return diffmap[static_cast<int>(diff) + 7];
     }
 
     //! convert direction difference to cyclic absolute difference
-    static const char dir_abs_diff(char a, char b) { return dir_abs_diff(a - b); }
+    static char dir_abs_diff(char a, char b) { return dir_abs_diff(static_cast<char>(a - b)); }
   };
 
   struct Pattern {
@@ -176,13 +176,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     Pattern(size_t b, ushort s, uchar f, const PatternPrimitive& pp) : beg(b), primitive(pp), size(s), flags(f) {}
 
     // start position in point list
-    size_t beg;
+    size_t beg{};
     // pattern primitive data
-    PatternPrimitive primitive;
+    PatternPrimitive primitive{};
     // number of points
-    ushort size;
+    ushort size{};
     // pattern control flags
-    uchar flags;
+    uchar flags{};
 
     inline size_t begpos() const { return beg; }
 
@@ -207,9 +207,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         : points_(po), patterns_(pa), pat_beg(b), pat_size(s) {}
 
     // start position in pattern list
-    size_t pat_beg;
+    size_t pat_beg{};
     // number of patterns
-    unsigned int pat_size;
+    unsigned int pat_size{};
 
     inline size_t pattern_begpos() const { return pat_beg; }
 
@@ -245,9 +245,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     inline size_t endpos() const { return pattern_back().endpos(); }
 
-    inline typename PointVector::const_iterator begin() const { return points_->cbegin() + begpos(); }
+    inline typename PointVector::const_iterator begin() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(begpos());
+    }
 
-    inline typename PointVector::const_iterator end() const { return points_->cbegin() + endpos(); }
+    inline typename PointVector::const_iterator end() const {
+      return points_->cbegin() + static_cast<std::ptrdiff_t>(endpos());
+    }
 
     inline typename PointVector::const_reverse_iterator rbegin() const {
       return PointVector::const_reverse_iterator(end());
@@ -300,8 +304,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         flags_(flags),
         min_pix_(min_pix),
         max_gap_(max_gap),
-        err_dist_(err_dist),
-        pat_tol_(pat_tol) {
+        pat_tol_(pat_tol),
+        err_dist_(err_dist) {
     CV_Assert(pat_tol >= 0 && max_gap >= 0 && min_pix > 1 && th_high <= 1 && th_high > 0 && th_low <= 1 && th_low > 0 &&
               th_high >= th_low && err_dist > 0);
     init();
@@ -435,9 +439,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
  private:
   // list of all patterns in segments
-  PatternVector patterns_;
+  PatternVector patterns_{};
   // line data vector
-  LineDataVector lineData_;
+  LineDataVector lineData_{};
 
   // LsdCP& operator= (const LsdCP&); // to quiet MSVC
 
@@ -445,18 +449,18 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   struct SearchState {
     SearchState(int i = 0, int xp = 0, int yp = 0, char d = -1) : idx(i), x(xp), y(yp), dir(d) {}
 
-    int idx, x, y;
-    char dir;
+    int idx{}, x{}, y{};
+    char dir{};
   };
 
   struct SegmentState {
     SegmentState(int i = 0, size_t p = 0, uchar r = 0, const SearchState& s = SearchState())
         : id(i), pos(p), rstate(r), sstate(s) {}
 
-    int id;
-    size_t pos;
-    uchar rstate;
-    SearchState sstate;
+    int id{};
+    size_t pos{};
+    uchar rstate{};
+    SearchState sstate{};
   };
 
   void computePatterns() {
@@ -467,11 +471,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     lsmap_.row(rows_ - 1).setTo(-1);
     lsmap_.col(cols_ - 1).setTo(-1);
 
-    size_t size = static_cast<size_t>(seeds_.size() * th_high_ / th_low_);
+    size_t size = static_cast<size_t>(static_cast<FT>(seeds_.size()) * th_high_ / th_low_);
     points_.clear();
     points_.reserve(size);
     patterns_.clear();
-    patterns_.reserve(size / (2 * pat_tol_));
+    patterns_.reserve(size / static_cast<size_t>(2 * pat_tol_));
 
     short dmapStore[28][4] = {{-1, -1, 0, 0},
                               {static_cast<short>(-1 - cols_), -1, -1, 1},
@@ -518,14 +522,15 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     // check for pixel in ndir direction
     auto find_pixel = [&](SearchState& fs, char edir, char ndir) {
-      int idx2 = fs.idx + pdmap[ndir][0];
+      const int dirIndex = static_cast<int>(ndir);
+      int idx2 = fs.idx + pdmap[dirIndex][0];
       char edir2 = pemap[idx2];
       // pixel is already used
-      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[edir - edir2] > 1) return false;
+      if (edir2 < 0 || plsmap[idx2] || abs_diffmap[static_cast<int>(edir - edir2)] > 1) return false;
       fs.idx = idx2;
-      fs.x += pdmap[ndir][1];
-      fs.y += pdmap[ndir][2];
-      fs.dir = static_cast<char>(dmap[ndir][3]);
+      fs.x += pdmap[dirIndex][1];
+      fs.y += pdmap[dirIndex][2];
+      fs.dir = static_cast<char>(dmap[dirIndex][3]);
       return true;
     };
 
@@ -535,8 +540,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       if (find_pixel(fs, edir, edir - 1)) return true;
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -576,8 +581,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
             return true;
           }
           // got pixels on both sides -> try to decide by difference to main dir or greater gradient magnitude
-          if (abs_diffmap[edir - tmp3.dir] > abs_diffmap[edir - tmp4.dir] ||
-              (abs_diffmap[edir - tmp3.dir] == abs_diffmap[edir - tmp4.dir] && pmag[tmp2.idx] > pmag[tmp1.idx])) {
+          if (abs_diffmap[static_cast<int>(edir - tmp3.dir)] > abs_diffmap[static_cast<int>(edir - tmp4.dir)] ||
+              (abs_diffmap[static_cast<int>(edir - tmp3.dir)] == abs_diffmap[static_cast<int>(edir - tmp4.dir)] &&
+               pmag[tmp2.idx] > pmag[tmp1.idx])) {
             fs = tmp2;
             return true;
           }
@@ -591,8 +597,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       // if still no pixel was found, check if last direction was != edge map dir
       // and search again
-      char diff = diffmap[fs.dir - edir];
-      if (std::abs(diff) == 1 && find_pixel(fs, edir, edir + (2 * diff))) return true;
+      char diff = diffmap[static_cast<int>(fs.dir - edir)];
+      if (std::abs(diff) == 1 && find_pixel(fs, edir, static_cast<char>(edir + (2 * diff)))) return true;
 
       return false;
     };
@@ -611,7 +617,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     // check for thick lines and remove pixels
     auto check_dir = [&](const SearchState& ls, char ndir) -> void {
-      int idx2 = ls.idx + pdmap[ndir][0];
+      int idx2 = ls.idx + pdmap[static_cast<int>(ndir)][0];
       if (pemap[idx2] < 0 || plsmap[idx2]) return;
       plsmap[idx2] = -2;
     };
@@ -635,7 +641,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     };
 
     auto move_idx = [&pemap, &pdmap](int& idx, char ndir) {
-      idx += pdmap[ndir][0];
+      idx += pdmap[static_cast<int>(ndir)][0];
       return pemap[idx];
     };
 
@@ -672,7 +678,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         ldir = move_idx(idxl, edir);
         if (ldir == -2) return false;
         if (ldir > -1) {
-          if (abs_diffmap[edir - ldir] < 2) {
+          if (abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
             idx = idxl;
             goto done;
           }
@@ -691,13 +697,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       for (int i = 0; i != max_gap_; ++i) {
         ldir = move_idx(idxl, edir);
-        if (ldir > -1 && abs_diffmap[edir - ldir] < 2) {
+        if (ldir > -1 && abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
           idx = idxl;
           goto done;
         }
 
         rdir = move_idx(idxr, edir);
-        if (rdir > -1 && abs_diffmap[edir - rdir] < 2) {
+        if (rdir > -1 && abs_diffmap[static_cast<int>(edir - rdir)] < 2) {
           idx = idxr;
           goto done;
         }
@@ -709,13 +715,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       for (int i = 0; i != max_gap_; ++i) {
         ldir = move_idx(idxl2, edir);
-        if (ldir > -1 && abs_diffmap[edir - ldir] < 2) {
+        if (ldir > -1 && abs_diffmap[static_cast<int>(edir - ldir)] < 2) {
           idx = idxl2;
           goto done;
         }
 
         rdir = move_idx(idxr2, edir);
-        if (rdir > -1 && abs_diffmap[edir - rdir] < 2) {
+        if (rdir > -1 && abs_diffmap[static_cast<int>(edir - rdir)] < 2) {
           idx = idxr2;
           goto done;
         }
@@ -736,7 +742,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       //     return false;
       SearchState tmp = s;
       return (!find_next_no_check(tmp) ||
-              (abs_diffmap[edir - pemap[tmp.idx]] < 2 && std::abs(lmag - pmag[tmp.idx]) < 500));
+              (abs_diffmap[static_cast<int>(edir - pemap[tmp.idx])] < 2 && std::abs(lmag - pmag[tmp.idx]) < 500));
     };
 
     // search connected components in one direction
@@ -779,7 +785,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           p.primitive.dir_next = seg.sstate.dir;
 
           // if direction change is to big, stop pattern
-          if (abs_diffmap[ls_dir - seg.sstate.dir] > 1) {
+          if (abs_diffmap[static_cast<int>(ls_dir - seg.sstate.dir)] > 1) {
             checkEnd(0);
           }
           // if no last pattern exist, just store current pattern as last and continue
@@ -809,10 +815,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
               Pattern& blp = patterns_.back();
               if (!blp.terminate() && lp.primitive.dir == blp.primitive.dir) {
                 unsigned int s = blp.primitive.size + p.primitive.size;
-                if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
+                if (lp.size <= s + static_cast<unsigned int>(2 * pat_tol_) &&
+                    lp.size >= s - static_cast<unsigned int>(2 * pat_tol_)) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
-                  blp.size += blpadd;
+                  blp.size += static_cast<ushort>(blpadd);
                   p.beg = blp.endpos();
                   goto update_lp;
                 }
@@ -893,16 +900,16 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         if (p.primitive.size > 1 && ls_dir != seg.sstate.dir) {
           // get new direction
           p.primitive.dir_next = seg.sstate.dir;
-          int diff_s = abs_diffmap[ls_dir - seg.sstate.dir];
+          int diff_s = abs_diffmap[static_cast<int>(ls_dir - seg.sstate.dir)];
 
           // check corner rule
           if (next) {
-            int diff_fs = abs_diffmap[ls_dir - fs.dir];
+            int diff_fs = abs_diffmap[static_cast<int>(ls_dir - fs.dir)];
             //                           |        |
             //                           |       /     |
             // check for hard corners  _/   or _|  or _|
             if (find_next(fs2 = fs)) {
-              int diff_fs2 = abs_diffmap[ls_dir - fs2.dir];
+              int diff_fs2 = abs_diffmap[static_cast<int>(ls_dir - fs2.dir)];
               if (diff_fs > 1) {
                 if (diff_s == 2) {
                   checkEnd(CP_PATTERN_TERMINATE);
@@ -968,10 +975,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
               Pattern& blp = patterns_.back();
               if (!blp.terminate() && lp.primitive.dir == blp.primitive.dir) {
                 unsigned int s = blp.primitive.size + p.primitive.size;
-                if (lp.size <= s + 2 * pat_tol_ && lp.size >= s - 2 * pat_tol_) {
+                if (lp.size <= s + static_cast<unsigned int>(2 * pat_tol_) &&
+                    lp.size >= s - static_cast<unsigned int>(2 * pat_tol_)) {
                   unsigned int blpadd =
                       static_cast<unsigned int>(round(static_cast<double>(lp.size * blp.primitive.size) / s));
-                  blp.size += blpadd;
+                  blp.size += static_cast<ushort>(blpadd);
                   p.beg = blp.endpos();
                   goto update_lp;
                 }
@@ -1021,7 +1029,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
                                size_t po_size, uchar flag) {
       size_t po_beg = beg->beg;
       size_t po_end = po_beg + po_size;
-      std::reverse(this->points_.begin() + po_beg, this->points_.begin() + po_end);
+      std::reverse(this->points_.begin() + static_cast<std::ptrdiff_t>(po_beg),
+                   this->points_.begin() + static_cast<std::ptrdiff_t>(po_end));
       while (beg < end) {
         --end;
         Pattern tmp = *beg;
@@ -1057,6 +1066,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           // just switch fw with rv
           fwdmap = rvdmap;
           rvdmap = dmap;
+          [[fallthrough]];
         case 3:  // <---x---> : rv: <---, fw: --->
         case 4: {
           SearchState fs = seg.sstate, s = seg.sstate;
@@ -1094,7 +1104,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
           if (this->points_.back() == PT(fs.x, fs.y)) {
             seg.rstate = dmap != fwdmap;
           } else {
-            pattern_reverse(patterns_.begin() + ppos1, patterns_.begin() + patterns_.size(),
+            pattern_reverse(patterns_.begin() + static_cast<std::ptrdiff_t>(ppos1),
+                            patterns_.begin() + static_cast<std::ptrdiff_t>(patterns_.size()),
                             this->points_.size() - seg.pos, static_cast<uchar>(fwdmap == dmap));
 
             // get current pattern
@@ -1167,10 +1178,10 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         FT err = err_dist_ * l2_norm<FT>(n);
 
         PT a = mid - start, a2 = mid2 - start;
-        if (std::abs(getX(n) * getX(a) + getY(n) * getY(a)) > err ||
-            std::abs(getX(n) * getX(a2) + getY(n) * getY(a2)) > err) {
+        if (std::abs(static_cast<FT>(getX(n) * getX(a) + getY(n) * getY(a))) > err ||
+            std::abs(static_cast<FT>(getX(n) * getX(a2) + getY(n) * getY(a2))) > err) {
           ld.pat_size = static_cast<unsigned int>(idx - ld.pat_beg);
-          if (ld.size() >= min_pix_) {
+          if (ld.size() >= static_cast<size_t>(min_pix_)) {
             lineData_.push_back(ld);
           }
           ld.pat_beg = idx;
@@ -1181,7 +1192,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       if (p.terminate()) {
         ld.pat_size = static_cast<unsigned int>(idx - ld.pat_beg);
-        if (ld.size() >= min_pix_) {
+        if (ld.size() >= static_cast<size_t>(min_pix_)) {
           lineData_.push_back(ld);
         }
         lterm = true;
@@ -1204,7 +1215,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       if (beg >= end) return;
 
       if (end - beg == 1) {
-        if (beg->size >= this->min_pix_)
+        if (static_cast<int>(beg->size) >= this->min_pix_)
           lineData_.push_back(LineData(static_cast<size_t>(beg - pbeg), 1, &this->points_, &this->patterns_));
         return;
       }
@@ -1263,14 +1274,14 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
       ++end;
 
-      if (max_h > err_dist_ * l2_norm<FT>(n)) {
+      if (static_cast<FT>(max_h) > err_dist_ * l2_norm<FT>(n)) {
         PatternIter max_end = p_idx;
 
         // corner check
         if (max_count != 0) {
           PatternIter e2 = p_idx + max_count;
-          if (abs_diffmap[(e2 - 1)->primitive.dir - e2->primitive.dir] >
-              abs_diffmap[(p_idx - 1)->primitive.dir - p_idx->primitive.dir])
+          if (abs_diffmap[static_cast<int>((e2 - 1)->primitive.dir - e2->primitive.dir)] >
+              abs_diffmap[static_cast<int>((p_idx - 1)->primitive.dir - p_idx->primitive.dir)])
             max_end = e2;
         }
         search(fbeg, max_end);
@@ -1290,11 +1301,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   }
 
   void computeLines() {
-    lineSegments_.reserve(lineData_.size());
+    lineSegments_.reserve(static_cast<size_t>(lineData_.size()));
     typedef typename PointVector::const_iterator const_iter;
 
     for_each(lineData_.begin(), lineData_.end(), [&](LineData& ldata) {
-      if (ldata.size() < min_pix_) return;
+      if (ldata.size() < static_cast<size_t>(min_pix_)) return;
       const_iter beg = ldata.begin(), end = ldata.end();
 
       const PT& first = ldata.reverse() ? *beg : *(end - 1);

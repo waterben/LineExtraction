@@ -36,14 +36,14 @@ int main(int argc, char** argv) {
   typedef float FT;
 
 
-  LsdEL<FT> lsd(0.004, 0.012, 30, 3, 5, 4, 0 /*EL_USE_NFA*/);
+  LsdEL<FT> lsd(0.004f, 0.012f, 30, 3, 5, 4, 0 /*EL_USE_NFA*/);
 
   lsd.detect(src);
   LsdEL<FT>::LineSegmentVector lines = lsd.lineSegments();
 
   // init as same line (e.g. diagonal of mat)
   struct Dists {
-    Dists() {}
+    Dists() : id(0), nd(0) {}
     Dists(FT i, FT n = 0) : id(i), nd(n) {}
 
     FT id, nd;  // intersection distance and normal distance
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     ;
     ii.nd = 0;
   }
-  double time = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency() / 100;
+  double time = static_cast<double>(cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency() / 100;
   std::cout << "line: " << lines.size() << ", time: " << time << "ms" << std::endl;
 
   imshow("lines", drawLinesR(src, lines, false, 1, 8, 5, 3));

@@ -10,9 +10,7 @@ namespace Qwt3D {
 
 class GLStateBewarer {
  public:
-  GLStateBewarer(GLenum what, bool on, bool persist = false) {
-    state_ = what;
-    stateval_ = glIsEnabled(what);
+  GLStateBewarer(GLenum what, bool on, bool persist = false) : state_(what), stateval_(glIsEnabled(what)) {
     if (on)
       turnOn(persist);
     else
@@ -44,7 +42,7 @@ class GLStateBewarer {
 
 inline const GLubyte* gl_error() {
   GLenum errcode;
-  const GLubyte* err = 0;
+  const GLubyte* err = nullptr;
 
   if ((errcode = glGetError()) != GL_NO_ERROR) {
     err = gluErrorString(errcode);

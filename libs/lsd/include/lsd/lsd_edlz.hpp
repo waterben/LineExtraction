@@ -50,10 +50,12 @@ namespace lsfm {
 
 template <class FT, template <class> class LPT = Vec2>
 class LsdEDLZ : public LsdBase<FT, LPT> {
-  EDLineDetector* edl;
-  typename LsdBase<FT, LPT>::ImageData imageData_;
+  EDLineDetector* edl{nullptr};
+  typename LsdBase<FT, LPT>::ImageData imageData_{};
 
-  // LsdEDLZ& operator= (const LsdEDLZ&); // to quiet MSVC
+  // Deleted copy operations due to pointer member
+  LsdEDLZ(const LsdEDLZ&) = delete;
+  LsdEDLZ& operator=(const LsdEDLZ&) = delete;
   void init() {
     edl = new EDLineDetector;
 

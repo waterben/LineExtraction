@@ -56,15 +56,15 @@ int main(int argc, char** argv) {
   Pyramid<float> imgGrad(src.size(), -3);
   Pyramid<char> imgNMS(src.size(), -3);
   int64 start = cv::getTickCount();
-  double t;
-  for (int i = 0; i != imgP.size(); ++i) {
-    sobel.process(imgP[i]);
-    imgGrad[i] = sobel.magnitude();
+  double t{};
+  for (std::size_t i = 0; i != imgP.size(); ++i) {
+    sobel.process(imgP[static_cast<int>(i)]);
+    imgGrad[static_cast<int>(i)] = sobel.magnitude();
     nms.process(sobel);
-    imgNMS[i] = nms.hysteresis();
-    if (i == 0) t = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
+    imgNMS[static_cast<int>(i)] = nms.hysteresis();
+    if (i == 0) t = static_cast<double>(cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
   }
-  double time = (cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
+  double time = static_cast<double>(cv::getTickCount() - start) * 1000.0 / cv::getTickFrequency();
   std::cout << "time image: " << t << "ms, time pyramid: " << time << "ms" << std::endl;
   showPyramid("img", imgP);
   showPyramid("grad", imgGrad);

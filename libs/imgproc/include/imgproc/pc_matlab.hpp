@@ -94,7 +94,21 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
         cutOff_(cutOff),
         g_(g),
         deviationGain_(deviationGain),
-        noiseMethod_(noiseMethod) {
+        noiseMethod_(noiseMethod),
+        e_(),
+        ox_(),
+        oy_(),
+        pc_(),
+        energy_(),
+        odd_(),
+        dir_(),
+        phase_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_() {
     init();
   }
 
@@ -107,7 +121,21 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
         cutOff_(0.5),
         g_(10),
         deviationGain_(1.5),
-        noiseMethod_(-1) {
+        noiseMethod_(-1),
+        e_(),
+        ox_(),
+        oy_(),
+        pc_(),
+        energy_(),
+        odd_(),
+        dir_(),
+        phase_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_() {
     init();
     value(options);
   }
@@ -121,7 +149,21 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
         cutOff_(0.5),
         g_(10),
         deviationGain_(1.5),
-        noiseMethod_(-1) {
+        noiseMethod_(-1),
+        e_(),
+        ox_(),
+        oy_(),
+        pc_(),
+        energy_(),
+        odd_(),
+        dir_(),
+        phase_(),
+        dir_done_(false),
+        phase_done_(false),
+        odd_done_(false),
+        energyRange_(),
+        oddRange_(),
+        evenRange_() {
     init();
     value(options);
   }

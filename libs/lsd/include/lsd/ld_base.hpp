@@ -52,8 +52,8 @@ struct DataDescriptorEntry {
   DataDescriptorEntry(const std::string& n = std::string(), const std::string d = std::string())
       : name(n), description(d) {}
 
-  std::string name;
-  std::string description;
+  std::string name{};
+  std::string description{};
 };
 
 typedef std::vector<DataDescriptorEntry> DataDescriptor;
@@ -116,13 +116,13 @@ class LdBase : public ValueManager {
     const DataDescriptor& data = imageDataDescriptor();
     typename DataDescriptor::const_iterator f =
         find_if(data.begin(), data.end(), [&name](const DataDescriptorEntry& e) { return (e.name == name); });
-    return f != data.end() ? imageData()[f - data.begin()] : cv::Mat();
+    return f != data.end() ? imageData()[static_cast<size_t>(f - data.begin())] : cv::Mat();
   }
 
  protected:
   LdBase() {}
 
-  mutable LineVector lines_;
+  mutable LineVector lines_{};
   // int flags_;
 
   //! helper that should be used to clear internal data

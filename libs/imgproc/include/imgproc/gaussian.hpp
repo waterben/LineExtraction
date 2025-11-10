@@ -60,7 +60,7 @@ cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
 
   int s2 = (size - 1) / 2;
 
-  FT step = range / s2;
+  FT step = range / static_cast<FT>(s2);
 
   cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
 
@@ -68,7 +68,7 @@ cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
   pg[0] = std::exp(FT(0));
 
   for (int i = 1; i <= s2; ++i) {
-    FT x = i * step;
+    FT x = static_cast<FT>(i) * step;
     pg[-i] = pg[i] = std::exp(-x * x / 2);
   }
 
@@ -87,7 +87,7 @@ cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
 
   int s2 = (size - 1) / 2;
 
-  FT step = range / s2;
+  FT step = range / static_cast<FT>(s2);
 
   cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
 
@@ -95,7 +95,7 @@ cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
   pg[0] = 0;
 
   for (int i = 1; i <= s2; ++i) {
-    FT x = i * step;
+    FT x = static_cast<FT>(i) * step;
     x *= std::exp(-x * x / 2);
     pg[-i] = -x;
     pg[i] = x;
@@ -117,7 +117,7 @@ cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
 
   int s2 = (size - 1) / 2;
 
-  FT step = range / s2;
+  FT step = range / static_cast<FT>(s2);
 
   cv::Mat_<FT> g(1, size, cv::DataType<FT>::type);
 
@@ -125,7 +125,7 @@ cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
   pg[0] = -std::exp(FT(0));
 
   for (int i = 1; i <= s2; ++i) {
-    FT x2 = i * step;
+    FT x2 = static_cast<FT>(i) * step;
     x2 *= x2;
     pg[-i] = pg[i] = (x2 - 1) * std::exp(-x2 / 2);
   }

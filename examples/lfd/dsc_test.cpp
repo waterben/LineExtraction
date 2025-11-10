@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   MyFloat mean = 0;
   for_each(bfmatches3.begin(), bfmatches3.end(), [&](const DescriptorMatch<MyFloat>& data) { mean += data.distance; });
 
-  mean /= bfmatches3.size();
+  mean /= static_cast<MyFloat>(bfmatches3.size());
   std::cout << "mean distance: " << mean << std::endl;
   for_each(bfmatches3.begin(), bfmatches3.end(), [&](const DescriptorMatch<MyFloat>& data) {
     // mean += data.distance;

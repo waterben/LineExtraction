@@ -147,22 +147,37 @@ void Dot::draw(Qwt3D::Triple const& pos) {
 /////////////////////////////////////////////////////////////////
 
 Cone::Cone() {
-  hat = gluNewQuadric();
-  disk = gluNewQuadric();
-
+  initQuadrics();
   configure(0, 3);
 }
 
 Cone::Cone(double rad, unsigned quality) {
-  hat = gluNewQuadric();
-  disk = gluNewQuadric();
-
+  initQuadrics();
   configure(rad, quality);
+}
+
+Cone::Cone(const Cone& other) {
+  initQuadrics();
+  *this = other;
+}
+
+Cone& Cone::operator=(const Cone& other) {
+  if (this != &other) {
+    configure(other.radius_, other.quality_);
+    oldstate_ = other.oldstate_;
+    plot = other.plot;
+  }
+  return *this;
 }
 
 Cone::~Cone() {
   gluDeleteQuadric(hat);
   gluDeleteQuadric(disk);
+}
+
+void Cone::initQuadrics() {
+  hat = gluNewQuadric();
+  disk = gluNewQuadric();
 }
 
 void Cone::configure(double rad, unsigned quality) {
@@ -206,6 +221,34 @@ void Cone::draw(Qwt3D::Triple const& pos) {
 /////////////////////////////////////////////////////////////////
 
 Arrow::Arrow() {
+  initQuadrics();
+  configure(3, 0.4, 0.06, 0.02);
+}
+
+Arrow::Arrow(const Arrow& other) {
+  initQuadrics();
+  *this = other;
+}
+
+Arrow& Arrow::operator=(const Arrow& other) {
+  if (this != &other) {
+    configure(other.segments_, other.rel_cone_length, other.rel_cone_radius, other.rel_stem_radius);
+    oldstate_ = other.oldstate_;
+    top_ = other.top_;
+    rgba_ = other.rgba_;
+    plot = other.plot;
+  }
+  return *this;
+}
+
+Arrow::~Arrow() {
+  gluDeleteQuadric(hat);
+  gluDeleteQuadric(disk);
+  gluDeleteQuadric(base);
+  gluDeleteQuadric(bottom);
+}
+
+void Arrow::initQuadrics() {
   hat = gluNewQuadric();
   disk = gluNewQuadric();
   base = gluNewQuadric();
@@ -223,15 +266,6 @@ Arrow::Arrow() {
   gluQuadricDrawStyle(bottom, GLU_FILL);
   gluQuadricNormals(bottom, GLU_SMOOTH);
   gluQuadricOrientation(bottom, GLU_OUTSIDE);
-
-  configure(3, 0.4, 0.06, 0.02);
-}
-
-Arrow::~Arrow() {
-  gluDeleteQuadric(hat);
-  gluDeleteQuadric(disk);
-  gluDeleteQuadric(base);
-  gluDeleteQuadric(bottom);
 }
 
 /**

@@ -71,34 +71,34 @@ class LsdFBW : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::endPoints_;
   using LsdBase<FT, LPT>::lineSegments_;
 
-  GRAD grad_;
+  GRAD grad_{};
 
   // the images
-  cv::Mat img_;  // input image
+  cv::Mat img_{};  // input image
 
-  cv::Mat used_;  // indicates used pixels
+  cv::Mat used_{};  // indicates used pixels
 
   // segmentation components
-  cv::Mat th_dir_;     // FT,  Threshold filtered gradient direction
-  IndexVector seeds_;  // seed indexes (above higer thres)
-  IndexVector areas_;
+  cv::Mat th_dir_{};     // FT,  Threshold filtered gradient direction
+  IndexVector seeds_{};  // seed indexes (above higer thres)
+  IndexVector areas_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   // image parameters
-  int cols_;         // image width
-  int rows_;         // image height
-  int pixel_count_;  // image pixel count
+  int cols_{};         // image width
+  int rows_{};         // image height
+  int pixel_count_{};  // image pixel count
 
-  int flags_;
-  FT th_low_;    // gives the lower threshold for the gradient
-  FT th_high_;   // gives the higher threshold for the gradient
-  FT angle_th_;  // Gradient angle tolerance in degrees.
-  int min_pix_;  // minimum amount of supporting pixels
-  FT quant_;
+  int flags_{};
+  FT th_low_{};    // gives the lower threshold for the gradient
+  FT th_high_{};   // gives the higher threshold for the gradient
+  FT angle_th_{};  // Gradient angle tolerance in degrees.
+  int min_pix_{};  // minimum amount of supporting pixels
+  FT quant_{};
 
-  FT prec_;
-  FT nang_;
+  FT prec_{};
+  FT nang_{};
 
   void init() {
     this->addManager(grad_);
@@ -153,7 +153,7 @@ class LsdFBW : public LsdBase<FT, LPT> {
   typedef std::vector<LineData> LineDataVector;  // vector of LineData structs
 
  private:
-  LineDataVector lineData_;
+  LineDataVector lineData_{};
 
  public:
   //! Create a FoodLineSegmentDetector object.
@@ -316,13 +316,13 @@ class LsdFBW : public LsdBase<FT, LPT> {
     used_.setTo(FBW_NOTUSED);
 
     seeds_.clear();
-    seeds_.reserve(pixel_count_ / 3);
+    seeds_.reserve(static_cast<size_t>(pixel_count_ / 3));
   }
 
 
   // Compute threshold filtered magnitude and direction + seeds, using NMS
   void seedsNMS() {
-    const int TG22 = (int)(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
+    const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 
     const mag_type* pmag = grad_.magnitude().template ptr<mag_type>();
     FT* pth_dir = th_dir_.ptr<FT>();
@@ -357,10 +357,13 @@ class LsdFBW : public LsdBase<FT, LPT> {
           } else {
             mag_type tg67x = tg22x + x * 65536;
             if (y > tg67x) {
-              if (m > pmag[idx - cols_] && m >= pmag[idx + cols_]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_)] && m >= pmag[idx + static_cast<size_t>(cols_)])
+                goto maxima;
             } else {
               int s = neg_sign(xs, ys) ? -1 : 1;
-              if (m > pmag[idx - cols_ - s] && m > pmag[idx + cols_ + s]) goto maxima;
+              if (m > pmag[idx - static_cast<size_t>(cols_) - static_cast<size_t>(s)] &&
+                  m > pmag[idx + static_cast<size_t>(cols_) + static_cast<size_t>(s)])
+                goto maxima;
             }
           }
           continue;
@@ -409,11 +412,11 @@ class LsdFBW : public LsdBase<FT, LPT> {
   }
 
   void findRegions() {
-    size_t size = static_cast<size_t>(seeds_.size() * th_high_ / th_low_);
+    size_t size = static_cast<size_t>(static_cast<FT>(seeds_.size()) * th_high_ / th_low_);
     areas_.clear();
     areas_.reserve(size);
     lineData_.clear();
-    lineData_.reserve(size / (min_pix_ * min_pix_) + 100);
+    lineData_.reserve(size / static_cast<size_t>(min_pix_ * min_pix_) + 100);
     lineSegments_.reserve(lineData_.size());
 
     FT rangle;
@@ -423,15 +426,15 @@ class LsdFBW : public LsdBase<FT, LPT> {
       size_t start = areas_.size();
       regionGrow(idx, prec_, rangle);
       // ignore region
-      if (areas_.size() - start < min_pix_) return;
+      if (areas_.size() - start < static_cast<size_t>(min_pix_)) return;
 
 
       LineData ld(start, areas_.size());
       ld.prec = prec_;
       ld.prob = nang_;
       LineSegment l = region2Data(ld);
-      float epnx = sin(rangle);
-      float epny = -cos(rangle);
+      float epnx = static_cast<float>(sin(rangle));
+      float epny = static_cast<float>(-cos(rangle));
       if (epnx * l.normalX() + epny * l.normalY() >= 0) {
         l.normalFlip();
       }
@@ -445,7 +448,8 @@ class LsdFBW : public LsdBase<FT, LPT> {
     Line l;
     std::vector<PT> tmp;
     tmp.resize(ld.size());
-    IndexConvert<PT>::toPoint(areas_.begin() + ld.begpos(), areas_.begin() + ld.endpos(), tmp.begin(), cols_);
+    IndexConvert<PT>::toPoint(areas_.begin() + static_cast<std::ptrdiff_t>(ld.begpos()),
+                              areas_.begin() + static_cast<std::ptrdiff_t>(ld.endpos()), tmp.begin(), cols_);
 
 
     FIT::fit(&tmp.front(), &tmp.back() + 1, l, grad_.magnitude());
@@ -504,9 +508,9 @@ class LsdFBW : public LsdBase<FT, LPT> {
         reg_angle = atan2(sumdy, sumdx);
       }
 
-      index_type uadr = idx - cols_ - 1;
+      index_type uadr = idx - static_cast<index_type>(cols_) - 1;
       adr = uadr + 3;
-      index_type ladr = idx + cols_ - 1;
+      index_type ladr = idx + static_cast<index_type>(cols_) - 1;
 
       // test the remaining 6 pixels above and under the current pixel
       for (; uadr != adr; ++uadr, ++ladr) {

@@ -60,10 +60,11 @@ struct Mean {
 
     // make sure line is not ouside of mat
     LineSegment<FT, PT> tl = l;
-    tl.trim2Box(mag.cols - IP::BorderEnd, mag.rows - IP::BorderEnd, IP::BorderStart, IP::BorderStart);
+    tl.trim2Box(static_cast<FT>(mag.cols - IP::BorderEnd), static_cast<FT>(mag.rows - IP::BorderEnd),
+                static_cast<FT>(IP::BorderStart), static_cast<FT>(IP::BorderStart));
 
     FT length = tl.length();
-    FT offset = fmod(length, dist) / 2;
+    FT offset = static_cast<FT>(fmod(length, dist)) / static_cast<FT>(2);
     PT<FT> start = tl.start() > tl.end() ? tl.endPoint() : tl.startPoint();
     FT ret = 0;
     int n = 0;
@@ -73,7 +74,7 @@ struct Mean {
     }
 
     // normalize
-    if (n != 0) ret /= n;
+    if (n != 0) ret /= static_cast<FT>(n);
     return ret;
   }
 
@@ -83,12 +84,13 @@ struct Mean {
 
     // make sure line is not ouside of mat
     LineSegment<FT, PT> tl = l;
-    tl.trim2Box(mag.cols - IP::BorderEnd, mag.rows - IP::BorderEnd, IP::BorderStart, IP::BorderStart);
+    tl.trim2Box(static_cast<FT>(mag.cols - IP::BorderEnd), static_cast<FT>(mag.rows - IP::BorderEnd),
+                static_cast<FT>(IP::BorderStart), static_cast<FT>(IP::BorderStart));
 
     FT length = tl.length();
     std::vector<FT> vals;
     vals.reserve(static_cast<size_t>(length / dist));
-    FT offset = fmod(length, dist) / 2;
+    FT offset = static_cast<FT>(fmod(length, dist)) / static_cast<FT>(2);
     PT<FT> start = tl.start() > tl.end() ? tl.endPoint() : tl.startPoint();
     FT ret = 0, ret2 = 0, val;
     variance = 0;
@@ -102,8 +104,8 @@ struct Mean {
 
     if (n != 0) {
       // normalize
-      ret /= n;
-      variance = ret2 / n - ret * ret;
+      ret /= static_cast<FT>(n);
+      variance = ret2 / static_cast<FT>(n) - ret * ret;
     }
     return ret;
   }
@@ -114,7 +116,8 @@ struct Mean {
 
     // make sure line is not ouside of mat
     LineSegment<FT, PT> tl = l;
-    tl.trim2Box(mag.cols - IP::BorderEnd, mag.rows - IP::BorderEnd, IP::BorderStart, IP::BorderStart);
+    tl.trim2Box(static_cast<FT>(mag.cols - IP::BorderEnd), static_cast<FT>(mag.rows - IP::BorderEnd),
+                static_cast<FT>(IP::BorderStart), static_cast<FT>(IP::BorderStart));
 
     FT length = tl.length();
     ret.clear();
@@ -165,13 +168,14 @@ struct FastMean {
     int step = static_cast<int>(dist);
     if (step < 1) step = 1;
     FT ret = 0, nstep, nx = fabs(l.normalX()), ny = fabs(l.normalY());
-    int n = 0, cols = mag.cols - IP::BorderEnd, rows = mag.rows - IP::BorderEnd, matStepY = mag.step[0] / sizeof(MT);
+    int n = 0, cols = mag.cols - IP::BorderEnd, rows = mag.rows - IP::BorderEnd,
+        matStepY = static_cast<int>(mag.step[0] / sizeof(MT));
     LineSegment<FT, PT> tl = l;
     // make sure line is not ouside of box
     tl.trim2Box(cols, rows, IP::BorderStart, IP::BorderStart);
     PT<FT> start = l.startPoint(), end = l.endPoint();
 
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;
@@ -257,9 +261,12 @@ struct FastMean {
     int step = static_cast<int>(dist);
     if (step < 1) step = 1;
     FT ret = 0, ret2 = 0, nstep, tmp, nx = fabs(l.normalX()), ny = fabs(l.normalY());
-    int n = 0, cols = mag.cols - 2, rows = mag.rows - 2, matStepY = mag.step[0] / sizeof(MT);
+    int n = 0;
+    const int cols = mag.cols - 2;
+    const int rows = mag.rows - 2;
+    int matStepY = static_cast<int>(mag.step[0] / sizeof(MT));
     PT<FT> start = l.startPoint(), end = l.endPoint();
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;
@@ -355,7 +362,7 @@ struct FastMean {
     FT nstep, nx = fabs(l.normalX()), ny = fabs(l.normalY());
     int cols = mag.cols - 2, rows = mag.rows - 2, matStepY = mag.step[0] / sizeof(MT);
     PT<FT> start = l.startPoint(), end = l.endPoint();
-    const MT* data = 0;
+    const MT* data = nullptr;
     if (nx > ny) {
       if (getX(start) < 1) {
         getX(start) = 1;

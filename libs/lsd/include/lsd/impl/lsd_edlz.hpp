@@ -55,16 +55,16 @@ struct Pixel {
   unsigned int y;  // Y coordinate
 };
 struct EdgeChains {
-  std::vector<unsigned int> xCors;  // all the x coordinates of edge points
-  std::vector<unsigned int> yCors;  // all the y coordinates of edge points
-  std::vector<unsigned int> sId;    // the start index of each edge in the coordinate arrays
-  unsigned int numOfEdges;  // the number of edges whose length are larger than minLineLen; numOfEdges < sId.size;
+  std::vector<unsigned int> xCors{};  // all the x coordinates of edge points
+  std::vector<unsigned int> yCors{};  // all the y coordinates of edge points
+  std::vector<unsigned int> sId{};    // the start index of each edge in the coordinate arrays
+  unsigned int numOfEdges{0};  // the number of edges whose length are larger than minLineLen; numOfEdges < sId.size;
 };
 struct LineChains {
-  std::vector<unsigned int> xCors;  // all the x coordinates of line points
-  std::vector<unsigned int> yCors;  // all the y coordinates of line points
-  std::vector<unsigned int> sId;    // the start index of each line in the coordinate arrays
-  unsigned int numOfLines;  // the number of lines whose length are larger than minLineLen; numOfLines < sId.size;
+  std::vector<unsigned int> xCors{};  // all the x coordinates of line points
+  std::vector<unsigned int> yCors{};  // all the y coordinates of line points
+  std::vector<unsigned int> sId{};    // the start index of each line in the coordinate arrays
+  unsigned int numOfLines{0};  // the number of lines whose length are larger than minLineLen; numOfLines < sId.size;
 };
 
 typedef std::list<Pixel> PixelChain;  // each edge is a pixel chain
@@ -98,6 +98,10 @@ class EDLineDetector {
   EDLineDetector();
   EDLineDetector(EDLineParam param);
   ~EDLineDetector();
+  EDLineDetector(const EDLineDetector&) = delete;
+  EDLineDetector& operator=(const EDLineDetector&) = delete;
+  EDLineDetector(EDLineDetector&&) = delete;
+  EDLineDetector& operator=(EDLineDetector&&) = delete;
 
   /*extract edges from image
    *image:    In, gray image;
@@ -114,25 +118,25 @@ class EDLineDetector {
   /*extract line from image, and store them*/
   int EDline(cv::Mat& image);
 
-  cv::Mat dxImg_;     // store the dxImg;
-  cv::Mat dyImg_;     // store the dyImg;
-  cv::Mat gImgWO_;    // store the gradient image without threshold;
-  LineChains lines_;  // store the detected line chains;
+  cv::Mat dxImg_{};     // store the dxImg;
+  cv::Mat dyImg_{};     // store the dyImg;
+  cv::Mat gImgWO_{};    // store the gradient image without threshold;
+  LineChains lines_{};  // store the detected line chains;
   // store the line Equation coefficients, vec3=[w1,w2,w3] for line w1*x + w2*y + w3=0;
-  std::vector<std::array<double, 3> > lineEquations_;
+  std::vector<std::array<double, 3> > lineEquations_{};
   // store the line endpoints, [x1,y1,x2,y3]
-  std::vector<std::array<float, 4> > lineEndpoints_;
+  std::vector<std::array<float, 4> > lineEndpoints_{};
   // store the line direction
-  std::vector<float> lineDirection_;
-  unsigned int imageWidth;
-  unsigned int imageHeight;
+  std::vector<float> lineDirection_{};
+  unsigned int imageWidth{0};
+  unsigned int imageHeight{0};
 
   EDLineParam getParams() const;
   void setParams(const EDLineParam& p);
 
-  cv::Mat edgeImage_;
-  cv::Mat gImg_;    // store the gradient image;
-  cv::Mat dirImg_;  // store the direction image
+  cv::Mat edgeImage_{};
+  cv::Mat gImg_{};    // store the gradient image;
+  cv::Mat dirImg_{};  // store the direction image
 
  private:
   void InitEDLine_();
@@ -175,20 +179,20 @@ class EDLineDetector {
                        unsigned int offsetE,
                        std::array<double, 3>& lineEquation,
                        float& direction);
-  bool bValidate_;  // flag to decide whether line will be validated
+  bool bValidate_{false};  // flag to decide whether line will be validated
   /*the threshold of pixel gradient magnitude.
    *Only those pixel whose gradient magnitude are larger than this threshold will be
    *taken as possible edge points. Default value is 36*/
-  short gradienThreshold_;
+  short gradienThreshold_{10};
   /*If the pixel's gradient value is bigger than both of its neighbors by a
    *certain threshold (ANCHOR_THRESHOLD), the pixel is marked to be an anchor.
    *Default value is 8*/
-  unsigned char anchorThreshold_;
+  unsigned char anchorThreshold_{2};
   /*anchor testing can be performed at different scan intervals, i.e.,
    *every row/column, every second row/column etc.
    *Default value is 2*/
-  unsigned int scanIntervals_;
-  int minLineLen_;  // minimal acceptable line length
+  unsigned int scanIntervals_{2};
+  int minLineLen_{15};  // minimal acceptable line length
   /*For example, there two edges in the image:
    *edge1 = [(7,4), (8,5), (9,6),| (10,7)|, (11, 8), (12,9)] and
    *edge2 = [(14,9), (15,10), (16,11), (17,12),| (18, 13)|, (19,14)] ; then we store them as following:
@@ -200,28 +204,28 @@ class EDLineDetector {
    *pSecondPartEdgeS_ = [0, 4, 9];// the index of start point of second part of each edge
    *This type of storage order is because of the order of edge detection process.
    *For each edge, start from one anchor point, first go right, then go left or first go down, then go up*/
-  unsigned int* pFirstPartEdgeX_;   // store the X coordinates of the first part of the pixels for chains
-  unsigned int* pFirstPartEdgeY_;   // store the Y coordinates of the first part of the pixels for chains
-  unsigned int* pFirstPartEdgeS_;   // store the start index of every edge chain in the first part arrays
-  unsigned int* pSecondPartEdgeX_;  // store the X coordinates of the second part of the pixels for chains
-  unsigned int* pSecondPartEdgeY_;  // store the Y coordinates of the second part of the pixels for chains
-  unsigned int* pSecondPartEdgeS_;  // store the start index of every edge chain in the second part arrays
-  unsigned int* pAnchorX_;          // store the X coordinates of anchors
-  unsigned int* pAnchorY_;          // store the Y coordinates of anchors
+  unsigned int* pFirstPartEdgeX_{nullptr};   // store the X coordinates of the first part of the pixels for chains
+  unsigned int* pFirstPartEdgeY_{nullptr};   // store the Y coordinates of the first part of the pixels for chains
+  unsigned int* pFirstPartEdgeS_{nullptr};   // store the start index of every edge chain in the first part arrays
+  unsigned int* pSecondPartEdgeX_{nullptr};  // store the X coordinates of the second part of the pixels for chains
+  unsigned int* pSecondPartEdgeY_{nullptr};  // store the Y coordinates of the second part of the pixels for chains
+  unsigned int* pSecondPartEdgeS_{nullptr};  // store the start index of every edge chain in the second part arrays
+  unsigned int* pAnchorX_{nullptr};          // store the X coordinates of anchors
+  unsigned int* pAnchorY_{nullptr};          // store the Y coordinates of anchors
 
   /*The threshold of line fit error;
    *If lineFitErr is large than this threshold, then
    *the pixel chain is not accepted as a single line segment.*/
-  double lineFitErrThreshold_;
+  double lineFitErrThreshold_{0.0};
 
 
-  double logNT_;
-  cv::Mat_<float> ATA;             // the previous matrix of A^T * A;
-  cv::Mat_<float> ATV;             // the previous vector of A^T * V;
-  cv::Mat_<float> fitMatT;         // the matrix used in line fit function;
-  cv::Mat_<float> fitVec;          // the vector used in line fit function;
-  cv::Mat_<float> tempMatLineFit;  // the matrix used in line fit function;
-  cv::Mat_<float> tempVecLineFit;  // the vector used in line fit function;
+  double logNT_{0.0};
+  cv::Mat_<float> ATA{};             // the previous matrix of A^T * A;
+  cv::Mat_<float> ATV{};             // the previous vector of A^T * V;
+  cv::Mat_<float> fitMatT{};         // the matrix used in line fit function;
+  cv::Mat_<float> fitVec{};          // the vector used in line fit function;
+  cv::Mat_<float> tempMatLineFit{};  // the matrix used in line fit function;
+  cv::Mat_<float> tempVecLineFit{};  // the vector used in line fit function;
 
 
   /** Compare doubles by relative error.
@@ -237,9 +241,9 @@ class EDLineDetector {
     double abs_diff, aa, bb, abs_max;
     /* trivial case */
     if (a == b) return true;
-    abs_diff = fabs(a - b);
-    aa = fabs(a);
-    bb = fabs(b);
+    abs_diff = std::fabs(a - b);
+    aa = std::fabs(a);
+    bb = std::fabs(b);
     abs_max = aa > bb ? aa : bb;
     /* DBL_MIN is the smallest normalized number, thus, the smallest
   number whose relative error is bounded by DBL_EPSILON. For
@@ -275,14 +279,14 @@ class EDLineDetector {
   static double log_gamma_lanczos(double x) {
     static double q[7] = {75122.6331530, 80916.6278952, 36308.2951477, 8687.24529705,
                           1168.92649479, 83.8676043424, 2.50662827511};
-    double a = (x + 0.5) * log(x + 5.5) - (x + 5.5);
+    double a = (x + 0.5) * std::log(x + 5.5) - (x + 5.5);
     double b = 0.0;
     int n;
     for (n = 0; n < 7; n++) {
-      a -= log(x + (double)n);
-      b += q[n] * pow(x, (double)n);
+      a -= std::log(x + static_cast<double>(n));
+      b += q[n] * std::pow(x, static_cast<double>(n));
     }
-    return a + log(b);
+    return a + std::log(b);
   }
   /** Computes the natural logarithm of the absolute value of
        the gamma function of x using Windschitl method.
@@ -300,7 +304,8 @@ class EDLineDetector {
        This formula is a good approximation when x > 15.
    */
   static double log_gamma_windschitl(double x) {
-    return 0.918938533204673 + (x - 0.5) * log(x) - x + 0.5 * x * log(x * sinh(1 / x) + 1 / (810.0 * pow(x, 6.0)));
+    return 0.918938533204673 + (x - 0.5) * std::log(x) - x +
+           0.5 * x * std::log(x * std::sinh(1 / x) + 1 / (810.0 * std::pow(x, 6.0)));
   }
 
 
@@ -346,11 +351,11 @@ class EDLineDetector {
     /* check parameters */
     if (n < 0 || k < 0 || k > n || p <= 0.0 || p >= 1.0) {
       std::cout << "nfa: wrong n, k or p values." << std::endl;
-      exit(0);
+      std::exit(0);
     }
     /* trivial cases */
     if (n == 0 || k == 0) return -logNT;
-    if (n == k) return -logNT - (double)n * log10(p);
+    if (n == k) return -logNT - static_cast<double>(n) * std::log10(p);
 
     /* probability term */
     p_term = p / (1.0 - p);
@@ -363,14 +368,15 @@ class EDLineDetector {
     bincoef(n,k) = gamma(n+1) / ( gamma(k+1) * gamma(n-k+1) ).
   We use this to compute the first term. Actually the log of it.
      */
-    log1term = log_gamma((double)n + 1.0) - log_gamma((double)k + 1.0) - log_gamma((double)(n - k) + 1.0) +
-               (double)k * log(p) + (double)(n - k) * log(1.0 - p);
-    term = exp(log1term);
+    log1term = log_gamma(static_cast<double>(n) + 1.0) - log_gamma(static_cast<double>(k) + 1.0) -
+               log_gamma(static_cast<double>(n - k) + 1.0) + static_cast<double>(k) * std::log(p) +
+               static_cast<double>(n - k) * std::log(1.0 - p);
+    term = std::exp(log1term);
 
     /* in some cases no more computations are needed */
-    if (double_equal(term, 0.0)) {         /* the first term is almost zero */
-      if ((double)k > (double)n * p)       /* at begin or end of the tail?  */
-        return -log1term / M_LN10 - logNT; /* end: use just the first term  */
+    if (double_equal(term, 0.0)) {                             /* the first term is almost zero */
+      if (static_cast<double>(k) > static_cast<double>(n) * p) /* at begin or end of the tail?  */
+        return -log1term / M_LN10 - logNT;                     /* end: use just the first term  */
       else
         return -logNT; /* begin: the tail is roughly 1  */
     }
@@ -388,7 +394,7 @@ and
   term_i = term_i-1 * (n-i+1)/i * p/(1-p).
 p/(1-p) is computed only once and stored in 'p_term'.
        */
-      bin_term = (double)(n - i + 1) / (double)i;
+      bin_term = static_cast<double>(n - i + 1) / static_cast<double>(i);
       mult_term = bin_term * p_term;
       term *= mult_term;
       bin_tail += term;
@@ -397,7 +403,7 @@ p/(1-p) is computed only once and stored in 'p_term'.
 Then, the error on the binomial tail when truncated at
 the i term can be bounded by a geometric series of form
 term_i * sum mult_term_i^j.                            */
-        err = term * ((1.0 - pow(mult_term, (double)(n - i + 1))) / (1.0 - mult_term) - 1.0);
+        err = term * ((1.0 - std::pow(mult_term, static_cast<double>(n - i + 1))) / (1.0 - mult_term) - 1.0);
         /* One wants an error at most of tolerance*final_result, or:
 tolerance * abs(-log10(bin_tail)-logNT).
 Now, the error that can be accepted on bin_tail is
@@ -406,10 +412,10 @@ of -log10(x) when x=bin_tail. that is:
 tolerance * abs(-log10(bin_tail)-logNT) / (1/bin_tail)
 Finally, we truncate the tail if the error is less than:
 tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
-        if (err < tolerance * fabs(-log10(bin_tail) - logNT) * bin_tail) break;
+        if (err < tolerance * std::fabs(-std::log10(bin_tail) - logNT) * bin_tail) break;
       }
     }
-    return -log10(bin_tail) - logNT;
+    return -std::log10(bin_tail) - logNT;
   }
 };
 

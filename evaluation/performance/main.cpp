@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
 
   if (verbose) std::cout << "Number of runs: " << runs << std::endl;
 
-  uint64 start = cv::getTickCount();
+  uint64 start = static_cast<uint64>(cv::getTickCount());
 
   for_each(getTests().begin(), getTests().end(), [&](PerformanceTestPtr test) {
     test->showMean = showMean;
@@ -165,7 +165,9 @@ int main(int argc, char** argv) {
   });
 
   std::cout << "Total time for performance tests: "
-            << static_cast<double>((cv::getTickCount() - start)) / cv::getTickFrequency() << "s" << std::endl;
+            << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start)) /
+                   static_cast<double>(cv::getTickFrequency())
+            << "s" << std::endl;
 
   char c;
   std::cin >> c;

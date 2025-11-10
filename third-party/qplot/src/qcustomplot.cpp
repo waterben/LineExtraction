@@ -2765,7 +2765,7 @@ Qt::Alignment QCPLayoutInset::insetAlignment(int index) const {
     return mInsetAlignment.at(index);
   else {
     qDebug() << Q_FUNC_INFO << "Invalid element index:" << index;
-    return 0;
+    return Qt::Alignment();
   }
 }
 
@@ -3127,8 +3127,8 @@ void QCPLineEnding::draw(QCPPainter* painter, const QVector2D& pos, const QVecto
   QVector2D lengthVec(dir.normalized());
   if (lengthVec.isNull()) lengthVec = QVector2D(1, 0);
   QVector2D widthVec(-lengthVec.y(), lengthVec.x());
-  lengthVec *= (float)(mLength * (mInverted ? -1 : 1));
-  widthVec *= (float)(mWidth * 0.5 * (mInverted ? -1 : 1));
+  lengthVec *= static_cast<float>(mLength * (mInverted ? -1 : 1));
+  widthVec *= static_cast<float>(mWidth * 0.5 * (mInverted ? -1 : 1));
 
   QPen penBackup = painter->pen();
   QBrush brushBackup = painter->brush();
@@ -3212,10 +3212,10 @@ void QCPLineEnding::draw(QCPPainter* painter, const QVector2D& pos, const QVecto
         // if drawing with thick (non-cosmetic) pen, shift bar a little in line direction to prevent line from sticking
         // through bar slightly
         painter->drawLine((pos + widthVec + lengthVec * 0.2f * (mInverted ? -1 : 1) +
-                           dir.normalized() * qMax(1.0f, (float)painter->pen().widthF()) * 0.5f)
+                           dir.normalized() * qMax(1.0f, static_cast<float>(painter->pen().widthF())) * 0.5f)
                               .toPointF(),
                           (pos - widthVec - lengthVec * 0.2f * (mInverted ? -1 : 1) +
-                           dir.normalized() * qMax(1.0f, (float)painter->pen().widthF()) * 0.5f)
+                           dir.normalized() * qMax(1.0f, static_cast<float>(painter->pen().widthF())) * 0.5f)
                               .toPointF());
       }
       break;
@@ -4587,7 +4587,7 @@ void QCPAxis::setScaleRatio(const QCPAxis* otherAxis, double ratio) {
   else
     ownPixelSize = axisRect()->height();
 
-  double newRangeSize = ratio * otherAxis->range().size() * ownPixelSize / (double)otherPixelSize;
+  double newRangeSize = ratio * otherAxis->range().size() * ownPixelSize / static_cast<double>(otherPixelSize);
   setRange(range().center(), newRangeSize, Qt::AlignCenter);
 }
 
@@ -4647,16 +4647,18 @@ double QCPAxis::pixelToCoord(double value) const {
   if (orientation() == Qt::Horizontal) {
     if (mScaleType == stLinear) {
       if (!mRangeReversed)
-        return (value - mAxisRect->left()) / (double)mAxisRect->width() * mRange.size() + mRange.lower;
+        return (value - mAxisRect->left()) / static_cast<double>(mAxisRect->width()) * mRange.size() + mRange.lower;
       else
-        return -(value - mAxisRect->left()) / (double)mAxisRect->width() * mRange.size() + mRange.upper;
+        return -(value - mAxisRect->left()) / static_cast<double>(mAxisRect->width()) * mRange.size() + mRange.upper;
     } else  // mScaleType == stLogarithmic
     {
       if (!mRangeReversed)
-        return qPow(mRange.upper / mRange.lower, (value - mAxisRect->left()) / (double)mAxisRect->width()) *
+        return qPow(mRange.upper / mRange.lower,
+                    (value - mAxisRect->left()) / static_cast<double>(mAxisRect->width())) *
                mRange.lower;
       else
-        return qPow(mRange.upper / mRange.lower, (mAxisRect->left() - value) / (double)mAxisRect->width()) *
+        return qPow(mRange.upper / mRange.lower,
+                    (mAxisRect->left() - value) / static_cast<double>(mAxisRect->width())) *
                mRange.upper;
     }
   } else  // orientation() == Qt::Vertical
@@ -6740,11 +6742,11 @@ QCPItemAnchor::QCPItemAnchor(QCustomPlot* parentPlot, QCPAbstractItem* parentIte
 
 QCPItemAnchor::~QCPItemAnchor() {
   // unregister as parent at children:
-  foreach (QCPItemPosition* child, mChildrenX.toList()) {
+  foreach (QCPItemPosition* child, mChildrenX.values()) {
     if (child->parentAnchorX() == this)
       child->setParentAnchorX(0);  // this acts back on this anchor and child removes itself from mChildrenX
   }
-  foreach (QCPItemPosition* child, mChildrenY.toList()) {
+  foreach (QCPItemPosition* child, mChildrenY.values()) {
     if (child->parentAnchorY() == this)
       child->setParentAnchorY(0);  // this acts back on this anchor and child removes itself from mChildrenY
   }
@@ -6903,11 +6905,11 @@ QCPItemPosition::~QCPItemPosition() {
   // Note: this is done in ~QCPItemAnchor again, but it's important QCPItemPosition does it itself, because only then
   //       the setParentAnchor(0) call the correct QCPItemPosition::pixelPoint function instead of
   //       QCPItemAnchor::pixelPoint
-  foreach (QCPItemPosition* child, mChildrenX.toList()) {
+  foreach (QCPItemPosition* child, mChildrenX.values()) {
     if (child->parentAnchorX() == this)
       child->setParentAnchorX(0);  // this acts back on this anchor and child removes itself from mChildrenX
   }
-  foreach (QCPItemPosition* child, mChildrenY.toList()) {
+  foreach (QCPItemPosition* child, mChildrenY.values()) {
     if (child->parentAnchorY() == this)
       child->setParentAnchorY(0);  // this acts back on this anchor and child removes itself from mChildrenY
   }
@@ -8184,7 +8186,7 @@ QCustomPlot::QCustomPlot(QWidget* parent)
       mAutoAddPlottableToLegend(true),
       mAntialiasedElements(QCP::aeNone),
       mNotAntialiasedElements(QCP::aeNone),
-      mInteractions(0),
+      mInteractions(QCP::Interactions()),
       mSelectionTolerance(8),
       mNoAntialiasingOnDrag(false),
       mBackgroundBrush(Qt::white, Qt::SolidPattern),
@@ -9360,8 +9362,7 @@ void QCustomPlot::replot(QCustomPlot::RefreshPriority refreshPriority) {
   QCPPainter painter;
   painter.begin(&mPaintBuffer);
   if (painter.isActive()) {
-    painter.setRenderHint(
-        QPainter::HighQualityAntialiasing);  // to make Antialiasing look good if using the OpenGL graphicssystem
+    painter.setRenderHint(QPainter::Antialiasing);  // to make Antialiasing look good if using the OpenGL graphicssystem
     if (mBackgroundBrush.style() != Qt::SolidPattern && mBackgroundBrush.style() != Qt::NoBrush)
       painter.fillRect(mViewport, mBackgroundBrush);
     draw(&painter);
@@ -12637,7 +12638,7 @@ void QCPColorScale::setRangeDrag(bool enabled) {
   if (enabled)
     mAxisRect.data()->setRangeDrag(QCPAxis::orientation(mType));
   else
-    mAxisRect.data()->setRangeDrag(0);
+    mAxisRect.data()->setRangeDrag(Qt::Orientations());
 }
 
 /*!
@@ -12655,7 +12656,7 @@ void QCPColorScale::setRangeZoom(bool enabled) {
   if (enabled)
     mAxisRect.data()->setRangeZoom(QCPAxis::orientation(mType));
   else
-    mAxisRect.data()->setRangeZoom(0);
+    mAxisRect.data()->setRangeZoom(Qt::Orientations());
 }
 
 /*!

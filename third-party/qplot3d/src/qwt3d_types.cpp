@@ -77,9 +77,9 @@ GridData::GridData(unsigned int columns, unsigned int rows) {
   setPeriodic(false, false);
 }
 
-int GridData::columns() const { return (int)vertices.size(); }
+int GridData::columns() const { return static_cast<int>(vertices.size()); }
 
-int GridData::rows() const { return (empty()) ? 0 : (int)vertices[0].size(); }
+int GridData::rows() const { return (empty()) ? 0 : static_cast<int>(vertices[0].size()); }
 
 void GridData::clear() {
   setHull(ParallelEpiped());
@@ -166,7 +166,7 @@ void Qwt3D::convexhull2d(std::vector<unsigned>& idx, const std::vector<Tuple>& s
   coordinate_type* P = new coordinate_type[src.size() * 2];
 
   int i;
-  for (i = 0; i < (int)src.size(); ++i) {
+  for (i = 0; i < static_cast<int>(src.size()); ++i) {
     points[i] = &P[2 * i];
     points[i][0] = src[i].x;
     points[i][1] = src[i].y;

@@ -62,7 +62,7 @@ class FmBruteForce : public OptionManager {
 
 
   struct Graph {
-    Graph(float_type r = 0, int kk = 0) : radius(r), k(kk) {}
+    Graph(float_type r = 0, int kk = 0) : distances(), relations(), k(kk), radius(r) {}
 
     match_vector distances;
     std::vector<size_t> relations;
@@ -72,7 +72,7 @@ class FmBruteForce : public OptionManager {
 
   //! init object with radius (max distance between descriptors) and k (k best matches
   //! for every query descriptor). If radius or k = 0 (default), all matches are stored
-  FmBruteForce(float_type radius = 0, int k = 0) : radius_(radius), k_(k) {
+  FmBruteForce(float_type radius = 0, int k = 0) : graph_(), k_(k), radius_(radius) {
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
     this->options_.push_back(OptionManager::OptionEntry("k", k, "int", "Number of nearest neighbors."));
     this->options_.push_back(OptionManager::OptionEntry("radius", radius, type, "Max distance between descriptors."));
@@ -93,25 +93,27 @@ class FmBruteForce : public OptionManager {
     auto iter = qDsc.begin();
     auto diter = graph_.distances.begin();
     auto dbeg = diter;
-    for (int i = 0; iter != end; ++i, ++iter) {
+    for (size_t i = 0; iter != end; ++i, ++iter) {
       // loop match descriptors
       auto miter = mDsc.begin();
-      for (int j = 0; j != ms; ++j, ++miter) diter[j] = match_type(i, j, iter->distance(*miter));
-      auto dend = diter + ms;
+      for (size_t j = 0; j != ms; ++j, ++miter)
+        diter[static_cast<std::ptrdiff_t>(j)] =
+            match_type(static_cast<int>(i), static_cast<int>(j), iter->distance(*miter));
+      auto dend = diter + static_cast<std::ptrdiff_t>(ms);
       // sort by distance
       std::sort(diter, dend);
       // check if we have set k nearest neighbors, if so, resize to k
-      if (k_ > 0 && k_ < static_cast<int>(ms)) dend = diter + (static_cast<size_t>(k_));
+      if (k_ > 0 && k_ < static_cast<int>(ms)) dend = diter + static_cast<std::ptrdiff_t>(k_);
       // check if we have set a serach radius, if so, sort out distances > radius
       if (radius_ > 0 && ms > 0 && (dend - 1)->distance > radius_)
         dend = std::upper_bound(diter, dend, match_type(0, 0, radius_));
       // get max distance in this set
       if (dend != diter) mdist = std::max(mdist, (dend - 1)->distance);
-      graph_.relations[i + 1] = dend - dbeg;
+      graph_.relations[i + 1] = static_cast<size_t>(dend - dbeg);
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -156,7 +158,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -198,7 +200,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -250,7 +252,7 @@ class FmBruteForce : public OptionManager {
       diter = dend;
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(ms);
     // overall max dist
@@ -281,10 +283,11 @@ class FmBruteForce : public OptionManager {
     auto diter = graph_.distances.begin();
     auto dend = diter;
     auto dbeg = diter;
-    int idx = 0;
+    size_t idx = 0;
 
     for_each(matches.begin(), matches.end(), [&](decltype(matches[0])& fm) {
-      if (idx != fm.queryIdx) {
+      const size_t query_idx = static_cast<size_t>(fm.queryIdx);
+      if (idx != query_idx) {
         if (diter != dend) {
           // sort by distance
           std::sort(diter, dend);
@@ -295,14 +298,15 @@ class FmBruteForce : public OptionManager {
             dend = std::upper_bound(diter, dend, match_type(0, 0, radius_));
           // get max distance in this set
           if (dend != diter) mdist = std::max(mdist, (dend - 1)->distance);
-          graph_.relations[idx + 1] = dend - dbeg;
+          graph_.relations[idx + 1] = static_cast<size_t>(dend - dbeg);
           diter = dend;
           ++idx;
         }
-        for (; idx < fm.queryIdx; ++idx) graph_.relations[idx + 1] = graph_.relations[idx];
+        for (; idx < query_idx; ++idx) graph_.relations[idx + 1] = graph_.relations[idx];
       }
       if (fm.filterState == FS_MASKED) return;
-      *dend = match_type(fm.queryIdx, fm.matchIdx, qDsc[fm.queryIdx].distance(mDsc[fm.matchIdx]));
+      *dend = match_type(fm.queryIdx, fm.matchIdx,
+                         qDsc[static_cast<size_t>(fm.queryIdx)].distance(mDsc[static_cast<size_t>(fm.matchIdx)]));
       ++dend;
     });
 
@@ -317,14 +321,14 @@ class FmBruteForce : public OptionManager {
           dend = std::upper_bound(diter, dend, match_type(0, 0, radius_));
         // get max distance in this set
         if (dend != diter) mdist = std::max(mdist, (dend - 1)->distance);
-        graph_.relations[idx + 1] = dend - dbeg;
+        graph_.relations[idx + 1] = static_cast<size_t>(dend - dbeg);
         diter = dend;
         ++idx;
       }
       for (; idx < qDsc.size(); ++idx) graph_.relations[idx + 1] = graph_.relations[idx];
     }
 
-    graph_.distances.resize(diter - dbeg);
+    graph_.distances.resize(static_cast<size_t>(diter - dbeg));
     // max num of nn for every match vector
     graph_.k = k_ > 0 ? k_ : static_cast<int>(mDsc.size());
     // overall max dist
@@ -500,7 +504,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.distances.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       last = graph_.relations[i];
       int j = 0, jn = size > k ? k : size;
       for (; j < jn; ++j, ++iter) matches.push_back(*iter);
@@ -525,7 +529,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.distances.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       if (size == 0) continue;
       last = graph_.relations[i];
       matches.insert(matches.end(), iter, std::upper_bound(iter, iter + size, mt));
@@ -539,7 +543,7 @@ class FmBruteForce : public OptionManager {
     matches.reserve(graph_.relations.size());
     size_t last = 0;
     for (size_t i = 1; i != graph_.relations.size(); ++i) {
-      int size = graph_.relations[i] - last;
+      int size = static_cast<int>(graph_.relations[i] - last);
       if (size == 0) continue;
       last = graph_.relations[i];
       matches.push_back(*iter);

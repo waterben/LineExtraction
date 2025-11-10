@@ -52,6 +52,10 @@ namespace lsfm {
 //! stereo line Matcher
 template <class FT, class GV = std::vector<LineSegment<FT>>, class DC_Helper = GchGradImgInterpolate<FT>>
 class StereoLineMatcher : public OptionManager {
+  // Deleted copy operations due to pointer members
+  StereoLineMatcher(const StereoLineMatcher&) = delete;
+  StereoLineMatcher& operator=(const StereoLineMatcher&) = delete;
+
  public:
   typedef FT float_type;
 
@@ -91,7 +95,15 @@ class StereoLineMatcher : public OptionManager {
                     FT distTh = 0,
                     FT r = 0,
                     int kk = 0)
-      : slf(height, maxDist, angleTh, minYOverlap), bfm(r, kk), creatorL(&cL), creatorR(&cR), distTh_(distTh) {
+      : slf(height, maxDist, angleTh, minYOverlap),
+        bfm(r, kk),
+        creatorL(&cL),
+        creatorR(&cR),
+        dscLeft_(),
+        dscRight_(),
+        mLeft_(),
+        mRight_(),
+        distTh_(distTh) {
     CV_Assert(distTh_ >= 0);
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
@@ -108,10 +120,14 @@ class StereoLineMatcher : public OptionManager {
                     int kk = 0)
       : slf(height, maxDist, angleTh, minYOverlap),
         bfm(r, kk),
-        creatorL(0),
-        creatorR(0),
+        creatorL(nullptr),
+        creatorR(nullptr),
         creatorLPtr(cL),
         creatorRPtr(cR),
+        dscLeft_(),
+        dscRight_(),
+        mLeft_(),
+        mRight_(),
         distTh_(distTh) {
     if (!creatorLPtr.empty()) creatorL = dynamic_cast<descriptor_creator*>(creatorLPtr.operator->());
     if (!creatorRPtr.empty()) creatorR = dynamic_cast<descriptor_creator*>(creatorRPtr.operator->());
@@ -132,7 +148,7 @@ class StereoLineMatcher : public OptionManager {
   }
 
   void match(const geometric_vector& left, const geometric_vector& right, match_vector& matches) {
-    CV_Assert(creatorL != 0 && creatorR != 0);
+    CV_Assert(creatorL != nullptr && creatorR != nullptr);
     match_vector candidates;
     slf.create(left, right, candidates, mLeft_, mRight_);
     creatorL->createList(left, mLeft_, dscLeft_);
@@ -183,20 +199,21 @@ class StereoLineMatcher : public OptionManager {
     auto diter = candidatesR.begin();
     auto dend = diter;
     auto dbeg = diter;
-    int idx = 0;
+    size_t idx = 0;
 
     for_each(candidatesR.begin(), candidatesR.end(), [&](const match_type& fm) {
-      if (idx != fm.matchIdx) {
+      const size_t match_idx = static_cast<size_t>(fm.matchIdx);
+      if (idx != match_idx) {
         if (diter != dend) {
           // sort by distance
           std::sort(diter, dend);
-          relationsR[idx + 1] = dend - dbeg;
+          relationsR[idx + 1] = static_cast<size_t>(dend - dbeg);
           mean += diter->distance;
           diter = dend;
           ++idx;
           ++count;
         }
-        for (; idx < fm.matchIdx; ++idx) relationsR[idx + 1] = relationsR[idx];
+        for (; idx < match_idx; ++idx) relationsR[idx + 1] = relationsR[idx];
       }
       ++dend;
     });
@@ -205,7 +222,7 @@ class StereoLineMatcher : public OptionManager {
       if (diter != dend) {
         // sort by distance
         std::sort(diter, dend);
-        relationsR[idx + 1] = dend - dbeg;
+        relationsR[idx + 1] = static_cast<size_t>(dend - dbeg);
         mean += diter->distance;
         ++idx;
         ++count;
@@ -213,7 +230,7 @@ class StereoLineMatcher : public OptionManager {
       for (; idx < dscR.size(); ++idx) relationsR[idx + 1] = relationsR[idx];
     }
 
-    mean /= count;
+    mean /= static_cast<FT>(count);
     mean *= 2;
 
     matches.reserve(candidatesL.size() / 10);
@@ -223,17 +240,16 @@ class StereoLineMatcher : public OptionManager {
       if (sizeL == 0) return;
       const match_type& fmL = candidatesL[startL];
 
-      size_t startR = relationsR[fmL.matchIdx];
-      size_t sizeR = relationsR[fmL.matchIdx + 1] - startR;
+      size_t startR = relationsR[static_cast<size_t>(fmL.matchIdx)];
 
       // if (sizeR == 0)
       //     return;
 
       const match_type& fmR = candidatesR[startR];
 
-      FT llow = left[fmL.queryIdx].length(), lhigh = right[fmL.matchIdx].length();
+      FT llow = left[static_cast<size_t>(fmL.queryIdx)].length(),
+         lhigh = right[static_cast<size_t>(fmL.matchIdx)].length();
       if (llow > lhigh) std::swap(llow, lhigh);
-      FT lsim = llow / lhigh;
 
       // L-R-Check
       if (fmR.queryIdx == fmL.queryIdx) {
@@ -252,9 +268,12 @@ class StereoLineMatcher : public OptionManager {
   }
 
   void setOptionImpl(const std::string& name, FT value) {
+    static_cast<void>(name);
+    static_cast<void>(value);
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
-            k_ = static_cast<int>(value);
+            k_ =
+    static_cast<int>(value);
             this->options_[0].value = k_;
         }
     }

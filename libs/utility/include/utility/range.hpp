@@ -52,13 +52,7 @@ template <class T>
 struct Range {
   Range(T l = 0, T u = 0) : lower(l), upper(u) {}
   void swap() { std::swap(lower, upper); }
-  T size() const {
-    if constexpr (std::is_unsigned_v<T>) {
-      return (upper > lower) ? (upper - lower) : (lower - upper);
-    } else {
-      return std::abs(upper - lower);
-    }
-  }
+  T size() const { return (upper >= lower) ? (upper - lower) : (lower - upper); }
   T lower, upper;
 };
 }  // namespace lsfm

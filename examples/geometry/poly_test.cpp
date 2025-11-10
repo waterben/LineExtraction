@@ -9,7 +9,7 @@ using namespace std;
 using namespace lsfm;
 
 
-int main(int argc, char** argv) {
+int main() {
   cv::Mat out(600, 800, CV_8UC3);
   out.setTo(0);
 

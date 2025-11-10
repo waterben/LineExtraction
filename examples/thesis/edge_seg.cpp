@@ -42,7 +42,7 @@ class EdgeSegApp : public EvalApp {
 
   using ConsoleAppInterface::run;
 
-  cv::RNG rng{static_cast<uint64>(time(0))};
+  cv::RNG rng{static_cast<uint64>(time(nullptr))};
 
   void defineArgs() {
     ConsoleApp::defineArgs();
@@ -61,7 +61,8 @@ class EdgeSegApp : public EvalApp {
                cv::Mat& out,
                bool circles = false) {
     for_each(segments.begin(), segments.end(), [&](const EdgeSegment& seg) {
-      Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+      Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                  static_cast<uchar>(20 + rng.uniform(0, 225)));
       for (size_t i = seg.begin(); i != seg.end(); ++i) setPixel(out, points[i], color);
 
       if (circles) {
@@ -104,8 +105,6 @@ class EdgeSegApp : public EvalApp {
               bool circles = false,
               bool img_bg = false,
               std::size_t top = 0) {
-    typedef typename EDGE::point_type point_type;
-
     std::vector<float> n;
     EdgeSegmentVector out;
     nfa.eval(edge, out, n);
@@ -142,7 +141,8 @@ class EdgeSegApp : public EvalApp {
 
       top = std::min(top, n.size());
       for (size_t i = 0; i != top; ++i) {
-        Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+        Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                    static_cast<uchar>(20 + rng.uniform(0, 225)));
         drawSegment(top_edges, out[idxVec[i].first], edge.points(), color);
       }
       std::string top_name = "top" + std::to_string(top) + "_" + name;
@@ -178,23 +178,23 @@ class EdgeSegApp : public EvalApp {
     simple.detect(grad, nms);
     visEdgeMat("simple_" + name, simple, img);
 
-    EsdDrawing<int> draw(min_pix, 3, grad.magnitudeThreshold(th_low));
+    EsdDrawing<int> draw(min_pix, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     draw.detect(grad, nms);
     visEdgeMat("draw_" + name, draw, img);
 
-    EsdLinking<int> link(min_pix, max_gap, 3, grad.magnitudeThreshold(th_low));
+    EsdLinking<int> link(min_pix, max_gap, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     link.detect(grad, nms);
     visEdgeMat("link_" + name, link, img);
 
-    EsdLinking<int, 8, true> linkc(min_pix, max_gap, 3, grad.magnitudeThreshold(th_low));
+    EsdLinking<int, 8, true> linkc(min_pix, max_gap, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     linkc.detect(grad, nms);
     visEdgeMat("linkc_" + name, linkc, img);
 
-    EsdPattern<int> pattern(min_pix, max_gap, 3, grad.magnitudeThreshold(th_low));
+    EsdPattern<int> pattern(min_pix, max_gap, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     pattern.detect(grad, nms);
     visEdgeMat("pattern_" + name, pattern, img);
 
-    EsdPattern<int, 8, true> patternc(min_pix, max_gap, 3, grad.magnitudeThreshold(th_low));
+    EsdPattern<int, 8, true> patternc(min_pix, max_gap, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     patternc.detect(grad, nms);
     visEdgeMat("patternc_" + name, patternc, img);
   }
@@ -213,7 +213,7 @@ class EdgeSegApp : public EvalApp {
     NonMaximaSuppression<GradType, MagType, DirType> nms(th_low, th_high);
     nms.process(grad);
 
-    EsdLinking<int, 8, true> linkc(min_pix, 3, 3, grad.magnitudeThreshold(th_low));
+    EsdLinking<int, 8, true> linkc(min_pix, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low)));
     linkc.detect(grad, nms);
 
     NfaContrast<int, float, index_type, std::map<int, float>> nfac(eps);

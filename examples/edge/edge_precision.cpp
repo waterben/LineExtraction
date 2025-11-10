@@ -32,7 +32,7 @@ using namespace std;
 
 template <class FT, template <class> class PT = cv::Point_>
 struct GroundTruth {
-  GroundTruth() {
+  GroundTruth() : segments(), img() {
     cv::Mat tmp(32000, 32000, CV_8U);
     tmp.setTo(0);
 
@@ -86,9 +86,9 @@ struct GroundTruth {
                                 cv::Vec3b(255, 0, 255), cv::Vec3b(0, 255, 255), cv::Vec3b(255, 255, 255),
                                 cv::Vec3b(0, 0, 255)};
     if (err > 1 || l > 5)
-      lsfm::set(out, cv::Point(getX(p), getY(p)), color[6]);
+      lsfm::set(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[6]);
     else
-      lsfm::set(out, cv::Point(getX(p), getY(p)), color[l]);
+      lsfm::set(out, cv::Point(static_cast<int>(getX(p)), static_cast<int>(getY(p))), color[l]);
   }
 };
 
@@ -113,14 +113,14 @@ void outputSet(const std::string& name,
     }
     if (getX(p) > -1 && getX(p) < gt.img.cols && getY(p) > -1 && getY(p) < gt.img.rows) gt.draw(out, p, l, e);
   });
-  err /= (points.size() - outlier);
-  errSqr /= (points.size() - outlier);
+  err /= static_cast<FT>(points.size() - static_cast<size_t>(outlier));
+  errSqr /= static_cast<FT>(points.size() - static_cast<size_t>(outlier));
   std::cout << name << " - points: " << points.size() << ", outlier: " << outlier << ", mean error: " << err
             << ", std deviation: " << sqrt(errSqr - err * err) << std::endl;
   if (show) cv::imshow(name.c_str(), out);
 }
 
-int main(int argc, char** argv) {
+int main() {
   typedef double FT;
   DerivativeGradient<uchar, FT, FT, FT, ScharrDerivative> grad(0, 255);
   LaplaceCV<uchar, FT> laplace(5, 0, 255);

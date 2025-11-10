@@ -30,8 +30,8 @@ class QWT3D_EXPORT Drawable {
  protected:
   Qwt3D::RGBA color;
   void Enable(GLenum what, GLboolean val);
-  Qwt3D::Triple ViewPort2World(Qwt3D::Triple win, bool* err = 0);
-  Qwt3D::Triple World2ViewPort(Qwt3D::Triple obj, bool* err = 0);
+  Qwt3D::Triple ViewPort2World(Qwt3D::Triple win, bool* err = nullptr);
+  Qwt3D::Triple World2ViewPort(Qwt3D::Triple obj, bool* err = nullptr);
 
   GLdouble modelMatrix[16];
   GLdouble projMatrix[16];

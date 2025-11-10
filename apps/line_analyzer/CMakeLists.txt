@@ -57,6 +57,9 @@ le_add_executable(app_line_analyzer
         lib_qplot
         lib_qplot3d
         ${OPENGL_LIBRARIES}
-        ${OpenCV_LIBS}
+        le::opencv
         dlib::dlib
 )
+
+# Re-enable warnings to fix them properly
+# target_compile_options(app_line_analyzer PRIVATE -Wno-old-style-cast)

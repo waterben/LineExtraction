@@ -71,17 +71,17 @@ template <class FT,
           class FIT = FitLine<EigenFit<FT, PT>>  // MEstimatorFitLine<FT,PT>
           >
 class LsdEL : public LsdExt<FT, LPT, PT> {
-  ESOURCE esource_;
-  EDGE edge_;
-  SPLIT split_;
-  FIT fit_;
-  NFA nfa_;
-  int flags_;
+  ESOURCE esource_{};
+  EDGE edge_{};
+  SPLIT split_{};
+  FIT fit_{};
+  NFA nfa_{};
+  int flags_{};
 
-  typename LsdExt<FT, LPT, PT>::PointVector points_;
-  EdgeSegmentVector segments_;
+  typename LsdExt<FT, LPT, PT>::PointVector points_{};
+  EdgeSegmentVector segments_{};
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
   void init() {
     this->addManager(esource_);
@@ -125,8 +125,8 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
         int flags = 0)
       : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
         edge_(min_pix),
-        nfa_(log_eps),
         split_(dist, min_len),
+        nfa_(log_eps),
         flags_(flags) {
     init();
   }

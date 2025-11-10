@@ -89,7 +89,7 @@ class PipelineOperator : public ImageOperator {
   std::vector<ImageOperatorPtr> pipePtr;
   std::vector<ImageOperator*> pipe;
 
-  PipelineOperator() : ImageOperator("Pipeline") {}
+  PipelineOperator() : ImageOperator("Pipeline"), pipePtr{}, pipe{} {}
   // PipelineOperator(const PipelineOperator& op) : ImageOperator("Pipeline"), pipe(op.pipe) {}
   virtual ~PipelineOperator() {}
 
@@ -266,7 +266,7 @@ class NoOp : public ImageOperator {
   NoOp() : ImageOperator("Noop") {}
   virtual ~NoOp() {}
 
-  virtual void apply(cv::Mat& img) {}
+  virtual void apply(cv::Mat& /*img*/) {}
 
   using ImageOperator::apply;
   using ImageOperator::name;
@@ -362,7 +362,7 @@ class BilateralOperator : public ImageOperator {
 
  public:
   BilateralOperator(int d = 5, double sigmaColor = 50, double sigmaSpace = 50)
-      : ImageOperator("BilateralFilter"), d_(d), sCol_(sigmaColor), sSpace_(sigmaSpace) {}
+      : ImageOperator("BilateralFilter"), sCol_(sigmaColor), sSpace_(sigmaSpace), d_(d) {}
   virtual ~BilateralOperator() {}
 
   virtual void apply(cv::Mat& img) {

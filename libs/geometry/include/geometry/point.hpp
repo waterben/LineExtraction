@@ -19,7 +19,7 @@ inline void set(cv::Mat& m, const cv::Point& p, MT val) {
 
 template <class FT, class MT>
 inline void set(cv::Mat& m, const cv::Point_<FT>& p, MT val) {
-  m.at<MT>(std::round(p.y), std::round(p.x)) = val;
+  m.at<MT>(static_cast<int>(std::round(p.y)), static_cast<int>(std::round(p.x))) = val;
 }
 
 template <class MT>
@@ -29,7 +29,7 @@ inline void set(cv::Mat& m, const Vec2i& v, MT val) {
 
 template <class FT, class MT>
 inline void set(cv::Mat& m, const Vec2<FT>& v, MT val) {
-  m.at<MT>(std::round(v.y()), std::round(v.x())) = val;
+  m.at<MT>(static_cast<int>(std::round(v.y())), static_cast<int>(std::round(v.x()))) = val;
 }
 
 template <class MT>
@@ -39,7 +39,7 @@ inline void get(const cv::Mat& m, const cv::Point& p, MT& val) {
 
 template <class FT, class MT>
 inline void get(const cv::Mat& m, const cv::Point_<FT>& p, MT& val) {
-  val = m.at<MT>(std::round(p.y), std::round(p.x));
+  val = m.at<MT>(static_cast<int>(std::round(p.y)), static_cast<int>(std::round(p.x)));
 }
 
 template <class MT>
@@ -49,7 +49,7 @@ inline void get(const cv::Mat& m, const Vec2i& v, MT& val) {
 
 template <class FT, class MT>
 inline void get(const cv::Mat& m, const Vec2<FT>& v, MT& val) {
-  val = m.at<MT>(std::round(v.y()), std::round(v.x()));
+  val = m.at<MT>(static_cast<int>(std::round(v.y())), static_cast<int>(std::round(v.x())));
 }
 
 template <class MT>

@@ -23,20 +23,27 @@ void doInit() {
   }
 }
 
-inline uint nextPowerOf2(uint n) {
-  /*
-   * Below indicates passed no is a power of 2, so return the same.
-   */
-  if ((n == 0) || !(n & (n - 1))) {
-    return (n);
+inline int nextPowerOf2(int n) {
+  if (n <= 0) {
+    return 0;
   }
 
-  while (n & (n - 1)) {
-    n = n & (n - 1);
+  unsigned int value = static_cast<unsigned int>(n);
+  if ((value & (value - 1U)) == 0U) {
+    return static_cast<int>(value);
   }
 
-  n = n << 1;
-  return n;
+  while (value & (value - 1U)) {
+    value &= (value - 1U);
+  }
+
+  value <<= 1U;
+  if (value > static_cast<unsigned int>(std::numeric_limits<int>::max())) {
+    // Clamps improbable oversized inputs; consider switching to size_t if extremely large images are expected.
+    return std::numeric_limits<int>::max();
+  }
+
+  return static_cast<int>(value);
 }
 
 inline void prepare(const cv::Mat& img,
@@ -60,7 +67,7 @@ namespace lsfm {
 
 
 PhaseCong::PhaseCong(int ns, double mw, double ml, double sig)
-    : rows_(0), cols_(0), nscale_(ns), minW_(mw), mult_(ml), sigmaOnf_(sig), sizep2_(0), lgf(0), H(0) {
+    : lgf(nullptr), H(nullptr), rows_(0), cols_(0), nscale_(ns), sizep2_(0), minW_(mw), mult_(ml), sigmaOnf_(sig) {
   doInit();
 }
 

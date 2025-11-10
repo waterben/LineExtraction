@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace utility {
@@ -60,11 +61,19 @@ class Options {
 
  private:
   struct EntryBase {
-    std::string long_name;
+    std::string long_name{};
     char short_name{};
-    std::string description;
-    bool seen{false};
+    std::string description{};
+    mutable bool seen{false};
+
     virtual ~EntryBase() = default;
+
+   protected:
+    EntryBase(std::string long_n, char short_n, std::string desc)
+        : long_name(std::move(long_n)), short_name(short_n), description(std::move(desc)) {}
+
+   public:
+    EntryBase() = default;
     virtual void set_from_string(const std::string& value) const = 0;
     virtual void set_switch() const = 0;
     virtual bool is_required() const = 0;
@@ -80,19 +89,14 @@ class Options {
     bool has_def{false};
     std::string def_value;
     StringEntry(std::string long_n, char short_n, std::string desc, std::string& tgt, bool req, std::string def)
-        : target(tgt) {
-      long_name = std::move(long_n);
-      short_name = short_n;
-      description = std::move(desc);
-      required = req;
-      if (!def.empty()) {
-        has_def = true;
-        def_value = std::move(def);
-      }
-    }
+        : EntryBase(std::move(long_n), short_n, std::move(desc)),
+          target(tgt),
+          required(req),
+          has_def(!def.empty()),
+          def_value(std::move(def)) {}
     void set_from_string(const std::string& value) const override {
       target = value;
-      const_cast<StringEntry*>(this)->seen = true;
+      seen = true;
     }
     void set_switch() const override { throw options_error("Option --" + long_name + " expects a value"); }
     bool is_required() const override { return required; }
@@ -105,18 +109,15 @@ class Options {
 
   struct SwitchEntry : EntryBase {
     bool& target;
-    SwitchEntry(std::string long_n, char short_n, std::string desc, bool& tgt) : target(tgt) {
-      long_name = std::move(long_n);
-      short_name = short_n;
-      description = std::move(desc);
-    }
+    SwitchEntry(std::string long_n, char short_n, std::string desc, bool& tgt)
+        : EntryBase(std::move(long_n), short_n, std::move(desc)), target(tgt) {}
     void set_from_string(const std::string&) const override {
       target = true;
-      const_cast<SwitchEntry*>(this)->seen = true;
+      seen = true;
     }
     void set_switch() const override {
       target = true;
-      const_cast<SwitchEntry*>(this)->seen = true;
+      seen = true;
     }
     bool is_required() const override { return false; }
     bool has_default() const override { return false; }
@@ -124,9 +125,9 @@ class Options {
     bool expects_value() const override { return false; }
   };
 
-  std::vector<std::unique_ptr<EntryBase>> entries_;
-  std::unordered_map<std::string, EntryBase*> by_long_;
-  std::unordered_map<char, EntryBase*> by_short_;
+  std::vector<std::unique_ptr<EntryBase>> entries_{};
+  std::unordered_map<std::string, EntryBase*> by_long_{};
+  std::unordered_map<char, EntryBase*> by_short_{};
 };
 
 }  // namespace utility

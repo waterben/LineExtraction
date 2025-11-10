@@ -47,27 +47,29 @@
 
 #include <edge/edge_segment.hpp>
 
+#include <cstddef>
+
 namespace lsfm {
 
 template <class MT, int NUM_DIR = 8>
 class EsdSimple : public EsdBase<MT, index_type> {
-  cv::Mat dir_;
-  char* pdir_;
+  cv::Mat dir_{};
+  char* pdir_{nullptr};
 
 #ifdef DRAW_MODE
-  cv::Mat draw;
-  cv::Vec3b col;
+  cv::Mat draw{};
+  cv::Vec3b col{};
 #endif
 
-  short dmapStore_[20];
+  short dmapStore_[20]{};
 
-  const short* dmap;
-  const short* pdmap;
-  const short* rvdmap;
-  const short* fwdmap;
-  const MT* pmag_;
+  const short* dmap{nullptr};
+  const short* pdmap{nullptr};
+  const short* rvdmap{nullptr};
+  const short* fwdmap{nullptr};
+  const MT* pmag_{nullptr};
 
-  int min_pix_;
+  int min_pix_{};
 
   using EsdBase<MT, index_type>::points_;
   using EsdBase<MT, index_type>::segments_;
@@ -82,6 +84,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
     this->add("edge_min_pixels", std::bind(&EsdSimple<MT, NUM_DIR>::valueMinPixels, this, std::placeholders::_1),
               "Minimal number of support pixels.");
   }
+
+  EsdSimple(const EsdSimple&) = delete;
+  EsdSimple& operator=(const EsdSimple&) = delete;
 
   Value valueMinPixels(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
@@ -119,8 +124,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
 
     for_each(seeds.begin(), seeds.end(), [&](index_type idx) {
-      char dir = pdir_[idx];
-      if (dir < 0) return;
+      char direction = pdir_[idx];
+      if (direction < 0) return;
 
       size_t seg_beg = points_.size(), seg_end = points_.size();
 #ifdef DRAW_MODE
@@ -135,7 +140,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
         pdmap = rvdmap;
         extractSegment(idx);
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_))
+          segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
         return;
       }
 
@@ -148,7 +154,7 @@ class EsdSimple : public EsdBase<MT, index_type> {
         pdmap = fwdmap;
         extractSegment(idx);
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
         return;
       }
 
@@ -158,17 +164,19 @@ class EsdSimple : public EsdBase<MT, index_type> {
       // closed check
       if (this->points_.back() == idx) {
         seg_end = this->points_.size();
-        if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+        if (seg_end - seg_beg > static_cast<size_t>(min_pix_))
+          segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
         return;
       }
 
-      std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+      std::reverse(this->points_.begin() + static_cast<typename std::vector<index_type>::difference_type>(seg_beg),
+                   this->points_.end());
 
       // do fw
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > min_pix_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(min_pix_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
     });
   }
 
@@ -177,7 +185,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
  private:
   // check for vaild adjacent pixel by given direction and retun new index
   inline index_type checkAdjacent(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     char ndir = pdir_[nidx];
     // is pixel already used / not set and direction is -+1
     if (ndir < 0 || absDiff<NUM_DIR>(dir - ndir) > 1) return 0;
@@ -188,7 +198,9 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const int dirIndex = static_cast<int>(dir);
+    const ptrdiff_t offset = pdmap[dirIndex];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < 0) return;
     pdir_[nidx] = -3;
   }

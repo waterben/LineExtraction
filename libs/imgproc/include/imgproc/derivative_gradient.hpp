@@ -80,14 +80,28 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
   typedef Range<DT> DirectionRange;
 
   DerivativeGradient(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max())
-      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper),
+        derivative_(),
+        gx_(),
+        gy_(),
+        mag_(),
+        dir_(),
+        mag_done_(false),
+        dir_done_(false) {
     this->addManager(derivative_);
   }
 
   DerivativeGradient(const ValueManager::NameValueVector& options,
                      IT int_lower = std::numeric_limits<IT>::lowest(),
                      IT int_upper = std::numeric_limits<IT>::max())
-      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper),
+        derivative_(),
+        gx_(),
+        gy_(),
+        mag_(),
+        dir_(),
+        mag_done_(false),
+        dir_done_(false) {
     this->addManager(derivative_);
     this->value(options);
   }
@@ -95,7 +109,14 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
   DerivativeGradient(ValueManager::InitializerList options,
                      IT int_lower = std::numeric_limits<IT>::lowest(),
                      IT int_upper = std::numeric_limits<IT>::max())
-      : Gradient<IT, GT, MT, DT>(int_lower, int_upper), mag_done_(false), dir_done_(false) {
+      : Gradient<IT, GT, MT, DT>(int_lower, int_upper),
+        derivative_(),
+        gx_(),
+        gy_(),
+        mag_(),
+        dir_(),
+        mag_done_(false),
+        dir_done_(false) {
     this->addManager(derivative_);
     this->value(options);
   }

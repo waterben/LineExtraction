@@ -12,10 +12,10 @@ namespace fs = std::filesystem;
 
 template <class FT>
 struct Entry : public PerformanceTaskDefault {
-  Entry() {}
+  Entry() : PerformanceTaskDefault(), filter(), threshold(), filterRes(), thresholdRes(), resName() {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const cv::Ptr<Threshold<FT>>& t, const std::string& n, int f = 0)
-      : PerformanceTaskDefault(n, f), filter(a), threshold(t) {}
+      : PerformanceTaskDefault(n, f), filter(a), threshold(t), filterRes(), thresholdRes(), resName() {}
 
 
   cv::Ptr<FilterI<uchar>> filter;
@@ -25,7 +25,7 @@ struct Entry : public PerformanceTaskDefault {
   cv::Mat thresholdRes;
   std::string resName;
 
-
+  using PerformanceTaskDefault::run;
   virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
     this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
     PerformanceMeasure& pm = this->measure.back();
@@ -34,16 +34,17 @@ struct Entry : public PerformanceTaskDefault {
     filter->process(src);
     filterRes = filter->results();
     cv::Mat mag = filterRes["mag"].data;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != loops; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       thresholdRes = threshold->process(mag);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (loops * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (loops * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   void saveResults(bool verbose) {

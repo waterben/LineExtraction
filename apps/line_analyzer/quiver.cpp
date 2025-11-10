@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-Quiver::Quiver(QWidget* parent) : QMainWindow(parent), ui(new Ui::Quiver), color_dia(new QColorDialog(this)) {
+Quiver::Quiver(QWidget* parent)
+    : QMainWindow(parent), color_dia(new QColorDialog(this)), ui(new Ui::Quiver), qPen(Qt::green) {
   ui->setupUi(this);
   this->setWindowTitle(QString("Quiver"));
-  qPen = QPen(Qt::green);
 
   ui->cb_interpolate->addItem("CV_INTER_NN");
   ui->cb_interpolate->addItem("CV_INTER_LINEAR");

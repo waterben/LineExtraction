@@ -56,7 +56,7 @@ struct LRDescritpor {
   LRDescritpor() {}
   LRDescritpor(const FT* d) : data() { memcopy(data, d, sizeof(FT) * (cn * 2)); }
 
-  FT data[cn * 2];
+  FT data[static_cast<size_t>(cn * 2)]{};
 
   inline FT* dataL() { return data; }
 
@@ -64,8 +64,10 @@ struct LRDescritpor {
 
   inline FT distance(const LRDescritpor<FT, cn>& rhs) const {
     // return static_cast<FT>(norm(cv::_InputArray(data,cn*2), cv::_InputArray(rhs.data,cn*2), NORM_L2));
-    return static_cast<FT>(norm(cv::_InputArray(data, cn), cv::_InputArray(rhs.data, cn), cv::NORM_L2)) *
-           static_cast<FT>(norm(cv::_InputArray(data + cn, cn), cv::_InputArray(rhs.data + cn, cn), cv::NORM_L2));
+    return static_cast<FT>(norm(cv::_InputArray(data, static_cast<int>(cn)),
+                                cv::_InputArray(rhs.data, static_cast<int>(cn)), cv::NORM_L2)) *
+           static_cast<FT>(norm(cv::_InputArray(data + cn, static_cast<int>(cn)),
+                                cv::_InputArray(rhs.data + cn, static_cast<int>(cn)), cv::NORM_L2));
   }
 
   //! compute distance between two descriptors (static version)
@@ -97,7 +99,7 @@ class FdcGenericLR : public Fdc<FT, GT, LRDescritpor<FT, Helper::dscSize>> {
   typedef LRDescritpor<FT, Helper::dscSize> descriptor_type;
 
   FdcGenericLR(const MatMap& data, FT pos = -1, FT stepDir = 1, FT lstep = 1)
-      : pos_(pos), stepDir_(stepDir), lstep_(lstep) {
+      : data_(), pos_(pos), stepDir_(stepDir), lstep_(lstep) {
     data_.resize(Helper::inputData().size());
     this->setData(data);
   }

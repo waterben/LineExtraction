@@ -254,7 +254,7 @@ double testDisk(Entry<GT, MT, DT>& e, cv::Mat img, cv::Mat mask, double blur = 0
 }
 
 
-int main(int argc, char** argv) {
+int main() {
   std::vector<Entry<short>> gradI;
   gradI.push_back(Entry<short>(new SusanGradient<short, int, double>, "Susan (37)", ENTRY_HALF_RANGE));
   gradI.push_back(Entry<short>(new SusanGradient<short, int, double>(20, true), "Susan (3x3)", ENTRY_HALF_RANGE));
@@ -339,8 +339,8 @@ int main(int argc, char** argv) {
       new GradientOdd<PCSqf<uchar, double>>({NV("grad_scale", 1), NV("grad_muls", 3), NV("grad_kernel_spacing", 2.5)}),
       "PCF Po"));
 
-  int cols = gradI.size() + gradF.size() + 1;
-  int rows = 7;
+  size_t cols = gradI.size() + gradF.size() + 1;
+  size_t rows = 7;
   std::vector<std::vector<std::string>> table_box, table_disk;
   table_box.resize(cols);
   table_disk.resize(cols);
@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
   cv::Mat disk_mask = sobel.magnitude() > sobel.magnitudeThreshold(magTh);
 
 
-  int row = 1;
+  size_t row = 1;
   for_each(gradI.begin(), gradI.end(), [&](Entry<short>& e) {
     table_box[row][0] = e.name;
     table_disk[row][0] = e.name;
@@ -597,8 +597,8 @@ int main(int argc, char** argv) {
   std::ofstream ofs;
   ofs.open("gradient_orientation_box.csv");
 
-  for_each(table_box.begin(), table_box.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table_box.begin(), table_box.end(), [&](const std::vector<std::string>& box_row) {
+    for_each(box_row.begin(), box_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });
@@ -610,8 +610,8 @@ int main(int argc, char** argv) {
 
   ofs.open("gradient_orientation_disk.csv");
 
-  for_each(table_disk.begin(), table_disk.end(), [&](const std::vector<std::string>& row) {
-    for_each(row.begin(), row.end(), [&](const std::string& cell) {
+  for_each(table_disk.begin(), table_disk.end(), [&](const std::vector<std::string>& disk_row) {
+    for_each(disk_row.begin(), disk_row.end(), [&](const std::string& cell) {
       std::cout << cell << "\t";
       ofs << cell << ";";
     });

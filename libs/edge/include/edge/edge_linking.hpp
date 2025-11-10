@@ -46,6 +46,8 @@
 #pragma once
 
 #include <edge/edge_segment.hpp>
+
+#include <cstddef>
 // #define NO_EDGE_THICK_CHECK
 // #define NO_GRADIENT_MAX_CHECK
 
@@ -54,7 +56,7 @@ namespace lsfm {
 template <class MT, int NUM_DIR = 8, bool USE_CORNER_RULE = false>
 class EsdLinking : public EsdBase<MT, index_type> {
   cv::Mat dir_;
-  char* pdir_;
+  char* pdir_{nullptr};
 
 #ifdef DRAW_MODE
   cv::Mat draw;
@@ -64,11 +66,11 @@ class EsdLinking : public EsdBase<MT, index_type> {
   short dmapStore_[20];
   char abs_diffmapStore_[15];
 
-  const short* dmap;
-  const short* pdmap;
-  const short* rvdmap;
-  const short* fwdmap;
-  const MT* pmag_;
+  const short* dmap{nullptr};
+  const short* pdmap{nullptr};
+  const short* rvdmap{nullptr};
+  const short* fwdmap{nullptr};
+  const MT* pmag_{nullptr};
 
   int minPixels_, maxGap_;
   float magMul_, magTh_;
@@ -81,7 +83,13 @@ class EsdLinking : public EsdBase<MT, index_type> {
 
  public:
   EsdLinking(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5)
-      : EsdBase<MT, index_type>(), minPixels_(minPix), maxGap_(maxGap), magMul_(magMul), magTh_(magTh) {
+      : EsdBase<MT, index_type>(),
+        dir_(),
+        minPixels_(minPix),
+        maxGap_(maxGap),
+        magMul_(magMul),
+        magTh_(magTh),
+        addedSeeds_() {
     dmap = &dmapStore_[8];
     rvdmap = dmap - 4;
     fwdmap = dmap;
@@ -99,6 +107,9 @@ class EsdLinking : public EsdBase<MT, index_type> {
               std::bind(&EsdLinking<MT, NUM_DIR, USE_CORNER_RULE>::valueMagThreshold, this, std::placeholders::_1),
               "Magnitude threshold.");
   }
+
+  EsdLinking(const EsdLinking&) = delete;
+  EsdLinking& operator=(const EsdLinking&) = delete;
 
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
@@ -192,7 +203,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
  private:
   // check for vaild adjacent pixel by given direction and retun new index
   inline index_type checkAdjacent(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     char ndir = pdir_[nidx];
     // is pixel already used / not set and direction is -+1
     // if (ndir < 0 || absDiff<NUM_DIR>(dir-ndir > 1)
@@ -212,9 +224,12 @@ class EsdLinking : public EsdBase<MT, index_type> {
     char dirn = dir - 1;
     char dirp = dir + 1;
 
-    index_type nidx = idx + pdmap[dir];
-    index_type nidxn = idx + pdmap[dirn];
-    index_type nidxp = idx + pdmap[dirp];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    const ptrdiff_t offsetN = pdmap[static_cast<int>(dirn)];
+    const ptrdiff_t offsetP = pdmap[static_cast<int>(dirp)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
+    index_type nidxn = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetN);
+    index_type nidxp = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offsetP);
 
     MT v = pmag_[nidx];
     MT vn = pmag_[nidxn];
@@ -243,7 +258,9 @@ class EsdLinking : public EsdBase<MT, index_type> {
     }
 
     // is pixel already used or border or no magnitude
-    if (v < magTh_ || pdir_[nidx] < -1 || v > magMul_ * pmag_[idx]) return 0;
+    const float vf = static_cast<float>(v);
+    const float vmag = static_cast<float>(pmag_[idx]);
+    if (vf < magTh_ || pdir_[nidx] < -1 || vf > magMul_ * vmag) return 0;
     dir = dirn;
     return nidx;
   }
@@ -252,14 +269,16 @@ class EsdLinking : public EsdBase<MT, index_type> {
 
   // check for thick lines and remove pixels
   inline void checkThick(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < 0) return;
     pdir_[nidx] = -4;
   }
 
   // check for thick lines and remove pixels
   inline void checkThickMag(index_type idx, char dir) {
-    index_type nidx = idx + pdmap[dir];
+    const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
+    index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
     if (pdir_[nidx] < -1) return;
     pdir_[nidx] = -4;
   }
@@ -442,7 +461,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -455,7 +475,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegment(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -465,17 +485,19 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
-    std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+    std::reverse(this->points_.begin() + static_cast<typename IndexVector::difference_type>(seg_beg),
+                 this->points_.end());
 
     // do fw
     pdmap = fwdmap;
     extractSegment(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 
 
@@ -688,7 +710,8 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = rvdmap;
       extractSegmentC(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE));
       return;
     }
 
@@ -701,7 +724,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
       pdmap = fwdmap;
       extractSegmentC(idx);
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
       return;
     }
 
@@ -711,17 +734,19 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // closed check
     if (this->points_.back() == idx) {
       seg_end = this->points_.size();
-      if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
+      if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+        segments_.push_back(EdgeSegment(seg_beg, seg_end, ES_REVERSE | ES_CLOSED));
       return;
     }
 
-    std::reverse(this->points_.begin() + seg_beg, this->points_.end());
+    std::reverse(this->points_.begin() + static_cast<typename IndexVector::difference_type>(seg_beg),
+                 this->points_.end());
 
     // do fw
     pdmap = fwdmap;
     extractSegmentC(idx);
     seg_end = this->points_.size();
-    if (seg_end - seg_beg > minPixels_) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 };
 

@@ -18,7 +18,11 @@ constexpr float th_low = 0.004f, th_high = 0.012f;
 
 struct FitPerformaceData : public TaskData {
   FitPerformaceData(const std::string& n, const cv::Mat& s)
-      : TaskData(n, s), nms(th_low, th_high), edge(10, 3, 3, grad.magnitudeThreshold(th_low)) {
+      : TaskData(n, s),
+        grad(),
+        nms(th_low, th_high),
+        edge(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
+        points() {
     if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
     grad.process(src);
     nms.process(grad);
@@ -57,16 +61,17 @@ struct Entry : public PerformanceTaskBase {
     PerformanceMeasure& pm = this->measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     std::vector<LineSegment<float, Vec2>> lsegs;
-    uint64 start;
+    uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
+      start = static_cast<uint64>(cv::getTickCount());
       fit.apply(pdata.edge.segments(), pdata.points, lsegs);
-      pm.measures.push_back(cv::getTickCount() - start);
+      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) / (runs * cv::getTickFrequency()) << "ms"
-                << std::endl;
+                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
+                       (runs * static_cast<double>(cv::getTickFrequency()))
+                << "ms" << std::endl;
   }
 
   FIT fit;

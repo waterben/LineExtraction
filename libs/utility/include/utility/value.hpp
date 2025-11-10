@@ -55,6 +55,8 @@ class Value {
     double fval;
     int64_t ival;
     char* str;
+
+    Data() : str(nullptr) {}
   };
 
   Data data_;
@@ -63,7 +65,7 @@ class Value {
   enum Type { NOT_A_VALUE = 0, FLOAT, INT, BOOL, STRING };
 
  private:
-  Type type_;
+  Type type_{NOT_A_VALUE};
 
   void release() { delete[] data_.str; }
 
@@ -72,18 +74,18 @@ class Value {
       release();
     else
       type_ = STRING;
-    if (data == 0) {
+    if (data == nullptr) {
       data_.str = new char[1];
       data_.str[0] = 0;
     } else {
       size_t s = std::strlen(data);
       data_.str = new char[s + 1];
-      data_.str[s + 1] = 0;
+      data_.str[s] = 0;
       strcpy(data_.str, data);
     }
   }
 
-  Value(Type t) : type_(t) { data_.fval = 0; }
+  Value(Type t) : data_(), type_(t) { data_.fval = 0; }
 
  public:
   static const Value& NAV() {
@@ -91,20 +93,20 @@ class Value {
     return nav;
   }
 
-  Value(double fval = 0) : type_(FLOAT) { data_.fval = fval; }
-  Value(float fval) : type_(FLOAT) { data_.fval = fval; }
-  Value(int64_t ival) : type_(INT) { data_.ival = ival; }
-  Value(int ival) : type_(INT) { data_.ival = ival; }
-  Value(unsigned int ival) : type_(INT) { data_.ival = ival; }
-  Value(short ival) : type_(INT) { data_.ival = ival; }
-  Value(unsigned short ival) : type_(INT) { data_.ival = ival; }
-  Value(char ival) : type_(INT) { data_.ival = ival; }
-  Value(unsigned char ival) : type_(INT) { data_.ival = ival; }
-  Value(bool ival) : type_(BOOL) { data_.ival = ival ? 1 : 0; }
-  Value(const std::string& str) : type_(INT) { create(str.c_str()); }
-  Value(const char* str) : type_(INT) { create(str); }
+  Value(double fval = 0) : data_(), type_(FLOAT) { data_.fval = fval; }
+  Value(float fval) : data_(), type_(FLOAT) { data_.fval = fval; }
+  Value(int64_t ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(int ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(unsigned int ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(short ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(unsigned short ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(char ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(unsigned char ival) : data_(), type_(INT) { data_.ival = ival; }
+  Value(bool ival) : data_(), type_(BOOL) { data_.ival = ival ? 1 : 0; }
+  Value(const std::string& str) : data_(), type_(INT) { create(str.c_str()); }
+  Value(const char* str) : data_(), type_(INT) { create(str); }
 
-  Value(const Value& val) : type_(val.type_), data_(val.data_) {
+  Value(const Value& val) : data_(val.data_), type_(val.type_) {
     if (type_ == STRING) {
       // prevent create to release data at pointer
       type_ = INT;
@@ -203,8 +205,12 @@ class Value {
         return "int";
       case BOOL:
         return "bool";
+      case STRING:
+        return "string";
+      case NOT_A_VALUE:
+        return "not_a_value";
     }
-    return "string";
+    return "unknown";
   }
 
   template <class T>
@@ -222,7 +228,7 @@ class Value {
         os << getInt64();
         break;
       case Value::BOOL:
-        os << getInt64() ? "true" : "false";
+        os << (getInt64() ? "true" : "false");
         break;
       case Value::STRING:
         os << getChar();
@@ -356,7 +362,7 @@ class Value {
   inline operator bool() const {
     return type_ == FLOAT                    ? data_.fval != 0
            : (type_ == INT || type_ == BOOL) ? data_.ival != 0
-           : type_ == STRING                 ? data_.str != 0
+           : type_ == STRING                 ? data_.str != nullptr
                                              : false;
   }
 };

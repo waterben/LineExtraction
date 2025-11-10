@@ -68,9 +68,15 @@ struct RotationAlign {
 
 template <class FT>
 struct NoAlign {
-  static inline void apply(const Line<FT>& line, const Vec2<FT>& p, Vec2<FT>& ret) { ret = p; }
+  static inline void apply(const Line<FT>& line, const Vec2<FT>& p, Vec2<FT>& ret) {
+    static_cast<void>(line);
+    ret = p;
+  }
 
-  static inline Vec2<FT> apply(const Line<FT>& line, const Vec2<FT>& p) { return p; }
+  static inline Vec2<FT> apply(const Line<FT>& line, const Vec2<FT>& p) {
+    static_cast<void>(line);
+    return p;
+  }
 };
 
 // Generic Feature Descriptor
@@ -79,10 +85,11 @@ struct GenericDescritpor {
   GenericDescritpor() {}
   GenericDescritpor(const FT* d) : data() { memcopy(data, d, sizeof(FT) * cn); }
 
-  FT data[cn];
+  FT data[static_cast<size_t>(cn)];
 
   inline FT distance(const GenericDescritpor<FT, cn>& rhs) const {
-    return static_cast<FT>(norm(cv::_InputArray(data, cn), cv::_InputArray(rhs.data, cn), cv::NORM_L2));
+    return static_cast<FT>(norm(cv::_InputArray(data, static_cast<int>(cn)),
+                                cv::_InputArray(rhs.data, static_cast<int>(cn)), cv::NORM_L2));
   }
 
   //! compute distance between two descriptors (static version)
@@ -718,7 +725,7 @@ class FdcGeneric : public Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>> {
   typedef GenericDescritpor<FT, Helper::dscSize> descriptor_type;
 
   FdcGeneric(const MatMap& data, FT pos = -1, FT stepDir = 1, FT lstep = 1)
-      : pos_(pos), stepDir_(stepDir), lstep_(lstep) {
+      : data_(), pos_(pos), stepDir_(stepDir), lstep_(lstep) {
     data_.resize(Helper::inputData().size());
     this->setData(data);
   }

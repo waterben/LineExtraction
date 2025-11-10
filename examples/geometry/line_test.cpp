@@ -13,7 +13,7 @@ using namespace std;
 using namespace lsfm;
 
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   /*const char* filename = "../../images/office1_low.jpg";
 
   //cv::Mat src = imread(filename, IMREAD_GRAYSCALE);

@@ -66,7 +66,7 @@ class InputTaskLoader : public TaskLoader {
   /// @brief Run tasks
   void run(std::size_t loops) override {
     std::cout << "Starting task sequence: " << name << std::endl;
-    uint64 start = cv::getTickCount();
+    int64 start = cv::getTickCount();
 
     for (auto& dp : data_provider) {
       if (!dp) {

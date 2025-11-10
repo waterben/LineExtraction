@@ -467,13 +467,14 @@ void drawMatch(cv::Mat& img,
         Vec<int,4> l(pl.pt.x, pl.pt.y, pr.pt.x + img.cols / 2, pr.pt.y);
         line(img, l, color);
 
-/*        if (connect) {
-            line(limg, ll, color);
-            line(rimg, lr, color);
-            PT<FT> tmp = lr.centerPoint();
-            getX(tmp) += FT(limg.cols);
-            LineSegment<FT,PT> c(ll.centerPoint(), tmp);
-            line(img, c, id, color);
+        // TODO: Implement connection logic
+        // if (connect) {
+        //     line(limg, ll, color);
+        //     line(rimg, lr, color);
+        //     PT<FT> tmp = lr.centerPoint();
+        //     getX(tmp) += FT(limg.cols);
+        //     LineSegment<FT,PT> c(ll.centerPoint(), tmp);
+        //     line(img, c, id, color);
         }
         else {
             line(limg, ll, id, color);
@@ -515,12 +516,13 @@ cv::Mat drawMatches(const cv::Mat& img1,
   bool useNumbers = (lineNumber.size() > 0);
   int idx = 0;
   for_each(matches.begin(), matches.end(), [&](const DM& m) {
-    cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
+    cv::Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
+                    static_cast<uchar>(20 + rng.uniform(0, 225)));
 
     char buffer[50];
-    sprintf(buffer, "%i", useNumbers ? lineNumber.at(m.queryIdx) : idx);
-    drawMatch(outImg, outImgL, outImgR, l1[m.queryIdx], l2[m.matchIdx], cv::Scalar(color[0], color[1], color[2]),
-              buffer, connect);
+    sprintf(buffer, "%i", useNumbers ? lineNumber.at(static_cast<size_t>(m.queryIdx)) : idx);
+    drawMatch(outImg, outImgL, outImgR, l1[static_cast<size_t>(m.queryIdx)], l2[static_cast<size_t>(m.matchIdx)],
+              cv::Scalar(color[0], color[1], color[2]), buffer, connect);
     idx++;
   });
 
@@ -628,7 +630,7 @@ cv::Mat quiver(const cv::Mat& image,
         if (length != 0) v *= length / d;
         p *= scale;
         v *= scale;
-        line(canvas, LineSegment<float>(p, p + cv::Point_<float>(v[0], v[1])), color, 1, lineType, normalLength,
+        line(canvas, LineSegment<float>(p, p + cv::Point_<float>(v[0], v[1])), color, thickness, lineType, normalLength,
              tipLength);
       }
     }
@@ -687,7 +689,7 @@ cv::Mat quiverDir(const cv::Mat& image,
         v *= length;
         p *= scale;
         v *= scale;
-        line(canvas, LineSegment<float>(p, p + v), color, 1, lineType, normalLength, tipLength);
+        line(canvas, LineSegment<float>(p, p + v), color, thickness, lineType, normalLength, tipLength);
       }
     }
   }
@@ -704,7 +706,9 @@ inline void setPixel(cv::Mat& dst, const lsfm::Vec2i& idx, const cv::Vec3b& colo
 }
 
 inline void setCircle(cv::Mat& dst, size_t idx, const cv::Vec3b& color, int r) {
-  circle(dst, cv::Point(static_cast<int>(idx % dst.cols), static_cast<int>(idx / dst.cols)), r,
+  // Safe conversion: dst.cols is always positive for valid images
+  const auto cols = static_cast<size_t>(dst.cols);
+  circle(dst, cv::Point(static_cast<int>(idx % cols), static_cast<int>(idx / cols)), r,
          cv::Scalar(color[0], color[1], color[2]));
 }
 

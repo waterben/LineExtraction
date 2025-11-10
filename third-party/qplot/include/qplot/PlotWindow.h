@@ -19,14 +19,15 @@
 
 class PlotWindow : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(PlotWindow)
 
-  QAction* actionInsert_Plot;
-  QAction* actionSave_Document;
-  QWidget* centralWidget;
-  QGridLayout* gridLayout;
-  QScrollBar* verticalScrollBar;
-  QScrollBar* horizontalScrollBar;
-  QStatusBar* statusBar;
+  QAction* actionInsert_Plot{nullptr};
+  QAction* actionSave_Document{nullptr};
+  QWidget* centralWidget{nullptr};
+  QGridLayout* gridLayout{nullptr};
+  QScrollBar* verticalScrollBar{nullptr};
+  QScrollBar* horizontalScrollBar{nullptr};
+  QStatusBar* statusBar{nullptr};
 
   bool hold_;
   bool keep_aspect_;
@@ -43,12 +44,12 @@ class PlotWindow : public QMainWindow {
   }
 
  public:
-  explicit PlotWindow(const char* title = "", QWidget* parent = 0);
+  explicit PlotWindow(const char* title = "", QWidget* parent = nullptr);
   ~PlotWindow();
   // direct access to custom plot
-  QCustomPlot* qplot;
-  double scale_x, scale_y;
-  double border_x, border_y;
+  QCustomPlot* qplot{nullptr};
+  double scale_x{}, scale_y{};
+  double border_x{}, border_y{};
 
   //! reset plot and set back to initial setup
   void reset();
@@ -159,7 +160,7 @@ inline QCPGraph* PlotWindow::plot(
   QCPGraph* graph = qplot->addGraph();
   graph->setPen(pen);
   graph->setBrush(brush);
-  graph->setData(QVector<double>::fromStdVector(dX), QVector<double>::fromStdVector(dY));
+  graph->setData(QVector<double>(dX.begin(), dX.end()), QVector<double>(dY.begin(), dY.end()));
   return graph;
 }
 
@@ -178,7 +179,7 @@ inline QCPGraph* PlotWindow::plot(
   QCPGraph* graph = qplot->addGraph();
   graph->setPen(pen);
   graph->setBrush(brush);
-  graph->setData(QVector<double>::fromStdVector(X), QVector<double>::fromStdVector(Y));
+  graph->setData(QVector<double>(X.begin(), X.end()), QVector<double>(Y.begin(), Y.end()));
   return graph;
 }
 
@@ -213,6 +214,6 @@ inline QCPItemLine* PlotWindow::line(T x1, T y1, T x2, T y2, bool fit_axis, cons
 
 template <typename FT, template <class> class LPT>
 inline QCPItemLine* PlotWindow::line(const lsfm::LineSegment<FT, LPT>& l, bool fit_axis, const QPen pen) {
-  lsfm::Vec<FT, 4> data = l.endPoints();
-  return line(data[0], data[1], data[2], data[3], fit_axis, pen);
+  lsfm::Vec<FT, 4> line_data = l.endPoints();
+  return line(line_data[0], line_data[1], line_data[2], line_data[3], fit_axis, pen);
 }

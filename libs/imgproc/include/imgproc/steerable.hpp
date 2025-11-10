@@ -51,7 +51,7 @@ cv::Mat_<FT> SteerGaussianD1(FT angle, int size = 5, FT range = 3) {
   cv::Mat_<FT> g = gaussian<FT>(size, range);
   cv::Mat_<FT> gd1 = gaussianD1<FT>(size, range);
 
-  return cos(-angle) * (g.t() * gd1) + sin(-angle) * (gd1.t() * g);
+  return cv::Mat_<FT>(cos(-angle) * (g.t() * gd1) + sin(-angle) * (gd1.t() * g));
 }
 
 template <class FT>
@@ -77,9 +77,9 @@ cv::Mat_<FT> SteerGaussianD2(FT angle, int size = 5, FT range = 3) {
   cv::Mat_<FT> gd1 = gaussianD1<FT>(size, range);
   cv::Mat_<FT> gd2 = gaussianD2<FT>(size, range);
 
-  FT c = cos(angle), s = sin(angle);
+  FT c = static_cast<FT>(cos(angle)), s = static_cast<FT>(sin(angle));
 
-  return (c * c) * (g.t() * gd2) + (s * s) * (gd2.t() * g) + (c * s * -2) * (gd1.t() * gd1);
+  return cv::Mat_<FT>((c * c) * (g.t() * gd2) + (s * s) * (gd2.t() * g) + (c * s * -2) * (gd1.t() * gd1));
 }
 
 template <class FT>

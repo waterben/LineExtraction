@@ -56,7 +56,8 @@ void testNMS(NMS& nms,
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << "nms - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "nms - " << name << ": "
+            << (static_cast<double>(rt) * 1000.0 / static_cast<double>(cv::getTickFrequency())) / runs << std::endl;
 }
 
 template <class GRAD>

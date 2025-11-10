@@ -6,8 +6,8 @@ using lsfm::OptionManager;
 
 namespace {
 struct MyOM : public OptionManager {
-  MyOM() = default;
-  explicit MyOM(const OptionManager::OptionVector& v) : OptionManager(v) {}
+  MyOM() : calls() {}
+  explicit MyOM(const OptionManager::OptionVector& v) : OptionManager(v), calls() {}
   std::vector<std::pair<std::string, double>> calls;
   void setOptionImpl(const std::string& name, double value) override { calls.emplace_back(name, value); }
 };

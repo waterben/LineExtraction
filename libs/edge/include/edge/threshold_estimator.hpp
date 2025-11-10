@@ -83,13 +83,11 @@ class ThresholdOtsu {
  public:
   typedef IT img_type;
 
-  explicit ThresholdOtsu(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0) : intensity_range_(r_min, r_max) {
-    scale_ = static_cast<FT>(N) / intensity_range_.size();
-  }
+  explicit ThresholdOtsu(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0)
+      : intensity_range_(r_min, r_max), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
-  explicit ThresholdOtsu(const Range<IT>& r) : intensity_range_(r) {
-    scale_ = static_cast<FT>(N) / intensity_range_.size();
-  }
+  explicit ThresholdOtsu(const Range<IT>& r)
+      : intensity_range_(r), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
   //! Compute threshold
   inline IT process(const cv::Mat& mag) const {
@@ -101,17 +99,19 @@ class ThresholdOtsu {
       size.height = 1;
     }
 
-    int i, j, h[N] = {0}, idx;
+    int i, j;
+    size_t idx;
+    size_t h[static_cast<size_t>(N)] = {0};
     for (i = 0; i < size.height; ++i) {
       const IT* src = mag.ptr<IT>(i);
       for (j = 0; j < size.width; ++j) {
-        idx = static_cast<int>(src[j] * scale_);
+        idx = static_cast<size_t>(src[j] * scale_);
         if (idx < N) h[idx]++;
       }
     }
 
-    FT mu = 0, scale = static_cast<FT>(1.) / (size.width * size.height);
-    for (i = 0; i < N; ++i) mu += i * static_cast<FT>(h[i]);
+    FT mu = 0, scale = static_cast<FT>(1.) / static_cast<FT>(size.width * size.height);
+    for (i = 0; i < N; ++i) mu += static_cast<FT>(i) * static_cast<FT>(h[i]);
 
     mu *= scale;
     FT mu1 = 0, q1 = 0;
@@ -120,7 +120,7 @@ class ThresholdOtsu {
     for (i = 0; i < N; ++i) {
       FT p_i, q2, mu2, sigma;
 
-      p_i = h[i] * scale;
+      p_i = static_cast<FT>(h[i]) * scale;
       mu1 *= q1;
       q1 += p_i;
       q2 = static_cast<FT>(1.) - q1;
@@ -129,7 +129,7 @@ class ThresholdOtsu {
           std::max(q1, q2) > static_cast<FT>(1.) - std::numeric_limits<FT>::epsilon())
         continue;
 
-      mu1 = (mu1 + i * p_i) / q1;
+      mu1 = (mu1 + static_cast<FT>(i) * p_i) / q1;
       mu2 = (mu - q1 * mu1) / q2;
       sigma = q1 * q2 * (mu1 - mu2) * (mu1 - mu2);
       if (sigma > max_sigma) {

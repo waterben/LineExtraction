@@ -10,6 +10,8 @@ using namespace cv;
 
 class PhaseCongruencyTest : public ::testing::Test {
  protected:
+  PhaseCongruencyTest() : step_image(), sine_image(), checkerboard(), uniform_image(), noisy_image(), phase_cong() {}
+
   void SetUp() override {
     // Create synthetic test images
     createTestImages();

@@ -40,6 +40,10 @@ the use of this software, even if advised of the possibility of such damage.
 
 #include <lsd/impl/lsd_edlz.hpp>
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+
 #define Horizontal 255  // if |dx|<|dy|;
 #define Vertical 0      // if |dy|<=|dx|;
 #define UpDir 1
@@ -50,22 +54,12 @@ the use of this software, even if advised of the possibility of such damage.
 #define SkipEdgePoint 2
 
 using namespace std;
-EDLineDetector::EDLineDetector() {
-  // set parameters for line segment detection
-  gradienThreshold_ = 10;  // ***** ORIGINAL WAS 25
-  anchorThreshold_ = 2;    // 8
-  scanIntervals_ = 2;      // 2
-  minLineLen_ = 15;
-  lineFitErrThreshold_ = 2;
-  bValidate_ = false;
-  InitEDLine_();
-}
+EDLineDetector::EDLineDetector() { InitEDLine_(); }
 EDLineDetector::EDLineDetector(EDLineParam param) {
-  // set parameters for line segment detection
-  gradienThreshold_ = param.gradientThreshold;
-  anchorThreshold_ = param.anchorThreshold;
-  scanIntervals_ = param.scanIntervals;
-  minLineLen_ = param.minLineLen;
+  gradienThreshold_ = static_cast<short>(std::lround(param.gradientThreshold));
+  anchorThreshold_ = static_cast<unsigned char>(std::lround(param.anchorThreshold));
+  scanIntervals_ = static_cast<unsigned int>(std::max(param.scanIntervals, 1));
+  minLineLen_ = std::max(param.minLineLen, 1);
   lineFitErrThreshold_ = param.lineFitErrThreshold;
   bValidate_ = param.validate;
   InitEDLine_();
@@ -109,20 +103,20 @@ EDLineDetector::~EDLineDetector() {
 
 EDLineParam EDLineDetector::getParams() const {
   EDLineParam ret;
-  ret.anchorThreshold = anchorThreshold_;
-  ret.gradientThreshold = gradienThreshold_;
+  ret.anchorThreshold = static_cast<float>(anchorThreshold_);
+  ret.gradientThreshold = static_cast<float>(gradienThreshold_);
   ret.lineFitErrThreshold = lineFitErrThreshold_;
   ret.minLineLen = minLineLen_;
-  ret.scanIntervals = scanIntervals_;
+  ret.scanIntervals = static_cast<int>(scanIntervals_);
   ret.validate = bValidate_;
   return ret;
 }
 
 void EDLineDetector::setParams(const EDLineParam& param) {
-  gradienThreshold_ = param.gradientThreshold;
-  anchorThreshold_ = param.anchorThreshold;
-  scanIntervals_ = param.scanIntervals;
-  minLineLen_ = param.minLineLen;
+  gradienThreshold_ = static_cast<short>(std::lround(param.gradientThreshold));
+  anchorThreshold_ = static_cast<unsigned char>(std::lround(param.anchorThreshold));
+  scanIntervals_ = static_cast<unsigned int>(std::max(param.scanIntervals, 1));
+  minLineLen_ = std::max(param.minLineLen, 1);
   lineFitErrThreshold_ = param.lineFitErrThreshold;
   bValidate_ = param.validate;
   fitMatT = cv::Mat_<int>(2, minLineLen_);
@@ -145,14 +139,15 @@ void writeMat(cv::Mat m, string name, int n) {
 }
 
 int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
-  imageWidth = image.cols;
-  imageHeight = image.rows;
+  imageWidth = static_cast<unsigned int>(image.cols);
+  imageHeight = static_cast<unsigned int>(image.rows);
   unsigned int pixelNum = imageWidth * imageHeight;
 
   unsigned int edgePixelArraySize = pixelNum / 2;
   unsigned int maxNumOfEdge = edgePixelArraySize / 5;
+  const unsigned int minLineLenUnsigned = static_cast<unsigned int>(minLineLen_);
   // compute dx, dy images
-  if (gImg_.cols != imageWidth || gImg_.rows != imageHeight) {
+  if (gImg_.cols != static_cast<int>(imageWidth) || gImg_.rows != static_cast<int>(imageHeight)) {
     if (pFirstPartEdgeX_ != NULL) {
       delete[] pFirstPartEdgeX_;
       delete[] pFirstPartEdgeY_;
@@ -163,12 +158,12 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
       delete[] pAnchorX_;
       delete[] pAnchorY_;
     }
-    dxImg_.create(imageHeight, imageWidth, CV_16SC1);
-    dyImg_.create(imageHeight, imageWidth, CV_16SC1);
-    gImgWO_.create(imageHeight, imageWidth, CV_16SC1);
-    gImg_.create(imageHeight, imageWidth, CV_16SC1);
-    dirImg_.create(imageHeight, imageWidth, CV_8UC1);
-    edgeImage_.create(imageHeight, imageWidth, CV_8UC1);
+    dxImg_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_16SC1);
+    dyImg_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_16SC1);
+    gImgWO_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_16SC1);
+    gImg_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_16SC1);
+    dirImg_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_8UC1);
+    edgeImage_.create(static_cast<int>(imageHeight), static_cast<int>(imageWidth), CV_8UC1);
     pFirstPartEdgeX_ = new unsigned int[edgePixelArraySize];
     pFirstPartEdgeY_ = new unsigned int[edgePixelArraySize];
     pSecondPartEdgeX_ = new unsigned int[edgePixelArraySize];
@@ -195,8 +190,6 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
   gImgWO_ = sumDxDy / 4;
   cv::compare(dxABS_m, dyABS_m, dirImg_, cv::CMP_LT);
 
-  short* pdxImg = dxImg_.ptr<short>();
-  short* pdyImg = dyImg_.ptr<short>();
   short* pgImg = gImg_.ptr<short>();
   unsigned char* pdirImg = dirImg_.ptr();
 
@@ -204,8 +197,10 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
   memset(pAnchorX_, 0, edgePixelArraySize * sizeof(unsigned int));  // initialization
   memset(pAnchorY_, 0, edgePixelArraySize * sizeof(unsigned int));
   unsigned int anchorsSize = 0;
-  int indexInArray;
-  unsigned char gValue1, gValue2, gValue3;
+  unsigned int indexInArray = 0;
+  short gValue1 = 0;
+  short gValue2 = 0;
+  short gValue3 = 0;
   for (unsigned int w = 1; w < imageWidth - 1; w = w + scanIntervals_) {
     for (unsigned int h = 1; h < imageHeight - 1; h = h + scanIntervals_) {
       indexInArray = h * imageWidth + w;
@@ -248,13 +243,17 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
   unsigned int offsetPS = 0;
 
   unsigned int x, y;
-  unsigned int lastX, lastY;
+  unsigned int lastX = 0;
+  unsigned int lastY = 0;
   unsigned char lastDirection;      // up = 1, right = 2, down = 3, left = 4;
   unsigned char shouldGoDirection;  // up = 1, right = 2, down = 3, left = 4;
-  int edgeLenFirst, edgeLenSecond;
+  unsigned int edgeLenFirst = 0;
+  unsigned int edgeLenSecond = 0;
   for (unsigned int i = 0; i < anchorsSize; i++) {
     x = pAnchorX_[i];
     y = pAnchorY_[i];
+    lastX = x;
+    lastY = y;
     indexInArray = y * imageWidth + x;
     if (pEdgeImg[indexInArray]) {  // if anchor i is already been an edge pixel.
       continue;
@@ -702,7 +701,7 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
     // only keep the edge chains whose length is larger than the minLineLen_;
     edgeLenFirst = offsetPFirst - pFirstPartEdgeS_[offsetPS];
     edgeLenSecond = offsetPSecond - pSecondPartEdgeS_[offsetPS];
-    if (edgeLenFirst + edgeLenSecond < minLineLen_ + 1) {  // short edge, drop it
+    if (edgeLenFirst + edgeLenSecond < minLineLenUnsigned + 1U) {  // short edge, drop it
       offsetPFirst = pFirstPartEdgeS_[offsetPS];
       offsetPSecond = pSecondPartEdgeS_[offsetPS];
     } else {
@@ -745,15 +744,20 @@ int EDLineDetector::EdgeDrawing(cv::Mat& image, EdgeChains& edgeChains) {
     psId[numOfEdges++] = indexInCors;
     indexInArray = pFirstPartEdgeS_[edgeId];
     offsetPFirst = pFirstPartEdgeS_[edgeId + 1];
-    for (tempID = offsetPFirst - 1; tempID >= indexInArray; tempID--) {  // add first part edge
-      pxCors[indexInCors] = pFirstPartEdgeX_[tempID];
-      pyCors[indexInCors++] = pFirstPartEdgeY_[tempID];
+    if (offsetPFirst > indexInArray) {
+      for (tempID = static_cast<int>(offsetPFirst) - 1; tempID >= static_cast<int>(indexInArray);
+           --tempID) {  // add first part edge
+        pxCors[indexInCors] = pFirstPartEdgeX_[static_cast<std::size_t>(tempID)];
+        pyCors[indexInCors++] = pFirstPartEdgeY_[static_cast<std::size_t>(tempID)];
+      }
     }
     indexInArray = pSecondPartEdgeS_[edgeId];
     offsetPSecond = pSecondPartEdgeS_[edgeId + 1];
-    for (tempID = indexInArray + 1; tempID < offsetPSecond; tempID++) {  // add second part edge
-      pxCors[indexInCors] = pSecondPartEdgeX_[tempID];
-      pyCors[indexInCors++] = pSecondPartEdgeY_[tempID];
+    for (tempID = static_cast<int>(indexInArray) + 1; tempID < static_cast<int>(offsetPSecond);
+         ++tempID) {  // add second part edge
+      const auto tempIndex = static_cast<std::size_t>(tempID);
+      pxCors[indexInCors] = pSecondPartEdgeX_[tempIndex];
+      pyCors[indexInCors++] = pSecondPartEdgeY_[tempIndex];
     }
   }
   psId[numOfEdges] = indexInCors;  // the end index of the last edge
@@ -781,8 +785,8 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
   unsigned int* pLineXCors = lines.xCors.data();
   unsigned int* pLineYCors = lines.yCors.data();
   unsigned int* pLineSID = lines.sId.data();
-  logNT_ = 2.0 * (log10((double)imageWidth) + log10((double)imageHeight));
-  double lineFitErr;  // the line fit error;
+  logNT_ = 2.0 * (std::log10(static_cast<double>(imageWidth)) + std::log10(static_cast<double>(imageHeight)));
+  double lineFitErr = 0.0;  // the line fit error;
   std::array<double, 2> lineEquation;
   lineEquations_.clear();
   lineEndpoints_.clear();
@@ -792,14 +796,16 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
   unsigned int offsetInEdgeArrayS, offsetInEdgeArrayE, newOffsetS;  // start index and end index
   unsigned int offsetInLineArray = 0;
   float direction;  // line direction
+  const unsigned int minLineLenUnsigned = static_cast<unsigned int>(minLineLen_);
 
   for (unsigned int edgeID = 0; edgeID < edges.numOfEdges; edgeID++) {
     offsetInEdgeArrayS = pEdgeSID[edgeID];
     offsetInEdgeArrayE = pEdgeSID[edgeID + 1];
     while (offsetInEdgeArrayE >
-           offsetInEdgeArrayS + minLineLen_) {  // extract line segments from an edge, may find more than one segments
+           offsetInEdgeArrayS +
+               minLineLenUnsigned) {  // extract line segments from an edge, may find more than one segments
       // find an initial line segment
-      while (offsetInEdgeArrayE > offsetInEdgeArrayS + minLineLen_) {
+      while (offsetInEdgeArrayE > offsetInEdgeArrayS + minLineLenUnsigned) {
         lineFitErr = LeastSquaresLineFit_(pEdgeXCors, pEdgeYCors, offsetInEdgeArrayS, lineEquation);
         if (lineFitErr <= lineFitErrThreshold_) break;  // ok, an initial line segment detected
         offsetInEdgeArrayS += SkipEdgePoint;  // skip the first two pixel in the chain and try with the remaining pixels
@@ -811,7 +817,7 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
       double pointToLineDis;  // for a line ax+by+c=0 and a point(xi, yi), pointToLineDis = coef1*|a*xi+b*yi+c|
       bool bExtended = true;
       bool bFirstTry = true;
-      int numOfOutlier;  // to against noise, we accept a few outlier of a line.
+      unsigned int numOfOutlier = 0;  // to against noise, we accept a few outlier of a line.
       int tryTimes = 0;
       if (pdirImg[pEdgeYCors[offsetInEdgeArrayS] * imageWidth + pEdgeXCors[offsetInEdgeArrayS]] ==
           Horizontal) {  // y=ax+b, i.e. ax-y+b=0
@@ -828,18 +834,18 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
             lineFitErr = LeastSquaresLineFit_(pLineXCors, pLineYCors, pLineSID[numOfLines], newOffsetS,
                                               offsetInLineArray, lineEquation);
           }
-          coef1 = 1 / sqrt(lineEquation[0] * lineEquation[0] + 1);
+          coef1 = 1.0 / std::sqrt(lineEquation[0] * lineEquation[0] + 1.0);
           numOfOutlier = 0;
           newOffsetS = offsetInLineArray;
           while (offsetInEdgeArrayE > offsetInEdgeArrayS) {
-            pointToLineDis = fabs(lineEquation[0] * pEdgeXCors[offsetInEdgeArrayS] - pEdgeYCors[offsetInEdgeArrayS] +
-                                  lineEquation[1]) *
+            pointToLineDis = std::fabs(lineEquation[0] * pEdgeXCors[offsetInEdgeArrayS] -
+                                       pEdgeYCors[offsetInEdgeArrayS] + lineEquation[1]) *
                              coef1;
             pLineXCors[offsetInLineArray] = pEdgeXCors[offsetInEdgeArrayS];
             pLineYCors[offsetInLineArray++] = pEdgeYCors[offsetInEdgeArrayS++];
             if (pointToLineDis > lineFitErrThreshold_) {
               numOfOutlier++;
-              if (numOfOutlier > 3) break;
+              if (numOfOutlier > 3U) break;
             } else {  // we count number of connective outliers.
               numOfOutlier = 0;
             }
@@ -871,12 +877,12 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
           double a5 = lineEqu[2] * lineEqu[1];
           unsigned int Px = pLineXCors[pLineSID[numOfLines]];  // first pixel
           unsigned int Py = pLineYCors[pLineSID[numOfLines]];
-          lineEndP[0] = a1 * Px - a3 * Py - a4;    // x
-          lineEndP[1] = a2 * Py - a3 * Px - a5;    // y
-          Px = pLineXCors[offsetInLineArray - 1];  // last pixel
+          lineEndP[0] = static_cast<float>(a1 * Px - a3 * Py - a4);  // x
+          lineEndP[1] = static_cast<float>(a2 * Py - a3 * Px - a5);  // y
+          Px = pLineXCors[offsetInLineArray - 1];                    // last pixel
           Py = pLineYCors[offsetInLineArray - 1];
-          lineEndP[2] = a1 * Px - a3 * Py - a4;  // x
-          lineEndP[3] = a2 * Py - a3 * Px - a5;  // y
+          lineEndP[2] = static_cast<float>(a1 * Px - a3 * Py - a4);  // x
+          lineEndP[3] = static_cast<float>(a2 * Py - a3 * Px - a5);  // y
           lineEndpoints_.push_back(lineEndP);
           lineDirection_.push_back(direction);
           numOfLines++;
@@ -897,18 +903,18 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
             lineFitErr = LeastSquaresLineFit_(pLineXCors, pLineYCors, pLineSID[numOfLines], newOffsetS,
                                               offsetInLineArray, lineEquation);
           }
-          coef1 = 1 / sqrt(1 + lineEquation[0] * lineEquation[0]);
+          coef1 = 1.0 / std::sqrt(1.0 + lineEquation[0] * lineEquation[0]);
           numOfOutlier = 0;
           newOffsetS = offsetInLineArray;
           while (offsetInEdgeArrayE > offsetInEdgeArrayS) {
-            pointToLineDis = fabs(pEdgeXCors[offsetInEdgeArrayS] - lineEquation[0] * pEdgeYCors[offsetInEdgeArrayS] -
-                                  lineEquation[1]) *
+            pointToLineDis = std::fabs(pEdgeXCors[offsetInEdgeArrayS] -
+                                       lineEquation[0] * pEdgeYCors[offsetInEdgeArrayS] - lineEquation[1]) *
                              coef1;
             pLineXCors[offsetInLineArray] = pEdgeXCors[offsetInEdgeArrayS];
             pLineYCors[offsetInLineArray++] = pEdgeYCors[offsetInEdgeArrayS++];
             if (pointToLineDis > lineFitErrThreshold_) {
               numOfOutlier++;
-              if (numOfOutlier > 3) break;
+              if (numOfOutlier > 3U) break;
             } else {  // we count number of connective outliers.
               numOfOutlier = 0;
             }
@@ -940,12 +946,12 @@ int EDLineDetector::EDline(cv::Mat& image, LineChains& lines) {
           double a5 = lineEqu[2] * lineEqu[1];
           unsigned int Px = pLineXCors[pLineSID[numOfLines]];  // first pixel
           unsigned int Py = pLineYCors[pLineSID[numOfLines]];
-          lineEndP[0] = a1 * Px - a3 * Py - a4;    // x
-          lineEndP[1] = a2 * Py - a3 * Px - a5;    // y
-          Px = pLineXCors[offsetInLineArray - 1];  // last pixel
+          lineEndP[0] = static_cast<float>(a1 * Px - a3 * Py - a4);  // x
+          lineEndP[1] = static_cast<float>(a2 * Py - a3 * Px - a5);  // y
+          Px = pLineXCors[offsetInLineArray - 1];                    // last pixel
           Py = pLineYCors[offsetInLineArray - 1];
-          lineEndP[2] = a1 * Px - a3 * Py - a4;  // x
-          lineEndP[3] = a2 * Py - a3 * Px - a5;  // y
+          lineEndP[2] = static_cast<float>(a1 * Px - a3 * Py - a4);  // x
+          lineEndP[3] = static_cast<float>(a2 * Py - a3 * Px - a5);  // y
           lineEndpoints_.push_back(lineEndP);
           lineDirection_.push_back(direction);
           numOfLines++;
@@ -972,10 +978,9 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
   }
   float* pMatT;
   float* pATA;
-  double fitError = 0;
+  double fitError = 0.0;
   double coef;
   unsigned char* pdirImg = dirImg_.data;
-  unsigned int offset = offsetS;
   /*If the first pixel in this chain is horizontal,
    *then we try to find a horizontal line, y=ax+b;*/
   if (pdirImg[yCors[offsetS] * imageWidth + xCors[offsetS]] == Horizontal) {
@@ -986,24 +991,37 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
      * [xn,1]         [yn]*/
     pMatT = fitMatT.ptr<float>();  // fitMatT = [x0, x1, ... xn; 1,1,...,1];
     for (int i = 0; i < minLineLen_; i++) {
-      //*(pMatT+minLineLen_) = 1; //the value are not changed;
-      *(pMatT++) = xCors[offsetS];
-      fitVec[0][i] = yCors[offsetS++];
+      const unsigned int currentX = xCors[offsetS];
+      const unsigned int currentY = yCors[offsetS];
+      ++offsetS;
+      *(pMatT++) = static_cast<float>(currentX);
+      fitVec[0][i] = static_cast<float>(currentY);
     }
     ATA = fitMatT * fitMatT.t();
     ATV = fitMatT * fitVec.t();
     /* [a,b]^T = Inv(mat^T * mat) * mat^T * vec */
     pATA = ATA.ptr<float>();
-    coef = 1.0 / (double(pATA[0]) * double(pATA[3]) - double(pATA[1]) * double(pATA[2]));
+    const double a00 = static_cast<double>(pATA[0]);
+    const double a01 = static_cast<double>(pATA[1]);
+    const double a10 = static_cast<double>(pATA[2]);
+    const double a11 = static_cast<double>(pATA[3]);
+    const double v0 = static_cast<double>(ATV[0][0]);
+    const double v1 = static_cast<double>(ATV[0][1]);
+    const double denom = a00 * a11 - a01 * a10;
+    coef = 1.0 / denom;
     //		lineEquation = svd.Invert(ATA) * matT * vec;
-    lineEquation[0] = coef * (double(pATA[3]) * double(ATV[0][0]) - double(pATA[1]) * double(ATV[0][1]));
-    lineEquation[1] = coef * (double(pATA[0]) * double(ATV[0][1]) - double(pATA[2]) * double(ATV[0][0]));
+    lineEquation[0] = coef * (a11 * v0 - a01 * v1);
+    lineEquation[1] = coef * (a00 * v1 - a10 * v0);
     /*compute line fit error */
+    unsigned int errorOffset = offsetS - static_cast<unsigned int>(minLineLen_);
     for (int i = 0; i < minLineLen_; i++) {
-      coef = double(yCors[offset]) - double(xCors[offset++]) * lineEquation[0] - lineEquation[1];
+      const unsigned int xVal = xCors[errorOffset];
+      const unsigned int yVal = yCors[errorOffset];
+      ++errorOffset;
+      coef = static_cast<double>(yVal) - static_cast<double>(xVal) * lineEquation[0] - lineEquation[1];
       fitError += coef * coef;
     }
-    return sqrt(fitError);
+    return std::sqrt(fitError);
   }
   /*If the first pixel in this chain is vertical,
    *then we try to find a vertical line, x=ay+b;*/
@@ -1015,24 +1033,37 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
      * [yn,1]         [xn]*/
     pMatT = fitMatT.ptr<float>();  // fitMatT = [y0, y1, ... yn; 1,1,...,1];
     for (int i = 0; i < minLineLen_; i++) {
-      //*(pMatT+minLineLen_) = 1;//the value are not changed;
-      *(pMatT++) = yCors[offsetS];
-      fitVec[0][i] = xCors[offsetS++];
+      const unsigned int currentY = yCors[offsetS];
+      const unsigned int currentX = xCors[offsetS];
+      ++offsetS;
+      *(pMatT++) = static_cast<float>(currentY);
+      fitVec[0][i] = static_cast<float>(currentX);
     }
     ATA = fitMatT * (fitMatT.t());
     ATV = fitMatT * fitVec.t();
     /* [a,b]^T = Inv(mat^T * mat) * mat^T * vec */
     pATA = ATA.ptr<float>();
-    coef = 1.0 / (double(pATA[0]) * double(pATA[3]) - double(pATA[1]) * double(pATA[2]));
+    const double b00 = static_cast<double>(pATA[0]);
+    const double b01 = static_cast<double>(pATA[1]);
+    const double b10 = static_cast<double>(pATA[2]);
+    const double b11 = static_cast<double>(pATA[3]);
+    const double bv0 = static_cast<double>(ATV[0][0]);
+    const double bv1 = static_cast<double>(ATV[0][1]);
+    const double bDenom = b00 * b11 - b01 * b10;
+    coef = 1.0 / bDenom;
     //		lineEquation = svd.Invert(ATA) * matT * vec;
-    lineEquation[0] = coef * (double(pATA[3]) * double(ATV[0][0]) - double(pATA[1]) * double(ATV[0][1]));
-    lineEquation[1] = coef * (double(pATA[0]) * double(ATV[0][1]) - double(pATA[2]) * double(ATV[0][0]));
+    lineEquation[0] = coef * (b11 * bv0 - b01 * bv1);
+    lineEquation[1] = coef * (b00 * bv1 - b10 * bv0);
     /*compute line fit error */
+    unsigned int errorOffset = offsetS - static_cast<unsigned int>(minLineLen_);
     for (int i = 0; i < minLineLen_; i++) {
-      coef = double(xCors[offset]) - double(yCors[offset++]) * lineEquation[0] - lineEquation[1];
+      const unsigned int xVal = xCors[errorOffset];
+      const unsigned int yVal = yCors[errorOffset];
+      ++errorOffset;
+      coef = static_cast<double>(xVal) - static_cast<double>(yVal) * lineEquation[0] - lineEquation[1];
       fitError += coef * coef;
     }
-    return sqrt(fitError);
+    return std::sqrt(fitError);
   }
   return 0;
 }
@@ -1042,8 +1073,8 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
                                             unsigned int newOffsetS,
                                             unsigned int offsetE,
                                             std::array<double, 2>& lineEquation) {
-  int length = offsetE - offsetS;
-  int newLength = offsetE - newOffsetS;
+  int length = static_cast<int>(offsetE - offsetS);
+  int newLength = static_cast<int>(offsetE - newOffsetS);
   if (length <= 0 || newLength <= 0) {
     cout << "EDLineDetector::LeastSquaresLineFit_ Error:"
             " the expected line index is wrong...offsetE = "
@@ -1071,9 +1102,12 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
      * [xn',1]         [yn']*/
     pMatT = matT.ptr<float>();  // matT = [x0', x1', ... xn'; 1,1,...,1]
     for (int i = 0; i < newLength; i++) {
-      *(pMatT + newLength) = 1;
-      *(pMatT++) = xCors[newOffsetS];
-      vec[0][i] = yCors[newOffsetS++];
+      const unsigned int currentX = xCors[newOffsetS];
+      const unsigned int currentY = yCors[newOffsetS];
+      ++newOffsetS;
+      *(pMatT + newLength) = 1.0f;
+      *(pMatT++) = static_cast<float>(currentX);
+      vec[0][i] = static_cast<float>(currentY);
     }
     /* [a,b]^T = Inv(ATA + mat^T * mat) * (ATV + mat^T * vec) */
     tempMatLineFit = matT * matT.t();
@@ -1081,9 +1115,16 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
     ATA = ATA + tempMatLineFit;
     ATV = ATV + tempVecLineFit;
     pATA = ATA.ptr<float>();
-    coef = 1.0 / (double(pATA[0]) * double(pATA[3]) - double(pATA[1]) * double(pATA[2]));
-    lineEquation[0] = coef * (double(pATA[3]) * double(ATV[0][0]) - double(pATA[1]) * double(ATV[0][1]));
-    lineEquation[1] = coef * (double(pATA[0]) * double(ATV[0][1]) - double(pATA[2]) * double(ATV[0][0]));
+    const double a00 = static_cast<double>(pATA[0]);
+    const double a01 = static_cast<double>(pATA[1]);
+    const double a10 = static_cast<double>(pATA[2]);
+    const double a11 = static_cast<double>(pATA[3]);
+    const double v0 = static_cast<double>(ATV[0][0]);
+    const double v1 = static_cast<double>(ATV[0][1]);
+    const double denom = a00 * a11 - a01 * a10;
+    coef = 1.0 / denom;
+    lineEquation[0] = coef * (a11 * v0 - a01 * v1);
+    lineEquation[1] = coef * (a00 * v1 - a10 * v0);
     /*compute line fit error */
     //		for(int i=0; i<length; i++){
     //			coef = double(yCors[offsetS]) - double(xCors[offsetS++]) * lineEquation[0] - lineEquation[1];
@@ -1102,9 +1143,10 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
     //		pMatT = matT.GetData();//matT = [y0', y1', ... yn'; 1,1,...,1]
     pMatT = matT.ptr<float>();  // matT = [y0', y1', ... yn'; 1,1,...,1]
     for (int i = 0; i < newLength; i++) {
-      *(pMatT + newLength) = 1;
-      *(pMatT++) = yCors[newOffsetS];
-      vec[0][i] = xCors[newOffsetS++];
+      *(pMatT + newLength) = 1.0f;
+      *(pMatT++) = static_cast<float>(yCors[newOffsetS]);
+      vec[0][i] = static_cast<float>(xCors[newOffsetS]);
+      ++newOffsetS;
     }
     /* [a,b]^T = Inv(ATA + mat^T * mat) * (ATV + mat^T * vec) */
     //		matT.MultiplyWithTransposeOf(matT, tempMatLineFit);
@@ -1114,9 +1156,16 @@ double EDLineDetector::LeastSquaresLineFit_(unsigned int* xCors,
     ATV = ATV + tempVecLineFit;
     //		pATA = ATA.GetData();
     pATA = ATA.ptr<float>();
-    coef = 1.0 / (double(pATA[0]) * double(pATA[3]) - double(pATA[1]) * double(pATA[2]));
-    lineEquation[0] = coef * (double(pATA[3]) * double(ATV[0][0]) - double(pATA[1]) * double(ATV[0][1]));
-    lineEquation[1] = coef * (double(pATA[0]) * double(ATV[0][1]) - double(pATA[2]) * double(ATV[0][0]));
+    const double b00 = static_cast<double>(pATA[0]);
+    const double b01 = static_cast<double>(pATA[1]);
+    const double b10 = static_cast<double>(pATA[2]);
+    const double b11 = static_cast<double>(pATA[3]);
+    const double bv0 = static_cast<double>(ATV[0][0]);
+    const double bv1 = static_cast<double>(ATV[0][1]);
+    const double bDenom = b00 * b11 - b01 * b10;
+    coef = 1.0 / bDenom;
+    lineEquation[0] = coef * (b11 * bv0 - b01 * bv1);
+    lineEquation[1] = coef * (b00 * bv1 - b10 * bv0);
     /*compute line fit error */
     //		for(int i=0; i<length; i++){
     //			coef = double(xCors[offsetS]) - double(yCors[offsetS++]) * lineEquation[0] - lineEquation[1];
@@ -1133,7 +1182,8 @@ bool EDLineDetector::LineValidation_(unsigned int* xCors,
                                      std::array<double, 3>& lineEquation,
                                      float& direction) {
   if (bValidate_) {
-    int n = offsetE - offsetS;
+    const unsigned int length = offsetE - offsetS;
+    const int n = static_cast<int>(length);
     /*first compute the direction of line, make sure that the dark side always be the
      *left side of a line.*/
     int meanGradientX = 0, meanGradientY = 0;
@@ -1141,50 +1191,57 @@ bool EDLineDetector::LineValidation_(unsigned int* xCors,
     short* pdyImg = dyImg_.ptr<short>();
     double dx, dy;
     std::vector<double> pointDirection;
-    int index;
-    for (int i = 0; i < n; i++) {
-      index = yCors[offsetS] * imageWidth + xCors[offsetS++];
+    pointDirection.reserve(length);
+    unsigned int currentOffset = offsetS;
+    for (unsigned int i = 0; i < length; ++i) {
+      const unsigned int currentX = xCors[currentOffset];
+      const unsigned int currentY = yCors[currentOffset];
+      ++currentOffset;
+      const std::size_t index = static_cast<std::size_t>(currentY) * static_cast<std::size_t>(imageWidth) +
+                                static_cast<std::size_t>(currentX);
       meanGradientX += pdxImg[index];
       meanGradientY += pdyImg[index];
-      dx = (double)pdxImg[index];
-      dy = (double)pdyImg[index];
-      pointDirection.push_back(atan2(-dx, dy));
+      dx = static_cast<double>(pdxImg[index]);
+      dy = static_cast<double>(pdyImg[index]);
+      pointDirection.push_back(std::atan2(-dx, dy));
     }
-    dx = fabs(lineEquation[1]);
-    dy = fabs(lineEquation[0]);
+    dx = std::fabs(lineEquation[1]);
+    dy = std::fabs(lineEquation[0]);
     if (meanGradientX == 0 && meanGradientY == 0) {  // not possible, if happens, it must be a wrong line,
       return false;
     }
-    if (meanGradientX > 0 && meanGradientY >= 0) {  // first quadrant, and positive direction of X axis.
-      direction = atan2(-dy, dx);                   // line direction is in fourth quadrant
+    if (meanGradientX > 0 && meanGradientY >= 0) {          // first quadrant, and positive direction of X axis.
+      direction = static_cast<float>(std::atan2(-dy, dx));  // line direction is in fourth quadrant
     }
-    if (meanGradientX <= 0 && meanGradientY > 0) {  // second quadrant, and positive direction of Y axis.
-      direction = atan2(dy, dx);                    // line direction is in first quadrant
+    if (meanGradientX <= 0 && meanGradientY > 0) {         // second quadrant, and positive direction of Y axis.
+      direction = static_cast<float>(std::atan2(dy, dx));  // line direction is in first quadrant
     }
-    if (meanGradientX < 0 && meanGradientY <= 0) {  // third quadrant, and negative direction of X axis.
-      direction = atan2(dy, -dx);                   // line direction is in second quadrant
+    if (meanGradientX < 0 && meanGradientY <= 0) {          // third quadrant, and negative direction of X axis.
+      direction = static_cast<float>(std::atan2(dy, -dx));  // line direction is in second quadrant
     }
-    if (meanGradientX >= 0 && meanGradientY < 0) {  // fourth quadrant, and negative direction of Y axis.
-      direction = atan2(-dy, -dx);                  // line direction is in third quadrant
+    if (meanGradientX >= 0 && meanGradientY < 0) {           // fourth quadrant, and negative direction of Y axis.
+      direction = static_cast<float>(std::atan2(-dy, -dx));  // line direction is in third quadrant
     }
     /*then check whether the line is on the border of the image. We don't keep the border line.*/
-    if (fabs(direction) < 0.15 || CV_PI - fabs(direction) < 0.15) {  // Horizontal line
-      if (fabs(lineEquation[2]) < 10 ||
-          fabs(imageHeight - fabs(lineEquation[2])) < 10) {  // upper border or lower border
+    if (std::fabs(direction) < 0.15f || CV_PI - std::fabs(direction) < 0.15) {  // Horizontal line
+      if (std::fabs(lineEquation[2]) < 10.0 ||
+          std::fabs(static_cast<double>(imageHeight) - std::fabs(lineEquation[2])) <
+              10.0) {  // upper border or lower border
         return false;
       }
     }
-    if (fabs(fabs(direction) - CV_PI * 0.5) < 0.15) {                                     // Vertical line
-      if (fabs(lineEquation[2]) < 10 || fabs(imageWidth - fabs(lineEquation[2])) < 10) {  // left border or right border
+    if (std::fabs(std::fabs(direction) - CV_PI * 0.5) < 0.15) {  // Vertical line
+      if (std::fabs(lineEquation[2]) < 10.0 || std::fabs(static_cast<double>(imageWidth) - std::fabs(lineEquation[2])) <
+                                                   10.0) {  // left border or right border
         return false;
       }
     }
     // count the aligned points on the line which have the same direction as the line.
     double disDirection;
     int k = 0;
-    for (int i = 0; i < n; i++) {
-      disDirection = fabs(direction - pointDirection[i]);
-      if (fabs(2 * CV_PI - disDirection) < 0.392699 ||
+    for (unsigned int i = 0; i < length; ++i) {
+      disDirection = std::fabs(static_cast<double>(direction) - pointDirection[i]);
+      if (std::fabs(2 * CV_PI - disDirection) < 0.392699 ||
           disDirection < 0.392699) {  // same direction, pi/8 = 0.392699081698724
         k++;
       }

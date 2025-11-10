@@ -55,14 +55,14 @@ template <class FT,
 class LdHough : public LdBase<FT, LPT> {
   using LdBase<FT, LPT>::lines_;
 
-  ESOURCE esource_;
-  std::vector<cv::Vec2f> cvLines_;
+  ESOURCE esource_{};
+  std::vector<cv::Vec2f> cvLines_{};
 
-  cv::Mat binaryEdgeMap_;
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_;
+  cv::Mat binaryEdgeMap_{};
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
 
-  double rho_, theta_, rho_msdiv_, theta_msdiv_;
-  int voteThreshold_;
+  double rho_{}, theta_{}, rho_msdiv_{}, theta_msdiv_{};
+  int voteThreshold_{};
 
   void init() {
     this->addManager(esource_);
@@ -107,20 +107,20 @@ class LdHough : public LdBase<FT, LPT> {
       : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
         rho_(rho),
         theta_(theta),
-        voteThreshold_(voteThreshold),
         rho_msdiv_(rho_msdiv),
-        theta_msdiv_(theta_msdiv) {
+        theta_msdiv_(theta_msdiv),
+        voteThreshold_(voteThreshold) {
     init();
   }
 
   LdHough(ValueManager::InitializerList options)
-      : rho_(1.5), theta_(CV_PI / 180), voteThreshold_(150), rho_msdiv_(0), theta_msdiv_(0) {
+      : rho_(1.5), theta_(CV_PI / 180), rho_msdiv_(0), theta_msdiv_(0), voteThreshold_(150) {
     init();
     this->value(options);
   }
 
   LdHough(ValueManager::NameValueVector options)
-      : rho_(1.5), theta_(CV_PI / 180), voteThreshold_(150), rho_msdiv_(0), theta_msdiv_(0) {
+      : rho_(1.5), theta_(CV_PI / 180), rho_msdiv_(0), theta_msdiv_(0), voteThreshold_(150) {
     init();
     this->value(options);
   }
@@ -260,22 +260,41 @@ class LsdHoughP : public LsdBase<FT, LPT> {
             double minLength = 10,
             double maxGap = 3)
       : esource_({NV("nms_th_low", th_low), NV("nms_th_high", th_high)}),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
         rho_(rho),
         theta_(theta),
-        voteThreshold_(voteThreshold),
         minLength_(minLength),
-        maxGap_(maxGap) {
+        maxGap_(maxGap),
+        voteThreshold_(voteThreshold) {
     init();
   }
 
   LsdHoughP(ValueManager::InitializerList options)
-      : rho_(1.5), theta_(CV_PI / 180), voteThreshold_(150), minLength_(10), maxGap_(3) {
+      : esource_(),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
+        rho_(1.5),
+        theta_(CV_PI / 180),
+        minLength_(10),
+        maxGap_(3),
+        voteThreshold_(150) {
     init();
     this->value(options);
   }
 
   LsdHoughP(ValueManager::NameValueVector options)
-      : rho_(1.5), theta_(CV_PI / 180), voteThreshold_(150), minLength_(10), maxGap_(2) {
+      : esource_(),
+        cvLines_(),
+        binaryEdgeMap_(),
+        imageData_(),
+        rho_(1.5),
+        theta_(CV_PI / 180),
+        minLength_(10),
+        maxGap_(2),
+        voteThreshold_(150) {
     init();
     this->value(options);
   }

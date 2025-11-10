@@ -45,7 +45,8 @@ void testZC(ZC& zc, LAPLACE& laplace, const std::string& name, double th_low = 0
     rt += cv::getTickCount() - tmp;
   }
 
-  std::cout << "zc - " << name << ": " << (rt * 1000.0 / cv::getTickFrequency()) / runs << std::endl;
+  std::cout << "zc - " << name << ": "
+            << (static_cast<double>(rt) * 1000.0 / static_cast<double>(cv::getTickFrequency())) / runs << std::endl;
 }
 
 template <class LAPLACE>

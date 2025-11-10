@@ -8,6 +8,8 @@ using namespace cv;
 
 class SusanTest : public ::testing::Test {
  protected:
+  SusanTest() : test_img(), gradient_img(), susan() {}
+
   void SetUp() override {
     // Create test image with some structures
     test_img = Mat::zeros(10, 10, CV_8UC1);
@@ -23,7 +25,9 @@ class SusanTest : public ::testing::Test {
     gradient_img = Mat::zeros(10, 10, CV_8UC1);
     for (int y = 0; y < 10; ++y) {
       for (int x = 0; x < 10; ++x) {
-        gradient_img.at<uchar>(y, x) = std::min(255, x * 50);  // More pronounced horizontal gradient
+        int val = x * 50;
+        gradient_img.at<uchar>(y, x) =
+            static_cast<uchar>(val > 255 ? 255 : val);  // More pronounced horizontal gradient
       }
     }
 

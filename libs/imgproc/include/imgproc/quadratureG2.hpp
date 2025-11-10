@@ -27,14 +27,12 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   static cv::Mat_<FT> createFilter(int width, FT spacing, KernelType f) {
     width = width / 2;
     cv::Mat_<FT> kernel(1, width * 2 + 1);
-    for (int i = -width; i <= width; ++i) kernel(i + width) = f(i * spacing);
+    for (int i = -width; i <= width; ++i) kernel(i + width) = f(static_cast<FT>(i) * spacing);
 
     return kernel;
   }
 
  private:
-  cv::Point anchor;
-
   // the kernels
   cv::Mat_<FT> m_dx, m_dy;
   cv::Mat_<FT> m_g1, m_g2, m_g3, m_h1, m_h2, m_h3, m_h4;
@@ -52,6 +50,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
 
   int ksize_;
   FT kspacing_;
+  cv::Point anchor;
 
   mutable bool energy_done_, phase_done_, oxy_done_, eo_done_;
 
@@ -123,9 +122,42 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
                IT int_lower = std::numeric_limits<IT>::lowest(),
                IT int_upper = std::numeric_limits<IT>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        m_dx(),
+        m_dy(),
+        m_g1(),
+        m_g2(),
+        m_g3(),
+        m_h1(),
+        m_h2(),
+        m_h3(),
+        m_h4(),
+        m_g2a(),
+        m_g2b(),
+        m_g2c(),
+        m_h2a(),
+        m_h2b(),
+        m_h2c(),
+        m_h2d(),
+        m_c1(),
+        m_c2(),
+        m_c3(),
+        m_theta(),
+        energy_(),
+        phase_(),
+        ox_(),
+        oy_(),
+        e_(),
+        o_(),
+        oddRange_(),
+        evenRange_(),
+        energyRange_(),
         ksize_(kernel_size),
         kspacing_(kernel_spacing),
-        anchor(-1, -1) {
+        anchor(-1, -1),
+        energy_done_(false),
+        phase_done_(false),
+        oxy_done_(false),
+        eo_done_(false) {
     init();
   }
 
@@ -133,9 +165,42 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        m_dx(),
+        m_dy(),
+        m_g1(),
+        m_g2(),
+        m_g3(),
+        m_h1(),
+        m_h2(),
+        m_h3(),
+        m_h4(),
+        m_g2a(),
+        m_g2b(),
+        m_g2c(),
+        m_h2a(),
+        m_h2b(),
+        m_h2c(),
+        m_h2d(),
+        m_c1(),
+        m_c2(),
+        m_c3(),
+        m_theta(),
+        energy_(),
+        phase_(),
+        ox_(),
+        oy_(),
+        e_(),
+        o_(),
+        oddRange_(),
+        evenRange_(),
+        energyRange_(),
         ksize_(9),
         kspacing_(static_cast<FT>(0.782)),
-        anchor(-1, -1) {
+        anchor(-1, -1),
+        energy_done_(false),
+        phase_done_(false),
+        oxy_done_(false),
+        eo_done_(false) {
     init();
     this->value(options);
   }
@@ -144,9 +209,42 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
       : Quadrature<IT, FT, FT, FT, FT>(int_lower, int_upper),
+        m_dx(),
+        m_dy(),
+        m_g1(),
+        m_g2(),
+        m_g3(),
+        m_h1(),
+        m_h2(),
+        m_h3(),
+        m_h4(),
+        m_g2a(),
+        m_g2b(),
+        m_g2c(),
+        m_h2a(),
+        m_h2b(),
+        m_h2c(),
+        m_h2d(),
+        m_c1(),
+        m_c2(),
+        m_c3(),
+        m_theta(),
+        energy_(),
+        phase_(),
+        ox_(),
+        oy_(),
+        e_(),
+        o_(),
+        oddRange_(),
+        evenRange_(),
+        energyRange_(),
         ksize_(9),
         kspacing_(static_cast<FT>(0.782)),
-        anchor(-1, -1) {
+        anchor(-1, -1),
+        energy_done_(false),
+        phase_done_(false),
+        oxy_done_(false),
+        eo_done_(false) {
     init();
     this->value(options);
   }

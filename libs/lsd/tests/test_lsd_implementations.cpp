@@ -15,6 +15,8 @@ using namespace cv;
 
 class LSDTest : public ::testing::Test {
  protected:
+  LSDTest() : test_img() {}
+
   void SetUp() override {
     // Create a simple test image with clear line structures
     test_img = Mat::zeros(100, 100, CV_8UC1);
@@ -37,14 +39,14 @@ class LSDTest : public ::testing::Test {
 
 TEST_F(LSDTest, LsdCC_Basic) {
   // Test LsdCC (Connected Components)
-  LsdCC<float> lsd_cc(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd_cc(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd_cc.detect(test_img));
 
   const auto& segments = lsd_cc.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GT(segments.size(), 0);
+  EXPECT_GT(segments.size(), size_t{0});
 
   // Check that segments are reasonable
   for (const auto& seg : segments) {
@@ -55,74 +57,74 @@ TEST_F(LSDTest, LsdCC_Basic) {
 
 TEST_F(LSDTest, LsdCP_Basic) {
   // Test LsdCP (Connected Pairs)
-  LsdCP<float> lsd_cp(0.004, 0.012, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX);
+  LsdCP<float> lsd_cp(0.004f, 0.012f, 10, 0, 2, 2, CP_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd_cp.detect(test_img));
 
   const auto& segments = lsd_cp.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);  // May not always find segments with stricter criteria
+  EXPECT_GE(segments.size(), size_t{0});  // May not always find segments with stricter criteria
 }
 
 TEST_F(LSDTest, LsdEL_Basic) {
   // Test LsdEL (Edge Linking)
-  LsdEL<float> lsd_el(0.004, 0.012, 10, 3, 10, 4, 0);
+  LsdEL<float> lsd_el(0.004f, 0.012f, 10, 3, 10, 4, 0);
 
   EXPECT_NO_THROW(lsd_el.detect(test_img));
 
   const auto& segments = lsd_el.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdEP_Basic) {
   // Test LsdEP (Edge Pairing)
-  LsdEP<float> lsd_ep(0.004, 0.012, 10, 3, 10, 2, 3, 3, 5, 0);
+  LsdEP<float> lsd_ep(0.004f, 0.012f, 10, 3, 10, 2, 3, 3, 5, 0);
 
   EXPECT_NO_THROW(lsd_ep.detect(test_img));
 
   const auto& segments = lsd_ep.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdBurns_Basic) {
   // Test LsdBurns
-  LsdBurns<float> lsd_burns(0.004, 0.012, 10, 12, BURNS_NMS);
+  LsdBurns<float> lsd_burns(0.004f, 0.012f, 10, 12, BURNS_NMS);
 
   EXPECT_NO_THROW(lsd_burns.detect(test_img));
 
   const auto& segments = lsd_burns.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdFBW_Basic) {
   // Test LsdFBW (Fast Burns-White)
-  LsdFBW<float> lsd_fbw(0.004, 0.012, 10, 22.5, FBW_NMS);
+  LsdFBW<float> lsd_fbw(0.004f, 0.012f, 10, 22.5f, FBW_NMS);
 
   EXPECT_NO_THROW(lsd_fbw.detect(test_img));
 
   const auto& segments = lsd_fbw.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdFGioi_Basic) {
   // Test LsdFGioi (Fast Gioi)
-  LsdFGioi<float> lsd_fgioi(2, 22.5, 0, 0.7, 1024);
+  LsdFGioi<float> lsd_fgioi(2, 22.5f, 0, 0.7f, 1024);
 
   EXPECT_NO_THROW(lsd_fgioi.detect(test_img));
 
   const auto& segments = lsd_fgioi.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, LsdEDLZ_Basic) {
@@ -134,12 +136,12 @@ TEST_F(LSDTest, LsdEDLZ_Basic) {
   const auto& segments = lsd_edlz.lineSegments();
 
   // Should detect some line segments
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }
 
 TEST_F(LSDTest, EmptyImage) {
   // Test behavior with empty image - just verify object creation
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
   // Empty image handling may vary - just test creation succeeds
   EXPECT_TRUE(true);
 }
@@ -148,26 +150,27 @@ TEST_F(LSDTest, UniformImage) {
   // Test behavior with uniform image (no edges)
   Mat uniform_img = Mat::ones(50, 50, CV_8UC1) * 128;
 
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd.detect(uniform_img));
 
   const auto& segments = lsd.lineSegments();
   // Uniform image should have no or very few line segments
-  EXPECT_LE(segments.size(), 2);  // Allow for small detection variations
+  EXPECT_LE(segments.size(), size_t{2});  // Allow for small detection variations
 }
 
 TEST_F(LSDTest, SmallImage) {
   // Test behavior with small image
-  Mat small_img = Mat::ones(10, 10, CV_8UC1) * 100;
+  Mat small_img = Mat::ones(10, 10, CV_8UC1);
+  small_img *= 100;
   // Add some structure
   cv::line(small_img, cv::Point(0, 5), cv::Point(9, 5), cv::Scalar(200), 1);
 
-  LsdCC<float> lsd(0.004, 0.012, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
+  LsdCC<float> lsd(0.004f, 0.012f, 10, 2, 2, CC_FIND_NEAR_COMPLEX);
 
   EXPECT_NO_THROW(lsd.detect(small_img));
 
   const auto& segments = lsd.lineSegments();
   // Should handle small images without crashing
-  EXPECT_GE(segments.size(), 0);
+  EXPECT_GE(segments.size(), size_t{0});
 }

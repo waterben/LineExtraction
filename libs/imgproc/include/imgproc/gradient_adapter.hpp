@@ -108,7 +108,7 @@ class GradientOdd : public GradientI<typename QUAD::img_type,
   virtual DirectionRange directionRange() const { return quad_.directionRange(); }
 
   //! get x,y derivatives or directional data
-  virtual void directionals(cv::Mat& gx, cv::Mat& gy) const { quad_.odd(gx, gy); }
+  virtual void directionals(cv::Mat& grad_x, cv::Mat& grad_y) const { quad_.odd(grad_x, grad_y); }
 
   //! get gradient range
   virtual GradientRange gradientRange() const { return quad_.oddGradRange(); }

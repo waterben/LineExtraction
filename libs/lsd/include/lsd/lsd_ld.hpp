@@ -85,11 +85,11 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
  protected:
   using MyLsdBase::lineSegments_;
 
-  LD lineDetector_;
-  FIT fit_;
-  TRACER tracer_;
+  LD lineDetector_{};
+  FIT fit_{};
+  TRACER tracer_{};
 
-  int flags_;
+  int flags_{};
 
   void init() {
     this->addManager(lineDetector_);
@@ -100,7 +100,7 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
               "Flags for line detector: 0 - none, 1 - use tracer with dirmap, 2 - use precise sub pixel estimation.");
   }
 
-  PointVector points_;
+  PointVector points_{};
 
   virtual void clearData() override {
     MyLsdBase::clearData();
@@ -233,14 +233,14 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
 
   using MyLsdBase::lineSegments_;
 
-  ESOURCE esource_;
-  LD lineDetector_;
-  FIT fit_;
-  TRACER tracer_;
+  ESOURCE esource_{};
+  LD lineDetector_{};
+  FIT fit_{};
+  TRACER tracer_{};
 
-  cv::Mat binaryEdgeMap_;
+  cv::Mat binaryEdgeMap_{};
 
-  int flags_;
+  int flags_{};
 
   void init() {
     this->addManager(lineDetector_);
@@ -252,9 +252,9 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
               "Flags for line detector: 0 - none, 1 - use tracer with dirmap, 2 - use precise sub pixel estimation.");
   }
 
-  typename MyLsdBase::ImageData imageData_;
+  typename MyLsdBase::ImageData imageData_{};
 
-  PointVector points_;
+  PointVector points_{};
 
 
   virtual void clearData() override {
