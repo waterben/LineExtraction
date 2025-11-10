@@ -1,0 +1,37 @@
+"""lib_edge - Edge detection library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_edge",
+    hdrs = glob(
+        [
+            "include/edge/*.hpp",
+            "include/edge/*.h",
+        ],
+        allow_empty = True,
+    ),
+    includes = ["include"],
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        deps = [
+            ":lib_edge",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

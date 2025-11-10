@@ -1,0 +1,23 @@
+"""Performance evaluation binaries"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "eval_performance",
+    srcs = glob(
+        [
+            "*.cpp",
+            "*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    deps = [
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/lsd:lib_lsd",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)

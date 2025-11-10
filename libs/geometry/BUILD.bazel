@@ -1,0 +1,53 @@
+"""lib_geometry - Geometry library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_geometry",
+    srcs = glob(
+        [
+            "src/*.cpp",
+            "src/*.c",
+        ],
+        allow_empty = True,
+    ),
+    hdrs = glob(
+        [
+            "include/geometry/*.hpp",
+            "include/geometry/*.h",
+            "src/*.h",
+        ],
+        allow_empty = True,
+    ),
+    includes = [
+        "include",
+        "src",
+    ],
+    linkopts = [
+        "-lGL",
+        "-lGLU",
+        "-lglut",
+    ],
+    deps = [
+        "//libs/utility:lib_utility",
+        "@eigen",
+        "@opencv",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        deps = [
+            ":lib_geometry",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

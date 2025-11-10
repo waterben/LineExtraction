@@ -1,0 +1,69 @@
+"""LineExtraction - A C++ library for line extraction and analysis"""
+
+module(
+    name = "line_extraction",
+    version = "1.0.0",
+)
+
+# Bazel Skylib - utilities
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+
+# C++ rules
+bazel_dep(name = "rules_cc", version = "0.2.9")
+
+# Python rules
+bazel_dep(name = "rules_python", version = "0.40.0")
+
+# GoogleTest for C++ testing
+bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
+
+# Custom modules from local registry
+bazel_dep(name = "dlib", version = "19.24.7")
+bazel_dep(name = "opencv", version = "4.12.0")
+bazel_dep(name = "opencv_contrib", version = "4.12.0")
+# Note: libjpeg-turbo is provided via single_version_override below (with SIMD linking fix)
+# Note: qt5 uses new_local_repository (see below) to reference system installation
+
+# Override libjpeg_turbo (BCR version has unfixable SIMD linking issues, use system library)
+single_version_override(
+    module_name = "libjpeg_turbo",
+    registry = "file://%workspace%/tools/bazel/registry",
+    version = "3.1.2",
+)
+
+# Eigen for linear algebra - using manual http_archive instead of bazel_dep due to checksum issues
+# bazel_dep(name = "eigen", version = "3.4.0")
+
+# pybind11 for Python bindings
+bazel_dep(name = "pybind11_bazel", version = "2.11.1")
+
+# Toolchain configuration
+bazel_dep(name = "toolchains_llvm", version = "1.0.0", dev_dependency = True)
+
+# HTTP archive for external dependencies
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+
+# Eigen - Linear algebra library
+# Using manual http_archive due to BCR checksum issues
+http_archive(
+    name = "eigen",
+    build_file = "//tools/bazel/third_party:eigen.BUILD",
+    sha256 = "8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72",
+    strip_prefix = "eigen-3.4.0",
+    urls = [
+        "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz",
+    ],
+)
+
+# Qt5 - GUI framework from system installation
+new_local_repository(
+    name = "qt5",
+    build_file = "//tools/bazel/third_party:qt5.BUILD",
+    path = "/usr",
+)
+
+# Note: dlib, opencv, and qt5 are now provided via local registry
+# See tools/bazel/registry/modules/ for module definitions
+# GCC and Clang selection is done via .bazelrc --config flags

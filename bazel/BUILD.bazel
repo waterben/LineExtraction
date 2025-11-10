@@ -1,0 +1,76 @@
+"""Feature flags and configuration settings for LineExtraction project.
+
+This BUILD file defines feature flags similar to CMake's option() command.
+Features can be enabled/disabled at build time using --//bazel:enable_<feature>=true/false
+"""
+
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# Feature flags (can be overridden via command line)
+# Example: bazel build --//bazel:enable_qt5=false //...
+
+bool_flag(
+    name = "enable_qt5",
+    build_setting_default = False,  # Disabled by default due to sandbox issues
+)
+
+config_setting(
+    name = "qt5_enabled",
+    flag_values = {
+        ":enable_qt5": "true",
+    },
+)
+
+bool_flag(
+    name = "enable_cuda",
+    build_setting_default = False,  # Disabled by default
+)
+
+config_setting(
+    name = "cuda_enabled",
+    flag_values = {
+        ":enable_cuda": "true",
+    },
+)
+
+bool_flag(
+    name = "enable_opengl",
+    build_setting_default = False,  # Disabled by default
+)
+
+config_setting(
+    name = "opengl_enabled",
+    flag_values = {
+        ":enable_opengl": "true",
+    },
+)
+
+bool_flag(
+    name = "enable_photo",
+    build_setting_default = False,  # OpenCV photo module - disabled (not in BCR)
+)
+
+config_setting(
+    name = "photo_enabled",
+    flag_values = {
+        ":enable_photo": "true",
+    },
+)
+
+# Helper to detect platform features
+config_setting(
+    name = "linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+)
+
+config_setting(
+    name = "windows",
+    constraint_values = ["@platforms//os:windows"],
+)

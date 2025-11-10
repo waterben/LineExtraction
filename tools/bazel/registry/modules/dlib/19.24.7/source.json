@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/davisking/dlib/archive/refs/tags/v19.24.tar.gz",
+  "integrity": "sha256-PMQuhMexu5JsZFGiGtFZX1bFsQvjodeqLzxxaiW3rjk=",
+  "strip_prefix": "dlib-19.24",
+  "overlay": {
+    "BUILD.bazel": "sha256-Q5Newd6Q658WveNJkj7D5aKkxJxAgDivv8i6LqgIBp8="
+  }
+}

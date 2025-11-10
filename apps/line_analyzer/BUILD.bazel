@@ -1,0 +1,59 @@
+"""line_analyzer - Qt application for line analysis
+
+Note: This application requires Qt5. Build with --//bazel:enable_qt5=true to include it.
+To build: bazel build --//bazel:enable_qt5=true --//bazel:enable_opengl=true //apps/line_analyzer:app_line_analyzer
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//bazel:features.bzl", "if_qt5_enabled")
+
+package(default_visibility = ["//visibility:public"])
+
+# For Qt applications, we need to handle MOC and UIC preprocessing
+# This is a simplified version - in production, you'd want to use a proper Qt rule
+
+cc_binary(
+    name = "app_line_analyzer",
+    srcs = if_qt5_enabled([
+        "main.cpp",
+        "helpers.cpp",
+        "controlwindow.cpp",
+        "preprocessing.cpp",
+        "profileanalyzer.cpp",
+        "precisionoptimizer.cpp",
+        "pofuncplot.cpp",
+        "quiver.cpp",
+        "helpers.h",
+        "controlwindow.h",
+        "preprocessing.h",
+        "profileanalyzer.h",
+        "precisionoptimizer.h",
+        "pofuncplot.h",
+        "quiver.h",
+        "latool.h",
+        # UI files would normally be processed by UIC
+        # For now, we assume moc_ and ui_ files are generated or handled separately
+    ]),
+    copts = [
+        "-Iapps/line_analyzer",  # For generated UI headers
+        "-fPIC",
+    ],
+    tags = [
+        "manual",  # Don't build by default (requires Qt5)
+        "opengl",
+        "qt5",
+    ],
+    deps = if_qt5_enabled([
+        "//libs/imgproc:lib_imgproc",
+        "//libs/lsd:lib_lsd",
+        "//third-party/qplot:lib_qplot",
+        "//third-party/qplot3d:lib_qplot3d",
+        "@dlib",
+        "@opencv",
+        "@qt5//:qt5_core",
+        "@qt5//:qt5_gui",
+        "@qt5//:qt5_opengl",
+        "@qt5//:qt5_printsupport",
+        "@qt5//:qt5_widgets",
+    ]),
+)

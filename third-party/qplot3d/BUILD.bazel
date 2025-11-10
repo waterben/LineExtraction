@@ -1,0 +1,63 @@
+"""qplot3d - Qt 3D plotting library
+
+Note: This library requires Qt5 and OpenGL.
+Build with --//bazel:enable_qt5=true --//bazel:enable_opengl=true to include it.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//bazel:features.bzl", "if_opengl_enabled", "if_qt5_enabled")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_qplot3d",
+    srcs = select({
+        "//bazel:qt5_enabled": [
+            "src/gl2ps.c",
+            "src/qwt3d_autoscaler.cpp",
+            "src/qwt3d_axis.cpp",
+            "src/qwt3d_color.cpp",
+            "src/qwt3d_colorlegend.cpp",
+            "src/qwt3d_coordsys.cpp",
+            "src/qwt3d_drawable.cpp",
+            "src/qwt3d_enrichment_std.cpp",
+            "src/qwt3d_function.cpp",
+            "src/qwt3d_gridmapping.cpp",
+            "src/qwt3d_gridplot.cpp",
+            "src/qwt3d_io.cpp",
+            "src/qwt3d_io_gl2ps.cpp",
+            "src/qwt3d_io_reader.cpp",
+            "src/qwt3d_label.cpp",
+            "src/qwt3d_lighting.cpp",
+            "src/qwt3d_meshplot.cpp",
+            "src/qwt3d_mousekeyboard.cpp",
+            "src/qwt3d_movements.cpp",
+            "src/qwt3d_parametricsurface.cpp",
+            "src/qwt3d_plot.cpp",
+            "src/qwt3d_scale.cpp",
+            "src/qwt3d_surfaceplot.cpp",
+            "src/qwt3d_types.cpp",
+        ],
+        "//conditions:default": [],
+    }),
+    hdrs = if_qt5_enabled(
+        glob([
+            "include/qplot3d/*.h",
+        ]),
+    ),
+    includes = ["include"],
+    linkopts = if_opengl_enabled([
+        "-lGL",
+        "-lGLU",
+    ]),
+    tags = [
+        "opengl",
+        "qt5",
+    ],
+    deps = if_qt5_enabled([
+        "@qt5//:qt5_core",
+        "@qt5//:qt5_gui",
+        "@qt5//:qt5_opengl",
+        "@qt5//:qt5_widgets",
+    ]),
+)

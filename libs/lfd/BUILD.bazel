@@ -1,0 +1,38 @@
+"""lib_lfd - Line Feature Detector library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_lfd",
+    hdrs = glob(
+        [
+            "include/lfd/*.hpp",
+            "include/lfd/*.h",
+        ],
+        allow_empty = True,
+    ),
+    includes = ["include"],
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "//libs/lsd:lib_lsd",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        deps = [
+            ":lib_lfd",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

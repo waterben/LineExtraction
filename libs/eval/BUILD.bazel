@@ -1,0 +1,43 @@
+"""lib_eval - Evaluation library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_eval",
+    srcs = glob(
+        [
+            "src/*.cpp",
+        ],
+        allow_empty = True,
+    ),
+    hdrs = glob(
+        [
+            "include/eval/*.hpp",
+            "include/eval/*.h",
+        ],
+        allow_empty = True,
+    ),
+    includes = ["include"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        deps = [
+            ":lib_eval",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

@@ -1,0 +1,8 @@
+{
+  "type": "local_path",
+  "path": "/usr",
+  "overlay": {
+    "BUILD.bazel": "sha256-SLSzs+e/OIPpuX5DNZn7pYtrzUBxPyJKPgnvj/w2FsA=",
+    "MODULE.bazel": "sha256-C7UF96A+79CFrAtA7Y8UqGVG7vHsGsbaD3wymfFTL9M="
+  }
+}

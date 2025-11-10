@@ -1,0 +1,33 @@
+"""qplot - Qt plotting library
+
+Note: This library requires Qt5. Build with --//bazel:enable_qt5=true to include it.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//bazel:features.bzl", "if_qt5_enabled")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_qplot",
+    srcs = if_qt5_enabled([
+        "src/PlotManager.cpp",
+        "src/PlotWindow.cpp",
+        "src/qcustomplot.cpp",
+    ]),
+    hdrs = if_qt5_enabled(
+        glob([
+            "include/qplot/*.h",
+        ]),
+    ),
+    includes = ["include"],
+    tags = ["qt5"],
+    deps = if_qt5_enabled([
+        "//libs/geometry:lib_geometry",
+        "@opencv",
+        "@qt5//:qt5_core",
+        "@qt5//:qt5_gui",
+        "@qt5//:qt5_printsupport",
+        "@qt5//:qt5_widgets",
+    ]),
+)

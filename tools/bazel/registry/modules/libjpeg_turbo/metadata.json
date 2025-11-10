@@ -1,0 +1,13 @@
+{
+  "homepage": "https://libjpeg-turbo.org/",
+  "maintainers": [
+    {
+      "email": "local@lineextraction",
+      "name": "LineExtraction Local Override"
+    }
+  ],
+  "versions": [
+    "3.1.2"
+  ],
+  "yanked_versions": {}
+}

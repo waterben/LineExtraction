@@ -1,0 +1,154 @@
+"""OpenCV Contrib - Extra modules for OpenCV
+
+This BUILD file compiles OpenCV contrib modules (without CUDA support).
+Configured to match the CMake setup in tools/cmake/extern_opencv.cmake
+
+Standard Contrib Components:
+- xfeatures2d: Extra 2D features (SIFT, SURF, FREAK, etc.)
+- line_descriptor: Binary line descriptors (LBD, BinBoost)
+- ximgproc: Extended image processing (structured forests, superpixels, etc.)
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# XFeatures2D - Extra 2D features framework
+cc_library(
+    name = "xfeatures2d",
+    srcs = glob(
+        [
+            "modules/xfeatures2d/src/**/*.cpp",
+        ],
+        exclude = [
+            "modules/xfeatures2d/src/**/*_test.cpp",
+            "modules/xfeatures2d/src/**/*cuda*.cpp",
+            "modules/xfeatures2d/src/**/*gpu*.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "modules/xfeatures2d/include/**/*.h*",
+            "modules/xfeatures2d/src/**/*.h*",
+        ],
+    ),
+    copts = [
+        "-std=c++11",
+        "-fPIC",
+        "-ffast-math",
+        "-DOPENCV_ENABLE_NONFREE",
+        "-D__OPENCV_BUILD",  # Allow access to private OpenCV headers
+    ],
+    includes = [
+        "modules/xfeatures2d/include",
+        "modules/xfeatures2d/src",
+    ],
+    textual_hdrs = [
+        "modules/xfeatures2d/src/generated_16.i",
+        "modules/xfeatures2d/src/generated_32.i",
+        "modules/xfeatures2d/src/generated_64.i",
+    ],
+    deps = [
+        "@opencv//:calib3d",
+        "@opencv//:core",
+        "@opencv//:features2d",
+        "@opencv//:flann",
+        "@opencv//:imgproc",
+    ],
+)
+
+# Line Descriptor - Binary descriptors for lines
+cc_library(
+    name = "line_descriptor",
+    srcs = glob(
+        [
+            "modules/line_descriptor/src/**/*.cpp",
+        ],
+        exclude = [
+            "modules/line_descriptor/src/**/*_test.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "modules/line_descriptor/include/**/*.h*",
+            "modules/line_descriptor/src/**/*.h*",
+        ],
+    ),
+    copts = [
+        "-std=c++11",
+        "-fPIC",
+        "-ffast-math",
+        "-D__OPENCV_BUILD",  # Allow access to private OpenCV headers
+    ],
+    includes = [
+        "modules/line_descriptor/include",
+        "modules/line_descriptor/src",
+    ],
+    deps = [
+        "@opencv//:core",
+        "@opencv//:features2d",
+        "@opencv//:imgproc",
+    ],
+)
+
+# XImgProc - Extended image processing
+cc_library(
+    name = "ximgproc",
+    srcs = glob(
+        [
+            "modules/ximgproc/src/**/*.cpp",
+        ],
+        exclude = [
+            "modules/ximgproc/src/**/*_test.cpp",
+            "modules/ximgproc/src/**/*cuda*.cpp",
+            "modules/ximgproc/src/**/*gpu*.cpp",
+            "modules/ximgproc/src/**/*ocl.cpp",  # Exclude OpenCL files
+            "modules/ximgproc/src/anisodiff.cpp",  # Uses OpenCL kernels
+            "modules/ximgproc/src/sparse_match_interpolators.cpp",  # Uses video module not in BCR
+        ],
+    ),
+    hdrs = glob(
+        [
+            "modules/ximgproc/include/**/*.h*",
+            "modules/ximgproc/src/**/*.h*",
+        ],
+    ),
+    copts = [
+        "-std=c++11",
+        "-fPIC",
+        "-ffast-math",
+        "-D__OPENCV_BUILD",  # Allow access to private OpenCV headers
+    ],
+    includes = [
+        "modules/ximgproc/include",
+        "modules/ximgproc/src",
+    ],
+    deps = [
+        "@opencv//:calib3d",
+        "@opencv//:core",
+        "@opencv//:imgproc",
+        "@opencv//:videoio",
+    ],
+)
+
+# Main opencv_contrib library - aggregates all contrib components
+cc_library(
+    name = "opencv_contrib",
+    hdrs = glob(
+        [
+            "modules/xfeatures2d/include/**/*.h*",
+            "modules/line_descriptor/include/**/*.h*",
+            "modules/ximgproc/include/**/*.h*",
+        ],
+    ),
+    includes = [
+        "modules/line_descriptor/include",
+        "modules/xfeatures2d/include",
+        "modules/ximgproc/include",
+    ],
+    deps = [
+        ":line_descriptor",
+        ":xfeatures2d",
+        ":ximgproc",
+    ],
+)

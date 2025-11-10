@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   cv::Mat frame;
 
   capture.grab();
-  capture.retrieve(frame, IMREAD_GRAYSCALE);
+  capture.retrieve(frame, cv::IMREAD_GRAYSCALE);
 
   cv::Size size = frame.size();
   cout << "Image size: " << size.width << " x " << size.height << '\n' << endl;
@@ -69,9 +69,9 @@ int main(int argc, char** argv) {
     lines(out, lsd.lineSegments(), cv::Scalar(255, 0, 0));
     imshow("video", out);
 
-    if (!capture.grab() || !capture.retrieve(frame, IMREAD_GRAYSCALE)) break;
+    if (!capture.grab() || !capture.retrieve(frame, cv::IMREAD_GRAYSCALE)) break;
 
-    exit_key_press = cvWaitKey(1);
+    exit_key_press = cv::waitKey(1);
   }
 
   cout << '\n' << endl;

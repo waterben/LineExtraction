@@ -1,0 +1,12 @@
+{
+  "homepage": "https://www.qt.io/",
+  "maintainers": [
+    {
+      "name": "LineExtraction Project"
+    }
+  ],
+  "versions": [
+    "5.15.0"
+  ],
+  "yanked_versions": {}
+}

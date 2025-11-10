@@ -32,7 +32,9 @@ TEST(ImageOperatorTest, BlurAndNoise) {
   auto gbl = lsfm::GaussianBlurOperator::create(1.0, cv::Size(3, 3));
   auto mbl = lsfm::MedianBlurOperator::create(3);
   auto bil = lsfm::BilateralOperator::create(5, 10, 10);
+#ifdef HAVE_OPENCV_PHOTO
   auto nlm = lsfm::FastNlMeansOperator::create(1.0f, 3, 7);
+#endif
   auto uno = lsfm::UniformNoiseOperator::create(-5.0, 5.0);
   auto gno = lsfm::GaussianNoiseOperator::create(5.0, 0.0);
 
@@ -47,7 +49,9 @@ TEST(ImageOperatorTest, BlurAndNoise) {
   // median requires odd kernel size; already set to 3
   EXPECT_NO_THROW((*mbl)(img));
   EXPECT_NO_THROW((*bil)(img));
+#ifdef HAVE_OPENCV_PHOTO
   EXPECT_NO_THROW((*nlm)(img));
+#endif
   EXPECT_NO_THROW((*uno)(img));
   EXPECT_NO_THROW((*gno)(img));
 }

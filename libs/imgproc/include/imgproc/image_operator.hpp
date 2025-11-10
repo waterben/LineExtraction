@@ -44,7 +44,9 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/photo/photo.hpp>
+#ifdef HAVE_OPENCV_PHOTO
+#  include <opencv2/photo/photo.hpp>
+#endif
 
 #include <memory>
 #include <string>
@@ -378,6 +380,7 @@ class BilateralOperator : public ImageOperator {
   }
 };
 
+#ifdef HAVE_OPENCV_PHOTO
 class FastNlMeansOperator : public ImageOperator {
   float h_;
   int tmpWinSize_, searchWinSize_;
@@ -401,6 +404,7 @@ class FastNlMeansOperator : public ImageOperator {
     return ImageOperatorPtr(new FastNlMeansOperator(h, templateWindowSize, searchWindowSize));
   }
 };
+#endif  // HAVE_OPENCV_PHOTO
 
 
 class UniformNoiseOperator : public ImageOperator {

@@ -1,0 +1,97 @@
+# LineExtraction Bazel Configuration
+
+# Enable Bzlmod (MODULE.bazel)
+common --enable_bzlmod
+
+# Register local Bazel registry for custom modules
+common --registry=file://%workspace%/tools/bazel/registry
+common --registry=https://bcr.bazel.build
+
+# C++ Standard
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+
+# Compiler selection
+# Use these with --config=gcc or --config=clang
+build:gcc --repo_env=CC=gcc
+build:gcc --repo_env=CXX=g++
+build:gcc --cxxopt=-fPIC
+build:gcc --cxxopt=-Wno-write-strings
+
+build:clang --repo_env=CC=clang
+build:clang --repo_env=CXX=clang++
+build:clang --cxxopt=-fPIC
+build:clang --cxxopt=-Wno-write-strings
+
+# Default to GCC if not specified
+build --config=gcc
+
+# Debug configuration
+build:debug --compilation_mode=dbg
+build:debug --cxxopt=-g
+build:debug --cxxopt=-O0
+build:debug --strip=never
+build:debug --copt=-DDEBUG
+
+# Release configuration
+build:release --compilation_mode=opt
+build:release --cxxopt=-O3
+build:release --cxxopt=-ffast-math
+build:release --cxxopt=-DNDEBUG
+build:release --strip=always
+
+# Default to release
+build --config=release
+
+# Test configuration
+test --test_output=errors
+test --test_summary=detailed
+test --test_verbose_timeout_warnings
+
+# Build output
+build --verbose_failures
+build --announce_rc
+
+# Colors and UI
+common --color=yes
+common --curses=yes
+
+# Performance
+build --jobs=auto
+build --local_resources=cpu=HOST_CPUS-1
+
+# Disk cache
+build --disk_cache=~/.cache/bazel/line_extraction
+
+# Remote cache (optional, uncomment if you have one)
+# build --remote_cache=grpc://your-cache-server:port
+
+# Use platforms for cross-compilation
+# Note: Using built-in toolchains, not custom ones
+# build --incompatible_enable_cc_toolchain_resolution
+
+# Additional debugging feature for development
+build:debugging_feature --config=debug
+build:debugging_feature --cxxopt=-ggdb3
+build:debugging_feature --cxxopt=-fno-omit-frame-pointer
+
+# Address Sanitizer
+build:asan --strip=never
+build:asan --copt=-fsanitize=address
+build:asan --copt=-DADDRESS_SANITIZER
+build:asan --copt=-O1
+build:asan --copt=-g
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --linkopt=-fsanitize=address
+
+# Thread Sanitizer
+build:tsan --strip=never
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-DTHREAD_SANITIZER
+build:tsan --copt=-O1
+build:tsan --copt=-g
+build:tsan --copt=-fno-omit-frame-pointer
+build:tsan --linkopt=-fsanitize=thread
+
+# Try to import user-specific .bazelrc if it exists
+try-import %workspace%/.bazelrc.user

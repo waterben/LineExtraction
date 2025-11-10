@@ -1,0 +1,39 @@
+"""lib_utility - Base utility library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_utility",
+    srcs = glob([
+        "src/*.cpp",
+    ]),
+    hdrs = glob(
+        [
+            "include/utility/*.hpp",
+            "include/utility/*.h",
+        ],
+        allow_empty = True,
+    ),
+    includes = ["include"],
+    deps = [
+        "@eigen",
+        "@opencv",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        deps = [
+            ":lib_utility",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

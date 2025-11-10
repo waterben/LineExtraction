@@ -1,0 +1,8 @@
+{
+  "integrity": "sha256-jwASI0tGTOUIkMSQ8YGU+ROnsfTmoD1mRBefoPhn0M8=",
+  "strip_prefix": "libjpeg-turbo-3.1.2",
+  "url": "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.1.2/libjpeg-turbo-3.1.2.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-CC+GxlKOSmbtaQp2FHvY6vJNt0DY0Ca6eEWe+Qtng+g="
+  }
+}

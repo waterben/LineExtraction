@@ -1,0 +1,12 @@
+{
+  "homepage": "http://dlib.net/",
+  "maintainers": [
+    {
+      "name": "LineExtraction Project"
+    }
+  ],
+  "versions": [
+    "19.24.7"
+  ],
+  "yanked_versions": {}
+}
