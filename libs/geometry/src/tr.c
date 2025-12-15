@@ -315,12 +315,15 @@ void trBeginTile(TRcontext* tr) {
     glOrtho(left, right, bottom, top, tr->Near, tr->Far);
 
   /* restore user's matrix mode */
-  glMatrixMode(matrixMode);
+  glMatrixMode((GLenum)matrixMode);
 }
 
 
 int trEndTile(TRcontext* tr) {
-  GLint prevRowLength, prevSkipRows, prevSkipPixels, prevAlignment;
+  GLint prevRowLength, prevSkipRows, prevSkipPixels;
+  (void)prevRowLength;
+  (void)prevSkipRows;
+  (void)prevSkipPixels;
 
   if (!tr) return 0;
 
@@ -390,7 +393,7 @@ void trRasterPos3f(TRcontext* tr, GLfloat x, GLfloat y, GLfloat z) {
   } else {
     GLdouble modelview[16], proj[16];
     GLint viewport[4];
-    GLdouble winX, winY, winZ;
+    GLfloat winX, winY, winZ;
 
     /* Get modelview, projection and viewport */
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
@@ -410,12 +413,12 @@ void trRasterPos3f(TRcontext* tr, GLfloat x, GLfloat y, GLfloat z) {
       glPushMatrix();
       glLoadIdentity();
       glOrtho(0.0, tr->CurrentTileWidth, 0.0, tr->CurrentTileHeight, 0.0, 1.0);
-      glRasterPos3f(0.0, 0.0, -winZ);
+      glRasterPos3f(0.0f, 0.0f, -winZ);
 
       /* Now use empty bitmap to adjust raster position to (winX,winY) */
       {
         GLubyte bitmap[1] = {0};
-        glBitmap(1, 1, 0.0, 0.0, winX, winY, bitmap);
+        glBitmap(1, 1, 0.0f, 0.0f, winX, winY, bitmap);
       }
 
       /* restore original matrices */
