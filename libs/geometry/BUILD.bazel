@@ -1,6 +1,7 @@
 """lib_geometry - Geometry library"""
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -21,6 +22,7 @@ cc_library(
         ],
         allow_empty = True,
     ),
+    copts = LE_COPTS_COMPAT,
     includes = [
         "include",
         "src",
@@ -43,6 +45,7 @@ cc_library(
         name = test_file[len("tests/"):-len(".cpp")],
         size = "small",
         srcs = [test_file],
+        copts = LE_COPTS_COMPAT,
         deps = [
             ":lib_geometry",
             "@googletest//:gtest",

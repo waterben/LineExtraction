@@ -2,7 +2,7 @@
 
 module(
     name = "line_extraction",
-    version = "1.0.0",
+    version = "2025.11.11.dev0",
 )
 
 # Bazel Skylib - utilities

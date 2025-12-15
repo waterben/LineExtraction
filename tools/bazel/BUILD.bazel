@@ -1,0 +1,7 @@
+"""Bazel build utilities for LineExtraction"""
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "copts.bzl",
+])
