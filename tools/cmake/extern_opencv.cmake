@@ -45,7 +45,7 @@ macro(opencv_repo extern_path)
     endif()
 
     foreach(flag ${OpenCVBuildFlags})
-	    list(APPEND build_flags "DCMAKE_CXX_FLAGS=${flag}")
+	    list(APPEND build_flags "-DCMAKE_CXX_FLAGS=${flag}")
     endforeach()
     # Map top-level WITH_CUDA option to OpenCV CMake flag
     if (WITH_CUDA)
@@ -71,7 +71,7 @@ set(OpenCVDetectionModes Auto System Extern Managed)
 set(OpenCVDetectionMode Auto CACHE STRING "OpenCV detection mode: Auto - try system, then extern, then managed; System - use lib from system; Extern - use lib from extern folder variable; Managed - get from repository")
 set(OpenCVExternPath "${PROJECT_SOURCE_DIR}/extern/opencv/build" CACHE PATH "Path to extern lib")
 set_property(CACHE OpenCVDetectionMode PROPERTY STRINGS ${OpenCVDetectionModes})
-set(OpenCVVersion "4.7.0" CACHE STRING "Managed opencv version")
+set(OpenCVVersion "4.12.0" CACHE STRING "Managed opencv version")
 
 # Configure OpenCV components based on CUDA availability
 if (WITH_CUDA)
