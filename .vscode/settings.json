@@ -73,9 +73,9 @@
       120
     ]
   },
-  // Docker container path (used when running in devcontainer)
-  // "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
-  // Local development path (used when running in WSL or native Linux)
+  // Python interpreter path
+  // In Docker: Overridden by devcontainer.json -> /opt/venv/deps/python
+  // In WSL/local: Uses .venv
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "cmake.configureOnOpen": false,
   "cmake.configureOnEdit": false,

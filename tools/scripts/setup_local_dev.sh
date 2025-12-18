@@ -11,6 +11,7 @@ DOCKER_BASE_DIR="${SCRIPT_DIR}/../../docker/base"
 DOCKER_DEVENV_DIR="${SCRIPT_DIR}/../../docker/devenv"
 REMOVE_TOOLS_MODE=false
 REMOVE_PACKAGES_MODE=false
+ONLY_EXTENSIONS_MODE=false
 
 writeError() {
     echo -e "\e[0;31mERROR: $1\e[0m" >&2
@@ -34,17 +35,19 @@ Usage: $0 [OPTIONS]
 OPTIONS:
     --remove-tools, --remove, -r  Remove only development tools and Python environments
     --remove-packages             Remove only APT packages from Docker configuration
+    --only-extensions             Install only VS Code extensions (no sudo required)
     --help, -h                    Show this help message
 
 DESCRIPTION:
     This script sets up (or removes) the development environment for the
     LineExtraction project. It reuses scripts from docker/scripts for consistency.
-    Must be run with sudo privileges.
+    Most operations require sudo privileges, except --only-extensions.
 
 EXAMPLES:
-    sudo $0                     # Install development environment
+    sudo $0                     # Install full development environment
     sudo $0 --remove-tools      # Remove only tools (uv, bazel, clangd, etc.)
     sudo $0 --remove-packages   # Remove only APT packages
+    $0 --only-extensions        # Install VS Code extensions only (no sudo)
 
 NOTE:
     This script installs system-wide packages and tools. Package removal with
@@ -67,6 +70,10 @@ parse_args() {
                 ;;
             --remove|-r)
                 REMOVE_TOOLS_MODE=true
+                shift
+                ;;
+            --only-extensions)
+                ONLY_EXTENSIONS_MODE=true
                 shift
                 ;;
             --help|-h)
@@ -515,6 +522,65 @@ remove_precommit() {
     writeInfo "Pre-commit hooks removed successfully."
 }
 
+# Install VS Code extensions from devcontainer.json
+install_vscode_extensions() {
+    writeInfo "Installing VS Code extensions from devcontainer.json..."
+
+    run_as_user bash -c '
+        DEVCONTAINER_JSON=".devcontainer/devcontainer.json"
+
+        if [[ ! -f "$DEVCONTAINER_JSON" ]]; then
+            echo "WARNING: devcontainer.json not found at $DEVCONTAINER_JSON"
+            return 0
+        fi
+
+        # Check if code command is available
+        if ! command -v code >/dev/null 2>&1; then
+            echo "WARNING: VS Code (code command) not found in PATH. Skipping extension installation."
+            echo "Install VS Code first: https://code.visualstudio.com/docs/setup/linux"
+            return 0
+        fi
+
+        # Extract extensions using grep and sed (no jq dependency)
+        # Look for lines between "extensions": [ and ]
+        extensions=$(sed -n "/\"extensions\":/,/]/p" "$DEVCONTAINER_JSON" | \
+                     grep -E "\"[^\"]+\.[^\"]+\"" | \
+                     sed -E "s/.*\"([^\"]+)\".*/\1/")
+
+        if [[ -z "$extensions" ]]; then
+            echo "No extensions found in devcontainer.json"
+            return 0
+        fi
+
+        echo "Found $(echo "$extensions" | wc -l) extensions to install"
+        echo ""
+
+        # Install each extension
+        local installed=0
+        local failed=0
+        while IFS= read -r ext; do
+            [[ -z "$ext" ]] && continue
+
+            echo "Installing: $ext"
+            if code --install-extension "$ext" --force >/dev/null 2>&1; then
+                ((installed++))
+            else
+                echo "  WARNING: Failed to install $ext"
+                ((failed++))
+            fi
+        done <<< "$extensions"
+
+        echo ""
+        echo "Extension installation complete:"
+        echo "  ✓ Installed: $installed"
+        if [[ $failed -gt 0 ]]; then
+            echo "  ✗ Failed: $failed"
+        fi
+    '
+
+    writeInfo "VS Code extensions installation completed."
+}
+
 # Remove APT packages from Docker configuration files
 remove_system_packages() {
     writeInfo "Removing APT packages from Docker configuration..."
@@ -613,6 +679,26 @@ ORIGINAL_HOME=""
 # Main function
 main() {
     parse_args "$@"
+
+    # Handle --only-extensions mode separately (no sudo required)
+    if [[ "$ONLY_EXTENSIONS_MODE" == "true" ]]; then
+        writeInfo "Installing VS Code extensions only (no sudo required)..."
+
+        # Set user variables to current user
+        ORIGINAL_USER="${SUDO_USER:-$USER}"
+        ORIGINAL_HOME="${HOME}"
+
+        # Ensure we're in the project root
+        PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+        cd "${PROJECT_ROOT}"
+
+        install_vscode_extensions
+
+        writeInfo "VS Code extensions installation completed."
+        return 0
+    fi
+
+    # For all other modes, check privileges
     check_privileges
 
     # Determine mode
@@ -709,6 +795,7 @@ main() {
         setup_python_env_local
         setup_dev_profile
         setup_precommit
+        install_vscode_extensions
 
         writeInfo ""
         writeInfo "=========================================="
