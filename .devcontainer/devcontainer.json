@@ -71,9 +71,10 @@
       "settings": {
         "terminal.integrated.shell.linux": "${localEnv:SHELL}",
         "http.proxyStrictSSL": false,
+        // Override python path for Docker (in devcontainer, python is in /opt/venv/deps/python)
         "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
         "python.autoComplete.extraPaths": [
-          "/opt/venv/deps/python/lib/python3.11/site-packages"
+          "/opt/venv/deps/python/lib/python/site-packages"
         ],
         "cmake.configureOnOpen": false,
         "cmake.configureOnEdit": false,
@@ -93,7 +94,6 @@
         "notskm.clang-tidy",
         "streetsidesoftware.code-spell-checker",
         "vscode-icons-team.vscode-icons",
-        "visualstudioexptteam.vscodeintellicode",
         "ZainChen.json",
         "benjamin-simmonds.pythoncpp-debug",
         "charliermarsh.ruff",
