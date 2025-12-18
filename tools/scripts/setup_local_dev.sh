@@ -3,6 +3,47 @@
 # LineExtraction Local Development Environment Setup Script
 # This script sets up or removes the development environment without Docker
 # It reuses scripts from docker/scripts for consistency
+#
+# USAGE:
+#   This script can be run from anywhere within the LineExtraction project.
+#   It automatically detects the project root and navigates there.
+#
+#   Installation (requires sudo):
+#     sudo ./tools/scripts/setup_local_dev.sh
+#
+#   VS Code extensions only (no sudo):
+#     ./tools/scripts/setup_local_dev.sh --only-extensions
+#
+#   Removal:
+#     sudo ./tools/scripts/setup_local_dev.sh --remove-tools
+#     sudo ./tools/scripts/setup_local_dev.sh --remove-packages
+#
+# WHAT IT INSTALLS:
+#   - System packages (build-essential, cmake, git, etc.)
+#   - Development tools (uv, bazel, clangd, gh, yq, ruff, actionlint)
+#   - Python virtual environment (.venv) with project dependencies
+#   - Git-aware shell prompt with persistent history
+#   - Pre-commit hooks
+#   - VS Code extensions from devcontainer.json
+#
+# SMART INSTALLATION:
+#   - The script checks before installing and skips already installed components
+#   - Safe to run multiple times - only missing components will be installed
+#   - VS Code extensions are never removed (including GitHub Copilot)
+#   - Python environment with >10 packages is considered configured
+#
+# ENVIRONMENT SETUP:
+#   - Creates ~/.vscode_profile with colorized git-aware prompt
+#   - Configures persistent command history in ~/.cmd_history/
+#   - Auto-activates Python venv in new shells
+#   - WSL: Configures DISPLAY for X server (GUI/OpenGL support)
+#
+# IMPORTANT NOTES:
+#   - Requires sudo for system operations (install/remove packages and tools)
+#   - No sudo needed for: --help, --only-extensions
+#   - Safe to run multiple times (idempotent with intelligent skip logic)
+#   - Removal operations are selective (use flags as needed)
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -101,33 +142,42 @@ check_os() {
     writeInfo "Detected OS: $ID $VERSION_ID"
 }
 
-# Check if running as root/sudo
-check_privileges() {
-    if [[ $EUID -ne 0 ]]; then
-        writeError "This script must be run as root (use sudo)."
-    fi
-
-    # Check if we have the original user available for user-specific operations
-    if [[ -z "${SUDO_USER:-}" ]]; then
-        writeWarning "SUDO_USER not set. User-specific operations will run as root."
-        ORIGINAL_USER="root"
-        ORIGINAL_HOME="/root"
-    else
+# Setup user context (works with or without sudo)
+setup_user_context() {
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        # Running under sudo
         ORIGINAL_USER="$SUDO_USER"
         ORIGINAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+    else
+        # Running as regular user
+        ORIGINAL_USER="$USER"
+        ORIGINAL_HOME="$HOME"
     fi
 
+    # Verify user home directory exists
+    if [[ ! -d "$ORIGINAL_HOME" ]]; then
+        writeError "User home directory not found: $ORIGINAL_HOME"
+    fi
+}
+
+# Check if running as root/sudo (for operations requiring root)
+check_privileges() {
+    if [[ $EUID -ne 0 ]]; then
+        writeError "This operation requires root privileges. Please run with sudo."
+    fi
+
+    setup_user_context
     writeInfo "Running system operations as root, user operations as: $ORIGINAL_USER"
 }
 
-# Run command as original user (before sudo)
+# Run command as original user (works with or without sudo)
 run_as_user() {
-    if [[ "$ORIGINAL_USER" == "root" ]]; then
-        # No original user available, run as root
-        "$@"
+    if [[ $EUID -eq 0 ]] && [[ -n "${SUDO_USER:-}" ]] && [[ "$SUDO_USER" != "root" ]]; then
+        # Running as root via sudo - switch to original user
+        sudo -u "$SUDO_USER" -H "$@"
     else
-        # Run as original user with their environment
-        sudo -u "$ORIGINAL_USER" -H "$@"
+        # Running as regular user - just execute
+        "$@"
     fi
 }
 
@@ -271,6 +321,22 @@ setup_python_env_local() {
         writeError "uv is not installed or not in PATH. Please ensure install_base_tools completed successfully."
     fi
 
+    # Check if Python environment is already properly set up
+    if [[ -d ".venv" ]] && [[ -f ".venv/bin/activate" ]] && [[ -f "uv.lock" ]]; then
+        writeInfo "Python virtual environment already exists."
+
+        # Quick check if dependencies are up to date
+        # Count installed packages in site-packages
+        pkg_count=$(run_as_user bash -c 'ls .venv/lib/python*/site-packages/*.dist-info 2>/dev/null | wc -l')
+
+        if [[ $pkg_count -gt 10 ]]; then
+            writeInfo "  Found $pkg_count packages installed"
+            writeInfo "  Python environment already properly configured. Skipping..."
+            writeInfo "  To force reinstall, remove .venv directory first: rm -rf .venv"
+            return
+        fi
+    fi
+
     # For local development, we use a simpler setup with .venv
     # The docker script is designed for system-wide multi-version setup
 
@@ -339,6 +405,12 @@ setup_python_env_local() {
 setup_dev_profile() {
     writeInfo "Setting up local development environment profile..."
 
+    # Check if profile is already set up
+    if [[ -f "$ORIGINAL_HOME/.vscode_profile" ]] && grep -q "source ~/.vscode_profile" "$ORIGINAL_HOME/.bashrc" 2>/dev/null; then
+        writeInfo "Development profile already configured. Skipping..."
+        return
+    fi
+
     # Run as original user
     run_as_user bash -c '
         # Create development folders
@@ -347,7 +419,7 @@ setup_dev_profile() {
 
         # Create .inputrc for history search
         echo "Setting up .inputrc for command history search..."
-        echo "$include /etc/inputrc" > ~/.inputrc
+        echo "$""include /etc/inputrc" > ~/.inputrc
         echo "# Map \"page up\" and \"page down\" to search the history" >> ~/.inputrc
         echo "\"\\e[5~\": history-search-backward" >> ~/.inputrc
         echo "\"\\e[6~\": history-search-forward" >> ~/.inputrc
@@ -386,7 +458,7 @@ setup_dev_profile() {
         echo "# WSL: Configure DISPLAY for X server (GUI/OpenGL support)" >> ~/.vscode_profile
         echo "if grep -qi microsoft /proc/version 2>/dev/null; then" >> ~/.vscode_profile
         echo "    # WSL 2: Use Windows host IP from resolv.conf" >> ~/.vscode_profile
-        echo "    export DISPLAY=\$(cat /etc/resolv.conf | grep nameserver | awk \"{print \\\$2}\"):0" >> ~/.vscode_profile
+        echo "    export DISPLAY=\$(cat /etc/resolv.conf | grep nameserver | awk '\''{print \$2}'\''):0" >> ~/.vscode_profile
         echo "    # Optional: Uncomment if using WSLg (WSL 2 with built-in GUI support)" >> ~/.vscode_profile
         echo "    # export DISPLAY=:0" >> ~/.vscode_profile
         echo "fi" >> ~/.vscode_profile
@@ -415,6 +487,12 @@ setup_precommit() {
         return
     fi
 
+    # Check if pre-commit hooks are already installed
+    if [[ -f ".git/hooks/pre-commit" ]] && grep -q "pre-commit" .git/hooks/pre-commit 2>/dev/null; then
+        writeInfo "Pre-commit hooks already installed. Skipping..."
+        return
+    fi
+
     # Run as original user
     run_as_user bash -c '
         # Activate virtual environment
@@ -424,6 +502,13 @@ setup_precommit() {
         fi
 
         source .venv/bin/activate
+
+        # Check if pre-commit is available
+        if ! command -v pre-commit >/dev/null 2>&1; then
+            echo "WARNING: pre-commit not found in venv. Installing..."
+            pip install pre-commit
+        fi
+
         pre-commit install --config .pre-commit-config.yaml
     '
 
@@ -525,20 +610,23 @@ remove_precommit() {
 # Install VS Code extensions from devcontainer.json
 install_vscode_extensions() {
     writeInfo "Installing VS Code extensions from devcontainer.json..."
+    writeInfo "NOTE: Existing extensions (including GitHub Copilot) will NOT be removed."
 
     run_as_user bash -c '
         DEVCONTAINER_JSON=".devcontainer/devcontainer.json"
 
         if [[ ! -f "$DEVCONTAINER_JSON" ]]; then
             echo "WARNING: devcontainer.json not found at $DEVCONTAINER_JSON"
-            return 0
+            echo "Skipping VS Code extension installation."
+            exit 0
         fi
 
         # Check if code command is available
         if ! command -v code >/dev/null 2>&1; then
-            echo "WARNING: VS Code (code command) not found in PATH. Skipping extension installation."
-            echo "Install VS Code first: https://code.visualstudio.com/docs/setup/linux"
-            return 0
+            echo "WARNING: VS Code (code command) not found in PATH."
+            echo "Skipping extension installation. Install VS Code first:"
+            echo "  https://code.visualstudio.com/docs/setup/linux"
+            exit 0
         fi
 
         # Extract extensions using grep and sed (no jq dependency)
@@ -549,33 +637,48 @@ install_vscode_extensions() {
 
         if [[ -z "$extensions" ]]; then
             echo "No extensions found in devcontainer.json"
-            return 0
+            exit 0
         fi
 
-        echo "Found $(echo "$extensions" | wc -l) extensions to install"
+        total_count=$(echo "$extensions" | wc -l)
+        echo "Found $total_count extensions to install"
         echo ""
 
         # Install each extension
-        local installed=0
-        local failed=0
+        installed=0
+        skipped=0
+        failed=0
+
         while IFS= read -r ext; do
             [[ -z "$ext" ]] && continue
 
-            echo "Installing: $ext"
+            # Check if extension is already installed
+            # Filter out header line and check for exact match
+            if code --list-extensions 2>/dev/null | grep -v "^Extensions installed" | grep -qx "$ext"; then
+                echo "[SKIP] $ext (already installed)"
+                ((skipped++))
+                continue
+            fi
+
+            echo "[INSTALL] $ext"
             if code --install-extension "$ext" --force >/dev/null 2>&1; then
                 ((installed++))
             else
-                echo "  WARNING: Failed to install $ext"
+                echo "  [ERROR] Failed to install $ext"
                 ((failed++))
             fi
         done <<< "$extensions"
 
         echo ""
-        echo "Extension installation complete:"
-        echo "  ✓ Installed: $installed"
+        echo "Extension installation summary:"
+        echo "  ✓ Newly installed: $installed"
+        if [[ $skipped -gt 0 ]]; then
+            echo "  ⊚ Already installed: $skipped"
+        fi
         if [[ $failed -gt 0 ]]; then
             echo "  ✗ Failed: $failed"
         fi
+        echo "  Total: $total_count"
     '
 
     writeInfo "VS Code extensions installation completed."
@@ -680,28 +783,44 @@ ORIGINAL_HOME=""
 main() {
     parse_args "$@"
 
-    # Handle --only-extensions mode separately (no sudo required)
+    # Setup user context (works with or without sudo)
+    setup_user_context
+
+    # Ensure we're in the project root
+    PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+    if [[ ! -f "${PROJECT_ROOT}/pyproject.toml" ]] || [[ ! -d "${PROJECT_ROOT}/.git" ]]; then
+        writeError "Project root detection failed. Expected pyproject.toml and .git in: $PROJECT_ROOT"
+    fi
+    cd "${PROJECT_ROOT}"
+    writeInfo "Working directory: $PROJECT_ROOT"
+
+    check_os
+
+    # Handle --only-extensions mode (no sudo required)
     if [[ "$ONLY_EXTENSIONS_MODE" == "true" ]]; then
         writeInfo "Installing VS Code extensions only (no sudo required)..."
-
-        # Set user variables to current user
-        ORIGINAL_USER="${SUDO_USER:-$USER}"
-        ORIGINAL_HOME="${HOME}"
-
-        # Ensure we're in the project root
-        PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-        cd "${PROJECT_ROOT}"
-
         install_vscode_extensions
-
         writeInfo "VS Code extensions installation completed."
         return 0
     fi
 
-    # For all other modes, check privileges
-    check_privileges
+    # Check if sudo is required for the requested operation
+    local needs_sudo=false
+    if [[ "$REMOVE_TOOLS_MODE" == "true" ]] || [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
+        needs_sudo=true
+    fi
 
-    # Determine mode
+    # For installation mode, check if system packages will be installed
+    if [[ "$REMOVE_TOOLS_MODE" == "false" ]] && [[ "$REMOVE_PACKAGES_MODE" == "false" ]] && [[ "$ONLY_EXTENSIONS_MODE" == "false" ]]; then
+        needs_sudo=true
+    fi
+
+    # Verify sudo privileges for operations that need them
+    if [[ "$needs_sudo" == "true" ]]; then
+        check_privileges
+    fi
+
+    # Determine mode and show appropriate message
     if [[ "$REMOVE_TOOLS_MODE" == "true" ]] || [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
         local mode_desc=""
         if [[ "$REMOVE_TOOLS_MODE" == "true" ]] && [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
@@ -712,21 +831,8 @@ main() {
             mode_desc="packages only"
         fi
         writeInfo "Starting LineExtraction local development environment removal ($mode_desc)..."
-    else
-        writeInfo "Starting LineExtraction local development environment setup..."
-        writeInfo "This will install system packages and development tools."
-    fi
 
-    # Ensure we're in the project root
-    PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-    cd "${PROJECT_ROOT}"
-    writeInfo "Working directory: $PROJECT_ROOT"
-
-    check_os
-
-    # Handle removal modes
-    if [[ "$REMOVE_TOOLS_MODE" == "true" ]] || [[ "$REMOVE_PACKAGES_MODE" == "true" ]]; then
-
+        # Handle removal operations
         if [[ "$REMOVE_TOOLS_MODE" == "true" ]]; then
             writeInfo "Removing development tools and environments..."
 
@@ -759,6 +865,10 @@ main() {
             writeInfo "NOTE: Development tools were NOT removed. Use --remove-tools to remove them."
         fi
     else
+        # Installation mode
+        writeInfo "Starting LineExtraction local development environment setup..."
+        writeInfo "This will install system packages and development tools."
+
         # Verify Docker scripts exist
         writeInfo "Verifying Docker scripts..."
         local required_scripts=(
@@ -840,8 +950,8 @@ main() {
             writeInfo "  (e.g., VcXsrv, X410). See docs/WSL_SETUP.md for details."
             writeInfo ""
         fi
-    fi
-}
+    fi  # End of else block (install mode)
+}  # End of main function
 
 # Check if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
