@@ -27,12 +27,17 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 
 ### Development Environment Setup
 
-**Docker/DevContainer (Recommended):** Use VS Code with Dev Containers extension. See [`docker/README.md`](docker/README.md) for complete setup instructions.
+**Docker/DevContainer (Recommended for Linux/CI):** Use VS Code with Dev Containers extension. See [`docker/README.md`](docker/README.md) for complete setup instructions.
 
-**Local Setup:** Use the automated setup script:
+**WSL (Windows Users):** For Windows users who want to develop with OpenGL support, use WSL 2 with Ubuntu. See [`docs/WSL_SETUP.md`](docs/WSL_SETUP.md) for a complete guide.
+
+**Local Setup (Linux/WSL):** Use the automated setup script:
+
 ```bash
 sudo ./tools/scripts/setup_local_dev.sh
 ```
+
+This will install all dependencies, set up the Python environment, configure git hooks, and create a developer-friendly shell profile.
 
 **Manual Setup:** See [`docker/README.md`](docker/README.md) for manual installation steps.
 
