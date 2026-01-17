@@ -65,12 +65,31 @@ cmake --build . -j$(nproc)
 - Libraries: `build/lib/`
 - Tests: `build/bin/test_*`
 
-### Bazel (Experimental, Future)
+### Bazel (Recommended for Development)
 
-Bazel support is in development as a potential next-generation build system:
+Bazel provides hermetic builds with automatic dependency management:
 ```bash
-bazel build //...
+# Detect available features (Qt5, OpenGL, CUDA) - run once
+./tools/scripts/detect_bazel_features.sh
+
+# Build all libraries
+bazel build //libs/...
+
+# Run all tests
+bazel test //libs/...
+
+# Build with specific features
+bazel build --//bazel:enable_qt5=true //apps/line_analyzer:app_line_analyzer
 ```
+
+See `docs/BAZEL.md` for complete documentation and `bazel/README.md` for feature flags.
+
+## Documentation
+
+For detailed documentation, see:
+- **Build Systems:** `docs/CMAKE.md`, `docs/BAZEL.md`
+- **Development Environments:** `docs/DOCKER.md`, `docs/WSL.md`
+- **Code Guidelines:** `.github/instructions/cpp.instructions.md`, `.github/instructions/python.instructions.md`
 
 ## Development Workflows
 
@@ -83,9 +102,9 @@ sudo ./tools/scripts/setup_local_dev.sh
 This installs dependencies, sets up Python venv, git hooks, and VS Code extensions.
 
 **Docker/DevContainer (Recommended for CI):**
-Use VS Code Dev Containers extension - see `docker/README.md`. Note: No OpenGL/GPU support in containers.
+Use VS Code Dev Containers extension - see `docs/DOCKER.md`. Note: No OpenGL/GPU support in containers.
 
-**WSL Users:** See `docs/WSL_SETUP.md` for OpenGL/GUI support setup.
+**WSL Users:** See `docs/WSL.md` for OpenGL/GUI support setup.
 
 ### Debugging in VS Code
 
@@ -162,4 +181,4 @@ Python environment is in `.venv/` (created by setup script). Dependencies in `py
 - **Don't** use bare `add_library()` - use `le_add_library()` for consistency
 - **Do** run tests after changes: `ctest` or individual test binaries
 - **Do** use pre-commit hooks (installed by setup script) for code quality
-- **WSL users**: Configure `DISPLAY` for X server (see `docs/WSL_SETUP.md`)
+- **WSL users**: Configure `DISPLAY` for X server (see `docs/WSL.md`)

@@ -77,10 +77,17 @@
   // In Docker: Overridden by devcontainer.json -> /opt/venv/deps/python
   // In WSL/local: Uses .venv
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  // Disable VS Code's automatic venv activation - we handle it in .project_env
+  "python.terminal.activateEnvironment": false,
   "cmake.configureOnOpen": false,
   "cmake.configureOnEdit": false,
   "cmake.buildBeforeRun": false,
   "terminal.integrated.scrollback": 100000,
+  // Auto-source .project_env in new terminals via shellIntegration
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.env.linux": {
+    "LE_PROJECT_DIR": "${workspaceFolder}"
+  },
   "github.copilot.chat.agent.autoExecute": true,
   "github.copilot.chat.agent.confirmationRequired": false,
   "github.copilot.chat.agent.allowCommandExecution": true,

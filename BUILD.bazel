@@ -1,0 +1,56 @@
+"""Doxygen documentation generation for Bazel.
+
+This BUILD file defines a target to generate Doxygen documentation.
+Run with: bazel build //:doxygen
+"""
+
+# Doxygen documentation generation
+# Note: This requires doxygen to be installed on the host system
+genrule(
+    name = "doxygen",
+    srcs = [
+        "Doxyfile.in",
+    ] + glob(
+        [
+            "libs/**/include/**/*.hpp",
+            "libs/**/include/**/*.h",
+            "libs/**/src/**/*.cpp",
+            "apps/**/*.hpp",
+            "apps/**/*.cpp",
+            "apps/**/*.h",
+        ],
+        allow_empty = True,
+    ),
+    outs = ["doxygen_generated.stamp"],
+    cmd = """
+        # Check if doxygen is available
+        if ! command -v doxygen &> /dev/null; then
+            echo "ERROR: doxygen is not installed. Install with: sudo apt install doxygen graphviz"
+            exit 1
+        fi
+
+        # Get workspace directory
+        WORKSPACE_DIR=$$(dirname $(location Doxyfile.in))
+
+        # Create output directory
+        mkdir -p $$WORKSPACE_DIR/build/doc/html
+
+        # Generate Doxyfile from template
+        sed -e 's|@CMAKE_CURRENT_SOURCE_DIR@|'$$WORKSPACE_DIR'|g' \
+            -e 's|@CMAKE_CURRENT_BINARY_DIR@|'$$WORKSPACE_DIR'/build|g' \
+            $(location Doxyfile.in) > $$WORKSPACE_DIR/build/Doxyfile
+
+        # Run doxygen
+        cd $$WORKSPACE_DIR && doxygen build/Doxyfile
+
+        # Create stamp file
+        echo "Documentation generated at $$(date)" > $@
+
+        echo ""
+        echo "═══════════════════════════════════════════════════════════════"
+        echo "Documentation generated successfully!"
+        echo "Open: $$WORKSPACE_DIR/build/doc/html/index.html"
+        echo "═══════════════════════════════════════════════════════════════"
+    """,
+    visibility = ["//visibility:public"],
+)

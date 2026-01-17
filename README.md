@@ -5,97 +5,105 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 ## Project Structure
 
 - **`libs/`** - Core library components:
-  - `edge/` - Edge detection algorithms
-  - `geometry/` - Geometric primitives and operations
-  - `imgproc/` - Image processing utilities
-  - `lfd/` - Line Feature Detector
-  - `lsd/` - Line Segment Detector
-  - `phase_cong/` - Phase congruency methods
-  - `utility/` - Common utilities and helpers
-  - `eval/` - Evaluation and benchmarking tools
+  - `edge/` - Edge detection algorithms (NMS, gradient computation, edge drawing)
+  - `geometry/` - Geometric primitives, transformations, and OpenGL rendering
+  - `imgproc/` - Image processing utilities and filters
+  - `lfd/` - Line Feature Detector implementation
+  - `lsd/` - Line Segment Detector implementation
+  - `utility/` - Common utilities (option managers, data structures)
+  - `eval/` - Evaluation and benchmarking framework
 
 - **`apps/`** - Applications:
-  - `line_analyzer/` - Interactive line analysis GUI
+  - `line_analyzer/` - Qt-based interactive GUI for line analysis
 
-- **`examples/`** - Usage examples and demonstrations
-- **`evaluation/`** - Performance evaluation and benchmarks
-- **`tools/`** - Build tools and utilities:
-  - `cmake/` - CMake modules and configuration files
-  - `scripts/` - Development and setup scripts
+- **`examples/`** - Usage examples demonstrating library functionality
+- **`evaluation/`** - Performance evaluation and thesis benchmarks
+- **`tools/`** - Build tools and utilities
 
 ## Quick Start
 
 ### Development Environment Setup
 
-**Docker/DevContainer (Recommended for Linux/CI):** Use VS Code with Dev Containers extension. See [`docker/README.md`](docker/README.md) for complete setup instructions.
+| Environment | Best For | Guide |
+|-------------|----------|-------|
+| **WSL** | Windows users, OpenGL/GUI apps | [`docs/WSL.md`](docs/WSL.md) |
+| **Docker/DevContainer** | Linux/macOS, CI/CD pipelines | [`docs/DOCKER.md`](docs/DOCKER.md) |
+| **Native Linux** | Linux desktop users | See below |
 
-**WSL (Windows Users):** For Windows users who want to develop with OpenGL support, use WSL 2 with Ubuntu. See [`docs/WSL/WSL_SETUP.md`](docs/WSL/WSL_SETUP.md) for a complete guide.
-
-**Local Setup (Linux/WSL):** Use the automated setup script:
+**Local Setup (Linux/WSL):**
 
 ```bash
 sudo ./tools/scripts/setup_local_dev.sh
 ```
 
-This will install all dependencies, set up the Python environment, configure git hooks, and create a developer-friendly shell profile.
-
-**Manual Setup:** See [`docker/README.md`](docker/README.md) for manual installation steps.
+This installs all dependencies, sets up Python environment, git hooks, and detects available build features.
 
 ### Build
 
+The project supports both **CMake** and **Bazel** build systems.
+
+| Build System | Documentation | Recommended For |
+|--------------|---------------|-----------------|
+| **Bazel** | [`docs/BAZEL.md`](docs/BAZEL.md) | Development, hermetic builds |
+| **CMake** | [`docs/CMAKE.md`](docs/CMAKE.md) | Production, full feature support |
+
+#### Bazel (Recommended for Development)
+
 ```bash
-git clone https://github.com/waterben/LineExtraction.git
-cd LineExtraction
+# One-time: detect available features (Qt5, OpenGL, CUDA)
+./tools/scripts/detect_bazel_features.sh
+
+# Build and test
+bazel build //libs/...
+bazel test //libs/...
+
+# Build and run line analyzer
+bazel run //apps/line_analyzer:app_line_analyzer
+```
+
+#### CMake (Full Feature Support)
+
+```bash
 mkdir build && cd build
 cmake ..
 cmake --build . -j$(nproc)
-```
-
-### Run Tests
-
-```bash
-# Run all tests
 ctest
-
-# Run specific test
-./bin/test_geometry
-```
-
-### Run Examples
-
-```bash
-# List available examples
-ls bin/*_example
-
-# Run specific example
-./bin/lsd_example path/to/image.jpg
-```
-
-### Run Applications
-
-```bash
-# Launch line analyzer GUI
-./bin/line_analyzer
-```
-
-## Build Configuration
-
-Key CMake options: `BUILD_DEBUG`, `BUILD_STATIC`, `ENABLE_UNIT_TEST`, `ENABLE_QT`
-
-```bash
-# Example: Debug build
-cmake -DBUILD_DEBUG=ON ..
-```
-
-## Documentation
-
-```bash
-make doc  # Output: build/doc/html/index.html
 ```
 
 ## Dependencies
 
-Automatically managed: OpenCV 4.7+, Eigen3, dlib, Google Test
+All dependencies are automatically managed by both build systems:
+
+| Dependency | Purpose |
+|------------|---------|
+| OpenCV 4.7+ | Image processing, computer vision |
+| Eigen3 | Linear algebra |
+| dlib | Machine learning utilities |
+| Google Test | Unit testing |
+| Qt5 | GUI applications (optional) |
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [`docs/BAZEL.md`](docs/BAZEL.md) | Bazel build system, feature flags, targets |
+| [`docs/CMAKE.md`](docs/CMAKE.md) | CMake build system, options, dependencies |
+| [`docs/DOCKER.md`](docs/DOCKER.md) | Docker/DevContainer development environment |
+| [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
+
+### API Documentation
+
+Generate API documentation with Doxygen:
+
+```bash
+# Bazel
+bazel build //:doxygen
+
+# CMake
+cmake -DBUILD_DOC=ON .. && make doc
+```
+
+Output: `build/doc/html/index.html`
 
 ## License
 

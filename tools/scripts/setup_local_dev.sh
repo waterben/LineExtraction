@@ -33,10 +33,10 @@
 #   - Python environment with >10 packages is considered configured
 #
 # ENVIRONMENT SETUP:
-#   - Creates ~/.vscode_profile with colorized git-aware prompt
+#   - Project environment configured via .project_env (git prompt, venv, DISPLAY)
 #   - Configures persistent command history in ~/.cmd_history/
-#   - Auto-activates Python venv in new shells
-#   - WSL: Configures DISPLAY for X server (GUI/OpenGL support)
+#   - WSL: VS Code loads .project_env via terminal.integrated.env.linux BASH_ENV
+#   - Docker/Native: .project_env sourced via .bashrc
 #
 # IMPORTANT NOTES:
 #   - Requires sudo for system operations (install/remove packages and tools)
@@ -405,9 +405,12 @@ setup_python_env_local() {
 setup_dev_profile() {
     writeInfo "Setting up local development environment profile..."
 
-    # Check if profile is already set up
-    if [[ -f "$ORIGINAL_HOME/.vscode_profile" ]] && grep -q "source ~/.vscode_profile" "$ORIGINAL_HOME/.bashrc" 2>/dev/null; then
-        writeInfo "Development profile already configured. Skipping..."
+    local PROJECT_DIR
+    PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+    # Check if .project_env sourcing is already set up in bashrc
+    if grep -q "source.*\.project_env" "$ORIGINAL_HOME/.bashrc" 2>/dev/null; then
+        writeInfo "Project environment already configured in .bashrc. Skipping..."
         return
     fi
 
@@ -424,54 +427,33 @@ setup_dev_profile() {
         echo "\"\\e[5~\": history-search-backward" >> ~/.inputrc
         echo "\"\\e[6~\": history-search-forward" >> ~/.inputrc
 
-        # Create .vscode_profile with git support for PS1
-        echo "Creating .vscode_profile..."
-        echo "# Use local copy of the PS1 support scripts provided by git" > ~/.vscode_profile
-        echo "source /usr/local/bin/git-prompt.sh" >> ~/.vscode_profile
-        echo "# Enable color codes" >> ~/.vscode_profile
-        echo "export COLOR_RED=\"\\[\\033[1;31m\\]\"" >> ~/.vscode_profile
-        echo "export COLOR_GREEN=\"\\[\\033[1;32m\\]\"" >> ~/.vscode_profile
-        echo "export COLOR_BLUE=\"\\[\\033[1;34m\\]\"" >> ~/.vscode_profile
-        echo "export COLOR_END=\"\\[\\033[0m\\]\"" >> ~/.vscode_profile
-        echo "# Change the prompt accordingly" >> ~/.vscode_profile
-        echo "export GIT_PS1_SHOWDIRTYSTATE=1" >> ~/.vscode_profile
-        echo "export GIT_PS1_SHOWSTASHSTATE=0" >> ~/.vscode_profile
-        echo "export GIT_PS1_SHOWUNTRACKEDFILES=0" >> ~/.vscode_profile
-        echo "export GIT_PS1_SHOWUPSTREAM=\"auto\"" >> ~/.vscode_profile
-        echo "export PS1=\"\${COLOR_GREEN}\\u@\\h\${COLOR_END}:\${COLOR_BLUE}\\w\${COLOR_RED}\$(__git_ps1)\${COLOR_END}\\n> \"" >> ~/.vscode_profile
-        echo "# ccache uses default ~/.ccache directory" >> ~/.vscode_profile
-        echo "# Set the bash history file to be persistent and ensure it is activated before prompt" >> ~/.vscode_profile
-        echo "export PROMPT_COMMAND=\"history -a\" && export HISTFILE=\"\${HOME}/.cmd_history/.bash_history\"" >> ~/.vscode_profile
-
         # Create history file
         touch ~/.cmd_history/.bash_history
-
-        # Source project-specific environment (.project_env) if it exists
-        echo "# Source project-specific environment (.project_env) if it exists" >> ~/.vscode_profile
-        echo "if [[ -f \"\${PWD}/.project_env\" ]]; then" >> ~/.vscode_profile
-        echo "    source \"\${PWD}/.project_env\"" >> ~/.vscode_profile
-        echo "fi" >> ~/.vscode_profile
-
-        # WSL-specific: Set DISPLAY for X server support
-        echo "# WSL: Configure DISPLAY for X server (GUI/OpenGL support)" >> ~/.vscode_profile
-        echo "if grep -qi microsoft /proc/version 2>/dev/null; then" >> ~/.vscode_profile
-        echo "    # WSL 2: Use Windows host IP from resolv.conf" >> ~/.vscode_profile
-        echo "    export DISPLAY=\$(cat /etc/resolv.conf | grep nameserver | awk '\''{print \$2}'\''):0" >> ~/.vscode_profile
-        echo "    # Optional: Uncomment if using WSLg (WSL 2 with built-in GUI support)" >> ~/.vscode_profile
-        echo "    # export DISPLAY=:0" >> ~/.vscode_profile
-        echo "fi" >> ~/.vscode_profile
-
-        # Enable environment in bashrc (only if not already present)
-        if ! grep -q "source ~/.vscode_profile" ~/.bashrc 2>/dev/null; then
-            echo "Adding .vscode_profile to .bashrc..."
-            echo "" >> ~/.bashrc
-            echo "# BEGIN - Appended via LineExtraction setup_local_dev.sh" >> ~/.bashrc
-            echo "source ~/.vscode_profile" >> ~/.bashrc
-            echo "# END - Appended via LineExtraction setup_local_dev.sh" >> ~/.bashrc
-        else
-            echo ".vscode_profile already sourced in .bashrc"
-        fi
     '
+
+    # Determine how to load .project_env based on environment
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        # WSL: VS Code handles .project_env via BASH_ENV in settings.json
+        # For non-VS Code terminals, user can manually source it
+        writeInfo "WSL detected: .project_env will be loaded via VS Code terminal settings"
+        writeInfo "For non-VS Code terminals, run: source ${PROJECT_DIR}/.project_env"
+    else
+        # Docker/Native Linux: Add .project_env to bashrc
+        run_as_user bash -c "
+            if ! grep -q 'source.*\.project_env' ~/.bashrc 2>/dev/null; then
+                echo 'Adding .project_env to .bashrc...'
+                echo '' >> ~/.bashrc
+                echo '# BEGIN - Appended via LineExtraction setup_local_dev.sh' >> ~/.bashrc
+                echo '# Source project environment for LineExtraction' >> ~/.bashrc
+                echo 'if [[ -f \"${PROJECT_DIR}/.project_env\" ]]; then' >> ~/.bashrc
+                echo '    source \"${PROJECT_DIR}/.project_env\"' >> ~/.bashrc
+                echo 'fi' >> ~/.bashrc
+                echo '# END - Appended via LineExtraction setup_local_dev.sh' >> ~/.bashrc
+            else
+                echo '.project_env already sourced in .bashrc'
+            fi
+        "
+    fi
 
     writeInfo "Development environment profile setup successfully."
 }
@@ -556,17 +538,17 @@ remove_dev_profile() {
     writeInfo "Removing local development environment profile..."
 
     run_as_user bash -c '
-        # Remove .vscode_profile entry from .bashrc
-        if [[ -f ~/.bashrc ]] && grep -q "source ~/.vscode_profile" ~/.bashrc 2>/dev/null; then
-            echo "Removing .vscode_profile from .bashrc..."
+        # Remove .project_env or .vscode_profile entry from .bashrc
+        if [[ -f ~/.bashrc ]] && grep -q "# BEGIN - Appended via LineExtraction setup_local_dev.sh" ~/.bashrc 2>/dev/null; then
+            echo "Removing LineExtraction entries from .bashrc..."
             # Remove the entire block added by setup script
             sed -i "/# BEGIN - Appended via LineExtraction setup_local_dev.sh/,/# END - Appended via LineExtraction setup_local_dev.sh/d" ~/.bashrc
         fi
 
-        # Remove profile files
+        # Remove legacy .vscode_profile if it exists
         if [[ -f ~/.vscode_profile ]]; then
             rm -f ~/.vscode_profile
-            echo "Removed .vscode_profile"
+            echo "Removed legacy .vscode_profile"
         fi
 
         if [[ -f ~/.inputrc ]]; then
@@ -905,6 +887,14 @@ main() {
         setup_precommit
         install_vscode_extensions
 
+        # Detect Bazel features and generate .bazelrc.user
+        writeInfo "Detecting Bazel features..."
+        if [[ -f "${PROJECT_ROOT}/tools/scripts/detect_bazel_features.sh" ]]; then
+            run_as_user bash -c "cd '${PROJECT_ROOT}' && ./tools/scripts/detect_bazel_features.sh --force" || {
+                writeWarning "Bazel feature detection failed, but setup will continue"
+            }
+        fi
+
         writeInfo ""
         writeInfo "=========================================="
         writeInfo "Setup completed successfully!"
@@ -945,7 +935,7 @@ main() {
         if grep -qi microsoft /proc/version 2>/dev/null; then
             writeInfo "WSL Detected:"
             writeInfo "  For GUI/OpenGL applications, ensure you have an X server running on Windows"
-            writeInfo "  (e.g., VcXsrv, X410). See docs/WSL_SETUP.md for details."
+            writeInfo "  (e.g., VcXsrv, X410). See docs/WSL.md for details."
             writeInfo ""
         fi
     fi  # End of else block (install mode)

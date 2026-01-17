@@ -113,36 +113,46 @@ fi
 
 section_header "Shell Configuration"
 
-# Check .vscode_profile
-if [[ -f "$HOME/.vscode_profile" ]]; then
-    check_ok ".vscode_profile exists"
+# Check .project_env
+if [[ -f ".project_env" ]]; then
+    check_ok ".project_env exists in workspace"
 
     # Check if it contains key components
-    if grep -q "git-prompt.sh" "$HOME/.vscode_profile" 2>/dev/null; then
-        check_ok "Git prompt configured"
+    if grep -q "git-prompt" ".project_env" 2>/dev/null; then
+        check_ok "Git prompt configured in .project_env"
     else
-        check_warn "Git prompt not configured in .vscode_profile"
+        check_warn "Git prompt not configured in .project_env"
     fi
 
-    if grep -q "venv/bin/activate" "$HOME/.vscode_profile" 2>/dev/null; then
+    if grep -q "venv/bin/activate" ".project_env" 2>/dev/null; then
         check_ok "Auto venv activation configured"
     else
         check_warn "Auto venv activation not configured"
     fi
 
-    if grep -qi "DISPLAY" "$HOME/.vscode_profile" 2>/dev/null && grep -qi microsoft /proc/version 2>/dev/null; then
+    if grep -qi "DISPLAY" ".project_env" 2>/dev/null && grep -qi microsoft /proc/version 2>/dev/null; then
         check_ok "WSL DISPLAY configured for X server"
     fi
 else
-    check_fail ".vscode_profile not found"
-    echo "    Run: sudo ./tools/scripts/setup_local_dev.sh"
+    check_fail ".project_env not found in workspace"
 fi
 
-# Check .bashrc integration
-if [[ -f "$HOME/.bashrc" ]] && grep -q "source ~/.vscode_profile" "$HOME/.bashrc" 2>/dev/null; then
-    check_ok ".vscode_profile sourced in .bashrc"
+# Check environment loading (WSL vs Docker/Native)
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    # WSL: Check VS Code settings
+    if [[ -f ".vscode/settings.json" ]] && grep -q "BASH_ENV" ".vscode/settings.json" 2>/dev/null; then
+        check_ok "VS Code configured to load .project_env (BASH_ENV)"
+    else
+        check_warn "VS Code BASH_ENV not configured for .project_env"
+    fi
 else
-    check_fail ".vscode_profile not sourced in .bashrc"
+    # Docker/Native: Check .bashrc
+    if [[ -f "$HOME/.bashrc" ]] && grep -q "source.*\.project_env" "$HOME/.bashrc" 2>/dev/null; then
+        check_ok ".project_env sourced in .bashrc"
+    else
+        check_warn ".project_env not sourced in .bashrc"
+        echo "    Run: sudo ./tools/scripts/setup_local_dev.sh"
+    fi
 fi
 
 # Check .inputrc
@@ -259,7 +269,7 @@ section_header "Summary"
 
 echo ""
 echo "Setup script: ./tools/scripts/setup_local_dev.sh"
-echo "Documentation: docs/WSL_SETUP.md"
+echo "Documentation: docs/WSL.md"
 echo ""
 
 # Return status based on critical checks
