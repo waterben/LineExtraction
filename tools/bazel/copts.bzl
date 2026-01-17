@@ -3,13 +3,14 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 # Core warning flags - compatible with external headers
+# NOTE: -Wcast-qual removed because OpenCV headers trigger it extensively
 LE_COPTS_SAFE = [
     "-Wall",
     "-Wextra",
     "-Wpedantic",
     "-Wmissing-field-initializers",
     "-Wcast-align",
-    "-Wcast-qual",
+    # "-Wcast-qual",  # Disabled: OpenCV headers have const-cast issues
     "-Woverloaded-virtual",
     "-Wdangling-else",
     "-Wformat-security",

@@ -2,43 +2,36 @@
 
 module(
     name = "line_extraction",
-    version = "2025.11.11.dev0",
+    version = "2026.01.17.dev0",
 )
 
 # Bazel Skylib - utilities
-bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+
+# Platform rules
+bazel_dep(name = "platforms", version = "0.0.11")
 
 # C++ rules
-bazel_dep(name = "rules_cc", version = "0.2.9")
+bazel_dep(name = "rules_cc", version = "0.2.15")
 
 # Python rules
-bazel_dep(name = "rules_python", version = "0.40.0")
+bazel_dep(name = "rules_python", version = "1.1.0")
 
-# GoogleTest for C++ testing
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
+# GoogleTest for C++ testing - updated to latest
+bazel_dep(name = "googletest", version = "1.15.2")
 
-# Custom modules from local registry
+# OpenCV from BCR - updated version with fixed libjpeg-turbo dependency
+# NOTE: 4.12.0.bcr.1 uses libjpeg_turbo 3.1.3 which has SIMD linking fixes
+bazel_dep(name = "opencv", version = "4.12.0.bcr.1")
+
+# Force latest libjpeg_turbo with SIMD fixes (bcr.2 released 9 days ago)
+bazel_dep(name = "libjpeg_turbo", version = "3.1.3.bcr.2")
+
+# dlib from local registry (not in BCR)
 bazel_dep(name = "dlib", version = "19.24.7")
-bazel_dep(name = "opencv", version = "4.12.0")
-bazel_dep(name = "opencv_contrib", version = "4.12.0")
-# Note: libjpeg-turbo is provided via single_version_override below (with SIMD linking fix)
-# Note: qt5 uses new_local_repository (see below) to reference system installation
-
-# Override libjpeg_turbo (BCR version has unfixable SIMD linking issues, use system library)
-single_version_override(
-    module_name = "libjpeg_turbo",
-    registry = "file://%workspace%/tools/bazel/registry",
-    version = "3.1.2",
-)
-
-# Eigen for linear algebra - using manual http_archive instead of bazel_dep due to checksum issues
-# bazel_dep(name = "eigen", version = "3.4.0")
 
 # pybind11 for Python bindings
-bazel_dep(name = "pybind11_bazel", version = "2.11.1")
-
-# Toolchain configuration
-bazel_dep(name = "toolchains_llvm", version = "1.0.0", dev_dependency = True)
+bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 
 # HTTP archive for external dependencies
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

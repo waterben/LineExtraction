@@ -26,8 +26,9 @@ build --incompatible_strict_action_env
 
 build --strip=never
 
-# Prevent autogen of toolchains and force using our own toolchains
-common --repo_env BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+# Use auto-detected system toolchains by default
+# Custom toolchains can be enabled via --config=custom_toolchain
+# common --repo_env BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 build --force_pic
 
@@ -56,8 +57,10 @@ build --nolegacy_external_runfiles
 # Bazel 8.0.0 will switch this to true. This leads to build errors on some transitive dependencies.
 # common --incompatible_disallow_empty_glob=false
 
-build --host_platform=//tools/bazel/platforms:linux_x86_64_gcc
-build --platforms=//tools/bazel/platforms:linux_x86_64_gcc
+# Platform configuration (use defaults, auto-detected)
+# Custom platforms can be added later if needed
+# build --host_platform=//tools/bazel/platforms:linux_x86_64_gcc
+# build --platforms=//tools/bazel/platforms:linux_x86_64_gcc
 
 # disable warnings for external dependencies
 build --host_per_file_copt external/.*@-w
@@ -107,12 +110,15 @@ try-import %workspace%/.user.bazelrc
 build --cxxopt=-std=c++17
 build --host_cxxopt=-std=c++17
 
-build --host_platform=//tools/bazel/platforms:linux_x86_64_clang
-build --platforms=//tools/bazel/platforms:linux_x86_64_clang
-build:clang --cxxopt=-stdlib=libc++
-build:clang --linkopt=-stdlib=libc++
-build:clang --linkopt=-stdlib=lc++
-build:clang --linkopt=-stdlib=lcabi++
+# Clang configuration (optional, use --config=clang)
+build:clang --repo_env=CC=clang
+build:clang --repo_env=CXX=clang++
+# build:clang --cxxopt=-stdlib=libc++
+# build:clang --linkopt=-stdlib=libc++
+
+# GCC configuration (default)
+build:gcc --repo_env=CC=gcc
+build:gcc --repo_env=CXX=g++
 
 
 # Compiler selection

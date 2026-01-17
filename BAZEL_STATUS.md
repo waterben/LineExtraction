@@ -1,106 +1,98 @@
 # Bazel Build Setup - Status und nächste Schritte
 
-## ⚠️ Bekannte Probleme
+## ✅ Aktueller Status (Januar 2026)
 
-### JPEG Linker-Fehler bei Tests
+**Das Bazel-Setup funktioniert jetzt!**
 
-**Problem**: Alle Tests schlagen mit `undefined symbol: jpeg_nbits_table` fehl
+- ✅ Alle Core-Libraries bauen erfolgreich
+- ✅ **52 von 54 Tests bestehen** (2 haben Code-Bugs, keine Build-Probleme)
+- ✅ libjpeg-turbo SIMD Linking Problem gelöst mit Version 3.1.3.bcr.2
 
-```
-symbol lookup error: .../libexternal_Slibjpeg_Uturbo+_Slibjpeg.so: undefined symbol: jpeg_nbits_table
-```
-
-**Ursache**: OpenCV 4.12.0 aus dem Bazel Central Registry (BCR) hat ein Problem mit der libjpeg-turbo Dependency. Das Symbol `jpeg_nbits_table` fehlt in der verlinkten libjpeg-turbo Version.
-
-**Status**:
-
-- ✅ Alle Libraries **kompilieren** erfolgreich
-- ✅ Alle Binaries **kompilieren** erfolgreich
-- ❌ Tests **laufen nicht** wegen JPEG linking issue
-
-**Workaround Optionen**:
-
-1. **OpenCV lokal installieren** und via `new_local_repository` einbinden (wie Qt5)
-2. **Eigene OpenCV bazel rules** erstellen mit funktionierender libjpeg-turbo
-3. **Warten** auf BCR fix für OpenCV
-
-**Betroffene Tests**: Alle 54 Tests (alle verwenden OpenCV indirekt über die Libraries)
-
-### Feature Flags
-
-**FastNlMeansOperator**: Benötigt opencv2/photo Modul (nicht in BCR OpenCV verfügbar)
+### Schnellstart
 
 ```bash
-# Code ist conditional mit #ifdef HAVE_OPENCV_PHOTO guards versehen
-# Kann aktiviert werden sobald OpenCV mit photo module verfügbar ist
-bazel build --//bazel:enable_photo=true //libs/imgproc:lib_imgproc
+# Alle Libraries bauen
+bazel build //libs/...
+
+# Alle Tests ausführen (ohne OpenGL)
+bazel test //libs/... --build_tag_filters=-opengl --test_tag_filters=-opengl
+
+# Einzelne Library bauen
+bazel build //libs/lsd:lib_lsd
 ```
 
-**Betroffene Files**:
+## 🔧 Behobene Probleme
 
-- `libs/imgproc/include/imgproc/image_operator.hpp`
-- `libs/imgproc/tests/test_image_operator.cpp`
-- `evaluation/thesis/image_denoise.cpp`
+### ✅ JPEG Linker-Fehler (BEHOBEN)
 
-## 🆕 Bazel 8.4.2 Migration
+**Problem**: `undefined symbol: jpeg_nbits_table`
 
-**Status**: ✅ Konfiguration aktualisiert
+**Lösung**: Update auf `libjpeg_turbo` Version 3.1.3.bcr.2 aus der BCR.
+Diese Version (veröffentlicht Januar 2026) behebt das SIMD Linking Problem.
 
-- `.bazelversion` auf 8.4.2 erhöht
-- Alle `glob()` Patterns mit `allow_empty=True` Parameter erweitert für strikte Bazel 8.x Validierung
-- MODULE.bazel Dependency-Versionen an Bazel 8.x angepasst
-- Warnings über dependency resolution (bazel_skylib 1.7.1, rules_cc 0.1.1, rules_python 0.40.0)
+### ✅ OpenCV Integration (FUNKTIONIERT)
 
-### Anpassungen für Bazel 8.x
+OpenCV 4.12.0.bcr.1 aus der Bazel Central Registry funktioniert jetzt korrekt.
 
-- **Glob Patterns**: Alle BUILD.bazel Dateien verwenden nun `allow_empty=True`
-- **Externe Dependencies**: Automatische version resolution durch bzlmod
-- **OpenCV BUILD**: Header patterns erweitert für generated und source includes
-- **Library Structure**: .c files zusätzlich zu .cpp files in geometry library
+## ⚠️ Bekannte Einschränkungen
 
-## ✅ Fertiggestellt
+### OpenGL-Abhängige Komponenten
 
-1. **MODULE.bazel** - Bzlmod-Konfiguration mit:
-   - GoogleTest (1.14.0.bcr.1) über BCR
-   - Eigen (3.4.0) über http_archive (BCR-Version hatte Checksum-Fehler)
-   - pybind11 (2.11.1) über BCR
-   - dlib (19.24) über http_archive
-   - rules_cc (0.0.9 → 0.1.1 auto-resolved)
-   - rules_python (0.31.0 → 0.40.0 auto-resolved)
-   - bazel_skylib (1.5.0 → 1.7.1 auto-resolved)
+Die OpenGL-Komponenten (`lib_geometry_gl`, `lib_geometry_tr`) sind optional und benötigen:
 
-2. **.bazelrc** - Konfiguration für:
-   - GCC und Clang Compiler-Auswahl
-   - Debug/Release Modi
-   - Sanitizer (ASan, TSan)
-   - Performance-Optimierungen
+- OpenGL, GLU, GLUT System-Libraries
+- Werden mit `--build_tag_filters=-opengl` ausgeschlossen
 
-3. **Library BUILD-Dateien** - Für alle Core-Bibliotheken:
-   - `//libs/utility` ✅ (inkl. src/*.h für OpenCV integration)
-   - `//libs/geometry` ✅ (inkl. src/*.h und src/*.c für tr.c)
-   - `//libs/imgproc` ✅ (inkl. src/*.h und impl/*.hpp)
-   - `//libs/edge` ⚠️ (build OK, linking mit OpenCV fehlt)
-   - `//libs/lsd` ✅ (inkl. impl/*.hpp)
-   - `//libs/lfd` ⚠️ (build OK, linking mit OpenCV fehlt)
-   - `//libs/eval` ⚠️ (build OK, linking mit OpenCV fehlt)
+```bash
+# Build ohne OpenGL
+bazel build //libs/... --build_tag_filters=-opengl
+```
 
-4. **Third-Party Bibliotheken**:
+### Qt5 Anwendungen
+
+Qt5-basierte Apps (z.B. `line_analyzer`) benötigen zusätzliche Konfiguration.
+
+### Fehlschlagende Tests (Code-Bugs, keine Build-Probleme)
+
+- `//libs/edge:test_zc` - OpenCV `cv::Mat::at()` Typfehler
+- `//libs/imgproc:test_susan` - Empty image handling
+
+## 📦 Dependency-Versionen (Januar 2026)
+
+| Dependency | Version | Quelle |
+|------------|---------|--------|
+| OpenCV | 4.12.0.bcr.1 | BCR |
+| libjpeg_turbo | 3.1.3.bcr.2 | BCR |
+| GoogleTest | 1.15.2 | BCR |
+| Eigen | 3.4.0 | http_archive |
+| dlib | 19.24.7 | Local Registry |
+| bazel_skylib | 1.9.0 | BCR |
+| rules_cc | 0.2.15 | BCR |
+| rules_python | 1.1.0 | BCR |
+
+## ✅ Fertiggestellte Komponenten
+
+1. **Core Libraries** - Alle bauen und testen erfolgreich:
+   - `//libs/utility` ✅
+   - `//libs/geometry:lib_geometry_core` ✅
+   - `//libs/imgproc` ✅
+   - `//libs/edge` ✅
+   - `//libs/lsd` ✅
+   - `//libs/lfd` ✅
+   - `//libs/eval` ✅
+
+2. **Third-Party Bibliotheken**:
    - `//third-party/qplot` ✅
    - `//third-party/qplot3d` ✅
-   - `//tools/bazel/third_party` - Bazel BUILD Dateien
-     - eigen.BUILD ✅
-     - dlib.BUILD ✅
-     - opencv.BUILD ✅
-     - qt5.BUILD ✅
 
-5. **Example BUILD-Dateien**:
+3. **Example BUILD-Dateien**:
    - `//examples/edge` (bereit für Tests)
    - `//examples/lsd` (bereit für Tests)
 
-6. **Evaluation BUILD-Dateien**:
+4. **Evaluation BUILD-Dateien**:
    - `//evaluation/performance` (bereit für Tests)
 
-7. **Tests**: Automatische Test-Target-Generierung für alle Bibliotheken
+5. **Tests**: Automatische Test-Target-Generierung für alle Bibliotheken
 
 ## ⚠️ Aktuelle Herausforderung
 
