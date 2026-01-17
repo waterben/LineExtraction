@@ -345,7 +345,10 @@ Generate Doxygen documentation:
 
 ```bash
 # Generate documentation
-bazel build //:doxygen
+bazel run //:doxygen
+
+# Or run the script directly
+./tools/scripts/generate_doxygen.sh
 
 # View documentation
 # Output: build/doc/html/index.html
@@ -357,8 +360,8 @@ bazel build //:doxygen
 sudo apt install doxygen graphviz
 ```
 
-**Note:** The Doxygen target uses the host's doxygen installation and writes
-output to `build/doc/html/` (same location as CMake for consistency).
+**Note:** Uses `bazel run` (not `bazel build`) to execute in the workspace directory
+and persist the output to `build/doc/html/`.
 
 ## Further Reading
 

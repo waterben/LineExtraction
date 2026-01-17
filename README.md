@@ -97,10 +97,13 @@ Generate API documentation with Doxygen:
 
 ```bash
 # Bazel
-bazel build //:doxygen
+bazel run //:doxygen
 
 # CMake
-cmake -DBUILD_DOC=ON .. && make doc
+cmake -DBUILD_DOC=ON .. && cmake --build . --target doc
+
+# Direct script
+./tools/scripts/generate_doxygen.sh
 ```
 
 Output: `build/doc/html/index.html`

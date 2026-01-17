@@ -1,5 +1,6 @@
 cmake
 doxygen
+graphviz
 fontconfig
 moreutils
 jq
