@@ -1,0 +1,19 @@
+# LineExtraction Project Environment
+# This file is sourced when entering the project directory (WSL and Docker)
+# It provides consistent environment setup across all development environments
+
+# Activate Python virtual environment (only if not already active)
+if [[ -z "${VIRTUAL_ENV}" ]] && [[ "${VENV_ACTIVATED:-0}" != "1" ]]; then
+    # Try project-local .venv first (WSL/local setup)
+    if [[ -f "${PWD}/.venv/bin/activate" ]]; then
+        source "${PWD}/.venv/bin/activate"
+        export VENV_ACTIVATED=1
+    # Fallback to Docker path
+    elif [[ -f "/opt/venv/deps/python/bin/activate" ]]; then
+        source "/opt/venv/deps/python/bin/activate"
+        export VENV_ACTIVATED=1
+    fi
+fi
+
+# Add any other project-specific environment variables or setup here
+# export MY_PROJECT_VAR="value"

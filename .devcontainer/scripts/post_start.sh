@@ -44,6 +44,12 @@ echo '# ccache uses default ~/.ccache directory (mounted as volume)' >> ~/.vscod
 echo '# Set the bash history file to be persistent on volume and ensure it is activated before prompt' >> ~/.vscode_profile
 echo 'export PROMPT_COMMAND="history -a" && export HISTFILE="${HOME}/.cmd_history/.bash_history"' >>  ~/.vscode_profile
 
+# Source project-specific environment if .project_env exists in workspace
+echo '# Source project-specific environment (.project_env) if it exists' >> ~/.vscode_profile
+echo 'if [[ -f "${PWD}/.project_env" ]]; then' >> ~/.vscode_profile
+echo '    source "${PWD}/.project_env"' >> ~/.vscode_profile
+echo 'fi' >> ~/.vscode_profile
+
 # Enable environment in bashrc (only if not already present)
 if ! grep -q "source ~/.vscode_profile" ~/.bashrc; then
     echo '# BEGIN - Appended via VSCode postStartCommand' >> ~/.bashrc

@@ -446,12 +446,10 @@ setup_dev_profile() {
         # Create history file
         touch ~/.cmd_history/.bash_history
 
-        # Activate Python venv if it exists
-        echo "# Activate Python virtual environment if it exists" >> ~/.vscode_profile
-        echo "if [[ -f \"\${HOME}/.venv/bin/activate\" ]]; then" >> ~/.vscode_profile
-        echo "    source \"\${HOME}/.venv/bin/activate\"" >> ~/.vscode_profile
-        echo "elif [[ -f \".venv/bin/activate\" ]]; then" >> ~/.vscode_profile
-        echo "    source .venv/bin/activate" >> ~/.vscode_profile
+        # Source project-specific environment (.project_env) if it exists
+        echo "# Source project-specific environment (.project_env) if it exists" >> ~/.vscode_profile
+        echo "if [[ -f \"\${PWD}/.project_env\" ]]; then" >> ~/.vscode_profile
+        echo "    source \"\${PWD}/.project_env\"" >> ~/.vscode_profile
         echo "fi" >> ~/.vscode_profile
 
         # WSL-specific: Set DISPLAY for X server support
