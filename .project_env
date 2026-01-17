@@ -1,19 +1,79 @@
 # LineExtraction Project Environment
-# This file is sourced when entering the project directory (WSL and Docker)
+# This file is sourced automatically:
+#   - VS Code: via terminal.integrated.env.linux BASH_ENV setting
+#   - Docker: via .bashrc entry
 # It provides consistent environment setup across all development environments
 
+# ============================================================================
+# Shell Prompt Configuration (Git-aware colored prompt)
+# ============================================================================
+
+# Source git-prompt if available (provides __git_ps1)
+if [[ -f /usr/local/bin/git-prompt.sh ]]; then
+    source /usr/local/bin/git-prompt.sh
+elif [[ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]]; then
+    source /usr/share/git-core/contrib/completion/git-prompt.sh
+elif [[ -f /etc/bash_completion.d/git-prompt ]]; then
+    source /etc/bash_completion.d/git-prompt
+fi
+
+# Only configure prompt if __git_ps1 is available and PS1 not already customized
+if type __git_ps1 &>/dev/null && [[ "${PROJECT_ENV_LOADED:-0}" != "1" ]]; then
+    # Color codes
+    export COLOR_RED="\[\033[1;31m\]"
+    export COLOR_GREEN="\[\033[1;32m\]"
+    export COLOR_BLUE="\[\033[1;34m\]"
+    export COLOR_END="\[\033[0m\]"
+
+    # Git prompt options
+    export GIT_PS1_SHOWDIRTYSTATE=1
+    export GIT_PS1_SHOWSTASHSTATE=0
+    export GIT_PS1_SHOWUNTRACKEDFILES=0
+    export GIT_PS1_SHOWUPSTREAM="auto"
+
+    # Colored prompt: user@host:path (git-branch)
+    export PS1="${COLOR_GREEN}\u@\h${COLOR_END}:${COLOR_BLUE}\w${COLOR_RED}\$(__git_ps1)${COLOR_END}\n> "
+fi
+
+# ============================================================================
+# Display Configuration (X11/Wayland for GUI applications)
+# ============================================================================
+
+# WSL2 with WSLg (Windows 11+): Set DISPLAY for X11 apps
+if [[ -z "${DISPLAY}" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+    export DISPLAY=:0
+fi
+
+# ============================================================================
+# Python Virtual Environment
+# ============================================================================
+
 # Activate Python virtual environment (only if not already active)
+# Note: VS Code Python extension may also activate, so we check VIRTUAL_ENV
 if [[ -z "${VIRTUAL_ENV}" ]] && [[ "${VENV_ACTIVATED:-0}" != "1" ]]; then
     # Try project-local .venv first (WSL/local setup)
-    if [[ -f "${PWD}/.venv/bin/activate" ]]; then
-        source "${PWD}/.venv/bin/activate"
+    if [[ -f "${LE_PROJECT_DIR:-.}/.venv/bin/activate" ]]; then
+        source "${LE_PROJECT_DIR:-.}/.venv/bin/activate" >/dev/null 2>&1
+        export VENV_ACTIVATED=1
+    elif [[ -f "${PWD}/.venv/bin/activate" ]]; then
+        source "${PWD}/.venv/bin/activate" >/dev/null 2>&1
         export VENV_ACTIVATED=1
     # Fallback to Docker path
     elif [[ -f "/opt/venv/deps/python/bin/activate" ]]; then
-        source "/opt/venv/deps/python/bin/activate"
+        source "/opt/venv/deps/python/bin/activate" >/dev/null 2>&1
         export VENV_ACTIVATED=1
     fi
 fi
 
-# Add any other project-specific environment variables or setup here
-# export MY_PROJECT_VAR="value"
+# ============================================================================
+# Project-specific Settings
+# ============================================================================
+
+# Persistent bash history (useful in Docker containers)
+if [[ -d "${HOME}/.cmd_history" ]]; then
+    export PROMPT_COMMAND="history -a"
+    export HISTFILE="${HOME}/.cmd_history/.bash_history"
+fi
+
+# Mark as loaded to prevent double-loading
+export PROJECT_ENV_LOADED=1

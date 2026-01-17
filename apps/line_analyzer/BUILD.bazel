@@ -1,20 +1,75 @@
 """line_analyzer - Qt application for line analysis
 
-Note: This application requires Qt5. Build with --//bazel:enable_qt5=true to include it.
-To build: bazel build --//bazel:enable_qt5=true --//bazel:enable_opengl=true //apps/line_analyzer:app_line_analyzer
+Note: This application requires Qt5 and OpenGL.
+Build with: bazel build //apps/line_analyzer:app_line_analyzer
+
+The build excludes some files that depend on missing headers:
+- connectionoptimizer.cpp (requires utility/line_connect.hpp)
+- continuityoptimizer.cpp (requires utility/line_merge.hpp)
+- lineanalyser2d.cpp (type mismatches)
+- analyseroptions.cpp (depends on lineanalyser2d)
+
+This matches the CMake build configuration.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load("//bazel:features.bzl", "if_qt5_enabled")
+load("//tools/bazel:qt5.bzl", "qt5_moc", "qt5_uic")
 
 package(default_visibility = ["//visibility:public"])
 
-# For Qt applications, we need to handle MOC and UIC preprocessing
-# This is a simplified version - in production, you'd want to use a proper Qt rule
+# Qt5 system include paths
+QT5_COPTS = [
+    "-isystem/usr/include/x86_64-linux-gnu/qt5",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtCore",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtGui",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtWidgets",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtOpenGL",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport",
+    "-fPIC",
+]
 
+# Headers that contain Q_OBJECT and need MOC processing
+MOC_HEADERS = [
+    "controlwindow.h",
+    "helpers.h",
+    "preprocessing.h",
+    "profileanalyzer.h",
+    "precisionoptimizer.h",
+    "pofuncplot.h",
+    "quiver.h",
+]
+
+# UI files for UIC processing
+UI_FILES = [
+    "controlwindow.ui",
+    "preprocessing.ui",
+    "profileanalyzer.ui",
+    "precisionoptimizer.ui",
+    "pofuncplot.ui",
+    "quiver.ui",
+]
+
+# Generate moc_*.cpp files from headers with Q_OBJECT
+qt5_moc(
+    name = "line_analyzer_moc",
+    hdrs = MOC_HEADERS,
+    includes = [
+        ".",
+        "apps/line_analyzer",
+    ],
+    deps = glob(["*.h"]),
+)
+
+# Generate ui_*.h files from .ui files
+qt5_uic(
+    name = "line_analyzer_uic",
+    srcs = UI_FILES,
+)
+
+# Main application binary
 cc_binary(
     name = "app_line_analyzer",
-    srcs = if_qt5_enabled([
+    srcs = [
         "main.cpp",
         "helpers.cpp",
         "controlwindow.cpp",
@@ -23,37 +78,34 @@ cc_binary(
         "precisionoptimizer.cpp",
         "pofuncplot.cpp",
         "quiver.cpp",
-        "helpers.h",
-        "controlwindow.h",
-        "preprocessing.h",
-        "profileanalyzer.h",
-        "precisionoptimizer.h",
-        "pofuncplot.h",
-        "quiver.h",
+        # Headers
         "latool.h",
-        # UI files would normally be processed by UIC
-        # For now, we assume moc_ and ui_ files are generated or handled separately
-    ]),
-    copts = [
-        "-Iapps/line_analyzer",  # For generated UI headers
-        "-fPIC",
+    ] + MOC_HEADERS + [
+        # MOC-generated files
+        ":line_analyzer_moc",
+    ],
+    copts = QT5_COPTS + [
+        "-I$(GENDIR)/apps/line_analyzer",  # For ui_*.h files
+    ],
+    linkopts = [
+        "-lGL",
     ],
     tags = [
-        "manual",  # Don't build by default (requires Qt5)
         "opengl",
         "qt5",
     ],
-    deps = if_qt5_enabled([
+    deps = [
+        ":line_analyzer_uic",
+        "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/lsd:lib_lsd",
         "//third-party/qplot:lib_qplot",
         "//third-party/qplot3d:lib_qplot3d",
-        "@dlib",
         "@opencv",
         "@qt5//:qt5_core",
         "@qt5//:qt5_gui",
         "@qt5//:qt5_opengl",
         "@qt5//:qt5_printsupport",
         "@qt5//:qt5_widgets",
-    ]),
+    ],
 )

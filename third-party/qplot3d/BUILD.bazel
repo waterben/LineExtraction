@@ -6,8 +6,36 @@ Build with --//bazel:enable_qt5=true --//bazel:enable_opengl=true to include it.
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("//bazel:features.bzl", "if_opengl_enabled", "if_qt5_enabled")
+load("//tools/bazel:qt5.bzl", "qt5_moc")
 
 package(default_visibility = ["//visibility:public"])
+
+# Qt5 system include paths (required since copts don't propagate transitively)
+QT5_COPTS = [
+    "-isystem/usr/include/x86_64-linux-gnu/qt5",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtCore",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtGui",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtWidgets",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtOpenGL",
+    "-fPIC",
+]
+
+# MOC headers for Qt signal/slot support
+qt5_moc(
+    name = "qplot3d_moc",
+    hdrs = [
+        "include/qplot3d/qwt3d_graphplot.h",
+        "include/qplot3d/qwt3d_multiplot.h",
+        "include/qplot3d/qwt3d_plot.h",
+        "include/qplot3d/qwt3d_surfaceplot.h",
+        "include/qplot3d/qwt3d_volumeplot.h",
+    ],
+    includes = [
+        "include",
+        "third-party/qplot3d/include",
+    ],
+    deps = glob(["include/qplot3d/*.h"]),
+)
 
 cc_library(
     name = "lib_qplot3d",
@@ -37,6 +65,8 @@ cc_library(
             "src/qwt3d_scale.cpp",
             "src/qwt3d_surfaceplot.cpp",
             "src/qwt3d_types.cpp",
+            # MOC-generated files
+            ":qplot3d_moc",
         ],
         "//conditions:default": [],
     }),
@@ -45,11 +75,15 @@ cc_library(
             "include/qplot3d/*.h",
         ]),
     ),
+    copts = select({
+        "//bazel:qt5_enabled": QT5_COPTS,
+        "//conditions:default": [],
+    }),
     includes = ["include"],
-    linkopts = if_opengl_enabled([
+    linkopts = [
         "-lGL",
         "-lGLU",
-    ]),
+    ],
     tags = [
         "opengl",
         "qt5",

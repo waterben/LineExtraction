@@ -26,6 +26,7 @@ cc_library(
     includes = ["include"],
     deps = [
         "//libs/utility:lib_utility",
+        "@dlib",
         "@eigen",
         "@opencv",
     ],
