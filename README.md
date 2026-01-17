@@ -29,7 +29,7 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 
 **Docker/DevContainer (Recommended for Linux/CI):** Use VS Code with Dev Containers extension. See [`docker/README.md`](docker/README.md) for complete setup instructions.
 
-**WSL (Windows Users):** For Windows users who want to develop with OpenGL support, use WSL 2 with Ubuntu. See [`docs/WSL_SETUP.md`](docs/WSL_SETUP.md) for a complete guide.
+**WSL (Windows Users):** For Windows users who want to develop with OpenGL support, use WSL 2 with Ubuntu. See [`docs/WSL/WSL_SETUP.md`](docs/WSL/WSL_SETUP.md) for a complete guide.
 
 **Local Setup (Linux/WSL):** Use the automated setup script:
 

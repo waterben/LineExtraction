@@ -23,10 +23,14 @@ This script will:
 - Install all required system packages
 - Install development tools (uv, bazel, clangd, etc.)
 - Create a Python virtual environment in `.venv`
-- Set up `.vscode_profile` for enhanced shell experience
+- Set up `.vscode_profile` for enhanced shell experience (git prompt, colors)
 - Configure bash history persistence
 - Install git pre-commit hooks
-- Configure VS Code settings for local Python
+- Install VS Code extensions from `.devcontainer/devcontainer.json`
+- Configure `.project_env` for automatic venv activation (shared with Docker)
+
+The setup uses `.project_env` (in the project root) for project-specific environment setup.
+This file is shared between Docker and WSL, ensuring consistent behavior in both environments.
 
 ### 2. Reload Your Shell
 
