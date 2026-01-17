@@ -65,12 +65,13 @@ cc_binary(
 cc_binary(
     name = "eval_image_denoise",
     srcs = ["image_denoise.cpp"],
-    defines = if_photo_enabled(["HAVE_OPENCV_PHOTO"]),
+    defines = ["HAVE_OPENCV_PHOTO"],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/utility:lib_utility",
         "@opencv",
+        "@opencv//:photo",
     ],
 )
 

@@ -399,7 +399,7 @@ Both build systems are supported:
 | Build | `cmake --build .` | `bazel build //...` |
 | Tests | `ctest` | `bazel test //...` |
 | Qt Support | Full support | Requires feature flag |
-| OpenCV Photo | Supported | Not available (BCR) |
+| OpenCV Photo | Supported | Supported (BCR 4.12.0.bcr.1+) |
 | IDE Support | Excellent | Good |
 
 **Recommendation:** Use CMake for production builds, Bazel for development.

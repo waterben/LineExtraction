@@ -52,7 +52,8 @@ Features can be enabled/disabled via command-line flags or `.bazelrc.user`:
 | Qt5 | `--//bazel:enable_qt5` | `false` | GUI applications (line_analyzer, qplot) |
 | OpenGL | `--//bazel:enable_opengl` | `false` | 3D visualization (qplot3d, geometry_gl) |
 | CUDA | `--//bazel:enable_cuda` | `false` | GPU acceleration |
-| OpenCV Photo | `--//bazel:enable_photo` | `false` | Advanced denoising (not in BCR) |
+
+**Note:** OpenCV photo module is always available (requires opencv >= 4.12.0.bcr.1 in [MODULE.bazel](../MODULE.bazel)).
 
 ### Manual Configuration
 
@@ -326,11 +327,6 @@ bazel build --subcommands //libs/utility:lib_utility
 ```
 
 ## Known Limitations
-
-### OpenCV Photo Module
-
-The BCR OpenCV build doesn't include the `photo` module (used for `FastNlMeansOperator`).
-Code is guarded with `#ifdef HAVE_OPENCV_PHOTO`. Use CMake build if you need this feature.
 
 ### System Dependencies
 

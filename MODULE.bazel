@@ -22,7 +22,7 @@ bazel_dep(name = "googletest", version = "1.15.2")
 
 # OpenCV from BCR - updated version with fixed libjpeg-turbo dependency
 # NOTE: 4.12.0.bcr.1 uses libjpeg_turbo 3.1.3 which has SIMD linking fixes
-bazel_dep(name = "opencv", version = "4.12.0.bcr.1")
+bazel_dep(name = "opencv", version = "4.12.0.bcr.1")  # Minimum 4.12.0.bcr.1 required for photo module
 
 # Force latest libjpeg_turbo with SIMD fixes (bcr.2 released 9 days ago)
 bazel_dep(name = "libjpeg_turbo", version = "3.1.3.bcr.2")

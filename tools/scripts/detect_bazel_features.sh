@@ -202,22 +202,35 @@ detect_cuda() {
 detect_opencv_photo() {
     log_info "Checking for OpenCV photo module..."
 
-    # This is typically not available in BCR OpenCV, but check anyway
-    if command -v pkg-config &>/dev/null; then
-        if pkg-config --exists opencv4 2>/dev/null; then
-            # Check if photo module is available
-            local opencv_libs
-            opencv_libs=$(pkg-config --libs opencv4 2>/dev/null || echo "")
-            if echo "${opencv_libs}" | grep -q "photo"; then
+    # BCR OpenCV 4.12.0.bcr.1+ includes the photo module
+    # Check if we're using Bazel (photo always available in BCR 4.12.0.bcr.1+)
+    if [[ -f "${PROJECT_ROOT}/MODULE.bazel" ]]; then
+        local opencv_version
+        opencv_version=$(grep 'name = "opencv"' "${PROJECT_ROOT}/MODULE.bazel" 2>/dev/null | grep -oP 'version = "\K[^"]+' || echo "")
+        if [[ -n "${opencv_version}" ]]; then
+            # Check if version is 4.12.0.bcr.1 or later (has photo module)
+            if [[ "${opencv_version}" == "4.12.0.bcr.1" || "${opencv_version}" > "4.12.0.bcr.1" ]]; then
                 HAVE_PHOTO=true
-                log_success "OpenCV photo module found"
+                log_success "OpenCV photo module available (BCR ${opencv_version})"
                 return 0
             fi
         fi
     fi
 
-    # Note: BCR OpenCV typically doesn't include photo module
-    log_warning "OpenCV photo module not available (expected - BCR OpenCV doesn't include it)"
+    # Fallback: Check system OpenCV via pkg-config
+    if command -v pkg-config &>/dev/null; then
+        if pkg-config --exists opencv4 2>/dev/null; then
+            local opencv_libs
+            opencv_libs=$(pkg-config --libs opencv4 2>/dev/null || echo "")
+            if echo "${opencv_libs}" | grep -q "photo"; then
+                HAVE_PHOTO=true
+                log_success "OpenCV photo module found (system)"
+                return 0
+            fi
+        fi
+    fi
+
+    log_warning "OpenCV photo module not available"
     return 1
 }
 
@@ -276,7 +289,6 @@ main() {
     detect_qt5 || true
     detect_opengl || true
     detect_cuda || true
-    detect_opencv_photo || true
 
     echo ""
     echo "═══════════════════════════════════════════════════════════════════"
@@ -287,9 +299,9 @@ main() {
     printf "  %-20s %s\n" "Qt5:" "$([[ ${HAVE_QT5} == true ]] && echo -e "${GREEN}Available${NC}" || echo -e "${YELLOW}Not found${NC}")"
     printf "  %-20s %s\n" "OpenGL:" "$([[ ${HAVE_OPENGL} == true ]] && echo -e "${GREEN}Available${NC}" || echo -e "${YELLOW}Not found${NC}")"
     printf "  %-20s %s\n" "CUDA:" "$([[ ${HAVE_CUDA} == true ]] && echo -e "${GREEN}Available${NC}" || echo -e "${YELLOW}Not found${NC}")"
-    printf "  %-20s %s\n" "OpenCV Photo:" "$([[ ${HAVE_PHOTO} == true ]] && echo -e "${GREEN}Available${NC}" || echo -e "${YELLOW}Not found${NC}")"
 
     echo ""
+    log_info "Note: OpenCV photo module is always available (requires opencv >= 4.12.0.bcr.1)"
 
     # Generate .bazelrc.user
     log_info "Generating ${OUTPUT_FILE}..."
@@ -325,10 +337,10 @@ build --//bazel:enable_opengl=${HAVE_OPENGL}
 # Detected: ${HAVE_CUDA}
 build --//bazel:enable_cuda=${HAVE_CUDA}
 
-# OpenCV Photo Module (advanced image processing)
-# Detected: ${HAVE_PHOTO}
-# Note: BCR OpenCV typically doesn't include this module
-build --//bazel:enable_photo=${HAVE_PHOTO}
+# ==============================================================================
+# Note: OpenCV photo module is always available (requires opencv >= 4.12.0.bcr.1)
+# ==============================================================================
+# Ensure MODULE.bazel specifies opencv version >= 4.12.0.bcr.1 for photo support
 
 # ┌──────────────────────────────────────────────────────────────────────────┐
 # │ User Customizations (add your settings below)                            │

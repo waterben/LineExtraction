@@ -47,18 +47,6 @@ config_setting(
     },
 )
 
-bool_flag(
-    name = "enable_photo",
-    build_setting_default = False,  # OpenCV photo module - disabled (not in BCR)
-)
-
-config_setting(
-    name = "photo_enabled",
-    flag_values = {
-        ":enable_photo": "true",
-    },
-)
-
 # Helper to detect platform features
 config_setting(
     name = "linux",

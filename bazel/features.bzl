@@ -29,10 +29,3 @@ def if_opengl_enabled(if_true, if_false = []):
         "//bazel:opengl_enabled": if_true,
         "//conditions:default": if_false,
     })
-
-def if_photo_enabled(if_true, if_false = []):
-    """Conditionally include dependencies if OpenCV photo module is enabled."""
-    return select({
-        "//bazel:photo_enabled": if_true,
-        "//conditions:default": if_false,
-    })
