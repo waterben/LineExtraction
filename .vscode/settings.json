@@ -73,7 +73,10 @@
       120
     ]
   },
-  "python.defaultInterpreterPath": "/opt/venv/deps/python/bin/python",
+  // Python interpreter path
+  // In Docker: Overridden by devcontainer.json -> /opt/venv/deps/python
+  // In WSL/local: Uses .venv
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "cmake.configureOnOpen": false,
   "cmake.configureOnEdit": false,
   "cmake.buildBeforeRun": false,

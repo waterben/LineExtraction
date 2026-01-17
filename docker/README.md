@@ -2,7 +2,32 @@
 
 This directory contains Docker configurations and scripts for setting up consistent development environments. Docker provides isolated, reproducible environments that work identically across different machines and operating systems.
 
-## Docker Development (Recommended)
+## Development Environment Options
+
+### Docker/DevContainer (This Guide)
+
+- **Best for:** Linux/macOS users, CI/CD pipelines
+- **Pros:** Complete isolation, reproducible, works everywhere
+- **Cons:** No OpenGL/GPU support, container overhead
+- **Setup:** See below
+
+### WSL (Windows Users)
+
+- **Best for:** Windows users who need OpenGL/GUI support
+- **Pros:** Native performance, OpenGL support, easier X server integration
+- **Cons:** Windows-only, less isolation than Docker
+- **Setup:** See [`../docs/WSL_SETUP.md`](../docs/WSL_SETUP.md)
+
+### Native Linux
+
+- **Best for:** Linux desktop users
+- **Pros:** Native performance, full hardware access
+- **Cons:** May affect system-wide packages
+- **Setup:** Run `sudo ./tools/scripts/setup_local_dev.sh`
+
+---
+
+## Docker Development (Recommended for Linux/CI)
 
 ### VS Code DevContainer
 
@@ -11,6 +36,7 @@ This directory contains Docker configurations and scripts for setting up consist
 3. Reopen in container when prompted
 
 **Python versions available:**
+
 - Python 3.11 (default)
 - Python 3.8/3.10 (via virtual environments)
 
@@ -34,6 +60,7 @@ The Dockerfile uses a multi-stage build:
 - **`devenv`** - Additional development environment tools and customizations
 
 Build specific stages:
+
 ```bash
 # Build only base stage
 docker build --target base -t lineextraction:base .
@@ -45,6 +72,7 @@ docker build --target devenv -t lineextraction:devenv .
 ### Customization
 
 Modify files in `devenv/custom/`:
+
 - `entrypoint.sh` - Custom entrypoint
 - `packages.txt` - Additional packages
 - `requirements-pip.txt` - Python packages
@@ -60,6 +88,7 @@ sudo ./tools/scripts/setup_local_dev.sh
 ```
 
 **Options:**
+
 - `--help` - Show all options
 - `--remove-tools` - Remove development tools
 - `--remove-packages` - Remove APT packages
@@ -69,17 +98,20 @@ sudo ./tools/scripts/setup_local_dev.sh
 ### Manual Setup (Ubuntu/Debian)
 
 1. **Install packages:**
+
    ```bash
    sudo apt install cmake build-essential vim gdb nano zsh
    ```
 
 2. **Install development tools:**
+
    ```bash
    curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_base_tools | sudo bash
    curl -fsSL https://raw.githubusercontent.com/waterben/LineExtraction/main/docker/scripts/install_devenv_tools | sudo bash
    ```
 
 3. **Setup Python environment:**
+
    ```bash
    uv venv .venv && source .venv/bin/activate && uv sync --locked
    pre-commit install
@@ -97,6 +129,7 @@ Multi-stage build optimized for development:
 2. **DevEnv Stage:** Additional development tools + customizations
 
 **Benefits:**
+
 - Cached layers for faster rebuilds
 - Flexible target selection
 - Consistent tool versions across environments
@@ -117,6 +150,7 @@ Multi-stage build optimized for development:
 ### Version Customization
 
 Set environment variables before running scripts:
+
 ```bash
 export BAZELISK_VERSION="1.25.0"
 export CLANGD_VERSION="20.0.0"
