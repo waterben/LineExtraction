@@ -1,6 +1,9 @@
-# CMake Build System
+# CMake Build System (Legacy)
 
-This guide covers building LineExtraction with CMake, the traditional and stable build system for the project.
+**Note:** CMake is maintained for legacy support. **Bazel is the recommended build system** for new development.
+See [`docs/BAZEL.md`](BAZEL.md) for the primary build system documentation.
+
+This guide covers building LineExtraction with CMake for compatibility with existing projects.
 
 ## Quick Start
 
@@ -389,20 +392,36 @@ cpack
 
 ## CMake vs Bazel
 
-Both build systems are supported:
+**Bazel is the recommended build system.** CMake is maintained for legacy compatibility.
 
-| Feature | CMake | Bazel |
-|---------|-------|-------|
-| Maturity | Stable, widely used | Modern, experimental |
-| Dependencies | Auto-download | Hermetic (BCR) |
-| Configuration | `cmake ..` | `.bazelrc` |
-| Build | `cmake --build .` | `bazel build //...` |
-| Tests | `ctest` | `bazel test //...` |
-| Qt Support | Full support | Requires feature flag |
-| OpenCV Photo | Supported | Supported (BCR 4.12.0.bcr.1+) |
-| IDE Support | Excellent | Good |
+| Feature | Bazel (Primary) | CMake (Legacy) |
+|---------|-----------------|----------------|
+| **Dependency Management** | ✅ Automatic via BCR, hermetic | ⚠️ Complex download scripts, error-prone |
+| **Build Hermeticity** | ✅ Fully hermetic, reproducible | ❌ System-dependent |
+| **Incremental Builds** | ✅ Intelligent caching | ⚠️ Limited |
+| **Cross-machine Consistency** | ✅ Identical results everywhere | ❌ Varies by system |
+| **Configuration** | ✅ Automatic (`.bazelrc`) | Manual (`cmake ..`) |
+| **Build** | `bazel build //...` | `cmake --build .` |
+| **Tests** | `bazel test //...` | `ctest` |
+| **Qt5 Support** | ✅ Optional (auto-detected) | ✅ Optional (auto-detected) |
+| **OpenCV Photo** | ✅ Always available (BCR 4.12.0.bcr.1+) | ✅ Always available |
+| **Setup Complexity** | ✅ Simple (one command) | ⚠️ External dependency scripts |
+| **Modern Ecosystem** | ✅ Active BCR development | ⚠️ Mature but stagnant |
 
-**Recommendation:** Use CMake for production builds, Bazel for development.
+**Why Bazel is preferred:**
+
+- **Simpler dependencies:** All managed via `MODULE.bazel` - no complex, error-prone download scripts
+- **Reproducible builds:** Same code → same binaries, regardless of machine or time
+- **Better performance:** Distributed caching and intelligent incremental builds
+- **Modern tooling:** Growing ecosystem with first-class support for modern workflows
+
+**When to use CMake:**
+
+- Existing projects with CMake infrastructure
+- Integration with CMake-only toolchains
+- Legacy compatibility requirements
+
+For all new development, **use Bazel** ([docs/BAZEL.md](BAZEL.md)).
 
 ## Further Reading
 

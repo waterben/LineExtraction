@@ -1,7 +1,8 @@
 # Bazel Build System for LineExtraction
 
-This project supports both CMake and Bazel build systems. Bazel provides hermetic builds
-with automatic dependency management via the Bazel Central Registry (BCR).
+Bazel is the **primary build system** for LineExtraction. It provides hermetic builds,
+automatic dependency management via the Bazel Central Registry (BCR), and reproducible
+builds across different machines. CMake is maintained for legacy support.
 
 ## Quick Start
 
@@ -250,16 +251,28 @@ cc_library(
 
 ## CMake Comparison
 
-| Feature | CMake | Bazel |
-|---------|-------|-------|
-| Configure | `cmake -B build` | Automatic (`.bazelrc`) |
-| Build | `cmake --build build` | `bazel build //...` |
-| Tests | `ctest` | `bazel test //...` |
-| Run | `./build/bin/app` | `bazel run //app:app` |
-| Clean | `rm -rf build` | `bazel clean` |
-| Full clean | - | `bazel clean --expunge` |
+| Feature | Bazel (Primary) | CMake (Legacy) |
+|---------|----------------|----------------|
+| **Dependency Management** | Automatic via BCR | Manual download scripts (complex, error-prone) |
+| **Build Hermeticity** | Fully hermetic | System-dependent |
+| **Caching** | Built-in distributed cache | Limited |
+| **Configure** | Automatic (`.bazelrc`) | `cmake -B build` |
+| **Build** | `bazel build //...` | `cmake --build build` |
+| **Tests** | `bazel test //...` | `ctest` |
+| **Run** | `bazel run //app:app` | `./build/bin/app` |
+| **Clean** | `bazel clean` | `rm -rf build` |
+| **Full clean** | `bazel clean --expunge` | - |
+| **Qt5 Support** | Optional (auto-detected) | Optional (auto-detected) |
+| **OpenCV Photo** | ✅ Always (BCR >= 4.12.0.bcr.1) | ✅ Always |
 
-Both build systems can be used in parallel.
+**Why Bazel is preferred:**
+
+- **Simpler dependencies:** All managed via `MODULE.bazel` - no complex download scripts
+- **Reproducible:** Same inputs → same outputs, regardless of machine
+- **Faster:** Intelligent caching and incremental builds
+- **Modern:** Active development and growing ecosystem
+
+Both build systems can be used in parallel, but Bazel is recommended for all new development.
 
 ## Troubleshooting
 

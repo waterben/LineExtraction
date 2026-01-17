@@ -28,48 +28,24 @@ Libraries depend on each other: `edge` depends on `imgproc` and `geometry`; othe
 
 ### External Dependencies
 
-Managed automatically via CMake scripts in `tools/cmake/extern_*.cmake`:
-- OpenCV 4.7+ (with optional CUDA support)
+All dependencies are managed automatically via Bazel Central Registry (BCR):
+- OpenCV 4.12.0.bcr.1+ (includes photo module, optional CUDA support)
 - Eigen3 (linear algebra)
 - dlib (machine learning utilities)
 - Google Test (unit testing)
-- Qt5 (GUI applications, optional)
+- Qt5 (GUI applications, optional, auto-detected)
 
-## Build System - Dual Approach
+## Build System
 
-### CMake (Primary, Stable)
+**ALWAYS use Bazel unless explicitly requested otherwise or for legacy compatibility.**
+
+### Bazel (Primary - Use This)
+
+Bazel is the **primary and recommended build system** for all development work.
 
 **Quick Build:**
 ```bash
-mkdir build && cd build
-cmake ..
-cmake --build . -j$(nproc)
-```
-
-**Key CMake Options:**
-- `BUILD_DEBUG=ON` - Debug build with symbols
-- `BUILD_STATIC=ON` - Build static libraries (default)
-- `ENABLE_UNIT_TEST=ON` - Build tests (default)
-- `ENABLE_QT=ON` - Build Qt apps (default)
-- `WITH_CUDA=ON` - Enable CUDA support (auto-detected)
-
-**Custom CMake Functions** (`tools/cmake/LineExtractionUtils.cmake`):
-- `le_add_library()` - Creates library with automatic source discovery
-  - Use `AUTO_TESTS` to auto-generate test targets from `tests/*.cpp`
-  - Specify `PUBLIC_DEPS`, `PRIVATE_DEPS` for dependencies
-  - Sources auto-discovered from `src/`, headers from `include/`
-- `le_add_executable()` - Creates executables with common configuration
-
-**Build Locations:**
-- Binaries: `build/bin/`
-- Libraries: `build/lib/`
-- Tests: `build/bin/test_*`
-
-### Bazel (Recommended for Development)
-
-Bazel provides hermetic builds with automatic dependency management:
-```bash
-# Detect available features (Qt5, OpenGL, CUDA) - run once
+# One-time: detect available features (Qt5, OpenGL, CUDA)
 ./tools/scripts/detect_bazel_features.sh
 
 # Build all libraries
@@ -78,11 +54,41 @@ bazel build //libs/...
 # Run all tests
 bazel test //libs/...
 
-# Build with specific features
-bazel build --//bazel:enable_qt5=true //apps/line_analyzer:app_line_analyzer
+# Build and run applications
+bazel run //apps/line_analyzer:app_line_analyzer
 ```
 
-See `docs/BAZEL.md` for complete documentation and `bazel/README.md` for feature flags.
+**Key Features:**
+- Hermetic builds with guaranteed reproducibility
+- Automatic dependency management via BCR (no manual scripts)
+- Built-in distributed caching for fast incremental builds
+- Automatic feature detection for Qt5, OpenGL, CUDA
+- All dependencies declared in `MODULE.bazel`
+
+**Common Bazel Commands:**
+- Build: `bazel build //target:name`
+- Test: `bazel test //target:name`
+- Run: `bazel run //target:name`
+- Query: `bazel query //...`
+- Clean: `bazel clean`
+
+**See:** `docs/BAZEL.md` for complete documentation and `bazel/README.md` for feature flags.
+
+### CMake (Legacy - Use Only When Explicitly Requested)
+
+CMake is maintained **only for legacy compatibility**. Do not use CMake unless:
+- User explicitly requests CMake
+- Working with existing CMake-only infrastructure
+- Debugging CMake-specific issues
+
+**Quick Build (if needed):**
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build . -j$(nproc)
+```
+
+**See:** `docs/CMAKE.md` for CMake documentation (use only when necessary).
 
 ## Documentation
 
@@ -118,19 +124,26 @@ Debug workflow uses build-and-copy pattern to fixed debug location (`.vscode/deb
 
 ### Testing
 
-**Run all tests:**
+**Use Bazel for testing (default):**
+```bash
+# Run all tests
+bazel test //...
+
+# Run specific test
+bazel test //libs/geometry:test_geometry
+bazel test //libs/edge:test_edge
+
+# Run tests with verbose output
+bazel test //... --test_output=all
+```
+
+**CMake testing (legacy only):**
 ```bash
 cd build
-ctest
+ctest  # Only use if explicitly requested
 ```
 
-**Run specific test:**
-```bash
-./bin/test_geometry
-./bin/test_edge
-```
-
-Tests are automatically discovered from `libs/*/tests/*.cpp` when using `le_add_library()` with `AUTO_TESTS` flag.
+Tests are automatically discovered from `libs/*/tests/*.cpp` in both build systems.
 
 ### Code Style & Documentation
 
@@ -148,27 +161,59 @@ Tests are automatically discovered from `libs/*/tests/*.cpp` when using `le_add_
 
 ## Key Integration Points
 
-### Adding a New Library
+### Adding a New Library (Bazel)
 
 1. Create directory under `libs/new_lib/`
 2. Create structure: `include/new_lib/*.hpp`, `src/*.cpp`, `tests/*.cpp`
-3. Add `CMakeLists.txt`:
-   ```cmake
-   le_add_library(lib_new_lib
-       AUTO_TESTS
-       PUBLIC_DEPS lib_utility le::opencv
-       PUBLIC_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include
+3. Add `BUILD.bazel`:
+   ```python
+   load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+   cc_library(
+       name = "lib_new_lib",
+       srcs = glob(["src/*.cpp"]),
+       hdrs = glob(["include/**/*.hpp"]),
+       includes = ["include"],
+       deps = [
+           "//libs/utility:lib_utility",
+           "@opencv",
+       ],
+       visibility = ["//visibility:public"],
+   )
+
+   cc_test(
+       name = "test_new_lib",
+       srcs = glob(["tests/*.cpp"]),
+       deps = [
+           ":lib_new_lib",
+           "@googletest//:gtest_main",
+       ],
    )
    ```
-4. Add `add_subdirectory(new_lib)` to `libs/CMakeLists.txt`
+4. Add library to `libs/BUILD.bazel` if needed
+
+**For CMake (legacy only):** See `docs/CMAKE.md` if explicitly requested.
 
 ### OpenCV Integration
 
-Use the `le::opencv` alias target (not raw OpenCV targets). This is configured in root CMakeLists.txt and provides consistent include paths and linking.
+In Bazel, use `@opencv` as dependency. For photo module features:
+```python
+deps = [
+    "@opencv",
+    "@opencv//:photo",  # For advanced denoising
+]
+```
 
 ### Qt Applications
 
-Qt apps use custom macros and require `ENABLE_QT=ON`. See `apps/line_analyzer/CMakeLists.txt` for reference. AUTOMOC is set per-target, not globally.
+Qt5 is auto-detected via feature detection script. Use Qt targets in Bazel:
+```python
+deps = [
+    "@qt//:qt_core",
+    "@qt//:qt_widgets",
+    # ...
+]
+```
 
 ### Python Integration
 
@@ -176,9 +221,16 @@ Python environment is in `.venv/` (created by setup script). Dependencies in `py
 
 ## Common Pitfalls
 
-- **Don't** manually manage OpenCV - use `le::opencv` target
-- **Don't** modify `build/` directory manually - regenerate with CMake
-- **Don't** use bare `add_library()` - use `le_add_library()` for consistency
-- **Do** run tests after changes: `ctest` or individual test binaries
+- **ALWAYS use Bazel** unless explicitly asked for CMake
+- **Don't** modify `bazel-*` directories (generated by Bazel)
+- **Don't** use CMake by default - Bazel is the primary build system
+- **Do** run `./tools/scripts/detect_bazel_features.sh` after system changes
+- **Do** run tests after changes: `bazel test //...`
 - **Do** use pre-commit hooks (installed by setup script) for code quality
 - **WSL users**: Configure `DISPLAY` for X server (see `docs/WSL.md`)
+
+### Build System Priority
+
+1. **Default:** Use Bazel (`bazel build`, `bazel test`, `bazel run`)
+2. **Legacy only:** Use CMake only when explicitly requested by user
+3. **Debugging:** VS Code tasks support both, but prefer Bazel workflows

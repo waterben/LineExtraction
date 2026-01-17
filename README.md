@@ -40,14 +40,14 @@ This installs all dependencies, sets up Python environment, git hooks, and detec
 
 ### Build
 
-The project supports both **CMake** and **Bazel** build systems.
+The project uses **Bazel** as the primary build system, with legacy **CMake** support.
 
-| Build System | Documentation | Recommended For |
-|--------------|---------------|-----------------|
-| **Bazel** | [`docs/BAZEL.md`](docs/BAZEL.md) | Development, hermetic builds |
-| **CMake** | [`docs/CMAKE.md`](docs/CMAKE.md) | Production, full feature support |
+| Build System | Status | Documentation | Recommended For |
+|--------------|--------|---------------|-----------------|
+| **Bazel** | **Primary** | [`docs/BAZEL.md`](docs/BAZEL.md) | All development, hermetic builds, dependency management |
+| **CMake** | Legacy | [`docs/CMAKE.md`](docs/CMAKE.md) | Legacy projects, specific integrations |
 
-#### Bazel (Recommended for Development)
+#### Bazel (Primary Build System)
 
 ```bash
 # One-time: detect available features (Qt5, OpenGL, CUDA)
@@ -61,7 +61,14 @@ bazel test //libs/...
 bazel run //apps/line_analyzer:app_line_analyzer
 ```
 
-#### CMake (Full Feature Support)
+**Why Bazel?**
+
+- Hermetic builds with reproducible results
+- Automatic dependency management via Bazel Central Registry (no complex download scripts)
+- Built-in caching for faster incremental builds
+- Consistent behavior across different machines
+
+#### CMake (Legacy Support)
 
 ```bash
 mkdir build && cd build
@@ -69,6 +76,8 @@ cmake ..
 cmake --build . -j$(nproc)
 ctest
 ```
+
+CMake is maintained for compatibility but Bazel is recommended for new development.
 
 ## Dependencies
 
