@@ -31,7 +31,7 @@ void drawEdge(cv::Mat& img, const LineSegment2<FT>& edge, size_t idx) {
 cv::Mat drawGeometry(const vector<Vec2<FT>>& points, const vector<pair<size_t, size_t>>& edges, const cv::Mat& img) {
   cv::Mat ret;
   if (img.type() == CV_8U)
-    cvtColor(img, ret, CV_GRAY2BGR);
+    cvtColor(img, ret, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(ret);
 
@@ -52,7 +52,7 @@ cv::Mat drawGeometry(const vector<Vec2<FT>>& points, const vector<pair<size_t, s
 cv::Mat drawGeometry(const vector<Line2<FT>>& lines, const cv::Mat& img) {
   cv::Mat ret;
   if (img.type() == CV_8U)
-    cv::cvtColor(img, ret, CV_GRAY2BGR);
+    cv::cvtColor(img, ret, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(ret);
 
@@ -65,7 +65,7 @@ cv::Mat drawGeometry(const vector<Line2<FT>>& lines, const cv::Mat& img) {
 cv::Mat drawGeometry(const vector<LineSegment2<FT>>& edges, const cv::Mat& img) {
   cv::Mat ret;
   if (img.type() == CV_8U)
-    cv::cvtColor(img, ret, CV_GRAY2BGR);
+    cv::cvtColor(img, ret, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(ret);
 

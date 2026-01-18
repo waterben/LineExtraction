@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
 #include <utility/range.hpp>
 
 

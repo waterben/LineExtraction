@@ -1,4 +1,3 @@
-#include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
 #include <utility/format.hpp>
 #include <utility/performance.hpp>
@@ -13,7 +12,7 @@ PerformanceData::PerformanceData(const std::string& n, const cv::Mat& s) : TaskD
     cv::cvtColor(src, src_gray, cv::COLOR_BGR2GRAY);
   else {
     src_gray = src;
-    cv::cvtColor(src_gray, src, CV_GRAY2RGB);
+    cv::cvtColor(src_gray, src, cv::COLOR_GRAY2RGB);
   }
 }
 

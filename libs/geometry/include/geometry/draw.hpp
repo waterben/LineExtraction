@@ -271,7 +271,7 @@ inline cv::Mat drawLine(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -290,7 +290,7 @@ inline cv::Mat drawLines(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -313,7 +313,7 @@ inline cv::Mat drawLines(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -349,7 +349,7 @@ inline cv::Mat drawLines(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -369,7 +369,7 @@ inline cv::Mat drawLinesT(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -388,7 +388,7 @@ inline cv::Mat drawLinesR(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -407,7 +407,7 @@ inline cv::Mat drawLinesR(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -426,7 +426,7 @@ inline cv::Mat drawLinesRT(const cv::Mat& img,
   cv::Mat outImg(img.size(), CV_MAKETYPE(img.depth(), 3));
 
   if (img.type() == CV_8U)
-    cvtColor(img, outImg, CV_GRAY2BGR);
+    cvtColor(img, outImg, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(outImg);
 
@@ -501,12 +501,12 @@ cv::Mat drawMatches(const cv::Mat& img1,
   outImgR = outImg(cv::Rect(img1.cols, 0, img2.cols, img2.rows));
 
   if (img1.type() == CV_8U)
-    cvtColor(img1, outImgL, CV_GRAY2BGR);
+    cvtColor(img1, outImgL, cv::COLOR_GRAY2BGR);
   else
     img1.copyTo(outImgL);
 
   if (img2.type() == CV_8U)
-    cv::cvtColor(img2, outImgR, CV_GRAY2BGR);
+    cv::cvtColor(img2, outImgR, cv::COLOR_GRAY2BGR);
   else
     img2.copyTo(outImgR);
 
@@ -569,7 +569,7 @@ cv::Mat drawGeometry(const std::vector<Vec2<FT>>& points,
                      const cv::Mat& img) {
   cv::Mat ret;
   if (img.type() == CV_8U)
-    cvtColor(img, ret, CV_GRAY2BGR);
+    cvtColor(img, ret, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(ret);
 
@@ -591,7 +591,7 @@ template <class LV>
 cv::Mat drawGeometry(const LV& lines, const cv::Mat& img) {
   cv::Mat ret;
   if (img.type() == CV_8U)
-    cv::cvtColor(img, ret, CV_GRAY2BGR);
+    cv::cvtColor(img, ret, cv::COLOR_GRAY2BGR);
   else
     img.copyTo(ret);
 

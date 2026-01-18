@@ -3,6 +3,6 @@
   "integrity": "sha256-htzKHghvi4B5mQ0H8A63B/ye9BLPOyzoCLN5VvDeLLg=",
   "strip_prefix": "superlu-7.0.1",
   "overlay": {
-    "BUILD.bazel": "sha256-Mzs6FN66giiqA0GMSmKJh7oqOk4sT7PvBpqYYJfFef4="
+    "BUILD.bazel": "sha256-CFPjXBZGQudXRnZY/HSe8Fv9luRTQcxi6lgvF+G0fJc="
   }
 }

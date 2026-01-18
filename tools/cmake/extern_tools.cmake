@@ -160,3 +160,45 @@ function( copy_files_glob EXPRESSION TARGET_DIR )
     endif()
     copy_files("${FILES}" ${TARGET_DIR})
 endfunction()
+
+# Check if an extern build directory has valid paths for the current environment
+# This handles switching between Docker and WSL where absolute paths differ.
+#
+#   BUILD_DIR   The extern build directory to check
+#   RESULT_VAR  Output variable set to TRUE if paths are valid, FALSE otherwise
+function(extern_check_build_valid BUILD_DIR RESULT_VAR)
+    set(${RESULT_VAR} TRUE PARENT_SCOPE)
+
+    if(NOT EXISTS "${BUILD_DIR}")
+        set(${RESULT_VAR} FALSE PARENT_SCOPE)
+        return()
+    endif()
+
+    # Check if CMakeCache.txt exists and contains valid paths
+    set(_cache_file "${BUILD_DIR}/CMakeCache.txt")
+    if(EXISTS "${_cache_file}")
+        file(READ "${_cache_file}" _cache_content)
+
+        # Extract CMAKE_HOME_DIRECTORY
+        string(REGEX MATCH "CMAKE_HOME_DIRECTORY:INTERNAL=([^\n]+)" _match "${_cache_content}")
+        if(_match)
+            string(REGEX REPLACE "CMAKE_HOME_DIRECTORY:INTERNAL=([^\n]+)" "\\1" _home_dir "${_match}")
+            string(STRIP "${_home_dir}" _home_dir)
+            if(NOT EXISTS "${_home_dir}")
+                message(STATUS "Extern build at ${BUILD_DIR} has stale CMAKE_HOME_DIRECTORY: ${_home_dir}")
+                set(${RESULT_VAR} FALSE PARENT_SCOPE)
+                return()
+            endif()
+        endif()
+    endif()
+endfunction()
+
+# Clean a stale extern build directory
+#
+#   BUILD_DIR   The extern build directory to clean
+function(extern_clean_stale_build BUILD_DIR)
+    if(EXISTS "${BUILD_DIR}")
+        message(STATUS "Removing stale extern build: ${BUILD_DIR}")
+        file(REMOVE_RECURSE "${BUILD_DIR}")
+    endif()
+endfunction()

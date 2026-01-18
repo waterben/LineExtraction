@@ -119,8 +119,8 @@ int main(int argc, char** argv) {
 
 
   /*cv::Mat segL, segR;
-  cvtColor(srcL, segL, CV_GRAY2BGR);
-  cvtColor(srcR, segR, CV_GRAY2BGR);
+  cvtColor(srcL, segL, cv::COLOR_GRAY2BGR);
+  cvtColor(srcR, segR, cv::COLOR_GRAY2BGR);
 
 
   RNG& rng = theRNG();

@@ -41,12 +41,13 @@ macro(gtest3_repo extern_path)
         CONF_ONLY ON
     )
 
-    # Modern GoogleTest builds libs into lib/ subdirectory
+    # GoogleTest builds libs into managed_gtest-build/lib/ subdirectory
     set(GTEST_ROOT "${extern_path}/managed_gtest/src/managed_gtest")
+    set(GTEST_BUILD_DIR "${extern_path}/managed_gtest/src/managed_gtest-build")
     set(GTEST_INCLUDE_DIR "${GTEST_ROOT}/googletest/include")
-    set(GTEST_LIBRARY "${GTEST_ROOT}/lib/libgtest.a")
-    set(GTEST_MAIN_LIBRARY "${GTEST_ROOT}/lib/libgtest_main.a")
-    set(GTEST_LIBRARY_DIR "${GTEST_ROOT}/lib")
+    set(GTEST_LIBRARY "${GTEST_BUILD_DIR}/lib/libgtest.a")
+    set(GTEST_MAIN_LIBRARY "${GTEST_BUILD_DIR}/lib/libgtest_main.a")
+    set(GTEST_LIBRARY_DIR "${GTEST_BUILD_DIR}/lib")
     set(GTEST_LIBRARIES "${GTEST_LIBRARY};${GTEST_MAIN_LIBRARY}")
     set(GTEST_FOUND TRUE)
 endmacro()
