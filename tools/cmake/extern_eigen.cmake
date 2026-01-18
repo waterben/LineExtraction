@@ -56,7 +56,7 @@ set(EigenDetectionModes Auto System Extern Managed)
 set(EigenDetectionMode Auto CACHE STRING "Eigen detection mode: Auto - try system, then extern, then managed; System - use lib from system; Extern - use lib from extern folder varibale; Managed - get from repository")
 set(EigenExternPath "${PROJECT_SOURCE_DIR}/extern/eigen" CACHE PATH "Path to extern lib")
 set_property(CACHE EigenDetectionMode PROPERTY STRINGS ${EigenDetectionModes})
-set(EigenVersion "3.3.9" CACHE STRING "Required minimal eigen version")
+set(EigenVersion "3.4.0" CACHE STRING "Required minimal eigen version (synced with Bazel MODULE.bazel)")
 
 
 list(FIND EigenDetectionModes ${EigenDetectionMode} index)

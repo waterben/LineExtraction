@@ -45,7 +45,7 @@ set(DLibDetectionModes Auto System Extern Managed)
 set(DLibDetectionMode Auto CACHE STRING "DLib detection mode: Auto - try extern, then managed; Extern - use lib from extern folder varibale; Managed - get from repository")
 set(DLibExternPath "${PROJECT_SOURCE_DIR}/extern/dlib" CACHE PATH "Path to extern lib")
 set_property(CACHE DLibDetectionMode PROPERTY STRINGS ${DLibDetectionModes})
-set(DLibVersion "19.15" CACHE STRING "Managed dlib version")
+set(DLibVersion "19.24.7" CACHE STRING "Managed dlib version (synced with Bazel MODULE.bazel)")
 set(DLibCMakeArgs "-DCMAKE_BUILD_TYPE=RELEASE -DUSE_AVX_INSTRUCTIONS=1 -DUSE_SSE4_INSTRUCTIONS=1 -DUSE_SSE2_INSTRUCTIONS=1" CACHE STRING "Custom cmake arguments")
 
 

@@ -71,7 +71,7 @@ set(OpenCVDetectionModes Auto System Extern Managed)
 set(OpenCVDetectionMode Auto CACHE STRING "OpenCV detection mode: Auto - try system, then extern, then managed; System - use lib from system; Extern - use lib from extern folder variable; Managed - get from repository")
 set(OpenCVExternPath "${PROJECT_SOURCE_DIR}/extern/opencv/build" CACHE PATH "Path to extern lib")
 set_property(CACHE OpenCVDetectionMode PROPERTY STRINGS ${OpenCVDetectionModes})
-set(OpenCVVersion "4.12.0" CACHE STRING "Managed opencv version")
+set(OpenCVVersion "4.12.0" CACHE STRING "Managed opencv version (synced with Bazel MODULE.bazel)")
 
 # Configure OpenCV components based on CUDA availability
 if (WITH_CUDA)
