@@ -1,0 +1,42 @@
+"""other examples (dlib, opencv features, etc.)"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "test_other_houghlines",
+    srcs = ["houghlines.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "test_other_dlib",
+    srcs = ["test_dlib.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "@dlib",
+    ],
+)
+
+# Note: opencv_features requires opencv_contrib (xfeatures2d) which is not in BCR
+# Commented out to avoid build failures
+# cc_binary(
+#     name = "test_opencv_features",
+#     srcs = [
+#         "opencv_features.cpp",
+#         "stats.h",
+#         "utils.h",
+#     ],
+#     copts = LE_COPTS_COMPAT,
+#     deps = [
+#         "//libs/geometry:lib_geometry",
+#         "@opencv",
+#     ],
+# )

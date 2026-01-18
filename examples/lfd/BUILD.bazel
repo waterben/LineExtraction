@@ -1,0 +1,45 @@
+"""lfd examples"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "test_lfd_dsc",
+    srcs = ["dsc_test.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "test_lfd_stereo_match",
+    srcs = ["stereo_match_test.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "test_lfd_generic",
+    srcs = ["generic_test.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+    ],
+)
+
+# Note: Most LFD examples require arpack++ (via PairwiseLineMatcher.hpp) which is not in BCR
+# The following targets are commented out to avoid build failures:
+# - test_lfd_pair, test_lfd_match, test_lfd_motion_match: Direct use
+# - test_lfd_triangulation: Uses arpack++ headers
+# - test_lfd_video_match, test_lfd_video_cv_matching: Use PairwiseLineMatcher

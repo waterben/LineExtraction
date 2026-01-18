@@ -24,7 +24,6 @@ cc_library(
         allow_empty = True,
     ),
     copts = LE_COPTS_COMPAT,
-    defines = ["HAVE_OPENCV_PHOTO"],
     includes = [
         "include",
         "src",
@@ -44,7 +43,6 @@ cc_library(
         size = "small",
         srcs = [test_file],
         copts = LE_COPTS_COMPAT,
-        defines = ["HAVE_OPENCV_PHOTO"],
         deps = [
             ":lib_imgproc",
             "@googletest//:gtest",

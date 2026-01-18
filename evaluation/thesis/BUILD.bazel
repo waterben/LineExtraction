@@ -1,5 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load("//bazel:features.bzl", "if_photo_enabled")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -65,7 +65,7 @@ cc_binary(
 cc_binary(
     name = "eval_image_denoise",
     srcs = ["image_denoise.cpp"],
-    defines = ["HAVE_OPENCV_PHOTO"],
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
