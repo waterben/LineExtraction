@@ -25,44 +25,45 @@ cc_binary(
     ],
 )
 
-# Note: The following require opencv_contrib (ximgproc) which is not in BCR
-# Commented out to avoid build failures
-# cc_binary(
-#     name = "thesis_imgproc_threshold_examples",
-#     srcs = ["threshold.cpp"],
-#     copts = LE_COPTS_COMPAT,
-#     deps = [
-#         "//libs/edge:lib_edge",
-#         "//libs/eval:lib_eval",
-#         "//libs/imgproc:lib_imgproc",
-#         "//libs/utility:lib_utility",
-#         "@opencv",
-#     ],
-# )
-#
-# cc_binary(
-#     name = "thesis_edge_segment_examples",
-#     srcs = ["edge_seg.cpp"],
-#     copts = LE_COPTS_COMPAT,
-#     deps = [
-#         "//libs/edge:lib_edge",
-#         "//libs/eval:lib_eval",
-#         "//libs/geometry:lib_geometry",
-#         "//libs/imgproc:lib_imgproc",
-#         "//libs/utility:lib_utility",
-#         "@opencv",
-#     ],
-# )
-#
-# cc_binary(
-#     name = "thesis_zc_examples",
-#     srcs = ["zc_example.cpp"],
-#     copts = LE_COPTS_COMPAT,
-#     deps = [
-#         "//libs/edge:lib_edge",
-#         "//libs/eval:lib_eval",
-#         "//libs/imgproc:lib_imgproc",
-#         "//libs/utility:lib_utility",
-#         "@opencv",
-#     ],
-# )
+# Note: The following require opencv_contrib (ximgproc) which is now available via local registry
+# threshold.cpp uses ximgproc for structured edge detection
+cc_binary(
+    name = "thesis_imgproc_threshold_examples",
+    srcs = ["threshold.cpp"],
+    copts = ["-w"],  # Legacy code with warnings
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+        "@opencv_contrib//:ximgproc",
+    ],
+)
+
+cc_binary(
+    name = "thesis_edge_segment_examples",
+    srcs = ["edge_seg.cpp"],
+    copts = ["-w"],  # Legacy code with warnings
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "thesis_zc_examples",
+    srcs = ["zc_example.cpp"],
+    copts = ["-w"],  # Legacy code with warnings
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)

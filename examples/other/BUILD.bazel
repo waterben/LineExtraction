@@ -43,18 +43,18 @@ cc_binary(
     ],
 )
 
-# Note: opencv_features requires opencv_contrib (xfeatures2d) which is not in BCR
-# Commented out to avoid build failures
-# cc_binary(
-#     name = "test_opencv_features",
-#     srcs = [
-#         "opencv_features.cpp",
-#         "stats.h",
-#         "utils.h",
-#     ],
-#     copts = LE_COPTS_COMPAT,
-#     deps = [
-#         "//libs/geometry:lib_geometry",
-#         "@opencv",
-#     ],
-# )
+# opencv_features uses opencv_contrib xfeatures2d module
+cc_binary(
+    name = "test_opencv_features",
+    srcs = [
+        "opencv_features.cpp",
+        "stats.h",
+        "utils.h",
+    ],
+    copts = ["-w"],  # Legacy code with warnings
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "@opencv",
+        "@opencv_contrib//:xfeatures2d",
+    ],
+)

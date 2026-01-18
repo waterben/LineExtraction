@@ -1,9 +1,11 @@
 // NOTE: Include order matters! arlsmat.h must come BEFORE lsymsol.h
 // because lsymsol.h uses conditional includes based on ARLSMAT_H being defined
-#include "lsmatrxa.h"
-#include "lsymsol.h"
+// clang-format off
 #include <arpack++/arlsmat.h>
 #include <arpack++/arlssym.h>
+#include "lsmatrxa.h"
+#include "lsymsol.h"
+// clang-format on
 
 #include <iostream>
 

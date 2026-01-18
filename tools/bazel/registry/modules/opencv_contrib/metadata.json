@@ -2,8 +2,7 @@
   "homepage": "https://github.com/opencv/opencv_contrib",
   "maintainers": [
     {
-      "name": "OpenCV Team",
-      "email": "admin@opencv.org"
+      "name": "LineExtraction Team"
     }
   ],
   "versions": [
