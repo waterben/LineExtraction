@@ -66,9 +66,10 @@ int main(int argc, char** argv) {
   data2["gy"] = lsd2.imageData()[1];
   data2["img"] = src2;
 
-  typedef GchGradImgInterpolate<MyType, 1, 2, NoAlign<MyType>, FastRoundNearestInterpolator<MyType, short>,
-                                FastRoundNearestInterpolator<MyType, uchar>>
-      MyGchHelper;
+  // NOTE: Commented out - unused typedef but kept for documentation
+  // typedef GchGradImgInterpolate<MyType, 1, 2, NoAlign<MyType>, FastRoundNearestInterpolator<MyType, short>,
+  //                               FastRoundNearestInterpolator<MyType, uchar>>
+  //     MyGchHelper;
 
   typedef FdcLBD<MyType, LsdCC<MyType>::LineSegment, short, FastRoundNearestInterpolator<MyType, short>> MyFdc;
   std::vector<typename MyFdc::descriptor_type> dsc1, dsc2;

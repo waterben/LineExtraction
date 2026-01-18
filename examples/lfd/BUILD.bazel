@@ -38,8 +38,97 @@ cc_binary(
     ],
 )
 
-# Note: Most LFD examples require arpack++ (via PairwiseLineMatcher.hpp) which is not in BCR
-# The following targets are commented out to avoid build failures:
-# - test_lfd_pair, test_lfd_match, test_lfd_motion_match: Direct use
-# - test_lfd_triangulation: Uses arpack++ headers
-# - test_lfd_video_match, test_lfd_video_cv_matching: Use PairwiseLineMatcher
+# Examples using PairwiseLineMatcher (requires arpack++ AND SuperLU)
+cc_binary(
+    name = "test_lfd_pair",
+    srcs = ["pair_test.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+        "@superlu",
+    ],
+)
+
+# Note: match_test.cpp requires opencv_contrib (line_descriptor module)
+# which is not in BCR. Uncomment when opencv_contrib is available:
+# cc_binary(
+#     name = "test_lfd_match",
+#     srcs = ["match_test.cpp"],
+#     copts = LE_COPTS_COMPAT,
+#     deps = [
+#         "//libs/lfd:lib_lfd",
+#         "//libs/lsd:lib_lsd",
+#         "@opencv",
+#         "@superlu",
+#     ],
+# )
+
+cc_binary(
+    name = "test_lfd_motion_match",
+    srcs = ["motion_match_test.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+        "@superlu",
+    ],
+)
+
+# Note: triangulation_test.cpp requires slam module which is not available
+# Uncomment when slam module is available:
+# cc_binary(
+#     name = "test_lfd_triangulation",
+#     srcs = ["triangulation_test.cpp"],
+#     copts = LE_COPTS_COMPAT,
+#     deps = [
+#         "//libs/lfd:lib_lfd",
+#         "//libs/lsd:lib_lsd",
+#         "@opencv",
+#         "@superlu",
+#     ],
+# )
+
+# NOTE: video_match_test.cpp has code quality issues (shadowing, sign comparison)
+# Using reduced warnings until code is cleaned up
+cc_binary(
+    name = "test_lfd_video_match",
+    srcs = ["video_match_test.cpp"],
+    copts = ["-w"],  # Suppress warnings - legacy example code
+    deps = [
+        "//libs/lfd:lib_lfd",
+        "//libs/lsd:lib_lsd",
+        "@opencv",
+        "@superlu",
+    ],
+)
+
+# Note: video_cv_matching_test.cpp requires opencv_contrib (line_descriptor module)
+# which is not in BCR. Uncomment when opencv_contrib is available:
+# cc_binary(
+#     name = "test_lfd_video_cv_matching",
+#     srcs = ["video_cv_matching_test.cpp"],
+#     copts = LE_COPTS_COMPAT,
+#     deps = [
+#         "//libs/lfd:lib_lfd",
+#         "//libs/lsd:lib_lsd",
+#         "@opencv",
+#         "@superlu",
+#     ],
+# )
+
+# Note: cv3_linematching_test.cpp requires opencv_contrib (line_descriptor module)
+# which is not in BCR. Uncomment when opencv_contrib is available:
+# cc_binary(
+#     name = "test_lfd_cv3_linematching",
+#     srcs = ["cv3_linematching_test.cpp"],
+#     copts = LE_COPTS_COMPAT,
+#     deps = [
+#         "//libs/lfd:lib_lfd",
+#         "//libs/lsd:lib_lsd",
+#         "@opencv",
+#         "@opencv_contrib//:line_descriptor",
+#     ],
+# )

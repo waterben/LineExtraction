@@ -70,9 +70,10 @@ int main(int argc, char** argv) {
   dataR["gy"] = lsdR.imageData()[1];
   dataR["img"] = srcR;
 
-  typedef GchGradImgInterpolate<MyFloat, 1, 2, NoAlign<MyFloat>, FastRoundNearestInterpolator<MyFloat, short>,
-                                FastRoundNearestInterpolator<MyFloat, uchar>>
-      MyGchHelper;
+  // GchGradImgInterpolate helper type - kept for reference/future use
+  // typedef GchGradImgInterpolate<MyFloat, 1, 2, NoAlign<MyFloat>, FastRoundNearestInterpolator<MyFloat, short>,
+  //                               FastRoundNearestInterpolator<MyFloat, uchar>>
+  //     MyGchHelper;
 
   // typedef FdcGenericLR<MyFloat,LsdCC<MyFloat>::LineSegment,MyGchHelper> MyFdc;
   typedef FdcLBD<MyFloat, LsdCC<MyFloat>::LineSegment, short, FastRoundNearestInterpolator<MyFloat, short>> MyFdc;

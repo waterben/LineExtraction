@@ -63,11 +63,11 @@ struct FdLBD {
 
   cv::Mat data;
 
-  inline FT distance(const FdLBD<FT>& rhs) const { return static_cast<FT>(norm(data, rhs.data, NORM_L2)); }
+  inline FT distance(const FdLBD<FT>& rhs) const { return static_cast<FT>(cv::norm(data, rhs.data, cv::NORM_L2)); }
 
   //! compute distance between two descriptors (static version)
   static inline FT distance(const FdLBD<FT>& lhs, const FdLBD<FT>& rhs) {
-    return static_cast<FT>(norm(lhs.data, rhs.data, NORM_L2));
+    return static_cast<FT>(cv::norm(lhs.data, rhs.data, cv::NORM_L2));
   }
 
   std::string name() const { return "LBD"; }
@@ -311,7 +311,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
     dstMat.setTo(0.4, dstMat > 0.4);
 
     // re-normalize desVec;
-    dstMat *= 1.0 / static_cast<FT>(norm(dstMat, NORM_L2));
+    dstMat *= 1.0 / static_cast<FT>(cv::norm(dstMat, cv::NORM_L2));
   }
 
  public:

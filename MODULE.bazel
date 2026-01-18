@@ -30,6 +30,14 @@ bazel_dep(name = "libjpeg_turbo", version = "3.1.3.bcr.2")
 # dlib from local registry (not in BCR)
 bazel_dep(name = "dlib", version = "19.24.7")
 
+# arpack++ from local registry - header-only C++ interface to ARPACK
+# Requires system-installed arpack, lapack, blas libraries
+bazel_dep(name = "arpackpp", version = "2.4.0")
+
+# SuperLU from local registry - sparse direct solver
+# Used by arpack++ for LU decomposition variants (ARluSymMatrix, etc.)
+bazel_dep(name = "superlu", version = "7.0.1")
+
 # pybind11 for Python bindings
 bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 

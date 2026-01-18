@@ -1,0 +1,12 @@
+{
+  "homepage": "https://github.com/xiaoyeli/superlu",
+  "maintainers": [
+    {
+      "name": "LineExtraction Project"
+    }
+  ],
+  "versions": [
+    "7.0.1"
+  ],
+  "yanked_versions": {}
+}

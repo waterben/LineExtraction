@@ -1,0 +1,85 @@
+"""SuperLU - Supernodal sparse direct solver for large sparse linear systems"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# SuperLU requires a config header - we generate a minimal one
+genrule(
+    name = "superlu_config",
+    outs = ["SRC/superlu_config.h"],
+    cmd = """
+cat > $@ << 'EOF'
+/* SuperLU configuration for Bazel build */
+#ifndef __SUPERLU_CONFIG_H__
+#define __SUPERLU_CONFIG_H__
+
+/* Version info */
+#define SUPERLU_MAJOR_VERSION 7
+#define SUPERLU_MINOR_VERSION 0
+#define SUPERLU_PATCH_VERSION 1
+
+/* Enable double precision */
+#define HAVE_SUPERLU_DP 1
+
+/* 32-bit indexing */
+#define XSDK_INDEX_SIZE 32
+
+/* Define int_t type based on index size */
+#if (XSDK_INDEX_SIZE == 64)
+#include <stdint.h>
+typedef int64_t int_t;
+#else
+typedef int int_t;
+#endif
+
+/* Use vendor BLAS */
+#define USE_VENDOR_BLAS 1
+
+/* Fortran naming convention - add underscore */
+#define Add_ 1
+
+#endif /* __SUPERLU_CONFIG_H__ */
+EOF
+    """,
+)
+
+# Internal CBLAS library (fallback if no system BLAS)
+cc_library(
+    name = "cblas_internal",
+    srcs = glob(["CBLAS/*.c"]),
+    hdrs = ["CBLAS/f2c.h"] + glob(["SRC/*.h"]) + [":superlu_config"],
+    copts = [
+        "-w",  # Suppress warnings from legacy C code
+        "-DAdd_",
+    ],
+    includes = [
+        "CBLAS",
+        "SRC",
+    ],
+)
+
+# Main SuperLU library
+cc_library(
+    name = "superlu",
+    srcs = glob(
+        ["SRC/*.c"],
+        exclude = [
+            # Exclude files that need special handling or are not needed
+        ],
+    ),
+    hdrs = glob(["SRC/*.h"]) + [":superlu_config"],
+    copts = [
+        "-w",  # Suppress warnings from legacy C code
+        "-DAdd_",  # Fortran naming convention
+        "-DUSE_VENDOR_BLAS",  # Use system BLAS
+    ],
+    includes = ["SRC"],
+    linkopts = [
+        "-lblas",
+        "-lm",
+    ],
+    deps = [
+        ":cblas_internal",
+    ],
+)

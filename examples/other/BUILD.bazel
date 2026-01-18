@@ -25,6 +25,24 @@ cc_binary(
     ],
 )
 
+# arpack++ test using SuperLU for sparse eigenvalue problems
+# NOTE: arpack++ is legacy C++ code with many warnings that need to be suppressed
+cc_binary(
+    name = "test_arpack",
+    srcs = [
+        "arpack_test.cpp",
+        "lsmatrxa.h",
+        "lsymsol.h",
+    ],
+    copts = [
+        "-w",  # Suppress all warnings - arpack++ headers have many issues
+    ],
+    deps = [
+        "@arpackpp",
+        "@superlu",
+    ],
+)
+
 # Note: opencv_features requires opencv_contrib (xfeatures2d) which is not in BCR
 # Commented out to avoid build failures
 # cc_binary(

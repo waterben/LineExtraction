@@ -20,6 +20,7 @@ cc_library(
         "//libs/geometry:lib_geometry",
         "//libs/lsd:lib_lsd",
         "//libs/utility:lib_utility",
+        "@arpackpp",
         "@opencv",
     ],
 )

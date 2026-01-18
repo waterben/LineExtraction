@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/m-reuter/arpackpp/archive/refs/tags/2.4.0.tar.gz",
+  "integrity": "sha256-BkFu5YTQHrpCVVtnakIg9oV173Fc3ps36FkQaY14TKA=",
+  "strip_prefix": "arpackpp-2.4.0",
+  "overlay": {
+    "BUILD.bazel": "sha256-Q0aJTPOwPebTfupSwKxTDGLE6AfVWpWtH+7/BnFEJwU="
+  }
+}
