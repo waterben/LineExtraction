@@ -45,6 +45,14 @@ LE_THIRD_PARTY_COPTS = [
     "-w",  # Disable all warnings for third-party code
 ]
 
+# Warning suppressions needed for arpack++ headers (legacy C++98 code)
+# arpack++ has: shadow warnings, overloaded-virtual, implicit-fallthrough
+ARPACKPP_COPTS = [
+    "-Wno-shadow",
+    "-Wno-overloaded-virtual",
+    "-Wno-implicit-fallthrough",
+]
+
 def le_cc_library(copts = [], **kwargs):
     """cc_library wrapper with LineExtraction warning flags.
 

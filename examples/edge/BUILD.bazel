@@ -44,6 +44,16 @@ cc_binary(
 )
 
 cc_binary(
+    name = "nms_variant_test",
+    srcs = ["nms_variant_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
     name = "pattern_test",
     srcs = ["pattern_test.cpp"],
     deps = [
@@ -55,6 +65,16 @@ cc_binary(
 cc_binary(
     name = "zc_test",
     srcs = ["zc_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "zc_variant_test",
+    srcs = ["zc_variant_test.cpp"],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",

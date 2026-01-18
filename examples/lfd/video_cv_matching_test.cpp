@@ -122,7 +122,7 @@ int stereoRectification(const std::string intrinsic_filename,
 }
 
 void coutPairVector(std::vector<std::pair<int, int>> pixel) {
-  for (int i = 0; i < pixel.size(); ++i) {
+  for (size_t i = 0; i < pixel.size(); ++i) {
     std::cout << pixel.at(i).first << " & " << pixel.at(i).second << ", ";
   }
   std::cout << std::endl;
@@ -228,7 +228,6 @@ int main(int argc, char** argv) {
        scaleFactor)); resize(im_grayRight, im_grayRight, Size(im_grayRight.size().width * scaleFactor,
        im_grayRight.size().height * scaleFactor));
     */
-    cv::Mat img1r, img2r;
     remap(im_grayLeft, img1r, map11, map12, INTER_LINEAR);  // Undistort
     remap(im_grayRight, img2r, map21, map22, INTER_LINEAR);
 
@@ -317,8 +316,8 @@ int main(int argc, char** argv) {
     // Tracking ---------------------------------------------------------
 
     typedef FdcLBD<MyType, LsdCC<MyType>::LineSegment, short, FastRoundNearestInterpolator<MyType, short>> LbdFdc;
-    LbdFdc::FdcPtr fdc1 = LbdFdc::createFdc(lsd1.imageData()[0], lsd1.imageData()[1], 7, 5);
-    LbdFdc::FdcPtr fdc2 = LbdFdc::createFdc(lsd2.imageData()[0], lsd2.imageData()[1], 7, 5);
+    [[maybe_unused]] LbdFdc::FdcPtr fdc1 = LbdFdc::createFdc(lsd1.imageData()[0], lsd1.imageData()[1], 7, 5);
+    [[maybe_unused]] LbdFdc::FdcPtr fdc2 = LbdFdc::createFdc(lsd2.imageData()[0], lsd2.imageData()[1], 7, 5);
 
     /*
             typedef FdcMotion<MyType,LsdCC<MyType>::LineSegment> MyMotionFdc;

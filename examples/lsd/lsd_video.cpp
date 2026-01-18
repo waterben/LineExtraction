@@ -32,9 +32,8 @@ int main(int argc, char** argv) {
   typedef LsdEL<FT> LSD;
 
   // similar settings
-  LSD lsd(0.01, 0.02, 20, 2, 10, 40, EL_USE_NFA);
+  LSD lsd(0.01f, 0.02f, 20, 2, 10, 40, EL_USE_NFA);
 
-  double cumulative_old = 0;
   double start;
   double duration_ms;
   double cumulative_duration = 0;

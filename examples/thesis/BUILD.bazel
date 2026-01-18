@@ -30,7 +30,7 @@ cc_binary(
 cc_binary(
     name = "thesis_imgproc_threshold_examples",
     srcs = ["threshold.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
         "//libs/eval:lib_eval",
@@ -44,7 +44,7 @@ cc_binary(
 cc_binary(
     name = "thesis_edge_segment_examples",
     srcs = ["edge_seg.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
         "//libs/eval:lib_eval",
@@ -58,7 +58,7 @@ cc_binary(
 cc_binary(
     name = "thesis_zc_examples",
     srcs = ["zc_example.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
         "//libs/eval:lib_eval",

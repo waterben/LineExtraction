@@ -25,6 +25,26 @@
 
 #include <qplot/qcustomplot.h>
 
+// Qt 5.15+ compatibility: QMap::insertMulti() and QMap::unite() are deprecated
+// Use insert() instead which has the same semantics for QMap (replaces duplicate keys)
+// Note: This is a semantic change if duplicate keys were expected, but QCustomPlot
+// uses keys as unique identifiers (data point positions), so this is safe.
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#  define QCP_MAP_INSERT_MULTI(map, key, value) (map)->insert((key), (value))
+#  define QCP_MAP_UNITE(map, other) (map)->insert(other)
+#else
+#  define QCP_MAP_INSERT_MULTI(map, key, value) (map)->insertMulti((key), (value))
+#  define QCP_MAP_UNITE(map, other) (map)->unite(other)
+#endif
+
+// Qt 5.15+ compatibility: QWheelEvent::pos() and delta() are deprecated
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#  define QCP_WHEEL_POS(event) (event)->position().toPoint()
+#  define QCP_WHEEL_DELTA(event) (event)->angleDelta().y()
+#else
+#  define QCP_WHEEL_POS(event) (event)->pos()
+#  define QCP_WHEEL_DELTA(event) (event)->delta()
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// QCPPainter
@@ -9816,7 +9836,7 @@ void QCustomPlot::wheelEvent(QWheelEvent* event) {
   emit mouseWheel(event);
 
   // call event of affected layout element:
-  if (QCPLayoutElement* el = layoutElementAt(event->pos())) el->wheelEvent(event);
+  if (QCPLayoutElement* el = layoutElementAt(QCP_WHEEL_POS(event))) el->wheelEvent(event);
 
   QWidget::wheelEvent(event);
 }
@@ -11380,16 +11400,18 @@ void QCPAxisRect::wheelEvent(QWheelEvent* event) {
   if (mParentPlot->interactions().testFlag(QCP::iRangeZoom)) {
     if (mRangeZoom != 0) {
       double factor;
-      double wheelSteps = event->delta() / 120.0;  // a single step delta is +/-120 usually
+      double wheelSteps = QCP_WHEEL_DELTA(event) / 120.0;  // a single step delta is +/-120 usually
       if (mRangeZoom.testFlag(Qt::Horizontal)) {
         factor = qPow(mRangeZoomFactorHorz, wheelSteps);
         if (mRangeZoomHorzAxis.data())
-          mRangeZoomHorzAxis.data()->scaleRange(factor, mRangeZoomHorzAxis.data()->pixelToCoord(event->pos().x()));
+          mRangeZoomHorzAxis.data()->scaleRange(factor,
+                                                mRangeZoomHorzAxis.data()->pixelToCoord(QCP_WHEEL_POS(event).x()));
       }
       if (mRangeZoom.testFlag(Qt::Vertical)) {
         factor = qPow(mRangeZoomFactorVert, wheelSteps);
         if (mRangeZoomVertAxis.data())
-          mRangeZoomVertAxis.data()->scaleRange(factor, mRangeZoomVertAxis.data()->pixelToCoord(event->pos().y()));
+          mRangeZoomVertAxis.data()->scaleRange(factor,
+                                                mRangeZoomVertAxis.data()->pixelToCoord(QCP_WHEEL_POS(event).y()));
       }
       mParentPlot->replot();
     }
@@ -13107,7 +13129,7 @@ void QCPGraph::setData(const QVector<double>& key, const QVector<double>& value)
   for (int i = 0; i < n; ++i) {
     newData.key = key[i];
     newData.value = value[i];
-    mData->insertMulti(newData.key, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
   }
 }
 
@@ -13133,7 +13155,7 @@ void QCPGraph::setDataValueError(const QVector<double>& key,
     newData.value = value[i];
     newData.valueErrorMinus = valueError[i];
     newData.valueErrorPlus = valueError[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13161,7 +13183,7 @@ void QCPGraph::setDataValueError(const QVector<double>& key,
     newData.value = value[i];
     newData.valueErrorMinus = valueErrorMinus[i];
     newData.valueErrorPlus = valueErrorPlus[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13187,7 +13209,7 @@ void QCPGraph::setDataKeyError(const QVector<double>& key,
     newData.value = value[i];
     newData.keyErrorMinus = keyError[i];
     newData.keyErrorPlus = keyError[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13215,7 +13237,7 @@ void QCPGraph::setDataKeyError(const QVector<double>& key,
     newData.value = value[i];
     newData.keyErrorMinus = keyErrorMinus[i];
     newData.keyErrorPlus = keyErrorPlus[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13245,7 +13267,7 @@ void QCPGraph::setDataBothError(const QVector<double>& key,
     newData.keyErrorPlus = keyError[i];
     newData.valueErrorMinus = valueError[i];
     newData.valueErrorPlus = valueError[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13278,7 +13300,7 @@ void QCPGraph::setDataBothError(const QVector<double>& key,
     newData.keyErrorPlus = keyErrorPlus[i];
     newData.valueErrorMinus = valueErrorMinus[i];
     newData.valueErrorPlus = valueErrorPlus[i];
-    mData->insertMulti(key[i], newData);
+    QCP_MAP_INSERT_MULTI(mData, key[i], newData);
   }
 }
 
@@ -13400,7 +13422,7 @@ void QCPGraph::setAdaptiveSampling(bool enabled) { mAdaptiveSampling = enabled; 
 
   \see removeData
 */
-void QCPGraph::addData(const QCPDataMap& dataMap) { mData->unite(dataMap); }
+void QCPGraph::addData(const QCPDataMap& dataMap) { QCP_MAP_UNITE(mData, dataMap); }
 
 /*! \overload
   Adds the provided single data point in \a data to the current data.
@@ -13410,7 +13432,7 @@ void QCPGraph::addData(const QCPDataMap& dataMap) { mData->unite(dataMap); }
 
   \see removeData
 */
-void QCPGraph::addData(const QCPData& data) { mData->insertMulti(data.key, data); }
+void QCPGraph::addData(const QCPData& data) { QCP_MAP_INSERT_MULTI(mData, data.key, data); }
 
 /*! \overload
   Adds the provided single data point as \a key and \a value pair to the current data.
@@ -13424,7 +13446,7 @@ void QCPGraph::addData(double key, double value) {
   QCPData newData;
   newData.key = key;
   newData.value = value;
-  mData->insertMulti(newData.key, newData);
+  QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
 }
 
 /*! \overload
@@ -13441,7 +13463,7 @@ void QCPGraph::addData(const QVector<double>& keys, const QVector<double>& value
   for (int i = 0; i < n; ++i) {
     newData.key = keys[i];
     newData.value = values[i];
-    mData->insertMulti(newData.key, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
   }
 }
 
@@ -15322,7 +15344,7 @@ void QCPCurve::setData(const QVector<double>& t, const QVector<double>& key, con
     newData.t = t[i];
     newData.key = key[i];
     newData.value = value[i];
-    mData->insertMulti(newData.t, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.t, newData);
   }
 }
 
@@ -15340,7 +15362,7 @@ void QCPCurve::setData(const QVector<double>& key, const QVector<double>& value)
     newData.t = i;  // no t vector given, so we assign t the index of the key/value pair
     newData.key = key[i];
     newData.value = value[i];
-    mData->insertMulti(newData.t, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.t, newData);
   }
 }
 
@@ -15366,13 +15388,13 @@ void QCPCurve::setLineStyle(QCPCurve::LineStyle style) { mLineStyle = style; }
   Adds the provided data points in \a dataMap to the current data.
   \see removeData
 */
-void QCPCurve::addData(const QCPCurveDataMap& dataMap) { mData->unite(dataMap); }
+void QCPCurve::addData(const QCPCurveDataMap& dataMap) { QCP_MAP_UNITE(mData, dataMap); }
 
 /*! \overload
   Adds the provided single data point in \a data to the current data.
   \see removeData
 */
-void QCPCurve::addData(const QCPCurveData& data) { mData->insertMulti(data.t, data); }
+void QCPCurve::addData(const QCPCurveData& data) { QCP_MAP_INSERT_MULTI(mData, data.t, data); }
 
 /*! \overload
   Adds the provided single data point as \a t, \a key and \a value tuple to the current data
@@ -15383,7 +15405,7 @@ void QCPCurve::addData(double t, double key, double value) {
   newData.t = t;
   newData.key = key;
   newData.value = value;
-  mData->insertMulti(newData.t, newData);
+  QCP_MAP_INSERT_MULTI(mData, newData.t, newData);
 }
 
 /*! \overload
@@ -15402,7 +15424,7 @@ void QCPCurve::addData(double key, double value) {
     newData.t = 0;
   newData.key = key;
   newData.value = value;
-  mData->insertMulti(newData.t, newData);
+  QCP_MAP_INSERT_MULTI(mData, newData.t, newData);
 }
 
 /*! \overload
@@ -15418,7 +15440,7 @@ void QCPCurve::addData(const QVector<double>& ts, const QVector<double>& keys, c
     newData.t = ts[i];
     newData.key = keys[i];
     newData.value = values[i];
-    mData->insertMulti(newData.t, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.t, newData);
   }
 }
 
@@ -17181,7 +17203,7 @@ void QCPBars::setData(const QVector<double>& key, const QVector<double>& value) 
   for (int i = 0; i < n; ++i) {
     newData.key = key[i];
     newData.value = value[i];
-    mData->insertMulti(newData.key, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
   }
 }
 
@@ -17247,13 +17269,13 @@ void QCPBars::moveAbove(QCPBars* bars) {
   Adds the provided data points in \a dataMap to the current data.
   \see removeData
 */
-void QCPBars::addData(const QCPBarDataMap& dataMap) { mData->unite(dataMap); }
+void QCPBars::addData(const QCPBarDataMap& dataMap) { QCP_MAP_UNITE(mData, dataMap); }
 
 /*! \overload
   Adds the provided single data point in \a data to the current data.
   \see removeData
 */
-void QCPBars::addData(const QCPBarData& data) { mData->insertMulti(data.key, data); }
+void QCPBars::addData(const QCPBarData& data) { QCP_MAP_INSERT_MULTI(mData, data.key, data); }
 
 /*! \overload
   Adds the provided single data point as \a key and \a value tuple to the current data
@@ -17263,7 +17285,7 @@ void QCPBars::addData(double key, double value) {
   QCPBarData newData;
   newData.key = key;
   newData.value = value;
-  mData->insertMulti(newData.key, newData);
+  QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
 }
 
 /*! \overload
@@ -17277,7 +17299,7 @@ void QCPBars::addData(const QVector<double>& keys, const QVector<double>& values
   for (int i = 0; i < n; ++i) {
     newData.key = keys[i];
     newData.value = values[i];
-    mData->insertMulti(newData.key, newData);
+    QCP_MAP_INSERT_MULTI(mData, newData.key, newData);
   }
 }
 
@@ -19041,7 +19063,7 @@ void QCPFinancial::setData(const QVector<double>& key,
   n = qMin(n, low.size());
   n = qMin(n, close.size());
   for (int i = 0; i < n; ++i) {
-    mData->insertMulti(key[i], QCPFinancialData(key[i], open[i], high[i], low[i], close[i]));
+    QCP_MAP_INSERT_MULTI(mData, key[i], QCPFinancialData(key[i], open[i], high[i], low[i], close[i]));
   }
 }
 
@@ -19120,7 +19142,7 @@ void QCPFinancial::setPenNegative(const QPen& pen) { mPenNegative = pen; }
 
   \see removeData
 */
-void QCPFinancial::addData(const QCPFinancialDataMap& dataMap) { mData->unite(dataMap); }
+void QCPFinancial::addData(const QCPFinancialDataMap& dataMap) { QCP_MAP_UNITE(mData, dataMap); }
 
 /*! \overload
 
@@ -19131,7 +19153,7 @@ void QCPFinancial::addData(const QCPFinancialDataMap& dataMap) { mData->unite(da
 
   \see removeData
 */
-void QCPFinancial::addData(const QCPFinancialData& data) { mData->insertMulti(data.key, data); }
+void QCPFinancial::addData(const QCPFinancialData& data) { QCP_MAP_INSERT_MULTI(mData, data.key, data); }
 
 /*! \overload
 
@@ -19144,7 +19166,7 @@ void QCPFinancial::addData(const QCPFinancialData& data) { mData->insertMulti(da
   \see removeData
 */
 void QCPFinancial::addData(double key, double open, double high, double low, double close) {
-  mData->insertMulti(key, QCPFinancialData(key, open, high, low, close));
+  QCP_MAP_INSERT_MULTI(mData, key, QCPFinancialData(key, open, high, low, close));
 }
 
 /*! \overload
@@ -19167,7 +19189,7 @@ void QCPFinancial::addData(const QVector<double>& key,
   n = qMin(n, low.size());
   n = qMin(n, close.size());
   for (int i = 0; i < n; ++i) {
-    mData->insertMulti(key[i], QCPFinancialData(key[i], open[i], high[i], low[i], close[i]));
+    QCP_MAP_INSERT_MULTI(mData, key[i], QCPFinancialData(key[i], open[i], high[i], low[i], close[i]));
   }
 }
 

@@ -22,7 +22,7 @@ vector<Point2f> Points(vector<KeyPoint> keypoints);
 Rect2d selectROI(const String& video_name, const Mat& frame);
 
 void drawBoundingBox(Mat image, vector<Point2f> bb) {
-  for (unsigned i = 0; i < bb.size() - 1; i++) {
+  for (size_t i = 0; i < bb.size() - 1; i++) {
     line(image, bb[i], bb[i + 1], Scalar(0, 0, 255), 2);
   }
   line(image, bb[bb.size() - 1], bb[0], Scalar(0, 0, 255), 2);
@@ -57,7 +57,7 @@ void printStatistics(string name, Stats stats) {
 
 vector<Point2f> Points(vector<KeyPoint> keypoints) {
   vector<Point2f> res;
-  for (unsigned i = 0; i < keypoints.size(); i++) {
+  for (size_t i = 0; i < keypoints.size(); i++) {
     res.push_back(keypoints[i].pt);
   }
   return res;

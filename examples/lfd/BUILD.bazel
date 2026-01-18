@@ -55,7 +55,7 @@ cc_binary(
 cc_binary(
     name = "test_lfd_match",
     srcs = ["match_test.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/lfd:lib_lfd",
         "//libs/lsd:lib_lsd",
@@ -77,26 +77,10 @@ cc_binary(
     ],
 )
 
-# Note: triangulation_test.cpp requires slam module which is not available
-# Uncomment when slam module is available:
-# cc_binary(
-#     name = "test_lfd_triangulation",
-#     srcs = ["triangulation_test.cpp"],
-#     copts = LE_COPTS_COMPAT,
-#     deps = [
-#         "//libs/lfd:lib_lfd",
-#         "//libs/lsd:lib_lsd",
-#         "@opencv",
-#         "@superlu",
-#     ],
-# )
-
-# NOTE: video_match_test.cpp has code quality issues (shadowing, sign comparison)
-# Using reduced warnings until code is cleaned up
 cc_binary(
     name = "test_lfd_video_match",
     srcs = ["video_match_test.cpp"],
-    copts = ["-w"],  # Suppress warnings - legacy example code
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/lfd:lib_lfd",
         "//libs/lsd:lib_lsd",
@@ -109,7 +93,7 @@ cc_binary(
 cc_binary(
     name = "test_lfd_video_cv_matching",
     srcs = ["video_cv_matching_test.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/lfd:lib_lfd",
         "//libs/lsd:lib_lsd",
@@ -123,7 +107,7 @@ cc_binary(
 cc_binary(
     name = "test_lfd_cv3_linematching",
     srcs = ["cv3_linematching_test.cpp"],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/lfd:lib_lfd",
         "//libs/lsd:lib_lsd",

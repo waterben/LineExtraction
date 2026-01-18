@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
   MyFloat max_dist = 0;
   MyFloat min_dist = 100000;
   //-- Quick calculation of max and min distances between lines
-  for (int i = 0; i < bfmatches.size(); i++) {
+  for (size_t i = 0; i < bfmatches.size(); i++) {
     MyFloat dist = bfmatches[i].distance;
     if (dist < min_dist) min_dist = dist;
     if (dist > max_dist) max_dist = dist;
@@ -199,14 +199,14 @@ int main(int argc, char** argv) {
   MyFloat pmax_dist = 0;
   MyFloat pmin_dist = 100000;
   //-- Quick calculation of max and min distances between lines
-  for (int i = 0; i < pmatches.size(); i++) {
+  for (size_t i = 0; i < pmatches.size(); i++) {
     MyFloat dist = pmatches[i].distance;
-    if (dist < min_dist) min_dist = dist;
-    if (dist > max_dist) max_dist = dist;
+    if (dist < pmin_dist) pmin_dist = dist;
+    if (dist > pmax_dist) pmax_dist = dist;
   }
 
-  std::cout << "-- Max dist p: " << max_dist << std::endl;
-  std::cout << "-- Min dist p: " << min_dist << std::endl;
+  std::cout << "-- Max dist p: " << pmax_dist << std::endl;
+  std::cout << "-- Min dist p: " << pmin_dist << std::endl;
 
 
   //-- Draw only "good" matches (i.e. whose distance is less than 2*min_dist,
@@ -252,19 +252,12 @@ int main(int argc, char** argv) {
 
 
   std::vector<cv::line_descriptor::KeyLine> klV1, klV2;
-  //    Mat leftDEscr, rightDescr;
-  for (int i = 0; i < lsd1.lineSegments().size(); i++) {
-    // if( klsd1[i].octave == 0 ){
-    //            octave0_1.push_back( klsd1[i] );
+  for (size_t i = 0; i < lsd1.lineSegments().size(); i++) {
     klV1.push_back(lsfm::lineSegment2KeyLine(lsd1.lineSegments()[i], src1));
-    //}
   }
 
-  for (int j = 0; j < lsd2.lineSegments().size(); j++) {
-    // if( klsd2[j].octave == 0 ) {
-    //            octave0_2.push_back( klsd2[j] );
+  for (size_t j = 0; j < lsd2.lineSegments().size(); j++) {
     klV2.push_back(lineSegment2KeyLine(lsd2.lineSegments()[j], src2));
-    //}
   }
   imshow("Detected matches flann - schlecht",
          drawKeyLineMatches<MyFloat, DescriptorMatch<MyFloat>>(src1, klV1, src2, klV2, flannMatches));

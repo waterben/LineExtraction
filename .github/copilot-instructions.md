@@ -28,8 +28,11 @@ Libraries depend on each other: `edge` depends on `imgproc` and `geometry`; othe
 
 ### External Dependencies
 
-All dependencies are managed automatically via Bazel Central Registry (BCR):
+All dependencies are managed automatically via Bazel Central Registry (BCR) and local registry:
 - OpenCV 4.12.0.bcr.1+ (includes photo module, optional CUDA support)
+- opencv_contrib 4.12.0.bcr.1+ (xfeatures2d, line_descriptor, ximgproc, xphoto)
+- arpack++ 2.3.1 (sparse eigenvalue problems)
+- SuperLU 7.0.0 (sparse linear algebra)
 - Eigen3 (linear algebra)
 - dlib (machine learning utilities)
 - Google Test (unit testing)

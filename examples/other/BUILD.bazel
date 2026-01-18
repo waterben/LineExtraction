@@ -1,7 +1,7 @@
 """other examples (dlib, opencv features, etc.)"""
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+load("//tools/bazel:copts.bzl", "ARPACKPP_COPTS", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,7 +26,8 @@ cc_binary(
 )
 
 # arpack++ test using SuperLU for sparse eigenvalue problems
-# NOTE: arpack++ is legacy C++ code with many warnings that need to be suppressed
+# arpack++ is legacy C++98 code with unavoidable warnings in its headers
+# We suppress only the specific warnings triggered by arpack++ headers
 cc_binary(
     name = "test_arpack",
     srcs = [
@@ -34,9 +35,7 @@ cc_binary(
         "lsmatrxa.h",
         "lsymsol.h",
     ],
-    copts = [
-        "-w",  # Suppress all warnings - arpack++ headers have many issues
-    ],
+    copts = LE_COPTS_COMPAT + ARPACKPP_COPTS,
     deps = [
         "@arpackpp",
         "@superlu",
@@ -51,7 +50,7 @@ cc_binary(
         "stats.h",
         "utils.h",
     ],
-    copts = ["-w"],  # Legacy code with warnings
+    copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/geometry:lib_geometry",
         "@opencv",

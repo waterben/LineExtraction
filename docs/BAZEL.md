@@ -163,6 +163,9 @@ Managed via Bzlmod (`MODULE.bazel`):
 | Dependency | Version | Source |
 |------------|---------|--------|
 | OpenCV | 4.12.0.bcr.1 | BCR |
+| opencv_contrib | 4.12.0.bcr.1 | Local Registry |
+| arpack++ | 2.3.1 | Local Registry |
+| SuperLU | 7.0.0 | Local Registry |
 | libjpeg_turbo | 3.1.3.bcr.2 | BCR |
 | GoogleTest | 1.15.2 | BCR |
 | Eigen | 3.4.0 | http_archive |
@@ -170,6 +173,21 @@ Managed via Bzlmod (`MODULE.bazel`):
 | bazel_skylib | 1.9.0 | BCR |
 | rules_cc | 0.2.15 | BCR |
 | rules_python | 1.1.0 | BCR |
+
+### opencv_contrib Modules
+
+The following opencv_contrib modules are available for use:
+
+| Module | Bazel Target | Description |
+|--------|--------------|-------------|
+| xfeatures2d | `@opencv_contrib//:xfeatures2d` | Extra 2D features (SIFT, SURF, DAISY) |
+| line_descriptor | `@opencv_contrib//:line_descriptor` | Line segment detection and description |
+| ximgproc | `@opencv_contrib//:ximgproc` | Extended image processing |
+| xphoto | `@opencv_contrib//:xphoto` | Extra photo processing |
+| features2d | `@opencv_contrib//:features2d` | Feature detection/description |
+| tracking | `@opencv_contrib//:tracking` | Visual object tracking |
+
+**Note:** opencv_contrib modules require linking against both OpenCV core and the specific module.
 
 ## Component Status
 
