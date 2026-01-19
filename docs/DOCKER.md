@@ -212,7 +212,7 @@ Default versions (can be customized via environment variables):
 
 | Tool | Version | Environment Variable |
 |------|---------|---------------------|
-| Bazelisk | 1.25.0 | `BAZELISK_VERSION` |
+| Bazelisk | 1.27.0 | `BAZELISK_VERSION` |
 | clangd | 20.0.0 | `CLANGD_VERSION` |
 | UV | latest | `UV_VERSION` |
 | GitHub CLI | latest | - |
@@ -222,7 +222,7 @@ Default versions (can be customized via environment variables):
 
 ```bash
 # Set before running scripts
-export BAZELISK_VERSION="1.24.0"
+export BAZELISK_VERSION="1.27.0"
 export CLANGD_VERSION="19.0.0"
 
 sudo -E ./docker/scripts/install_base_tools
@@ -397,6 +397,51 @@ Edit `.devcontainer/devcontainer.json`:
     }
   }
 }
+```
+
+## Troubleshooting
+
+### Pre-commit Hooks Fail After Switching Between Docker and Local
+
+**Symptom:** Git commits fail in VS Code with `pre-commit not found` or similar errors, but work fine in the terminal.
+
+**Cause:** The pre-commit hook stores an absolute path to the Python interpreter. When switching between Docker (`/opt/venv/deps/python/bin/python3`) and local development (`~/.venv/bin/python3`), the stored path becomes invalid.
+
+**Solution:** Reinstall pre-commit hooks in your current environment:
+
+```bash
+# In Docker container
+pre-commit install --install-hooks
+
+# Or locally (with venv activated)
+source .venv/bin/activate
+pre-commit install --install-hooks
+```
+
+**Verify the fix:**
+
+```bash
+head -10 .git/hooks/pre-commit
+# Should show INSTALL_PYTHON pointing to your current environment
+```
+
+> **Note:** You need to run `pre-commit install` each time you switch between Docker and local development.
+
+### Container Cannot Access GPU/OpenGL
+
+Docker containers have no GPU/OpenGL support in this project. For GPU-accelerated work or GUI applications:
+
+- **Windows:** Use [WSL with WSLg](WSL.md)
+- **Linux:** Use native development with `./tools/scripts/setup_local_dev.sh`
+
+### Bazel Cache Issues After Container Rebuild
+
+```bash
+# Clean Bazel cache
+bazel clean --expunge
+
+# Rebuild
+bazel build //...
 ```
 
 ## Local Development (Without Docker)
