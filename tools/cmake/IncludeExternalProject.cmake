@@ -14,16 +14,80 @@ function (compare_files fileA fileB result)
     set(${result} ${my_result} PARENT_SCOPE)
 endfunction()
 
+# Check if CMakeCache.txt in an external project directory has valid paths
+# This handles Docker <-> WSL switching where absolute paths differ
+function(_check_external_cache_valid cache_dir result_var)
+    set(${result_var} TRUE PARENT_SCOPE)
+    set(_cache_file "${cache_dir}/CMakeCache.txt")
+
+    if(NOT EXISTS "${_cache_file}")
+        return()
+    endif()
+
+    file(READ "${_cache_file}" _cache_content)
+
+    # Extract CMAKE_HOME_DIRECTORY from cache
+    string(REGEX MATCH "CMAKE_HOME_DIRECTORY:INTERNAL=([^\n\r]+)" _match "${_cache_content}")
+    if(_match)
+        string(REGEX REPLACE "CMAKE_HOME_DIRECTORY:INTERNAL=([^\n\r]+)" "\\1" _home_dir "${_match}")
+        string(STRIP "${_home_dir}" _home_dir)
+        if(NOT EXISTS "${_home_dir}")
+            message(STATUS "External project at ${cache_dir} has stale paths (was: ${_home_dir})")
+            message(STATUS "This happens when switching between Docker and WSL environments.")
+            message(STATUS "The managed library will need to be rebuilt.")
+            set(${result_var} FALSE PARENT_SCOPE)
+        endif()
+    endif()
+endfunction()
+
+# Clean stale external project directory completely
+# This removes the entire src/*-build directory because CMake generates many files
+# with hardcoded paths that can't be fixed individually
+function(_clean_stale_external_cache cache_dir)
+    message(STATUS "Cleaning stale external project in ${cache_dir}")
+
+    # Remove top-level cache
+    file(REMOVE "${cache_dir}/CMakeCache.txt")
+    if(EXISTS "${cache_dir}/CMakeFiles")
+        file(REMOVE_RECURSE "${cache_dir}/CMakeFiles")
+    endif()
+
+    # Remove ALL build directories under src/ - they contain generated CMake files
+    # with hardcoded paths (e.g., Eigen3Targets.cmake, OpenCVConfig.cmake)
+    if(EXISTS "${cache_dir}/src")
+        file(GLOB _build_dirs "${cache_dir}/src/*-build")
+        foreach(_build_dir ${_build_dirs})
+            message(STATUS "  Removing build directory: ${_build_dir}")
+            file(REMOVE_RECURSE "${_build_dir}")
+        endforeach()
+
+        # Also remove stamp files to force reconfiguration
+        file(GLOB _stamp_dirs "${cache_dir}/src/*-stamp")
+        foreach(_stamp_dir ${_stamp_dirs})
+            message(STATUS "  Removing stamp directory: ${_stamp_dir}")
+            file(REMOVE_RECURSE "${_stamp_dir}")
+        endforeach()
+    endif()
+endfunction()
+
 function(_build_conf name path args)
     string(REPLACE ";;" " \"\" " output "cmake_minimum_required(VERSION 3.5...3.27)\nproject(conf_${name})\ninclude(ExternalProject)\nExternalProject_Add(${name} ${args})\n")
     string(REPLACE ";" " " output "${output}")
     set(DO_EXECUTE TRUE)
+
+    # Check for stale cache from Docker <-> WSL switching before any CMake operations
+    _check_external_cache_valid("${path}/${name}" _cache_valid)
+    if(NOT _cache_valid)
+        _clean_stale_external_cache("${path}/${name}")
+        set(DO_EXECUTE TRUE)  # Force re-execution after cache cleanup
+    endif()
+
     #message(STATUS "${path}/${name}/CMakeLists.txt")
     if(EXISTS "${path}/${name}/CMakeLists.txt")
         file(WRITE "${path}/${name}/CMakeLists.tmp" ${output})
         compare_files("${path}/${name}/CMakeLists.tmp" "${path}/${name}/CMakeLists.txt" cmp_result)
 #        message(STATUS "${cmp_result}")
-        if ("${cmp_result}" STREQUAL "0")
+        if ("${cmp_result}" STREQUAL "0" AND _cache_valid)
             set(DO_EXECUTE FALSE)
         else()
             file(REMOVE "${path}/${name}/CMakeLists.tmp" ${output})

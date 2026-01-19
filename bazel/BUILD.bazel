@@ -62,3 +62,18 @@ config_setting(
     name = "windows",
     constraint_values = ["@platforms//os:windows"],
 )
+
+# Compiler detection based on CC environment variable
+config_setting(
+    name = "compiler_clang",
+    flag_values = {
+        "@bazel_tools//tools/cpp:compiler": "clang",
+    },
+)
+
+config_setting(
+    name = "compiler_clang_env",
+    define_values = {
+        "COMPILER": "clang",
+    },
+)

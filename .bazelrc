@@ -113,6 +113,10 @@ build --host_cxxopt=-std=c++17
 # Clang configuration (optional, use --config=clang)
 build:clang --repo_env=CC=clang
 build:clang --repo_env=CXX=clang++
+build:clang --define=COMPILER=clang
+# Suppress warnings that occur in OpenCV headers when included via templates
+# Using per_file_copt to apply AFTER all other copts for non-external files
+build:clang --per_file_copt=^(?!external/).*@-Wno-cast-align,-Wno-c11-extensions
 # build:clang --cxxopt=-stdlib=libc++
 # build:clang --linkopt=-stdlib=libc++
 

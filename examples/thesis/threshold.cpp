@@ -69,7 +69,7 @@ class ThresholdApp : public EvalApp {
 
   using ConsoleAppInterface::run;
 
-  void defineArgs() {
+  void defineArgs() override {
     ConsoleApp::defineArgs();
     opts_.add_string("input", 'i', "Input file", input_, false, "../../images/windmill.jpg");
     opts_.add_string("output", 'o', "Output folder", output_, false, "./results/threshold_example");

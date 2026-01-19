@@ -116,7 +116,11 @@ void Plot3D::wheelEvent(QWheelEvent* e) {
 
   double accel = 0.05;
 
+#if QT_VERSION >= 0x050000
+  double step = accel * e->angleDelta().y() / WHEEL_DELTA;
+#else
   double step = accel * e->delta() / WHEEL_DELTA;
+#endif
   step = exp(step) - 1;
 
   if (e->modifiers() & Qt::ShiftModifier)

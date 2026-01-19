@@ -897,7 +897,7 @@ class SpeApp : public EvalApp {
 
   using ConsoleAppInterface::run;
 
-  void defineArgs() {
+  void defineArgs() override {
     ConsoleApp::defineArgs();
     opts_.add_string("output", 'o', "Output folder", output_, false, "./results/spe");
     opts_.add_switch("prio", 'p', "Run as high prio process", run_high_prio_);

@@ -3905,11 +3905,8 @@ static int gl2psPrintPDFShaderStreamDataCoord(GL2PSvertex* vertex,
   int offs = 0;
   unsigned long imap;
   GLfloat diff;
-  double dmax = ~1UL;
+  double dmax = DBL_MAX;
   char edgeflag = 0;
-
-  /* FIXME: temp bux fix for 64 bit archs: */
-  if (sizeof(unsigned long) == 8) dmax = dmax - 2048.;
 
   offs += (*action)(edgeflag, 1);
 
@@ -3945,10 +3942,7 @@ static int gl2psPrintPDFShaderStreamDataCoord(GL2PSvertex* vertex,
 static int gl2psPrintPDFShaderStreamDataRGB(GL2PSvertex* vertex, size_t (*action)(unsigned long data, size_t size)) {
   int offs = 0;
   unsigned long imap;
-  double dmax = ~1UL;
-
-  /* FIXME: temp bux fix for 64 bit archs: */
-  if (sizeof(unsigned long) == 8) dmax = dmax - 2048.;
+  double dmax = DBL_MAX;
 
   imap = (unsigned long)((vertex->rgba[0]) * dmax);
   offs += (*action)(imap, 1);
@@ -3969,10 +3963,7 @@ static int gl2psPrintPDFShaderStreamDataAlpha(GL2PSvertex* vertex,
                                               int sigbyte) {
   int offs = 0;
   unsigned long imap;
-  double dmax = ~1UL;
-
-  /* FIXME: temp bux fix for 64 bit archs: */
-  if (sizeof(unsigned long) == 8) dmax = dmax - 2048.;
+  double dmax = DBL_MAX;
 
   if (sigbyte != 8 && sigbyte != 16) sigbyte = 8;
 

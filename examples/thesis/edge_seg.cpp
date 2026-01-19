@@ -44,7 +44,7 @@ class EdgeSegApp : public EvalApp {
 
   cv::RNG rng{static_cast<uint64>(time(nullptr))};
 
-  void defineArgs() {
+  void defineArgs() override {
     ConsoleApp::defineArgs();
     opts_.add_string("input", 'i', "Input file", input_, false, "../../images/windmill.jpg");
     opts_.add_string("output", 'o', "Output folder", output_, false, "./results/edge_seg_examples");
