@@ -1,0 +1,69 @@
+"""thesis examples"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "derivative",
+    srcs = ["derivative_filters.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "pyramid",
+    srcs = ["pyramid.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+# Note: The following require opencv_contrib (ximgproc) which is now available via local registry
+# threshold.cpp uses ximgproc for structured edge detection
+cc_binary(
+    name = "thesis_imgproc_threshold_examples",
+    srcs = ["threshold.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+        "@opencv_contrib//:ximgproc",
+    ],
+)
+
+cc_binary(
+    name = "thesis_edge_segment_examples",
+    srcs = ["edge_seg.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "thesis_zc_examples",
+    srcs = ["zc_example.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+    ],
+)

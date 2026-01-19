@@ -1,0 +1,83 @@
+"""Edge detection examples"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "edge_precision",
+    srcs = ["edge_precision.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "edge_test",
+    srcs = ["edge_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "nfa_test",
+    srcs = ["nfa_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "nms_test",
+    srcs = ["nms_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "nms_variant_test",
+    srcs = ["nms_variant_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "pattern_test",
+    srcs = ["pattern_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "zc_test",
+    srcs = ["zc_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "zc_variant_test",
+    srcs = ["zc_variant_test.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)

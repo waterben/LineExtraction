@@ -404,7 +404,13 @@ void trRasterPos3f(TRcontext* tr, GLfloat x, GLfloat y, GLfloat z) {
     viewport[3] = tr->CurrentTileHeight;
 
     /* Project object coord to window coordinate */
+    /* NOTE: gluProject expects GLdouble* for winX/winY/winZ, but we pass GLdouble variables.
+     * This is legacy code from 1998 and the pointer types may vary between OpenGL implementations.
+     * Suppress the incompatible-pointer-types warning for this call. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
     if (gluProject(x, y, z, modelview, proj, viewport, &winX, &winY, &winZ)) {
+#pragma GCC diagnostic pop
       /* set raster pos to window coord (0,0) */
       glMatrixMode(GL_MODELVIEW);
       glPushMatrix();

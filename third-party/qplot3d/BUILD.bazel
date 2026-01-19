@@ -1,0 +1,97 @@
+"""qplot3d - Qt 3D plotting library
+
+Note: This library requires Qt5 and OpenGL.
+Build with --//bazel:enable_qt5=true --//bazel:enable_opengl=true to include it.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//bazel:features.bzl", "if_opengl_enabled", "if_qt5_enabled")
+load("//tools/bazel:qt5.bzl", "qt5_moc")
+
+package(default_visibility = ["//visibility:public"])
+
+# Qt5 system include paths (required since copts don't propagate transitively)
+QT5_COPTS = [
+    "-isystem/usr/include/x86_64-linux-gnu/qt5",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtCore",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtGui",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtWidgets",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtOpenGL",
+    "-fPIC",
+]
+
+# MOC headers for Qt signal/slot support
+qt5_moc(
+    name = "qplot3d_moc",
+    hdrs = [
+        "include/qplot3d/qwt3d_graphplot.h",
+        "include/qplot3d/qwt3d_multiplot.h",
+        "include/qplot3d/qwt3d_plot.h",
+        "include/qplot3d/qwt3d_surfaceplot.h",
+        "include/qplot3d/qwt3d_volumeplot.h",
+    ],
+    includes = [
+        "include",
+        "third-party/qplot3d/include",
+    ],
+    deps = glob(["include/qplot3d/*.h"]),
+)
+
+cc_library(
+    name = "lib_qplot3d",
+    srcs = select({
+        "//bazel:qt5_enabled": [
+            "src/gl2ps.c",
+            "src/qwt3d_autoscaler.cpp",
+            "src/qwt3d_axis.cpp",
+            "src/qwt3d_color.cpp",
+            "src/qwt3d_colorlegend.cpp",
+            "src/qwt3d_coordsys.cpp",
+            "src/qwt3d_drawable.cpp",
+            "src/qwt3d_enrichment_std.cpp",
+            "src/qwt3d_function.cpp",
+            "src/qwt3d_gridmapping.cpp",
+            "src/qwt3d_gridplot.cpp",
+            "src/qwt3d_io.cpp",
+            "src/qwt3d_io_gl2ps.cpp",
+            "src/qwt3d_io_reader.cpp",
+            "src/qwt3d_label.cpp",
+            "src/qwt3d_lighting.cpp",
+            "src/qwt3d_meshplot.cpp",
+            "src/qwt3d_mousekeyboard.cpp",
+            "src/qwt3d_movements.cpp",
+            "src/qwt3d_parametricsurface.cpp",
+            "src/qwt3d_plot.cpp",
+            "src/qwt3d_scale.cpp",
+            "src/qwt3d_surfaceplot.cpp",
+            "src/qwt3d_types.cpp",
+            # MOC-generated files
+            ":qplot3d_moc",
+        ],
+        "//conditions:default": [],
+    }),
+    hdrs = if_qt5_enabled(
+        glob([
+            "include/qplot3d/*.h",
+        ]),
+    ),
+    copts = select({
+        "//bazel:qt5_enabled": QT5_COPTS,
+        "//conditions:default": [],
+    }),
+    includes = ["include"],
+    linkopts = [
+        "-lGL",
+        "-lGLU",
+    ],
+    tags = [
+        "opengl",
+        "qt5",
+    ],
+    deps = if_qt5_enabled([
+        "@qt5//:qt5_core",
+        "@qt5//:qt5_gui",
+        "@qt5//:qt5_opengl",
+        "@qt5//:qt5_widgets",
+    ]),
+)

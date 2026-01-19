@@ -152,10 +152,12 @@ int main() {
   filter.push_back(Entry(BilateralOperator::create(7), "bilat 7"));
   filter.push_back(Entry(BilateralOperator::create(9), "bilat 9"));
 
+#ifdef HAVE_OPENCV_PHOTO
   filter.push_back(Entry(FastNlMeansOperator::create(5), "nlmean 5"));
   filter.push_back(Entry(FastNlMeansOperator::create(10), "nlmean 10"));
   filter.push_back(Entry(FastNlMeansOperator::create(15), "nlmean 15"));
   filter.push_back(Entry(FastNlMeansOperator::create(20), "nlmean 20"));
+#endif
 
   size_t rows = filter.size() + 1;
   size_t cols = 11;

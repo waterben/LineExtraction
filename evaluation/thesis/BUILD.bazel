@@ -1,0 +1,94 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "eval_color_test_sobel",
+    srcs = ["color_test_sobel.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_color_test_rcmg",
+    srcs = ["color_test_rcmg.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_even_parameter",
+    srcs = ["even_parameter_test.cpp"],
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@dlib",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_filter_results",
+    srcs = ["filter_results.cpp"],
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_gradient_noise",
+    srcs = ["gradient_noise.cpp"],
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_gradient_orientation",
+    srcs = ["gradient_orientation.cpp"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_image_denoise",
+    srcs = ["image_denoise.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+        "@opencv//:photo",
+    ],
+)
+
+cc_binary(
+    name = "eval_gradient_performance",
+    srcs = ["gradient_performance.cpp"],
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_phase_dc",
+    srcs = ["phase_dc.cpp"],
+    deps = [
+        "//libs/imgproc:lib_imgproc",
+        "@opencv",
+    ],
+)

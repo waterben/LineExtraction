@@ -27,6 +27,8 @@ CTestTestfile.cmake
 MODULE.bazel.lock
 bazel-*
 external
+.bazelrc.user
+.user.bazelrc
 
 # user specific customization
 docker/devenv/custom/**/*

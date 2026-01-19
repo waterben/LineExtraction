@@ -1,0 +1,39 @@
+"""arpack++ - C++ interface to ARPACK for iteratively solving large-scale sparse eigenvalue problems"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# arpack++ is a header-only library
+# Headers are in include/ but code uses <arpack++/...>
+#
+# IMPORTANT: arpack++ is legacy C++ code (C++98 era) with many warnings that
+# cannot be fixed without modifying the upstream library:
+# - shadow warnings (parameters shadow member variables)
+# - overloaded-virtual warnings (hiding base class virtual functions)
+# - implicit-fallthrough warnings (switch statements without break)
+#
+# Consumers must suppress these specific warnings when using arpack++
+
+cc_library(
+    name = "arpackpp",
+    hdrs = glob(["include/*.h"]),
+    include_prefix = "arpack++",
+    includes = ["include"],
+    # arpack++ requires ARPACK (Fortran), LAPACK, and BLAS at runtime
+    # These are system libraries that need to be linked
+    linkopts = [
+        "-larpack",
+        "-llapack",
+        "-lblas",
+    ],
+    strip_include_prefix = "include",
+)
+
+# Copts that consumers should use to suppress arpack++ header warnings
+# Export this so consumers can reference it if needed
+ARPACKPP_COPTS = [
+    "-Wno-shadow",
+    "-Wno-overloaded-virtual",
+    "-Wno-implicit-fallthrough",
+]

@@ -1,0 +1,21 @@
+"""OpenCV Contrib modules for Bazel
+
+Provides extra OpenCV modules including:
+- xfeatures2d: Extra 2D features framework (SIFT, SURF, etc.)
+- line_descriptor: Binary descriptors for lines extracted from an image
+- ximgproc: Extended image processing
+- CUDA modules (if available): cudev, cudaarithm, cudaimgproc, cudafilters
+"""
+
+module(
+    name = "opencv_contrib",
+    version = "4.12.0",
+    compatibility_level = 0,
+)
+
+bazel_dep(name = "rules_cc", version = "0.2.9")
+bazel_dep(name = "opencv", version = "4.12.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# CUDA support (optional)
+bazel_dep(name = "rules_cuda", version = "0.4.0", dev_dependency = True)

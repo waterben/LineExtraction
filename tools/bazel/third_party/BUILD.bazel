@@ -1,0 +1,12 @@
+"""Third-party dependencies"""
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(
+    [
+        "eigen.BUILD",
+        "qt5.BUILD",
+        "opencv.BUILD",
+        "dlib.BUILD",
+    ],
+)

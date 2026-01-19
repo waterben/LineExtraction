@@ -1,0 +1,6 @@
+"""Qt5 module overlay - system installation wrapper"""
+
+module(
+    name = "qt5",
+    version = "5.15.0",
+)

@@ -70,7 +70,7 @@ void drawSegment(cv::Mat img, const EdgeSegment& seg, const std::vector<PT>& v, 
 template <class EDGE, class NFA>
 void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
   Mat edgeImg;
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   cv::RNG rng(static_cast<uint64_t>(time(nullptr)));
 
   std::vector<float> n;
@@ -108,7 +108,7 @@ void showNfa(EDGE& edge, const cv::Mat& src, const NFA& nfa, const std::string& 
     std::sort(idxVec.begin(), idxVec.end(),
               [](const std::pair<size_t, float>& a, const std::pair<size_t, float>& b) { return a.second > b.second; });
 
-    cvtColor(src, edgeImg, CV_GRAY2BGR);
+    cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
     for (size_t i = 0; i != 20; ++i) {
       Vec3b color(static_cast<uchar>(20 + rng.uniform(0, 225)), static_cast<uchar>(20 + rng.uniform(0, 225)),
                   static_cast<uchar>(20 + rng.uniform(0, 225)));

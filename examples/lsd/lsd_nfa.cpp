@@ -49,7 +49,7 @@ template <class LSD, class NFA>
 void showNfa(LSD& lsd, const cv::Mat& src, const NFA& nfa, const std::string& name, bool circles = true) {
   static_cast<void>(circles);
   Mat edgeImg;
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   cv::RNG& rng = cv::theRNG();
 
   std::vector<float> n;
@@ -73,7 +73,7 @@ void showNfa(LSD& lsd, const cv::Mat& src, const NFA& nfa, const std::string& na
 
   imshow("nfa all " + name, edgeImg);
 
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   for (size_t i = 0; i != n.size() / 2; ++i) {
     if (idxVec[i].second < 0) break;
     Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
@@ -84,7 +84,7 @@ void showNfa(LSD& lsd, const cv::Mat& src, const NFA& nfa, const std::string& na
 
   imshow("nfa filtered " + name, edgeImg);
 
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   for (size_t i = 0; i != n.size() / 2; ++i) {
     Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
     sprintf(buffer, "%zu", i);
@@ -94,7 +94,7 @@ void showNfa(LSD& lsd, const cv::Mat& src, const NFA& nfa, const std::string& na
 
   imshow("nfa top 50% " + name, edgeImg);
 
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   for (size_t i = 0; i != n.size() && i != 20; ++i) {
     Scalar color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
     sprintf(buffer, "%zu", i);

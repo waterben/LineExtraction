@@ -1,0 +1,12 @@
+{
+  "homepage": "https://github.com/opencv/opencv_contrib",
+  "maintainers": [
+    {
+      "name": "LineExtraction Team"
+    }
+  ],
+  "versions": [
+    "4.12.0"
+  ],
+  "yanked_versions": {}
+}

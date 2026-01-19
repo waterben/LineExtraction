@@ -1,0 +1,73 @@
+--- BUILD.bazel
++++ BUILD.bazel
+@@ -278,6 +278,7 @@ cc_library(
+         "simd/x86_64/jsimdcpu.o",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -418,6 +419,7 @@ cc_library(
+         "simd/arm/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -475,6 +477,7 @@ cc_library(
+         "simd/arm64/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -634,6 +637,7 @@ cc_library(
+         "simd/loongson/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -690,6 +694,7 @@ cc_library(
+         "simd/mips/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -746,6 +751,7 @@ cc_library(
+         "simd/mips64/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -802,6 +808,7 @@ cc_library(
+         "simd/powerpc/jsimdcpu.c",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -858,6 +865,7 @@ cc_library(
+         "simd/i386/jsimdcpu.o",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )
+
+@@ -1046,6 +1054,7 @@ cc_library(
+         "simd/x86_64/jsimdcpu.o",
+     ] + SRCS_SIMD_COMMON,
+     copts = libjpegturbo_copts,
++    alwayslink = True,
+     linkstatic = True,
+ )

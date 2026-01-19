@@ -1,0 +1,98 @@
+"""lib_geometry - Geometry library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("//bazel:features.bzl", "if_opengl_enabled")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core geometry library without OpenGL dependencies
+cc_library(
+    name = "lib_geometry_core",
+    srcs = glob(
+        ["src/*.cpp"],
+        allow_empty = True,
+        exclude = ["src/render_gl.cpp"],
+    ),
+    hdrs = glob(
+        [
+            "include/geometry/*.hpp",
+            "include/geometry/*.h",
+        ],
+        allow_empty = True,
+        exclude = ["include/geometry/render_gl.hpp"],
+    ),
+    copts = LE_COPTS_COMPAT,
+    includes = ["include"],
+    deps = [
+        "//libs/utility:lib_utility",
+        "@dlib",
+        "@eigen",
+        "@opencv",
+    ],
+)
+
+# OpenGL rendering extension (optional, requires OpenGL)
+cc_library(
+    name = "lib_geometry_gl",
+    srcs = [
+        "src/render_gl.cpp",
+    ],
+    hdrs = ["include/geometry/render_gl.hpp"],
+    copts = LE_COPTS_COMPAT,
+    includes = ["include"],
+    linkopts = [
+        "-lGL",
+        "-lGLU",
+        "-lglut",
+    ],
+    tags = ["opengl"],
+    deps = [
+        ":lib_geometry_core",
+        ":lib_geometry_tr",
+        "@opencv",
+    ],
+)
+
+# TR library for tile rendering (C code, compiled separately)
+cc_library(
+    name = "lib_geometry_tr",
+    srcs = [
+        "src/tr.c",
+        "src/tr.h",
+    ],
+    copts = [
+        "-w",  # Disable all warnings for legacy C code
+    ],
+    includes = ["src"],
+    linkopts = [
+        "-lGL",
+        "-lGLU",
+    ],
+    tags = ["opengl"],
+)
+
+# Combined library (alias for compatibility)
+# Use lib_geometry_core for builds without OpenGL
+cc_library(
+    name = "lib_geometry",
+    deps = [
+        ":lib_geometry_core",
+    ] + if_opengl_enabled([":lib_geometry_gl"]),
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        copts = LE_COPTS_COMPAT,
+        deps = [
+            ":lib_geometry_core",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

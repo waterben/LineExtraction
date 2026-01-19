@@ -1,6 +1,8 @@
 # Docker and DevContainer Setup
 
-This directory contains Docker configurations and scripts for setting up consistent development environments. Docker provides isolated, reproducible environments that work identically across different machines and operating systems.
+**For complete Docker documentation, see [`../docs/DOCKER.md`](../docs/DOCKER.md)**
+
+This directory contains Docker configurations and scripts for setting up consistent development environments. The information below provides quick reference for advanced usage.
 
 ## Development Environment Options
 
@@ -16,7 +18,7 @@ This directory contains Docker configurations and scripts for setting up consist
 - **Best for:** Windows users who need OpenGL/GUI support
 - **Pros:** Native performance, OpenGL support, easier X server integration
 - **Cons:** Windows-only, less isolation than Docker
-- **Setup:** See [`../docs/WSL_SETUP.md`](../docs/WSL_SETUP.md)
+- **Setup:** See [`../docs/WSL.md`](../docs/WSL.md)
 
 ### Native Linux
 

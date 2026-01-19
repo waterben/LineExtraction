@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
   cv::Mat lmapImg;
   //lmapImg.create(lmap.rows, lmap.cols, CV_8UC3);
   //lmapImg.setTo(Vec3b(0, 0, 0));
-  cvtColor(src, lmapImg, CV_GRAY2BGR);*/
+  cvtColor(src, lmapImg, cv::COLOR_GRAY2BGR);*/
 
   /*for_each(lsd.segments().begin(), lsd.segments().end(), [&](const LsdCC<FT>::LineData &seg){
       cv::Vec3b color(20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225), 20 + rng.uniform(0, 225));
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
   imshow("Detected patterns", pImg);*/
 
   cv::Mat img;
-  cvtColor(src, img, CV_GRAY2BGR);
+  cvtColor(src, img, cv::COLOR_GRAY2BGR);
   for_each(lines.begin(), lines.end(), [&](const LineSegment<FT>& l) {
     cv::Vec3b color(static_cast<unsigned char>(20 + rng.uniform(0, 225)),
                     static_cast<unsigned char>(20 + rng.uniform(0, 225)),

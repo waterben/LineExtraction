@@ -151,12 +151,12 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
   outImgR = outImg(cv::Rect(img1.cols, 0, img2.cols, img2.rows));
 
   if (img1.type() == CV_8U)
-    cvtColor(img1, outImgL, CV_GRAY2BGR);
+    cvtColor(img1, outImgL, cv::COLOR_GRAY2BGR);
   else
     img1.copyTo(outImgL);
 
   if (img2.type() == CV_8U)
-    cv::cvtColor(img2, outImgR, CV_GRAY2BGR);
+    cv::cvtColor(img2, outImgR, cv::COLOR_GRAY2BGR);
   else
     img2.copyTo(outImgR);
 
@@ -306,7 +306,7 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
   /* select best matches */
   std::vector<DMatch> good_matches;
   good_matches.clear();
-  for (int i = 0; i < static_cast<int> lsd_matches.size(); i++) {
+  for (int i = 0; i < static_cast<int>(lsd_matches.size()); i++) {
     if (lsd_matches[i].distance < MATCHES_DIST_THRESHOLD_LM) good_matches.push_back(lsd_matches[i]);
   }
   //        imshow("Detected matches", drawKeyLineMatches<FT,DescriptorMatch<FT>>(cam0grey, klV0, cam1grey, klV1,

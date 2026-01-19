@@ -70,9 +70,10 @@ int main(int argc, char** argv) {
   dataR["gy"] = lsdR.imageData()[1];
   dataR["img"] = srcR;
 
-  typedef GchGradImgInterpolate<MyFloat, 1, 2, NoAlign<MyFloat>, FastRoundNearestInterpolator<MyFloat, short>,
-                                FastRoundNearestInterpolator<MyFloat, uchar>>
-      MyGchHelper;
+  // GchGradImgInterpolate helper type - kept for reference/future use
+  // typedef GchGradImgInterpolate<MyFloat, 1, 2, NoAlign<MyFloat>, FastRoundNearestInterpolator<MyFloat, short>,
+  //                               FastRoundNearestInterpolator<MyFloat, uchar>>
+  //     MyGchHelper;
 
   // typedef FdcGenericLR<MyFloat,LsdCC<MyFloat>::LineSegment,MyGchHelper> MyFdc;
   typedef FdcLBD<MyFloat, LsdCC<MyFloat>::LineSegment, short, FastRoundNearestInterpolator<MyFloat, short>> MyFdc;
@@ -118,8 +119,8 @@ int main(int argc, char** argv) {
 
 
   /*cv::Mat segL, segR;
-  cvtColor(srcL, segL, CV_GRAY2BGR);
-  cvtColor(srcR, segR, CV_GRAY2BGR);
+  cvtColor(srcL, segL, cv::COLOR_GRAY2BGR);
+  cvtColor(srcR, segR, cv::COLOR_GRAY2BGR);
 
 
   RNG& rng = theRNG();

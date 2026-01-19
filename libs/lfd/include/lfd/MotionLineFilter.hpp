@@ -71,12 +71,12 @@ void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& p
 
   FT currX = x1, currY = y1;
 
-  int prevX = static_cast<int>(std::floor(currX);
-  int prevY = static_cast<int>(std::floor(currY);
+  int prevX = static_cast<int>(std::floor(currX));
+  int prevY = static_cast<int>(std::floor(currY));
   pixel.push_back(std::pair<int, int>(std::floor(prevX), std::floor(prevY)));
 
   if (dirY < 0) {
-    while (prevX < static_cast<int>(std::floor(x2) || prevY > static_cast<int>(std::floor(y2)) {
+    while (prevX < static_cast<int>(std::floor(x2)) || prevY > static_cast<int>(std::floor(y2))) {
       FT xStep, yStep;
 
       if (std::floor(currX) == std::floor(x2) || dirX == 0) {
@@ -99,25 +99,25 @@ void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& p
                                                                       : static_cast<FT>(std::floor(currY))),
                          y2);
 
-        prevX = static_cast<int>(std::floor(currX);
+        prevX = static_cast<int>(std::floor(currX));
         // dont jump two borders at once
-        if (static_cast<int>(std::floor(currY) == prevY) {
-          prevY = static_cast<int>(std::floor(currY - 1);
+        if (static_cast<int>(std::floor(currY)) == prevY) {
+          prevY = static_cast<int>(std::floor(currY - 1));
         } else {
-          prevY = static_cast<int>(std::floor(currY);
+          prevY = static_cast<int>(std::floor(currY));
         }
 
       } else {
         currX = std::floor(currX + 1.0);
         currY += xStep * dirY;
 
-        prevX = static_cast<int>(std::floor(currX);
-        prevY = static_cast<int>(std::floor(currY);
+        prevX = static_cast<int>(std::floor(currX));
+        prevY = static_cast<int>(std::floor(currY));
       }
       pixel.push_back(std::pair<int, int>(prevX, prevY));
     }
   } else {
-    while (prevX < static_cast<int>(std::floor(x2) || prevY < static_cast<int>(std::floor(y2)) {
+    while (prevX < static_cast<int>(std::floor(x2)) || prevY < static_cast<int>(std::floor(y2))) {
       FT xStep, yStep;
 
       if (std::floor(currX) == std::floor(x2) || dirX == 0) {
@@ -135,14 +135,14 @@ void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& p
         currX += yStep * dirX;
         currY = std::floor(currY + 1.0);
 
-        prevX = static_cast<int>(std::floor(currX);
-        prevY = static_cast<int>(std::floor(currY);
+        prevX = static_cast<int>(std::floor(currX));
+        prevY = static_cast<int>(std::floor(currY));
       } else {
         currX = std::floor(currX + 1.0);
         currY += xStep * dirY;
 
-        prevX = static_cast<int>(std::floor(currX);
-        prevY = static_cast<int>(std::floor(currY);
+        prevX = static_cast<int>(std::floor(currX));
+        prevY = static_cast<int>(std::floor(currY));
       }
       pixel.push_back(std::pair<int, int>(prevX, prevY));
     }

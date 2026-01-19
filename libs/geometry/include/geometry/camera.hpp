@@ -240,7 +240,7 @@ class Camera : public Pose<FT> {
   }
 
   //! compute field of view from focal and offset
-  static inline FT focal2Fov(FT focal, FT offset) { fov = 2 * detail::atan(offset / (2 * focal)); }
+  static inline FT focal2Fov(FT focal, FT offset) { return 2 * detail::atan(offset / (2 * focal)); }
 
   //! compute field of view from focal and offset
   static inline Vec2<FT> focal2Fov(const Vec2<FT>& focal, const Vec2<FT>& offset) {

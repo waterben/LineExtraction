@@ -37,7 +37,7 @@ void showData(const cv::Mat& src, const Entry<FT>& e) {
   std::cout << e.name << ": " << e.time << " ms" << std::endl;
 
   cv::Mat img;
-  cvtColor(src, img, CV_GRAY2BGR);
+  cvtColor(src, img, cv::COLOR_GRAY2BGR);
 
   cv::RNG rng(static_cast<uint64_t>(cv::getTickCount()));
 

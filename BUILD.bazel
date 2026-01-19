@@ -1,0 +1,28 @@
+"""Doxygen documentation generation for Bazel.
+
+This BUILD file defines a target to generate Doxygen documentation.
+Run with: bazel run //:doxygen
+"""
+
+# Doxygen documentation generation
+# Note: This requires doxygen to be installed on the host system
+# Uses 'bazel run' to execute in the workspace directory
+sh_binary(
+    name = "doxygen",
+    srcs = ["tools/scripts/generate_doxygen.sh"],
+    data = [
+        "Doxyfile.in",
+        "README.md",
+    ] + glob(
+        [
+            "libs/**/include/**/*.hpp",
+            "libs/**/include/**/*.h",
+            "libs/**/src/**/*.cpp",
+            "apps/**/*.hpp",
+            "apps/**/*.cpp",
+            "apps/**/*.h",
+        ],
+        allow_empty = True,
+    ),
+    visibility = ["//visibility:public"],
+)

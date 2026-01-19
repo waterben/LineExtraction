@@ -897,7 +897,7 @@ class SpeApp : public EvalApp {
 
   using ConsoleAppInterface::run;
 
-  void defineArgs() {
+  void defineArgs() override {
     ConsoleApp::defineArgs();
     opts_.add_string("output", 'o', "Output folder", output_, false, "./results/spe");
     opts_.add_switch("prio", 'p', "Run as high prio process", run_high_prio_);
@@ -1131,7 +1131,7 @@ class SpeApp : public EvalApp {
       cv::Mat tmp;
       gt->img(cv::Rect(x, y, 3, 3)).copyTo(tmp);
       cv::resize(tmp, tmp, cv::Size(3 * scale, 3 * scale), scale, scale, cv::INTER_NEAREST);
-      cvtColor(tmp, tmp, CV_GRAY2RGB);
+      cvtColor(tmp, tmp, cv::COLOR_GRAY2RGB);
 
       for (std::size_t i = 0; i != polys.size(); ++i) {
         polys[i].scale(scale);

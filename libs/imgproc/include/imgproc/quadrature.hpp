@@ -210,9 +210,9 @@ class QuadratureSimple : public Quadrature<IT, GT, FT, FT, FT> {
   GRAD grad_;
   LAPLACE laplace_;
 
-  bool phase_done_, energy_done_;
+  mutable bool phase_done_, energy_done_;
 
-  cv::Mat_<FT> energy_, phase_;
+  mutable cv::Mat_<FT> energy_, phase_;
 
   Range<FT> energyRange_;
 

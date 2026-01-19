@@ -45,7 +45,7 @@ void testEdge(GRAD& grad, NMS& nms, EDGE& edge, const std::string& name) {
 template <class EDGE>
 void showEdge(EDGE& edge, const cv::Mat& src, const std::string& name, bool circles = true) {
   Mat edgeImg;
-  cvtColor(src, edgeImg, CV_GRAY2BGR);
+  cvtColor(src, edgeImg, cv::COLOR_GRAY2BGR);
   cv::RNG rng(static_cast<uint64>(time(nullptr)));
 
   for_each(edge.segments().begin(), edge.segments().end(), [&](const EdgeSegment& seg) {

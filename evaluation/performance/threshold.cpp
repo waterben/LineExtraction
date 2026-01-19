@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 template <class FT>
 struct Entry : public PerformanceTaskDefault {
-  Entry() : PerformanceTaskDefault(), filter(), threshold(), filterRes(), thresholdRes(), resName() {}
+  Entry() : PerformanceTaskDefault(""), filter(), threshold(), filterRes(), thresholdRes(), resName() {}
 
   Entry(const cv::Ptr<FilterI<uchar>>& a, const cv::Ptr<Threshold<FT>>& t, const std::string& n, int f = 0)
       : PerformanceTaskDefault(n, f), filter(a), threshold(t), filterRes(), thresholdRes(), resName() {}

@@ -1,0 +1,46 @@
+"""lib_eval - Evaluation library"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "lib_eval",
+    srcs = glob(
+        [
+            "src/*.cpp",
+        ],
+        allow_empty = True,
+    ),
+    hdrs = glob(
+        [
+            "include/eval/*.hpp",
+            "include/eval/*.h",
+        ],
+        allow_empty = True,
+    ),
+    copts = LE_COPTS_COMPAT,
+    includes = ["include"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+    ],
+)
+
+# Tests
+[
+    cc_test(
+        name = test_file[len("tests/"):-len(".cpp")],
+        size = "small",
+        srcs = [test_file],
+        copts = LE_COPTS_COMPAT,
+        deps = [
+            ":lib_eval",
+            "@googletest//:gtest",
+            "@googletest//:gtest_main",
+        ],
+    )
+    for test_file in glob(["tests/test_*.cpp"])
+]

@@ -27,7 +27,7 @@ using namespace lsfm;
 using namespace std;
 namespace fs = std::filesystem;
 
-constexpr int runs = 1;
+// constexpr int runs = 1;
 
 constexpr int ENTRY_SQR = 1;
 constexpr int ENTRY_RGB = 2;

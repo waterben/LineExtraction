@@ -715,7 +715,7 @@ struct CubicInterpolator {
     int xi = static_cast<int>(fx);
 
     // border case
-    if (xi < 1 || xi > src.cols - 3)
+    if (xi < 1 || xi > cols - 3)
       return interpolate_cubic<FT, MT>(readValX<MT>(src, cols, xi - 1), readValX<MT>(src, cols, xi),
                                        readValX<MT>(src, cols, xi + 1), readValX<MT>(src, cols, xi + 2), fx - xi);
 
@@ -727,7 +727,7 @@ struct CubicInterpolator {
     fy -= yi;
 
     // border case
-    if (yi < 1 || yi > src.rows - 3)
+    if (yi < 1 || yi > rows - 3)
       return interpolate_cubic<FT, MT>(readValY<MT>(src, rows, cols, yi - 1), readValY<MT>(src, rows, cols, yi),
                                        readValY<MT>(src, rows, cols, yi + 1), readValY<MT>(src, rows, cols, yi + 2),
                                        fy);
@@ -744,7 +744,7 @@ struct CubicInterpolator {
     //     static_cast<FT>(readValX(src, cols, xi), border_type, border_val);
 
     // border case
-    if (xi < 1 || xi > src.cols - 3)
+    if (xi < 1 || xi > cols - 3)
       return interpolate_cubic<FT, MT>(readValX<MT>(src, cols, xi - 1, border_type, border_val),
                                        readValX<MT>(src, cols, xi, border_type, border_val),
                                        readValX<MT>(src, cols, xi + 1, border_type, border_val),

@@ -1,0 +1,39 @@
+"""qt examples"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
+
+package(default_visibility = ["//visibility:public"])
+
+# Qt5 system include paths - needed because qplot3d uses <qglobal.h> style includes
+QT5_COPTS = [
+    "-isystem/usr/include/x86_64-linux-gnu/qt5",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtCore",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtGui",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtWidgets",
+    "-isystem/usr/include/x86_64-linux-gnu/qt5/QtOpenGL",
+    "-w",  # Suppress warnings from Qt and qplot3d headers
+]
+
+# Simple qplot3d test (requires Qt5 + OpenGL)
+# Note: This requires both Qt5 and OpenGL to be enabled
+cc_binary(
+    name = "test_qplot3d",
+    srcs = ["test_qplot3d.cpp"],
+    copts = QT5_COPTS,
+    tags = [
+        "opengl",
+        "qt5",
+    ],
+    deps = select({
+        "//bazel:qt5_enabled": [
+            "//third-party/qplot3d:lib_qplot3d",
+            "@opencv",
+        ],
+        "//conditions:default": ["@opencv"],
+    }),
+)
+
+# Note: The subdirectory examples (autoswitch, axes, enrichments, mesh2)
+# are currently commented out in CMakeLists.txt and not built by default.
+# They would require additional Qt-specific configuration and UI files.

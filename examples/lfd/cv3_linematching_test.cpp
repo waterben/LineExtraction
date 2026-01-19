@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   // GaussianBlur(srcL, srcL, Size(3, 3), 0.3);
   // GaussianBlur(srcR, srcR, Size(3, 3), 0.3);
 
-  typedef double MyFloat;
+  // typedef double MyFloat;  // Unused - was used in commented-out LsdCC code below
   /*
       LsdCC<MyFloat> lsdL(0.004, 0.008, 20, 0, 3);
       LsdCC<MyFloat> lsdR(0.004, 0.008, 20, 0, 3);
@@ -149,8 +149,9 @@ int main(int argc, char** argv) {
   std::cout << "matches: " << lsd_matches.size() << std::endl;
 
   /* select best matches */
-  std::vector<DMatch> removed_maches,
-      filtered_matches2 = postfilterStereoMatches(lsd_matches, slf, leftLines, rightLines, removed_maches);
+  [[maybe_unused]] std::vector<DMatch> removed_maches;
+  [[maybe_unused]] std::vector<DMatch> filtered_matches2 =
+      postfilterStereoMatches(lsd_matches, slf, leftLines, rightLines, removed_maches);
   /*
      std::vector<DMatch> good_matches;
      good_matches.clear();

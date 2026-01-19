@@ -31,24 +31,32 @@ macro(gtest3_extern quiet)
 endmacro()
 
 macro(gtest3_repo extern_path)
+    # Note: GoogleTest changed tag naming from "release-X.Y.Z" to "vX.Y.Z" starting with 1.10.0
     IncludeExternalProject( managed_gtest ${extern_path}
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG "release-${GTestVersion}"
+        GIT_TAG "v${GTestVersion}"
         INSTALL_COMMAND ""
         LOG_DOWNLOAD ON
         LOG_CONFIGURE ON
         CONF_ONLY ON
     )
 
-    copy_files_glob("${extern_path}/managed_gtest/src/managed_gtest-build/libgtest*" "${extern_path}/managed_gtest/src/managed_gtest/lib")
-    gtest3_extern(FALSE PATH "${extern_path}/managed_gtest/src/managed_gtest")
+    # GoogleTest builds libs into managed_gtest-build/lib/ subdirectory
+    set(GTEST_ROOT "${extern_path}/managed_gtest/src/managed_gtest")
+    set(GTEST_BUILD_DIR "${extern_path}/managed_gtest/src/managed_gtest-build")
+    set(GTEST_INCLUDE_DIR "${GTEST_ROOT}/googletest/include")
+    set(GTEST_LIBRARY "${GTEST_BUILD_DIR}/lib/libgtest.a")
+    set(GTEST_MAIN_LIBRARY "${GTEST_BUILD_DIR}/lib/libgtest_main.a")
+    set(GTEST_LIBRARY_DIR "${GTEST_BUILD_DIR}/lib")
+    set(GTEST_LIBRARIES "${GTEST_LIBRARY};${GTEST_MAIN_LIBRARY}")
+    set(GTEST_FOUND TRUE)
 endmacro()
 
 set(GTestDetectionModes Auto System Extern Managed)
 set(GTestDetectionMode Auto CACHE STRING "GTest detection mode: Auto - try system, then extern, then managed; System - use lib from system; Extern - use lib from extern folder varibale; Managed - get from repository")
 set(GTestExternPath "${PROJECT_SOURCE_DIR}/extern/gtest" CACHE PATH "Path to extern lib")
 set_property(CACHE GTestDetectionMode PROPERTY STRINGS ${GTestDetectionModes})
-set(GTestVersion "1.7.0" CACHE STRING "Managed gtest version")
+set(GTestVersion "1.15.2" CACHE STRING "Managed gtest version (synced with Bazel MODULE.bazel)")
 set(GTestMakeArgs "-DCMAKE_BUILD_TYPE=RELEASE" CACHE STRING "Custom cmake arguments")
 
 list(FIND GTestDetectionModes ${GTestDetectionMode} index)
