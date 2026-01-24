@@ -205,5 +205,8 @@ build:tsan --copt=-g
 build:tsan --copt=-fno-omit-frame-pointer
 build:tsan --linkopt=-fsanitize=thread
 
+# Config to bypass disk cache for fresh builds
+build:nocache --disk_cache=""
+
 # Try to import user-specific .bazelrc if it exists
 try-import %workspace%/.bazelrc.user
