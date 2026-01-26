@@ -115,6 +115,15 @@ void PhaseCong::run(const cv::Mat& img,
   emxArray_real_T* inPc = emxCreateWrapper_real_T(pc.ptr<double>(), pc.rows, pc.cols);
 
   phasecong(in, lgf, H, mult_, k, cutOff, g, deviationGain, noiseMethod, inE, inOy, inOx, inEnergy, inPc);
+
+  // Free wrapper structures (but not the underlying cv::Mat data since canFreeData = false)
+  emxFree_real_T(&in);
+  emxFree_real_T(&inE);
+  emxFree_real_T(&inOx);
+  emxFree_real_T(&inOy);
+  emxFree_real_T(&inEnergy);
+  emxFree_real_T(&inPc);
+
   if (rows_ != sizep2_) {
     e = e.rowRange(0, rows_);
     ox = ox.rowRange(0, rows_);

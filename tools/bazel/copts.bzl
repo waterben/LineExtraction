@@ -34,28 +34,52 @@ LE_COPTS_CLANG_ONLY = [
     "-Wno-c11-extensions",  # OpenCV uses _Atomic in some headers
 ]
 
-# Strict warning flags - may trigger on external headers
+# Strict warning flags - these match CMake configuration
 LE_COPTS_STRICT = [
-    "-Wold-style-cast",  # OpenCV headers use C-style casts
     "-Wconversion",
     "-Wsign-conversion",
     "-Weffc++",
     "-Wzero-as-null-pointer-constant",
+    "-Wold-style-cast",
+    "-Wno-error=old-style-cast",  # OpenCV headers use C-style casts extensively
 ]
 
-# Combined: all warnings + error enforcement
+# Combined: all warnings + error enforcement (matching CMake)
 LE_COPTS = LE_COPTS_SAFE + LE_COPTS_STRICT + ["-Werror"]
 
-# For use when strict flags cause issues with external headers
+# Legacy: reduced warnings for compatibility (not recommended)
 LE_COPTS_COMPAT = LE_COPTS_SAFE + ["-Werror"]
 
 # Compiler-specific variants (use with select())
 LE_COPTS_GCC = LE_COPTS_COMPAT + LE_COPTS_GCC_ONLY
 LE_COPTS_CLANG = LE_COPTS_COMPAT + LE_COPTS_CLANG_ONLY
 
-# Reduced warning flags for third-party code (qplot, qplot3d)
+# Warning flags for third-party C++ code (qplot, qplot3d)
+# Based on CMake configuration - keep most warnings but disable problematic ones
 LE_THIRD_PARTY_COPTS = [
-    "-w",  # Disable all warnings for third-party code
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    # Disable warnings that third-party code triggers
+    "-Wno-effc++",
+    "-Wno-conversion",
+    "-Wno-sign-conversion",
+    "-Wno-float-conversion",
+    "-Wno-unused-parameter",
+    "-Wno-deprecated-declarations",
+    "-Wno-old-style-cast",
+    "-Wno-zero-as-null-pointer-constant",
+]
+
+# Warning flags for third-party C code (gl2ps.c in qplot3d)
+LE_THIRD_PARTY_C_COPTS = [
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wno-conversion",
+    "-Wno-sign-conversion",
+    "-Wno-unused-parameter",
+    "-Wno-implicit-fallthrough",  # gl2ps.c has intentional fallthroughs
 ]
 
 # Warning suppressions needed for arpack++ headers (legacy C++98 code)
@@ -69,11 +93,11 @@ ARPACKPP_COPTS = [
 def le_cc_library(copts = [], **kwargs):
     """cc_library wrapper with LineExtraction warning flags.
 
-    Uses LE_COPTS_COMPAT by default with compiler-specific adjustments to avoid
-    issues with external headers (esp. OpenCV) that don't use -isystem includes.
+    Uses full warning configuration matching CMake.
+    Note: -Wold-style-cast is enabled but not an error due to OpenCV headers.
     """
     cc_library(
-        copts = LE_COPTS_COMPAT + copts + select({
+        copts = LE_COPTS + copts + select({
             "//bazel:compiler_clang_env": LE_COPTS_CLANG_ONLY,
             "//conditions:default": LE_COPTS_GCC_ONLY,
         }),
@@ -83,11 +107,11 @@ def le_cc_library(copts = [], **kwargs):
 def le_cc_test(copts = [], **kwargs):
     """cc_test wrapper with LineExtraction warning flags.
 
-    Uses LE_COPTS_COMPAT by default with compiler-specific adjustments to avoid
-    issues with external headers (esp. OpenCV) that don't use -isystem includes.
+    Uses full warning configuration matching CMake.
+    Note: -Wold-style-cast is enabled but not an error due to OpenCV headers.
     """
     cc_test(
-        copts = LE_COPTS_COMPAT + copts + select({
+        copts = LE_COPTS + copts + select({
             "//bazel:compiler_clang_env": LE_COPTS_CLANG_ONLY,
             "//conditions:default": LE_COPTS_GCC_ONLY,
         }),

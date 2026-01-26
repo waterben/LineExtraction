@@ -118,13 +118,38 @@ bazel build --config=debugging_feature //...
 
 ### Sanitizers
 
+Use sanitizers to detect memory errors and data races:
+
 ```bash
-# Address Sanitizer (memory errors)
-bazel build --config=asan //libs/utility:test_value
+# Address Sanitizer (memory errors, buffer overflows, use-after-free)
+bazel test --config=asan //libs/...
 bazel run --config=asan //libs/utility:test_value
 
-# Thread Sanitizer (data races)
-bazel build --config=tsan //...
+# Thread Sanitizer (data races, deadlocks)
+bazel test --config=tsan //libs/...
+```
+
+**Note:** Sanitizer builds are slower and use more memory. Don't combine multiple sanitizers.
+
+### Warning Configuration
+
+The project uses strict compiler warnings matching CMake configuration (see `tools/bazel/copts.bzl`):
+
+- **LE_COPTS**: Full warning set with `-Werror` (used for project code)
+- **LE_THIRD_PARTY_COPTS**: Reduced warnings for third-party C++ code
+- **LE_THIRD_PARTY_C_COPTS**: Reduced warnings for third-party C code
+
+Warning flags include: `-Wall -Wextra -Wconversion -Weffc++ -Werror` and more.
+
+For libraries with strict warnings, use the provided macros:
+
+```python
+load("//tools/bazel:copts.bzl", "le_cc_library", "le_cc_test")
+
+le_cc_library(
+    name = "my_lib",
+    # ... automatically gets LE_COPTS
+)
 ```
 
 ## Project Structure
@@ -323,6 +348,9 @@ bazel clean --expunge
 
 # Remove disk cache
 rm -rf ~/.cache/bazel/line_extraction
+
+# Build without using disk cache (for a single build)
+bazel build --config=nocache //...
 ```
 
 ### Query available targets

@@ -6,6 +6,7 @@ Build with --//bazel:enable_qt5=true --//bazel:enable_opengl=true to include it.
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("//bazel:features.bzl", "if_opengl_enabled", "if_qt5_enabled")
+load("//tools/bazel:copts.bzl", "LE_THIRD_PARTY_COPTS", "LE_THIRD_PARTY_C_COPTS")
 load("//tools/bazel:qt5.bzl", "qt5_moc")
 
 package(default_visibility = ["//visibility:public"])
@@ -37,11 +38,33 @@ qt5_moc(
     deps = glob(["include/qplot3d/*.h"]),
 )
 
+# Separate C library for gl2ps (different warning flags for C code)
+cc_library(
+    name = "gl2ps",
+    srcs = select({
+        "//bazel:qt5_enabled": ["src/gl2ps.c"],
+        "//conditions:default": [],
+    }),
+    hdrs = if_qt5_enabled(["include/qplot3d/gl2ps.h"]),
+    copts = select({
+        "//bazel:qt5_enabled": ["-fPIC"] + LE_THIRD_PARTY_C_COPTS,
+        "//conditions:default": [],
+    }),
+    includes = ["include"],
+    linkopts = [
+        "-lGL",
+        "-lGLU",
+    ],
+    tags = [
+        "opengl",
+        "qt5",
+    ],
+)
+
 cc_library(
     name = "lib_qplot3d",
     srcs = select({
         "//bazel:qt5_enabled": [
-            "src/gl2ps.c",
             "src/qwt3d_autoscaler.cpp",
             "src/qwt3d_axis.cpp",
             "src/qwt3d_color.cpp",
@@ -76,7 +99,7 @@ cc_library(
         ]),
     ),
     copts = select({
-        "//bazel:qt5_enabled": QT5_COPTS,
+        "//bazel:qt5_enabled": QT5_COPTS + LE_THIRD_PARTY_COPTS,
         "//conditions:default": [],
     }),
     includes = ["include"],
@@ -89,6 +112,7 @@ cc_library(
         "qt5",
     ],
     deps = if_qt5_enabled([
+        ":gl2ps",
         "@qt5//:qt5_core",
         "@qt5//:qt5_gui",
         "@qt5//:qt5_opengl",

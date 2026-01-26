@@ -29,16 +29,7 @@ using namespace lsfm;
 using namespace std;
 namespace fs = std::filesystem;
 
-constexpr int runs = 1;
-
-constexpr int ENTRY_SQR = 1;
-constexpr int ENTRY_RGB = 2;
-constexpr int ENTRY_NO_3 = 4;
-constexpr int ENTRY_NO_5 = 8;
-
 typedef double FT;
-
-constexpr FT mag_th = static_cast<FT>(0.05);
 
 struct Entry {
   Entry() : filter(), gt(), ft(), name() {}

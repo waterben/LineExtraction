@@ -22,8 +22,11 @@ TEST(RCMGTest, Smoke) {
   ASSERT_EQ(dir.type(), CV_32F);
 
   // energy along the step should be non-zero
+  // Convert to double to avoid overflow in sum computation
   int stepCol = mag.cols / 2;
-  cv::Scalar s = cv::sum(cv::abs(mag.col(stepCol)) + cv::abs(mag.col(stepCol - 1)));
+  cv::Mat magDouble;
+  mag.convertTo(magDouble, CV_64F);
+  cv::Scalar s = cv::sum(cv::abs(magDouble.col(stepCol)) + cv::abs(magDouble.col(stepCol - 1)));
   EXPECT_GT(s[0], 0.0);
 
   auto gr = rcmg.gradientRange();
