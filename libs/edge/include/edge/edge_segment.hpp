@@ -371,13 +371,15 @@ inline char fixDir<4>(char dir) {
 inline char absDiff8(char dir) {
   static char absDiffMap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
   static const char* pdiff = absDiffMap + 7;
-  return pdiff[static_cast<unsigned char>(dir)];
+  // dir should be in range [-7, 7], use signed arithmetic for correct indexing
+  return pdiff[dir];
 }
 
 inline char absDiff4(char dir) {
   static char absDiffMap[] = {1, 2, 1, 0, 1, 2, 1};
   static const char* pdiff = absDiffMap + 3;
-  return pdiff[static_cast<unsigned char>(dir)];
+  // dir should be in range [-3, 3], use signed arithmetic for correct indexing
+  return pdiff[dir];
 }
 
 template <int NUM_DIR>
