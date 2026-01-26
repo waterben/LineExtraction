@@ -59,6 +59,10 @@ bazel test //libs/...
 
 # Build and run line analyzer
 bazel run //apps/line_analyzer:app_line_analyzer
+
+# Advanced: sanitizer testing
+bazel test --config=asan //libs/...  # Memory errors
+bazel test --config=tsan //libs/...  # Data races
 ```
 
 **Why Bazel?**
@@ -83,13 +87,16 @@ CMake is maintained for compatibility but Bazel is recommended for new developme
 
 All dependencies are automatically managed by both build systems:
 
-| Dependency | Purpose |
-|------------|---------|
-| OpenCV 4.7+ | Image processing, computer vision |
-| Eigen3 | Linear algebra |
-| dlib | Machine learning utilities |
-| Google Test | Unit testing |
-| Qt5 | GUI applications (optional) |
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| OpenCV | 4.12+ | Image processing, computer vision |
+| opencv_contrib | 4.12+ | Extended modules (line_descriptor, ximgproc) |
+| Eigen3 | 3.4+ | Linear algebra |
+| arpack++ | 2.3+ | Sparse eigenvalue problems |
+| SuperLU | 7.0+ | Sparse linear algebra |
+| dlib | 19.24+ | Machine learning utilities |
+| Google Test | 1.15+ | Unit testing |
+| Qt5 | 5.15+ | GUI applications (optional) |
 
 ## Documentation
 

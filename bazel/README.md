@@ -32,10 +32,12 @@ This directory contains feature flags and configuration for conditional compilat
 ### OpenCV Photo Module
 
 - **Flag**: `--//bazel:enable_photo=true/false`
-- **Default**: `false`
-- **Description**: Enable OpenCV photo module (currently unavailable in BCR)
+- **Default**: `true` (available since opencv 4.12.0.bcr.1)
+- **Description**: Enable OpenCV photo module for advanced denoising
 - **Affects**:
   - `FastNlMeansOperator` in `//libs/imgproc`
+
+**Note:** The photo module is now available in BCR and enabled by default.
 
 ## Usage Examples
 
@@ -108,7 +110,7 @@ config_setting(
 )
 ```
 
-2. Add a helper function in `features.bzl`:
+1. Add a helper function in `features.bzl`:
 
 ```python
 def if_my_feature_enabled(if_true, if_false = []):
@@ -118,7 +120,7 @@ def if_my_feature_enabled(if_true, if_false = []):
     })
 ```
 
-3. Use it in your BUILD files:
+1. Use it in your BUILD files:
 
 ```python
 load("//bazel:features.bzl", "if_my_feature_enabled")
@@ -134,7 +136,7 @@ cc_library(
 
 - ✅ Qt5: Configurable (disabled by default due to sandbox issues)
 - ✅ OpenGL: Configurable (disabled by default)
-- ✅ OpenCV Photo: Configurable (disabled - not in BCR)
+- ✅ OpenCV Photo: Available and enabled by default (BCR >= 4.12.0.bcr.1)
 - ⏸️ CUDA: Flag defined but not yet implemented
 
 ## Migration from CMake

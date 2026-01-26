@@ -74,6 +74,24 @@ bazel run //apps/line_analyzer:app_line_analyzer
 - Run: `bazel run //target:name`
 - Query: `bazel query //...`
 - Clean: `bazel clean`
+- Full clean: `bazel clean --expunge`
+
+**Build Configurations:**
+```bash
+# Compiler selection
+bazel build --config=gcc //...   # GCC (default)
+bazel build --config=clang //... # Clang
+
+# Debug build
+bazel build --config=debug //...
+
+# Sanitizers (for finding memory/thread bugs)
+bazel test --config=asan //libs/...  # AddressSanitizer
+bazel test --config=tsan //libs/...  # ThreadSanitizer
+
+# Bypass disk cache (for fresh builds)
+bazel build --config=nocache //...
+```
 
 **See:** `docs/BAZEL.md` for complete documentation and `bazel/README.md` for feature flags.
 
@@ -155,7 +173,8 @@ Tests are automatically discovered from `libs/*/tests/*.cpp` in both build syste
 - Doxygen documentation (`@brief`, `@param`, `@return`)
 - snake_case for functions/variables, PascalCase for classes
 - C++17 standard, namespace `lsfm`
-- Strict compiler warnings enabled (-Wall -Wextra -Werror)
+- Strict compiler warnings enabled (-Wall -Wextra -Wconversion -Weffc++ -Werror)
+- Warning configuration in `tools/bazel/copts.bzl`
 
 **Python Conventions** (see `.github/instructions/python.instructions.md`):
 - Sphinx-style docstrings
