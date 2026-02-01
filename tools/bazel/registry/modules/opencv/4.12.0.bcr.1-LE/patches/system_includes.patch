@@ -1,0 +1,47 @@
+--- a/opencv.bzl	2026-02-01 17:23:34.839236504 +0100
++++ b/opencv.bzl	2026-02-01 17:23:34.919236506 +0100
+@@ -304,7 +304,7 @@
+     cc_library(
+         name = name + "_generated_headers",
+         hdrs = extra_headers,
+-        strip_include_prefix = prefix + "/src",
++        includes = [prefix + "/src"],
+     )
+
+     simd_extra_headers = []
+@@ -417,7 +417,7 @@
+                                     "//conditions:default": [],
+                                 }),
+                         target_compatible_with = ["@platforms//cpu:{}".format(arch)],
+-                        strip_include_prefix = prefix + "/include",
++                        includes = [prefix + "/include"],
+                         features = [
+                             "exceptions", # enable exceptions for opencv modules
+                         ],
+@@ -465,7 +465,7 @@
+     cc_library(
+         name = name + "_generated_simd_headers",
+         hdrs = simd_extra_headers,
+-        strip_include_prefix = prefix + "/src",
++        includes = [prefix + "/src"],
+         deps = [":" + name + "_generated_headers"],
+     )
+
+@@ -523,7 +523,7 @@
+                                 "//conditions:default": [],
+                             }),
+                     target_compatible_with = ["@platforms//cpu:{}".format(arch)],
+-                    strip_include_prefix = prefix + "/include",
++                    includes = [prefix + "/include"],
+                     features = [
+                         "exceptions", # enable exceptions for opencv modules
+                     ],
+@@ -555,7 +555,7 @@
+         linkopts = linkopts,
+         local_defines = local_defines,
+         target_compatible_with = compatible_with,
+-        strip_include_prefix = prefix + "/include",
++        includes = [prefix + "/include"],
+         features = [
+             "exceptions", # enable exceptions for opencv modules
+         ],
