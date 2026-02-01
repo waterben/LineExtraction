@@ -1,198 +1,175 @@
+/// @file gpuConv.cpp
+/// @brief GPU Convolution performance tests comparing CPU, OpenCL and CUDA implementations
 #include "performance_test.hpp"
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/imgproc.hpp>
 
 
 using namespace lsfm;
 
-template <int KS>
-struct EntryConvCPU : public PerformanceTaskDefault {
-  EntryConvCPU() : PerformanceTaskDefault("Conv CPU " + std::to_string(KS)) {}
 
-  using PerformanceTaskDefault::run;
-  void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::Mat tmp;
-    int64 start = 0;
-    cv::GaussianBlur(src, tmp, cv::Size(KS, KS), 0);
-    for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
-      cv::GaussianBlur(src, tmp, cv::Size(KS, KS), 0);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+// =============================================================================
+// CPU Convolution Performance Tasks
+// =============================================================================
+
+/// @brief CPU Gaussian convolution performance task
+template <int KS>
+class EntryConvCPU : public CVPerformanceTaskBase {
+  cv::Mat tmp_{};
+
+ public:
+  EntryConvCPU() : CVPerformanceTaskBase("Conv CPU " + std::to_string(KS)), tmp_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override { cv::GaussianBlur(src, tmp_, cv::Size(KS, KS), 0); }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& src) override {
+    cv::GaussianBlur(src, tmp_, cv::Size(KS, KS), 0);
   }
 };
 
 
-template <int KS>
-struct EntryConvCL : public PerformanceTaskDefault {
-  EntryConvCL() : PerformanceTaskDefault("Conv CL " + std::to_string(KS)) {}
+// =============================================================================
+// OpenCL Convolution Performance Tasks
+// =============================================================================
 
-  using PerformanceTaskDefault::run;
-  void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    int64 start = 0;
-    cv::Mat tmp2;
-    cv::UMat in = src.getUMat(cv::ACCESS_READ), tmp;  // to GPU
+/// @brief OpenCL Gaussian convolution with memory transfer performance task
+template <int KS>
+class EntryConvCL : public CVPerformanceTaskBase {
+ public:
+  EntryConvCL() : CVPerformanceTaskBase("Conv CL " + std::to_string(KS)) {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    cv::UMat in = src.getUMat(cv::ACCESS_READ);
+    cv::UMat tmp;
     cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
-    tmp.copyTo(tmp2);  // to RAM
-
-    for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
-
-      in = src.getUMat(cv::ACCESS_READ);
-      cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
-      tmp.copyTo(tmp2);  // to RAM
-
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
-  }
-};
-
-template <int KS>
-struct EntryConvCLNT : public PerformanceTaskDefault {
-  EntryConvCLNT() : PerformanceTaskDefault("Conv CL NT " + std::to_string(KS)) {}
-
-  using PerformanceTaskDefault::run;
-  void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::UMat in = src.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::Mat tmp2;
+    tmp.copyTo(tmp2);
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& src) override {
+    cv::UMat in = src.getUMat(cv::ACCESS_READ);
+    cv::UMat tmp;
     cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
-    tmp.copyTo(tmp2);  // to RAM
-    int64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      in = src.getUMat(cv::ACCESS_READ);
-      start = cv::getTickCount();
-      cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
-
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount() - start));
-      tmp.copyTo(tmp2);  // to RAM
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
-  }
-};
-
-
-#ifdef ENABLE_CUDA
-template <int KS>
-struct EntryConvCuda : public PerformanceTaskDefault {
-  EntryConvCuda() : PerformanceTaskDefault("Conv Cuda " + std::to_string(KS)) {}
-
-  void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp2;
-    int64 start = 0;
-    cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
-    cv::cuda::GpuMat in, tmp;
-    in.upload(src);
-    gauss->apply(in, tmp);
-    tmp.download(tmp2);
-    for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
-      in.upload(src);
-      gauss->apply(in, tmp);
-      tmp.download(tmp2);
-      pm.measures.push_back(cv::getTickCount() - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    tmp.copyTo(tmp2);
   }
 };
 
+/// @brief OpenCL Gaussian convolution without memory transfer (compute only) performance task
 template <int KS>
-struct EntryConvCudaNT : public PerformanceTaskDefault {
-  EntryConvCudaNT() : PerformanceTaskDefault("Conv Cuda NT " + std::to_string(KS)) {}
+class EntryConvCLNT : public CVPerformanceTaskBase {
+  cv::UMat in_{};
+  cv::UMat tmp_{};
 
-  void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) override {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    int64 start = 0;
-    cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
-    cv::cuda::GpuMat in, tmp;
-    in.upload(src);
-    gauss->apply(in, tmp);
-    for (int i = 0; i != runs; ++i) {
-      start = cv::getTickCount();
-      gauss->apply(in, tmp);
-      pm.measures.push_back(cv::getTickCount() - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((cv::getTickCount() - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+ public:
+  EntryConvCLNT() : CVPerformanceTaskBase("Conv CL NT " + std::to_string(KS)), in_(), tmp_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    in_ = src.getUMat(cv::ACCESS_READ);
+    cv::GaussianBlur(in_, tmp_, cv::Size(KS, KS), 0);
   }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& src) override {
+    in_ = src.getUMat(cv::ACCESS_READ);
+    cv::GaussianBlur(in_, tmp_, cv::Size(KS, KS), 0);
+    cv::ocl::finish();  // Synchronize to measure actual compute time, not queue time
+  }
+};
+
+
+#ifdef ENABLE_CUDA
+// =============================================================================
+// CUDA Convolution Performance Tasks
+// =============================================================================
+
+/// @brief CUDA Gaussian convolution with memory transfer performance task
+template <int KS>
+class EntryConvCuda : public CVPerformanceTaskBase {
+  cv::Ptr<cv::cuda::Filter> gauss_;
+  cv::cuda::GpuMat in_;
+  cv::cuda::GpuMat tmp_;
+
+ public:
+  EntryConvCuda() : CVPerformanceTaskBase("Conv Cuda " + std::to_string(KS)) {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    gauss_ = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
+    in_.upload(src);
+    gauss_->apply(in_, tmp_);
+    cv::Mat tmp2;
+    tmp_.download(tmp2);
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& src) override {
+    in_.upload(src);
+    gauss_->apply(in_, tmp_);
+    cv::Mat tmp2;
+    tmp_.download(tmp2);
+  }
+};
+
+/// @brief CUDA Gaussian convolution without memory transfer (compute only) performance task
+template <int KS>
+class EntryConvCudaNT : public CVPerformanceTaskBase {
+  cv::Ptr<cv::cuda::Filter> gauss_;
+  cv::cuda::GpuMat in_;
+  cv::cuda::GpuMat tmp_;
+
+ public:
+  EntryConvCudaNT() : CVPerformanceTaskBase("Conv Cuda NT " + std::to_string(KS)) {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    gauss_ = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
+    in_.upload(src);
+    gauss_->apply(in_, tmp_);
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override { gauss_->apply(in_, tmp_); }
 };
 #endif
 
 
-PerformanceTestPtr createGpuConvPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
-  test->name = "GPU Conv";
-  try {
-    // add default
-    test->data = provider;
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+/// @brief Create GPU convolution performance test with all tasks
+CVPerformanceTestPtr createGpuConvPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "GPU Conv");
 
-  test->tasks.push_back(std::make_shared<EntryConvCPU<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<31>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<31>>());
-
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<31>>());
 
 #ifdef ENABLE_CUDA
-  test->tasks.push_back(std::make_shared<EntryConvCuda<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<31>>());
 #endif
 
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<31>>());
 
 #ifdef ENABLE_CUDA
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<31>>());
 #endif
+
   return test;
 }
 

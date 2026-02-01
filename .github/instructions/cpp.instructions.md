@@ -31,7 +31,7 @@ int factorial(int n);
 class IntegerContainer {
 private:
     /// @brief Internal storage for integers.
-    std::vector<int> data_;
+    std::vector<int> data_{};
 
 public:
     IntegerContainer();
@@ -86,6 +86,35 @@ class Container {
 - Prefer standard library algorithms over hand-written loops
 - Use move semantics for expensive-to-copy objects
 - Make interfaces explicit and type-safe
+
+**Initialization and Resource Management (CRITICAL):**
+
+- **Always initialize ALL member variables** in the member initialization list
+- Use default member initializers (`Type member_{};` or `Type member_ = value;`) for simple defaults
+- Initialize members in declaration order in the constructor initialization list
+- This is enforced by `-Werror=effc++` in both CMake and Bazel builds
+
+```cpp
+// CORRECT: All members initialized
+class GoodExample {
+  cv::Mat data_{};           // Default member initializer
+  int count_ = 0;            // Explicit default value
+  std::string name_{};       // Default initialization
+
+ public:
+  GoodExample() : data_(), count_(0), name_() {}  // Explicit in init list
+  GoodExample(int n) : data_(), count_(n), name_() {}  // Even when not all used
+};
+
+// WRONG: Missing member initializers - will cause -Werror=effc++ failure
+class BadExample {
+  cv::Mat data_;    // No default initializer
+  int count_;       // Uninitialized!
+
+ public:
+  BadExample() {}   // ERROR: members not in initialization list
+};
+```
 
 **Additional Documentation Guidelines:**
 

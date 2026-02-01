@@ -2,71 +2,94 @@
 
 #include <eval/data_provider.hpp>
 #include <eval/task.hpp>
+#include <opencv2/opencv.hpp>
 
+#include <any>
+#include <iostream>
 
 namespace lsfm {
 
-
-///@brief Base task class
+/// @brief Input task that processes typed input data
+///
+/// Bridges the type-erased ITask interface with strongly-typed input data.
+/// The prepareAny() method handles type conversion from std::any.
 template <typename InputDataT>
 class InputTask : public Task {
  public:
   InputTask(const std::string& task_name, bool task_verbose = false) : Task(task_name, task_verbose) {}
-  virtual ~InputTask() {}
+  ~InputTask() override = default;
 
   using InputData = InputDataT;
 
-  void prepare(const GenericInputData& data) final {
-    const InputData& input_data = static_cast<const InputData&>(data);
-    prepare(input_data);
-  }
-
-  using Task::clear;
+  using Task::name;
+  using Task::prepare;
+  using Task::reset;
   using Task::run;
   using Task::saveVisualResults;
-
-  using Task::name;
   using Task::verbose;
 
- protected:
+  /// @brief Prepare task with type-erased input (ITask interface)
+  void prepareAny(const std::any& data) override {
+    try {
+      const auto& input = std::any_cast<const InputData&>(data);
+      prepare(input);
+    } catch (const std::bad_any_cast&) {
+      // Try base class type
+      Task::prepareAny(data);
+    }
+  }
+
+  /// @brief Prepare task with generic input data (Task interface)
+  void prepare(const GenericInputData& data) override {
+    // Try to cast to our specific type if possible
+    if (const auto* specific = dynamic_cast<const InputData*>(&data)) {
+      prepare(*specific);
+    }
+  }
+
+  /// @brief Prepare task for given typed input data
   virtual void prepare(const InputData& source) = 0;
 };
 
-
-/// @brief Task loader
+/// @brief Task runner with data providers for input tasks
 template <typename InputTaskT>
-class InputTaskLoader : public TaskLoader {
+class InputTaskRunner : public TaskRunner {
  public:
-  using InputTask = InputTaskT;
-  using InputData = typename InputTask::InputData;
-  using DataProvider = DataProvider<InputData>;
-  using DataProviderPtrList = typename DataProvider::PtrList;
+  using InputTaskType = InputTaskT;
+  using InputData = typename InputTaskType::InputData;
+  using DataProviderType = DataProvider<InputData>;
+  using DataProviderPtrList = typename DataProviderType::PtrList;
+  using InputTaskPtr = std::shared_ptr<InputTaskType>;
+  using InputTaskPtrList = std::vector<InputTaskPtr>;
 
+  InputTaskRunner(DataProviderPtrList tr_data_provider,
+                  const std::string& tr_name,
+                  const std::string& tr_target_path = std::string(),
+                  bool tr_verbose = false,
+                  bool tr_visual_results = false)
+      : TaskRunner(tr_name, tr_verbose, tr_visual_results),
+        data_provider(std::move(tr_data_provider)),
+        target_path(tr_target_path) {}
+  ~InputTaskRunner() override = default;
 
-  InputTaskLoader(DataProviderPtrList tl_data_provider,
-                  const std::string& tl_name,
-                  const std::string& tl_target_path = std::string(),
-                  bool tl_verbose = false,
-                  bool tl_visual_results = false)
-      : TaskLoader(tl_name, tl_verbose, tl_visual_results),
-        data_provider(std::move(tl_data_provider)),
-        target_path(tl_target_path) {}
-  virtual ~InputTaskLoader() = default;
-
-  using TaskLoader::name;
-  using TaskLoader::tasks;
-  using TaskLoader::verbose;
-  using TaskLoader::visual_results;
+  using TaskRunner::name;
+  using TaskRunner::verbose;
+  using TaskRunner::visual_results;
 
   DataProviderPtrList data_provider{};
+  InputTaskPtrList input_tasks{};  ///< Typed tasks (shadows base class tasks)
 
   std::string target_path{};
-
 
   /// @brief Run tasks
   void run(std::size_t loops) override {
     std::cout << "Starting task sequence: " << name << std::endl;
     int64 start = cv::getTickCount();
+
+    // Reset all tasks before starting
+    for (auto& task : input_tasks) {
+      task->reset();
+    }
 
     for (auto& dp : data_provider) {
       if (!dp) {
@@ -77,31 +100,26 @@ class InputTaskLoader : public TaskLoader {
       // Prepare input data for all tasks
       InputData data;
       while (dp->get(data)) {
-        prepare(data);
-        for (auto& task : tasks) {
-          // Clear measures of task
-          task->clear();
+        prepareInputData(data);
+        for (auto& task : input_tasks) {
           // Prepare task by providing new data input
           task->prepare(data);
-          for (int i = 0; i < loop; ++i) {
-            // Run task
-            task->run(loops);
-            // Collect results if necessary
-            collect(*task);
-          }
+          // Run task the specified number of loops
+          task->run(loops);
+          // Collect results if necessary
+          collect(*task);
         }
       }
     }
 
-    std::cout << "Task sequence  " << name
+    std::cout << "Task sequence " << name
               << " done: " << static_cast<double>((cv::getTickCount() - start)) / cv::getTickFrequency() << "s"
               << std::endl;
   }
 
  protected:
   /// @brief Option to prepare data input in general for all tasks, e.g. blur etc.
-  virtual void prepareInputData(InputData& data) {}
+  virtual void prepareInputData(InputData& data) { static_cast<void>(data); }
 };
-
 
 }  // namespace lsfm

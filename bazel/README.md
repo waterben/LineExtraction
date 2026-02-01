@@ -139,6 +139,36 @@ cc_library(
 - ✅ OpenCV Photo: Available and enabled by default (BCR >= 4.12.0.bcr.1)
 - ⏸️ CUDA: Flag defined but not yet implemented
 
+## Compiler Options
+
+The project uses strict compiler warnings configured in `tools/bazel/copts.bzl`:
+
+### LE_COPTS (Recommended)
+
+Full strict warnings matching CMake configuration:
+
+- `-Wall -Wextra -Wpedantic -Weffc++ -Wconversion -Wsign-conversion`
+- `-Wzero-as-null-pointer-constant -Wold-style-cast -Werror`
+- External headers are automatically treated as system includes
+
+**Usage:**
+
+```python
+load("//tools/bazel:copts.bzl", "LE_COPTS")
+cc_library(
+    name = "my_lib",
+    copts = LE_COPTS,
+    ...
+)
+```
+
+### External Headers
+
+External headers (OpenCV, Eigen) are treated as system includes (`-isystem`) via
+a patched OpenCV module in the local registry (`opencv 4.12.0.bcr.1-LE`). This
+means strict warnings like `-Weffc++`, `-Wconversion`, etc. only apply to your
+code, not to external libraries.
+
 ## Migration from CMake
 
 | CMake Option | Bazel Flag | Notes |

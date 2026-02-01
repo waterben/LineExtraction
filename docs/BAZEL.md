@@ -141,16 +141,25 @@ The project uses strict compiler warnings matching CMake configuration (see `too
 
 Warning flags include: `-Wall -Wextra -Wconversion -Weffc++ -Werror` and more.
 
-For libraries with strict warnings, use the provided macros:
+For libraries with strict warnings, use LE_COPTS directly:
 
 ```python
-load("//tools/bazel:copts.bzl", "le_cc_library", "le_cc_test")
+load("//tools/bazel:copts.bzl", "LE_COPTS")
 
-le_cc_library(
+cc_library(
     name = "my_lib",
-    # ... automatically gets LE_COPTS
+    copts = LE_COPTS,
+    # ...
 )
 ```
+
+### External Header Warnings
+
+External headers (OpenCV, Eigen) are treated as system includes via the patched
+OpenCV module in the local registry (`opencv 4.12.0.bcr.1-LE`). This uses
+`-isystem` like CMake does, so strict warnings only apply to project code.
+
+See `bazel/README.md` for details on compiler options.
 
 ## Project Structure
 

@@ -1,3 +1,5 @@
+/// @file threshold.cpp
+/// @brief Threshold performance tests for various thresholding methods
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
@@ -10,89 +12,92 @@
 using namespace lsfm;
 namespace fs = std::filesystem;
 
+
+// =============================================================================
+// Threshold Performance Tasks
+// =============================================================================
+
+/// @brief Generic threshold performance task wrapper
 template <class FT>
-struct Entry : public PerformanceTaskDefault {
-  Entry() : PerformanceTaskDefault(""), filter(), threshold(), filterRes(), thresholdRes(), resName() {}
+class Entry : public CVPerformanceTaskBase {
+  cv::Ptr<FilterI<uchar>> filter_;
+  cv::Ptr<Threshold<FT>> threshold_;
+  FilterResults filterRes_{};
+  cv::Mat thresholdRes_{};
+  std::string resName_{};
 
-  Entry(const cv::Ptr<FilterI<uchar>>& a, const cv::Ptr<Threshold<FT>>& t, const std::string& n, int f = 0)
-      : PerformanceTaskDefault(n, f), filter(a), threshold(t), filterRes(), thresholdRes(), resName() {}
+ public:
+  Entry() : CVPerformanceTaskBase(""), filterRes_(), thresholdRes_(), resName_() {}
 
+  Entry(cv::Ptr<FilterI<uchar>> filter, cv::Ptr<Threshold<FT>> threshold, const std::string& n, int flags = 0)
+      : CVPerformanceTaskBase(n, flags),
+        filter_(std::move(filter)),
+        threshold_(std::move(threshold)),
+        filterRes_(),
+        thresholdRes_(),
+        resName_() {}
 
-  cv::Ptr<FilterI<uchar>> filter;
-  cv::Ptr<Threshold<FT>> threshold;
-
-  FilterResults filterRes;
-  cv::Mat thresholdRes;
-  std::string resName;
-
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    resName = "./results/visual/Threshold/" + src_name.substr(0, src_name.size() - 4) + "_" + this->name;
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    filter->process(src);
-    filterRes = filter->results();
-    cv::Mat mag = filterRes["mag"].data;
-    uint64 start = 0;
-    for (int i = 0; i != loops; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      thresholdRes = threshold->process(mag);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (loops * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    resName_ = "./results/visual/Threshold/" + currentData().name;
+    resName_ = resName_.substr(0, resName_.size() - 4) + "_" + this->name;
+    filter_->process(src);
+    filterRes_ = filter_->results();
   }
 
-  void saveResults(bool verbose) {
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    cv::Mat mag = filterRes_["mag"].data;
+    thresholdRes_ = threshold_->process(mag);
+  }
+
+ public:
+  void saveResults() override {
     NonMaximaSuppression<short, FT, FT> nms;
-    cv::Mat high = thresholdRes.clone();
+    cv::Mat high = thresholdRes_.clone();
     cv::GaussianBlur(high, high, cv::Size(0, 0), 15);
     cv::Mat low = high * 0.5;
     // set fixed lower threshold
-    low.setTo(filterRes["mag"].range.upper * 0.004, low < filterRes["mag"].range.upper * 0.004);
-    nms.process(filterRes["gx"].data, filterRes["gy"].data, filterRes["mag"].data, low, high);
-    if (verbose) std::cout << "    Save visual results " << resName << std::endl;
-    saveEdge(nms.hysteresis(), resName + "_mag");
-    saveNormalized(high, resName + "_th");
+    low.setTo(filterRes_["mag"].range.upper * 0.004, low < filterRes_["mag"].range.upper * 0.004);
+    nms.process(filterRes_["gx"].data, filterRes_["gy"].data, filterRes_["mag"].data, low, high);
+    std::cout << "    Save visual results " << resName_ << std::endl;
+    saveEdge(nms.hysteresis(), resName_ + "_mag");
+    saveNormalized(high, resName_ + "_th");
   }
 };
 
 
-PerformanceTestPtr createThresholdPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
-  test->name = "Threshold";
-  try {
-    test->data = provider;
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+/// @brief Create threshold performance test with all tasks
+CVPerformanceTestPtr createThresholdPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "Threshold");
 
   fs::create_directory("./results/visual/Threshold");
 
-  typedef float FT;
+  using FT = float;
 
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<FT>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                       new GlobalThreshold<FT, ThresholdOtsu<FT, 256>>(1141), "Otsu_G")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry<FT>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                    new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(3, 3, 1141), "Otsu_LTiles4")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry<FT>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                    new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(10, 10, 1141), "Otsu_LTiles10")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry<FT>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                    new LocalThreshold<FT, ThresholdOtsu<FT, 256>>(30, 30, true, 1141), "Otsu_LWindow")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<FT>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                       new DynamicThreshold<FT, ThresholdOtsu<FT, 256>>(5, 1141), "Otsu_D")));
+  test->input_tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                                          new GlobalThreshold<FT, ThresholdOtsu<FT, 256>>(1141),
+                                                          "Otsu_G"));
+
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(3, 3, 1141), "Otsu_LTiles4"));
+
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(10, 10, 1141), "Otsu_LTiles10"));
+
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThreshold<FT, ThresholdOtsu<FT, 256>>(30, 30, true, 1141), "Otsu_LWindow"));
+
+  test->input_tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                                          new DynamicThreshold<FT, ThresholdOtsu<FT, 256>>(5, 1141),
+                                                          "Otsu_D"));
+
   return test;
 }
 

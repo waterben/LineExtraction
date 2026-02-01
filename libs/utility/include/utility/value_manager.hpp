@@ -72,6 +72,22 @@ class ValueManager {
 
   ValueManager(const ValueManager& om) : values_(om.values_) {}
 
+  ValueManager(ValueManager&& om) noexcept : values_(std::move(om.values_)) {}
+
+  ValueManager& operator=(const ValueManager& om) {
+    if (this != &om) {
+      values_ = om.values_;
+    }
+    return *this;
+  }
+
+  ValueManager& operator=(ValueManager&& om) noexcept {
+    if (this != &om) {
+      values_ = std::move(om.values_);
+    }
+    return *this;
+  }
+
   // add new option
   void add(const std::string& name, const Functor& func, const std::string& dsc = std::string()) {
     values_[name] = ValueEntry(func, dsc);

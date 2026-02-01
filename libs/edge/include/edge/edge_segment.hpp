@@ -372,14 +372,14 @@ inline char absDiff8(char dir) {
   static char absDiffMap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
   static const char* pdiff = absDiffMap + 7;
   // dir should be in range [-7, 7], use signed arithmetic for correct indexing
-  return pdiff[dir];
+  return pdiff[static_cast<int>(dir)];
 }
 
 inline char absDiff4(char dir) {
   static char absDiffMap[] = {1, 2, 1, 0, 1, 2, 1};
   static const char* pdiff = absDiffMap + 3;
   // dir should be in range [-3, 3], use signed arithmetic for correct indexing
-  return pdiff[dir];
+  return pdiff[static_cast<int>(dir)];
 }
 
 template <int NUM_DIR>

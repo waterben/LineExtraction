@@ -1,12 +1,17 @@
+/// @file performance_test.hpp
+/// @brief Common header for performance test executables
 #pragma once
 
+#include <eval/cv_performance_task.hpp>
 #include <opencv2/core.hpp>
-#include <utility/performance.hpp>
 
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <vector>
+
 
 // Detect OpenCV CUDA module availability via header presence
 #if defined(__has_include)
@@ -29,10 +34,21 @@
 #  include <opencv2/ocl/ocl.hpp>
 #endif
 
-void addPerformanceTest(lsfm::PerformanceTestPtr test);
+namespace lsfm {
 
-typedef std::function<lsfm::PerformanceTestPtr(const lsfm::DataProviderList&)> PerformanceTestCreator;
+/// @brief Function type for creating performance tests
+using PerformanceTestCreator = std::function<CVPerformanceTestPtr(const DataProviderList&)>;
 
+/// @brief Add a performance test directly
+void addPerformanceTest(CVPerformanceTestPtr test);
+
+/// @brief Add a performance test creator function
 void addPerformanceTestCreator(PerformanceTestCreator creator);
-std::vector<lsfm::PerformanceTestPtr>& getTests();
-const lsfm::DataProviderList& getDefaultProvider();
+
+/// @brief Get the list of registered performance tests
+std::vector<CVPerformanceTestPtr>& getTests();
+
+/// @brief Get the default data provider list
+const DataProviderList& getDefaultProvider();
+
+}  // namespace lsfm

@@ -1,22 +1,29 @@
+/// @file main.cpp
+/// @brief Performance test main executable
 #include "performance_test.hpp"
 #include <utility/high_prio.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <iostream>
 #include <string>
 
 
-using namespace lsfm;
 namespace fs = std::filesystem;
 
-std::vector<PerformanceTestPtr>& getTests() {
-  static std::vector<PerformanceTestPtr> tests;
+namespace lsfm {
+
+/// @brief Global test registry
+std::vector<CVPerformanceTestPtr>& getTests() {
+  static std::vector<CVPerformanceTestPtr> tests;
   return tests;
 }
 
-void addPerformanceTest(PerformanceTestPtr test) { getTests().push_back(test); }
+/// @brief Add a test directly
+void addPerformanceTest(CVPerformanceTestPtr test) { getTests().push_back(test); }
 
+/// @brief Get default data providers
 const DataProviderList& getDefaultProvider() {
   static DataProviderList list;
   if (list.empty()) {
@@ -37,12 +44,15 @@ const DataProviderList& getDefaultProvider() {
   return list;
 }
 
+/// @brief Add a test via creator function
 void addPerformanceTestCreator(PerformanceTestCreator creator) {
   fs::create_directory("./results");
   fs::create_directory("./results/visual");
   fs::create_directory("./results/performance");
   getTests().emplace_back(creator(getDefaultProvider()));
 }
+
+}  // namespace lsfm
 
 void help() {
   std::cout << "Performance test options:" << std::endl
@@ -84,33 +94,33 @@ int main(int argc, char** argv) {
     if (val == "-h" || val == "-help") {
       help();
       return 0;
-    } else if (val == "-v" || val == "-verbose")
+    } else if (val == "-v" || val == "-verbose") {
       verbose = true;
-    else if (val == "-hp" || val == "-high_prio") {
+    } else if (val == "-hp" || val == "-high_prio") {
       highPriority = true;
       askPrio = false;
     } else if (val == "-lp" || val == "-low_prio") {
       highPriority = false;
       askPrio = false;
-    } else if (val == "-t" || val == "-transpose")
+    } else if (val == "-t" || val == "-transpose") {
       tasksAsCols = true;
-    else if (val == "-fr" || val == "-full_report")
+    } else if (val == "-fr" || val == "-full_report") {
       fullReport = true;
-    else if (val == "-co" || val == "-console_out")
+    } else if (val == "-co" || val == "-console_out") {
       printTables = true;
-    else if (val == "-no_total" || val == "-nt")
+    } else if (val == "-no_total" || val == "-nt") {
       showTotal = false;
-    else if (val == "-no_mean" || val == "-nm")
+    } else if (val == "-no_mean" || val == "-nm") {
       showMean = false;
-    else if (val == "-no_stddev" || val == "-ns")
+    } else if (val == "-no_stddev" || val == "-ns") {
       showStdDev = false;
-    else if (val == "-no_mpix" || val == "-np")
+    } else if (val == "-no_mpix" || val == "-np") {
       showMegaPixel = false;
-    else if (val == "-no_csv" || val == "-nc")
+    } else if (val == "-no_csv" || val == "-nc") {
       skipTableWrite = true;
-    else if (val == "-visual_res" || val == "-vr")
+    } else if (val == "-visual_res" || val == "-vr") {
       visualResults = true;
-    else if ((val == "-r" || val == "-runs") && i < argc + 1) {
+    } else if ((val == "-r" || val == "-runs") && i < argc + 1) {
       try {
         runs = std::stoi(std::string(argv[++i]));
         if (runs < 1) {
@@ -122,7 +132,7 @@ int main(int argc, char** argv) {
         help();
         return 1;
       } catch (...) {
-        std::cout << "Unkown error!" << std::endl;
+        std::cout << "Unknown error!" << std::endl;
         help();
         return 1;
       }
@@ -140,20 +150,26 @@ int main(int argc, char** argv) {
     if (c == 'y' || c == 'Y') highPriority = true;
   }
 
-  if (highPriority) setHighPriority();
+  if (highPriority) lsfm::setHighPriority();
 
   if (verbose) std::cout << "Number of runs: " << runs << std::endl;
 
-  uint64 start = static_cast<uint64>(cv::getTickCount());
+  std::uint64_t start = static_cast<std::uint64_t>(cv::getTickCount());
 
-  for_each(getTests().begin(), getTests().end(), [&](PerformanceTestPtr test) {
-    test->showMean = showMean;
-    test->showTotal = showTotal;
-    test->showMegaPixel = showMegaPixel;
-    test->showStdDev = showStdDev;
-    test->visualResults = visualResults;
-    test->run(runs, verbose);
-    StringTable result = test->resultTable(fullReport);
+  std::for_each(lsfm::getTests().begin(), lsfm::getTests().end(), [&](lsfm::CVPerformanceTestPtr test) {
+    // Configure test display options
+    test->show_mean = showMean;
+    test->show_total = showTotal;
+    test->show_mega_pixel = showMegaPixel;
+    test->show_std_dev = showStdDev;
+    test->visual_results = visualResults;
+    test->verbose = verbose;
+
+    // Run the test
+    test->run(static_cast<std::size_t>(runs));
+
+    // Generate and output results
+    lsfm::StringTable result = test->resultTable(fullReport);
     if (!tasksAsCols) {
       result = result.transpose();
       result(0, 0) = "Method";
@@ -165,7 +181,7 @@ int main(int argc, char** argv) {
   });
 
   std::cout << "Total time for performance tests: "
-            << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start)) /
+            << static_cast<double>((static_cast<std::uint64_t>(cv::getTickCount()) - start)) /
                    static_cast<double>(cv::getTickFrequency())
             << "s" << std::endl;
 

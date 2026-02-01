@@ -23,13 +23,8 @@ target_link_libraries(eval_gradient_orientation lib_edge lib_geometry lib_imgpro
 add_executable(eval_image_denoise image_denoise.cpp)
 target_link_libraries(eval_image_denoise lib_edge lib_imgproc lib_utility lib_imgproc le::opencv)
 
-add_executable(eval_gradient_performance gradient_performance.cpp)
-target_link_libraries(eval_gradient_performance lib_imgproc le::opencv )
-
 add_executable(eval_phase_dc phase_dc.cpp)
 target_link_libraries(eval_phase_dc lib_imgproc le::opencv )
 
 add_executable(eval_spe_precision spe_precision.cpp)
 target_link_libraries(eval_spe_precision lib_edge lib_utility lib_eval lib_imgproc le::opencv)
-
-add_subdirectory(old)

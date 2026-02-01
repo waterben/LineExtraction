@@ -76,15 +76,6 @@ cc_binary(
 )
 
 cc_binary(
-    name = "eval_gradient_performance",
-    srcs = ["gradient_performance.cpp"],
-    deps = [
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
-)
-
-cc_binary(
     name = "eval_phase_dc",
     srcs = ["phase_dc.cpp"],
     deps = [

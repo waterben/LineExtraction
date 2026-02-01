@@ -14,8 +14,10 @@ cc_binary(
         allow_empty = True,
     ),
     deps = [
+        "//libs/edge:lib_edge",
         "//libs/eval:lib_eval",
         "//libs/imgproc:lib_imgproc",
+        "//libs/lfd:lib_lfd",
         "//libs/lsd:lib_lsd",
         "//libs/utility:lib_utility",
         "@opencv",

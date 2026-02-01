@@ -1,3 +1,5 @@
+/// @file nms.cpp
+/// @brief Non-Maximum Suppression and Zero-Crossing performance tests
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/zc.hpp>
@@ -8,486 +10,378 @@
 using namespace lsfm;
 
 
-class EntryNMS4Fast : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-  NonMaximaSuppression<short, int, float, FastNMS4<short, int, float>> nms;
+// =============================================================================
+// NMS Performance Tasks
+// =============================================================================
+
+/// @brief NMS4 Fast (4-connected) performance task
+class EntryNMS4Fast : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS4<short, int, float>> nms_{};
 
  public:
-  EntryNMS4Fast() : PerformanceTaskDefault("NMS4 Fast"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()));
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMS4Fast() : CVPerformanceTaskBase("NMS4 Fast"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMS4Fast); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.gx(), sobel_.gy(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()));
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSFast : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms;
+
+/// @brief NMS Fast (8-connected) performance task
+class EntryNMSFast : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_{};
 
  public:
-  EntryNMSFast() : PerformanceTaskDefault("NMS Fast"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()));
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSFast() : CVPerformanceTaskBase("NMS Fast"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSFast); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.gx(), sobel_.gy(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()));
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSFastDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms;
+
+/// @brief NMS Fast with direction input performance task
+class EntryNMSFastDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_{};
 
  public:
-  EntryNMSFastDir() : PerformanceTaskDefault("NMS Fast Dir"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    sobel.direction();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
-                  sobel.directionRange().upper);
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSFastDir() : CVPerformanceTaskBase("NMS Fast Dir"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
+    sobel_.direction();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSFastDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.direction(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()), sobel_.directionRange().lower,
+                 sobel_.directionRange().upper);
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSPreciseLinear : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel;
-  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false>> nms;
+
+/// @brief NMS Precise Linear interpolation performance task
+class EntryNMSPreciseLinear : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false>> nms_{};
 
  public:
-  EntryNMSPreciseLinear() : PerformanceTaskDefault("NMS Precise Linear"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()));
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSPreciseLinear() : CVPerformanceTaskBase("NMS Precise Linear"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseLinear); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.gx(), sobel_.gy(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()));
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel;
+
+/// @brief NMS Precise Linear with direction input performance task
+class EntryNMSPreciseLinearDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
   NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, LinearInterpolator, PolarCV>>
-      nms;
+      nms_{};
 
  public:
-  EntryNMSPreciseLinearDir() : PerformanceTaskDefault("NMS Precise Linear Dir"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    sobel.direction();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
-                  sobel.directionRange().upper);
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSPreciseLinearDir() : CVPerformanceTaskBase("NMS Precise Linear Dir"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
+    sobel_.direction();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseLinearDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.direction(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()), sobel_.directionRange().lower,
+                 sobel_.directionRange().upper);
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSPreciseCubic : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel;
-  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator>> nms;
+
+/// @brief NMS Precise Cubic interpolation performance task
+class EntryNMSPreciseCubic : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator>> nms_{};
 
  public:
-  EntryNMSPreciseCubic() : PerformanceTaskDefault("NMS Precise Cubic"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()));
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSPreciseCubic() : CVPerformanceTaskBase("NMS Precise Cubic"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseCubic); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.gx(), sobel_.gy(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()));
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel;
+
+/// @brief NMS Precise Cubic with direction input performance task
+class EntryNMSPreciseCubicDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
   NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator, PolarCV>>
-      nms;
+      nms_{};
 
  public:
-  EntryNMSPreciseCubicDir() : PerformanceTaskDefault("NMS Precise Cubic Dir"), sobel(), nms() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.magnitude();
-    sobel.direction();
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      nms.process(sobel.direction(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
-                  sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
-                  sobel.directionRange().upper);
-      cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryNMSPreciseCubicDir() : CVPerformanceTaskBase("NMS Precise Cubic Dir"), sobel_(), nms_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.magnitude();
+    sobel_.direction();
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNMSPreciseCubicDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    nms_.process(sobel_.direction(), sobel_.magnitude(), sobel_.magnitudeThreshold(nms_.thresholdLow()),
+                 sobel_.magnitudeThreshold(nms_.thresholdHigh()), sobel_.directionRange().lower,
+                 sobel_.directionRange().upper);
+    cv::Mat tmp = nms_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCNoDir : public PerformanceTaskDefault {
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc;
+
+// =============================================================================
+// Zero-Crossing Performance Tasks
+// =============================================================================
+
+/// @brief Zero-crossing without direction performance task
+class EntryZCNoDir : public CVPerformanceTaskBase {
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_{};
 
  public:
-  EntryZCNoDir() : PerformanceTaskDefault("ZC No Dir"), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()));
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
-  }
+  EntryZCNoDir() : CVPerformanceTaskBase("ZC No Dir"), laplace_(), zc_() {}
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCNoDir); }
+ protected:
+  void prepareImpl(const cv::Mat& src) override { laplace_.process(src); }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()));
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCFast : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc;
+
+/// @brief Zero-crossing fast performance task
+class EntryZCFast : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_{};
 
  public:
-  EntryZCFast() : PerformanceTaskDefault("ZC Fast"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()));
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCFast() : CVPerformanceTaskBase("ZC Fast"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCFast); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.gx(), sobel_.gy(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()));
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCFastDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, FastZC<short, short, float, NCC_BASIC, EZCMap8, PolarCV>> zc;
+
+/// @brief Zero-crossing fast with direction performance task
+class EntryZCFastDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float, NCC_BASIC, EZCMap8, PolarCV>> zc_{};
 
  public:
-  EntryZCFastDir() : PerformanceTaskDefault("ZC Fast Dir"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.direction();
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
-                 sobel.directionRange().upper);
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCFastDir() : CVPerformanceTaskBase("ZC Fast Dir"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.direction();
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCFastDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.direction(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()), sobel_.directionRange().lower,
+                sobel_.directionRange().upper);
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCPreciseLinear : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator>> zc;
+
+/// @brief Zero-crossing precise linear interpolation performance task
+class EntryZCPreciseLinear : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator>> zc_{};
 
  public:
-  EntryZCPreciseLinear() : PerformanceTaskDefault("ZC Precise Linear"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()));
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCPreciseLinear() : CVPerformanceTaskBase("ZC Precise Linear"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseLinear); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.gx(), sobel_.gy(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()));
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator, PolarCV>> zc;
+
+/// @brief Zero-crossing precise linear with direction performance task
+class EntryZCPreciseLinearDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator, PolarCV>>
+      zc_{};
 
  public:
-  EntryZCPreciseLinearDir() : PerformanceTaskDefault("ZC Precise Linear Dir"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.direction();
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
-                 sobel.directionRange().upper);
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCPreciseLinearDir() : CVPerformanceTaskBase("ZC Precise Linear Dir"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.direction();
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseLinearDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.direction(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()), sobel_.directionRange().lower,
+                sobel_.directionRange().upper);
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCPreciseCubic : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator>> zc;
+
+/// @brief Zero-crossing precise cubic interpolation performance task
+class EntryZCPreciseCubic : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator>> zc_{};
 
  public:
-  EntryZCPreciseCubic() : PerformanceTaskDefault("ZC Precise Cubic"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()));
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCPreciseCubic() : CVPerformanceTaskBase("ZC Precise Cubic"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseCubic); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.gx(), sobel_.gy(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()));
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel;
-  LaplaceSimple<uchar, short> laplace;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator, PolarCV>> zc;
+
+/// @brief Zero-crossing precise cubic with direction performance task
+class EntryZCPreciseCubicDir : public CVPerformanceTaskBase {
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator, PolarCV>>
+      zc_{};
 
  public:
-  EntryZCPreciseCubicDir() : PerformanceTaskDefault("ZC Precise Cubic Dir"), sobel(), laplace(), zc() {}
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    sobel.process(src);
-    sobel.direction();
-    laplace.process(src);
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      zc.process(sobel.direction(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
-                 laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
-                 sobel.directionRange().upper);
-      cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  EntryZCPreciseCubicDir() : CVPerformanceTaskBase("ZC Precise Cubic Dir"), sobel_(), laplace_(), zc_() {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    sobel_.process(src);
+    sobel_.direction();
+    laplace_.process(src);
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryZCPreciseCubicDir); }
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    zc_.process(sobel_.direction(), laplace_.laplace(), laplace_.laplaceThreshold(zc_.thresholdLow()),
+                laplace_.laplaceThreshold(zc_.thresholdHigh()), sobel_.directionRange().lower,
+                sobel_.directionRange().upper);
+    cv::Mat tmp = zc_.hysteresis();
+    static_cast<void>(tmp);
+  }
 };
 
-PerformanceTestPtr createNMSPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
-  test->name = "NMS";
-  try {
-    // add default
-    test->data = provider;
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-  test->tasks.push_back(EntryNMS4Fast::create());
-  test->tasks.push_back(EntryNMSFast::create());
-  test->tasks.push_back(EntryNMSFastDir::create());
-  test->tasks.push_back(EntryNMSPreciseLinear::create());
-  test->tasks.push_back(EntryNMSPreciseLinearDir::create());
-  test->tasks.push_back(EntryNMSPreciseCubic::create());
-  test->tasks.push_back(EntryNMSPreciseCubicDir::create());
-  test->tasks.push_back(EntryZCNoDir::create());
-  test->tasks.push_back(EntryZCFast::create());
-  test->tasks.push_back(EntryZCFastDir::create());
-  test->tasks.push_back(EntryZCPreciseLinear::create());
-  test->tasks.push_back(EntryZCPreciseLinearDir::create());
-  test->tasks.push_back(EntryZCPreciseCubic::create());
-  test->tasks.push_back(EntryZCPreciseCubicDir::create());
+/// @brief Create NMS performance test with all tasks
+CVPerformanceTestPtr createNMSPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "NMS");
+
+  test->input_tasks.push_back(std::make_shared<EntryNMS4Fast>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSFast>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSFastDir>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseLinear>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseLinearDir>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseCubic>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseCubicDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCNoDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCFast>());
+  test->input_tasks.push_back(std::make_shared<EntryZCFastDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseLinear>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseLinearDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseCubic>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseCubicDir>());
+
   return test;
 }
 

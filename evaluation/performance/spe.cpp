@@ -1,3 +1,5 @@
+/// @file spe.cpp
+/// @brief Sub-Pixel Estimation performance tests
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/spe.hpp>
@@ -6,550 +8,376 @@
 
 using namespace lsfm;
 
+
 template <class FT>
 using GradFT = DerivativeGradient<uchar, FT, FT, FT>;
 
 template <class FT>
 using NmsFT = NonMaximaSuppression<FT, FT, FT, FastNMS8<FT, FT, FT>>;
 
+
+// =============================================================================
+// SPE Performance Task Base
+// =============================================================================
+
+/// @brief Base class for SPE performance tasks
 template <class FT>
-struct SpePerformaceData : public TaskData {
-  SpePerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), grad(), nms(0.004, 0.012, 2) {
-    if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-    grad.process(src);
-    nms.process(grad);
-  }
-
-  GradFT<FT> grad;
-  NmsFT<FT> nms;
-};
-
-template <class FT>
-struct SpePerformanceTest : public PerformanceTest {
-  SpePerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
-  virtual ~SpePerformanceTest() {}
-
+class Entry : public CVPerformanceTaskBase {
  protected:
-  // prepare task data
-  std::unique_ptr<TaskData> prepareTaskData(const std::string& src_name, cv::Mat& src) override {
-    prepareSource(src);
-    return std::make_unique<SpePerformaceData<FT>>(src_name, src);
+  GradFT<FT> grad_{};
+  NmsFT<FT> nms_{};
+
+  Entry(const std::string& n)
+      : CVPerformanceTaskBase(n + std::string(sizeof(FT) == 4 ? " 32F" : " 64F")), grad_(), nms_() {}
+
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = NmsFT<FT>(0.004, 0.012, 2);
+    grad_.process(src);
+    nms_.process(grad_);
   }
 };
 
-template <class FT>
-class Entry : public PerformanceTaskBase {
- protected:
-  Entry(const std::string& n) : PerformanceTaskBase(n + std::string(sizeof(FT) == 4 ? " 32F" : " 64F")) {}
 
- public:
-  virtual ~Entry() {}
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const SpePerformaceData<FT>& pdata = dynamic_cast<const SpePerformaceData<FT>&>(data);
-    process(pdata.name, pdata.src, pdata.grad, pdata.nms, runs, verbose);
-  }
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) = 0;
-};
-
+// =============================================================================
+// Nearest Neighbor Estimator
+// =============================================================================
 
 template <class FT>
 class EntryNearest : public Entry<FT> {
-  PixelEstimator<FT, cv::Point> pe;
+  PixelEstimator<FT, cv::Point> pe_{};
 
  public:
-  EntryNearest() : Entry<FT>("Nearest"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntryNearest() : Entry<FT>("Nearest"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convert(idxs, points, this->grad_.magnitude(), this->nms_.directionMap());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntryNearest); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntryNearest>(); }
 };
+
+
+// =============================================================================
+// Linear Estimator
+// =============================================================================
 
 template <class FT>
 class EntrySpeLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeLin() : Entry<FT>("SpeLin"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeLin() : Entry<FT>("SpeLin"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convert(idxs, points, this->grad_.magnitude(), this->nms_.directionMap());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLin); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeLin>(); }
 };
+
+
+// =============================================================================
+// Quadratic Estimator
+// =============================================================================
 
 template <class FT>
 class EntrySpeQuad : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
+      pe_{};
 
  public:
-  EntrySpeQuad() : Entry<FT>("SpeQuad"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeQuad() : Entry<FT>("SpeQuad"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convert(idxs, points, this->grad_.magnitude(), this->nms_.directionMap());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuad); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeQuad>(); }
 };
+
+
+// =============================================================================
+// Center of Gravity Estimator
+// =============================================================================
 
 template <class FT>
 class EntrySpeCog : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeCog() : Entry<FT>("SpeCog"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeCog() : Entry<FT>("SpeCog"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convert(idxs, points, this->grad_.magnitude(), this->nms_.directionMap());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCog); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeCog>(); }
 };
+
+
+// =============================================================================
+// Sobel Estimator
+// =============================================================================
 
 template <class FT>
 class EntrySpeSobel : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeSobel() : Entry<FT>("SpeSobel"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeSobel() : Entry<FT>("SpeSobel"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convert(idxs, points, this->grad_.magnitude(), this->nms_.directionMap());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobel); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeSobel>(); }
 };
+
+
+// =============================================================================
+// Linear Estimator with Direction (Linear Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeLinDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLinDirIpLin); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeLinDirIpLin>(); }
 };
+
+
+// =============================================================================
+// Quadratic Estimator with Direction (Linear Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeQuadDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
+      pe_{};
 
  public:
-  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuadDirIpLin); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeQuadDirIpLin>(); }
 };
+
+
+// =============================================================================
+// Center of Gravity Estimator with Direction (Linear Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeCogDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCogDirIpLin); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeCogDirIpLin>(); }
 };
+
+
+// =============================================================================
+// Sobel Estimator with Direction (Linear Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeSobelDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobelDirIpLin); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeSobelDirIpLin>(); }
 };
+
+
+// =============================================================================
+// Linear Estimator with Direction (Cubic Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeLinDirIpCubic : public Entry<FT> {
-  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>> pe;
+  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeLinDirIpCubic); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeLinDirIpCubic>(); }
 };
+
+
+// =============================================================================
+// Quadratic Estimator with Direction (Cubic Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeQuadDirIpCubic : public Entry<FT> {
-  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>> pe;
+  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>>
+      pe_{};
 
  public:
-  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeQuadDirIpCubic); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeQuadDirIpCubic>(); }
 };
+
+
+// =============================================================================
+// Center of Gravity Estimator with Direction (Cubic Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeCogDirIpCubic : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>> pe;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeCogDirIpCubic); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeCogDirIpCubic>(); }
 };
+
+
+// =============================================================================
+// Sobel Estimator with Direction (Cubic Interpolation)
+// =============================================================================
 
 template <class FT>
 class EntrySpeSobelDirIpCubic : public Entry<FT> {
-  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>> pe;
+  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic"), pe() {}
-  virtual void process(const std::string& src_name,
-                       const cv::Mat& src,
-                       const GradFT<FT>& g,
-                       const NmsFT<FT>& n,
-                       int runs,
-                       bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    IndexVector idxs = n.hysteresis_edgels();
+  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic"), pe_() {}
+
+ protected:
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    IndexVector idxs = this->nms_.hysteresis_edgels();
     std::vector<cv::Point_<FT>> points;
     points.reserve(idxs.size());
-    cv::Mat mag = g.magnitude();
-    cv::Mat dir = g.direction();
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    pe_.convertDir(idxs, points, this->grad_.magnitude(), this->grad_.direction());
   }
 
-  static PerformanceTaskPtr create() { return PerformanceTaskPtr(new EntrySpeSobelDirIpCubic); }
+ public:
+  static CVPerformanceTaskPtr create() { return std::make_shared<EntrySpeSobelDirIpCubic>(); }
 };
 
+
+// =============================================================================
+// Test Registration
+// =============================================================================
+
+/// @brief Create SPE performance test with all tasks
 template <class FT>
-PerformanceTestPtr createSPEPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<SpePerformanceTest<FT>>();
-  test->name = "SPE" + std::string(sizeof(FT) == 4 ? " 32F" : " 64F");
-  try {
-    // add default
-    test->data = provider;
+CVPerformanceTestPtr createSPEPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "SPE" + std::string(sizeof(FT) == 4 ? " 32F" : " 64F"));
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+  test->input_tasks.push_back(EntryNearest<FT>::create());
+  test->input_tasks.push_back(EntrySpeLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuad<FT>::create());
+  test->input_tasks.push_back(EntrySpeCog<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobel<FT>::create());
 
+  test->input_tasks.push_back(EntrySpeLinDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuadDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeCogDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobelDirIpLin<FT>::create());
 
-  test->tasks.push_back(EntryNearest<FT>::create());
-  test->tasks.push_back(EntrySpeLin<FT>::create());
-  test->tasks.push_back(EntrySpeQuad<FT>::create());
-  test->tasks.push_back(EntrySpeCog<FT>::create());
-  test->tasks.push_back(EntrySpeSobel<FT>::create());
+  test->input_tasks.push_back(EntrySpeLinDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuadDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeCogDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobelDirIpCubic<FT>::create());
 
-  test->tasks.push_back(EntrySpeLinDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeQuadDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeCogDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeSobelDirIpLin<FT>::create());
-
-  test->tasks.push_back(EntrySpeLinDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeQuadDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeCogDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeSobelDirIpCubic<FT>::create());
   return test;
 }
 

@@ -1,3 +1,5 @@
+/// @file split.cpp
+/// @brief Edge segment splitting performance tests
 #include "performance_test.hpp"
 #include <edge/edge_pattern.hpp>
 #include <edge/nms.hpp>
@@ -5,152 +7,120 @@
 #include <edge/split.hpp>
 #include <imgproc/derivative_gradient.hpp>
 
-#include <cassert>
-
+#include <memory>
 
 using namespace lsfm;
 
-typedef DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> Grad;
-typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms;
-typedef EsdPattern<int> Edge;
 
-constexpr float th_low = 0.004f, th_high = 0.012f;
+using Grad = DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>;
+using Nms = NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>>;
+using Edge = EsdPattern<int>;
 
-struct SplitPerformaceData : public TaskData {
-  SplitPerformaceData(const std::string& n, const cv::Mat& s)
-      : TaskData(n, s),
-        grad(),
-        nms(th_low, th_high),
-        edge(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))) {
-    if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-    grad.process(src);
-    nms.process(grad);
-    edge.detect(grad, nms);
-  }
+constexpr float TH_LOW = 0.004F;
+constexpr float TH_HIGH = 0.012F;
 
-  virtual ~SplitPerformaceData() = default;
 
-  Grad grad;
-  Nms nms;
-  Edge edge;
-};
+// =============================================================================
+// Split Performance Tasks
+// =============================================================================
 
-struct SplitPerformanceTest : public PerformanceTest {
-  SplitPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
-  virtual ~SplitPerformanceTest() {}
+/// @brief Generic segment split performance task
+template <class SPLIT>
+class Entry : public CVPerformanceTaskBase {
+  SPLIT split_;
+  Grad grad_{};
+  Nms nms_{};
+  std::unique_ptr<Edge> edge_{};
+  std::vector<Vec2i> points_{};
+
+ public:
+  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
+      : CVPerformanceTaskBase(n), split_(list), grad_(), nms_(), edge_(), points_() {}
 
  protected:
-  // prepare task data
-  std::unique_ptr<TaskData> prepareTaskData(const std::string& src_name, cv::Mat& src) override {
-    prepareSource(src);
-    return std::make_unique<SplitPerformaceData>(src_name, src);
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = Nms(TH_LOW, TH_HIGH);
+    grad_.process(src);
+    nms_.process(grad_);
+    edge_ = std::make_unique<Edge>(10, 3, 3, static_cast<float>(grad_.magnitudeThreshold(TH_LOW)));
+    edge_->detect(grad_, nms_);
+    // Make sure segments are built from pattern segments
+    edge_->segments();
+    PixelEstimator<float>::convert(edge_->points(), points_, grad_.magnitude(), nms_.directionMap());
+    split_.setup(grad_, nms_);
   }
-};
 
-template <class SPLIT>
-struct Entry : public PerformanceTaskBase {
-  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : PerformanceTaskBase(n), split(list) {}
-  virtual ~Entry() {}
-
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const SplitPerformaceData& pdata = dynamic_cast<const SplitPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
     EdgeSegmentVector out;
-    // make sure segments are build form pattern segments
-    pdata.edge.segments();
-    std::vector<Vec2i> points;
-    PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start = 0;
-    split.setup(pdata.grad, pdata.nms);
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      split.apply(pdata.edge, points, out);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    split_.apply(*edge_, points_, out);
   }
-
-  SPLIT split;
 };
 
+/// @brief Pattern-based segment split performance task
 template <class SPLIT>
-struct EntryPattern : public PerformanceTaskBase {
+class EntryPattern : public CVPerformanceTaskBase {
+  SPLIT split_;
+  Grad grad_{};
+  Nms nms_{};
+  std::unique_ptr<Edge> edge_{};
+  std::vector<Vec2i> points_{};
+
+ public:
   EntryPattern(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : PerformanceTaskBase(n), split(list) {}
-  virtual ~EntryPattern() {}
+      : CVPerformanceTaskBase(n), split_(list), grad_(), nms_(), edge_(), points_() {}
 
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const SplitPerformaceData& pdata = dynamic_cast<const SplitPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    EdgeSegmentVector out;
-    std::vector<Vec2i> points;
-    PixelEstimator<float>::convert(pdata.edge.points(), points, pdata.grad.magnitude(), pdata.nms.directionMap());
-    uint64 start = 0;
-    split.setup(pdata.grad, pdata.nms);
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      split.applyP(pdata.edge, points, out);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = Nms(TH_LOW, TH_HIGH);
+    grad_.process(src);
+    nms_.process(grad_);
+    edge_ = std::make_unique<Edge>(10, 3, 3, static_cast<float>(grad_.magnitudeThreshold(TH_LOW)));
+    edge_->detect(grad_, nms_);
+    PixelEstimator<float>::convert(edge_->points(), points_, grad_.magnitude(), nms_.directionMap());
+    split_.setup(grad_, nms_);
   }
 
-  SPLIT split;
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    EdgeSegmentVector out;
+    split_.applyP(*edge_, points_, out);
+  }
 };
 
 
-PerformanceTestPtr createSplitPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<SplitPerformanceTest>();
-  test->name = "Split";
-  try {
-    // add default
-    test->data = provider;
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+/// @brief Create split performance test with all tasks
+CVPerformanceTestPtr createSplitPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "Split");
 
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<RamerSplit<float, Vec2i, false>>("Ramer")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<RamerSplit<float, Vec2i, true>>("Ramer +m")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>("ExtRamer")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>("ExtRamer +m")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>("ExtRamer +es")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>("ExtRamer +m+es")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<LeastSquareSplit<float>>("LSqr")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<LeastSquareSplit<float, Vec2i, false>>("LSqr +p")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<AdaptiveLeastSquareSplit<float>>("ALSqr")));
+  test->input_tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, false>>>("Ramer"));
+  test->input_tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, true>>>("Ramer +m"));
+  test->input_tasks.push_back(std::make_shared<Entry<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("ExtRamer"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>>("ExtRamer +m"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>>("ExtRamer +es"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>>("ExtRamer +m+es"));
+  test->input_tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float>>>("LSqr"));
+  test->input_tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float, Vec2i, false>>>("LSqr +p"));
+  test->input_tasks.push_back(std::make_shared<Entry<AdaptiveLeastSquareSplit<float>>>("ALSqr"));
 
-  test->tasks.push_back(PerformanceTaskPtr(new EntryPattern<RamerSplit<float, Vec2i, false>>("PRamer")));
-  test->tasks.push_back(PerformanceTaskPtr(new EntryPattern<RamerSplit<float, Vec2i, true>>("PRamer +m")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new EntryPattern<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>("PExtRamer")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new EntryPattern<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>("PExtRamer +m")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new EntryPattern<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>("PExtRamer +es")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(new EntryPattern<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>("PExtRamer +m+es")));
-  test->tasks.push_back(PerformanceTaskPtr(new EntryPattern<LeastSquareSplit<float>>("PLSqr")));
-  test->tasks.push_back(PerformanceTaskPtr(new EntryPattern<LeastSquareSplit<float, Vec2i, false>>("PLSqr +p")));
-  test->tasks.push_back(PerformanceTaskPtr(new EntryPattern<AdaptiveLeastSquareSplit<float>>("PALSqr")));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, false>>>("PRamer"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, true>>>("PRamer +m"));
+  test->input_tasks.push_back(
+      std::make_shared<EntryPattern<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("PExtRamer"));
+  test->input_tasks.push_back(
+      std::make_shared<EntryPattern<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>>("PExtRamer +m"));
+  test->input_tasks.push_back(
+      std::make_shared<EntryPattern<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>>("PExtRamer +es"));
+  test->input_tasks.push_back(
+      std::make_shared<EntryPattern<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>>("PExtRamer +m+es"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float>>>("PLSqr"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float, Vec2i, false>>>("PLSqr +p"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<AdaptiveLeastSquareSplit<float>>>("PALSqr"));
 
   return test;
 }
