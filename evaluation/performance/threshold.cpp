@@ -78,24 +78,25 @@ CVPerformanceTestPtr createThresholdPerformanceTest(const DataProviderList& prov
 
   using FT = float;
 
-  test->tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                                    new GlobalThreshold<FT, ThresholdOtsu<FT, 256>>(1141), "Otsu_G"));
+  test->input_tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                                          new GlobalThreshold<FT, ThresholdOtsu<FT, 256>>(1141),
+                                                          "Otsu_G"));
 
-  test->tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                                    new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(3, 3, 1141),
-                                                    "Otsu_LTiles4"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(3, 3, 1141), "Otsu_LTiles4"));
 
-  test->tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                                    new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(10, 10, 1141),
-                                                    "Otsu_LTiles10"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThresholdTiles<FT, ThresholdOtsu<FT, 256>>(10, 10, 1141), "Otsu_LTiles10"));
 
-  test->tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                                    new LocalThreshold<FT, ThresholdOtsu<FT, 256>>(30, 30, true, 1141),
-                                                    "Otsu_LWindow"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                  new LocalThreshold<FT, ThresholdOtsu<FT, 256>>(30, 30, true, 1141), "Otsu_LWindow"));
 
-  test->tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
-                                                    new DynamicThreshold<FT, ThresholdOtsu<FT, 256>>(5, 1141),
-                                                    "Otsu_D"));
+  test->input_tasks.push_back(std::make_shared<Entry<FT>>(new DerivativeGradient<uchar, short, FT, FT, SobelDerivative>,
+                                                          new DynamicThreshold<FT, ThresholdOtsu<FT, 256>>(5, 1141),
+                                                          "Otsu_D"));
 
   return test;
 }

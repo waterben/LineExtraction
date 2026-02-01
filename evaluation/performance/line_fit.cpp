@@ -64,10 +64,10 @@ class Entry : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createFitPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "Line fit");
 
-  test->tasks.push_back(std::make_shared<Entry<FitLine<RegressionFit<float, cv::Point>>>>("RegressionFit"));
-  test->tasks.push_back(std::make_shared<Entry<FitLine<EigenFit<float, cv::Point>>>>("EigenFit"));
-  test->tasks.push_back(std::make_shared<Entry<FitLine<EigenCVFit<float, cv::Point>>>>("EigenCVFit"));
-  test->tasks.push_back(std::make_shared<Entry<MEstimatorFitLine<float, cv::Point>>>("MEstimatorFit"));
+  test->input_tasks.push_back(std::make_shared<Entry<FitLine<RegressionFit<float, cv::Point>>>>("RegressionFit"));
+  test->input_tasks.push_back(std::make_shared<Entry<FitLine<EigenFit<float, cv::Point>>>>("EigenFit"));
+  test->input_tasks.push_back(std::make_shared<Entry<FitLine<EigenCVFit<float, cv::Point>>>>("EigenCVFit"));
+  test->input_tasks.push_back(std::make_shared<Entry<MEstimatorFitLine<float, cv::Point>>>("MEstimatorFit"));
 
   return test;
 }

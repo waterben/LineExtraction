@@ -56,10 +56,10 @@ class Entry : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createLSDPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "LSD");
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdEL<float>>(0.004, 0.012, 15, 2, 15, 0, 0), "Lsd EL"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<
           LsdEL<float, Vec2, Vec2<int>,
                 EdgeSourceGRAD<DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>,
@@ -67,7 +67,7 @@ CVPerformanceTestPtr createLSDPerformanceTest(const DataProviderList& provider) 
                 EsdLinking<int, 8, true>>>(0.004, 0.012, 15, 2, 15, 0, 0),
       "Lsd EL Corner"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<
           LsdEL<float, Vec2, Vec2<int>,
                 EdgeSourceGRAD<DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>,
@@ -76,13 +76,13 @@ CVPerformanceTestPtr createLSDPerformanceTest(const DataProviderList& provider) 
                 LeastSquareSplit<float, Vec2<int>>>>(0.004, 0.012, 15, 2, 15, 0, 0),
       "Lsd EL LSSplit"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdEP<float, Vec2, false>>(0.004, 0.012, 15, 2, 15, 2, 3, 3, 5, 0), "Lsd EP"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdEP<float, Vec2, true>>(0.004, 0.012, 15, 2, 15, 2, 3, 3, 5, 0), "Lsd EP Corner"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<
           LsdEP<float, Vec2, false, Vec2<int>,
                 EdgeSourceGRAD<DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>,
@@ -91,49 +91,49 @@ CVPerformanceTestPtr createLSDPerformanceTest(const DataProviderList& provider) 
                                                                                        5, 0),
       "Lsd EP LSSplit"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdCC<float>>(0.004, 0.012, 15, 3, 2, 0), "Lsd CC"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdCC<float>>(0.004, 0.012, 15, 3, 2, CC_CORNER_RULE), "Lsd CC Corner"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdCP<float>>(0.004, 0.012, 15, 0, 2, 2), "Lsd CP"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdCP<float>>(0.004, 0.012, 15, 0, 2, 2, CP_CORNER_RULE), "Lsd CP Corner"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdHoughP<float>>(0.004, 0.012, 1.5, CV_PI / 180, 50, 15, 3), "Lsd HoughP"));
 
   auto lsd_hough =
       std::make_shared<Entry<float>>(std::make_shared<LsdHough<float>>(0.004, 0.012, 15, 3, 0), "Lsd Hough");
   lsd_hough->value("hough_vote_th", 50);
-  test->tasks.push_back(lsd_hough);
+  test->input_tasks.push_back(lsd_hough);
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdFGioi<float>>(2, 22.5, 0, 0.7, 1024), "Lsd FGioi"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdFBW<float>>(0.004, 0.012, 15, 22.5, 0), "Lsd FBW"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdFBW<float>>(0.004, 0.012, 15, 22.5, FBW_NMS), "Lsd FBW NMS"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdBurns<float>>(0.004, 0.012, 15, 12, 0), "Lsd Burns"));
 
-  test->tasks.push_back(std::make_shared<Entry<float>>(
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(
       std::make_shared<LsdBurns<float>>(0.004, 0.012, 15, 12, BURNS_NMS), "Lsd Burns NMS"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdEDLZ<float>>(10, 2, 1, 15, 2, false), "Lsd EDLZ"));
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<float>>(std::make_shared<LsdEDLZ<float>>(10, 2, 1, 15, 2, true), "Lsd EDLZ NFA"));
 
 #ifdef _MSC_VER
-  test->tasks.push_back(std::make_shared<Entry<float>>(std::make_shared<LsdEDTA<float>>(), "Lsd EDTA"));
+  test->input_tasks.push_back(std::make_shared<Entry<float>>(std::make_shared<LsdEDTA<float>>(), "Lsd EDTA"));
 #endif
 
   return test;

@@ -1,6 +1,7 @@
 /// @file gpuConv.cpp
 /// @brief GPU Convolution performance tests comparing CPU, OpenCL and CUDA implementations
 #include "performance_test.hpp"
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/imgproc.hpp>
 
 
@@ -74,6 +75,7 @@ class EntryConvCLNT : public CVPerformanceTaskBase {
   void runImpl(const std::string& /*src_name*/, const cv::Mat& src) override {
     in_ = src.getUMat(cv::ACCESS_READ);
     cv::GaussianBlur(in_, tmp_, cv::Size(KS, KS), 0);
+    cv::ocl::finish();  // Synchronize to measure actual compute time, not queue time
   }
 };
 
@@ -140,32 +142,32 @@ class EntryConvCudaNT : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createGpuConvPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "GPU Conv");
 
-  test->tasks.push_back(std::make_shared<EntryConvCPU<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCPU<31>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCL<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCPU<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCL<31>>());
 
 #ifdef ENABLE_CUDA
-  test->tasks.push_back(std::make_shared<EntryConvCuda<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCuda<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCuda<31>>());
 #endif
 
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCLNT<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCLNT<31>>());
 
 #ifdef ENABLE_CUDA
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<3>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<7>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<15>>());
-  test->tasks.push_back(std::make_shared<EntryConvCudaNT<31>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<3>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<7>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<15>>());
+  test->input_tasks.push_back(std::make_shared<EntryConvCudaNT<31>>());
 #endif
 
   return test;

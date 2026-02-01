@@ -367,20 +367,20 @@ class EntryZCPreciseCubicDir : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createNMSPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "NMS");
 
-  test->tasks.push_back(std::make_shared<EntryNMS4Fast>());
-  test->tasks.push_back(std::make_shared<EntryNMSFast>());
-  test->tasks.push_back(std::make_shared<EntryNMSFastDir>());
-  test->tasks.push_back(std::make_shared<EntryNMSPreciseLinear>());
-  test->tasks.push_back(std::make_shared<EntryNMSPreciseLinearDir>());
-  test->tasks.push_back(std::make_shared<EntryNMSPreciseCubic>());
-  test->tasks.push_back(std::make_shared<EntryNMSPreciseCubicDir>());
-  test->tasks.push_back(std::make_shared<EntryZCNoDir>());
-  test->tasks.push_back(std::make_shared<EntryZCFast>());
-  test->tasks.push_back(std::make_shared<EntryZCFastDir>());
-  test->tasks.push_back(std::make_shared<EntryZCPreciseLinear>());
-  test->tasks.push_back(std::make_shared<EntryZCPreciseLinearDir>());
-  test->tasks.push_back(std::make_shared<EntryZCPreciseCubic>());
-  test->tasks.push_back(std::make_shared<EntryZCPreciseCubicDir>());
+  test->input_tasks.push_back(std::make_shared<EntryNMS4Fast>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSFast>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSFastDir>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseLinear>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseLinearDir>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseCubic>());
+  test->input_tasks.push_back(std::make_shared<EntryNMSPreciseCubicDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCNoDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCFast>());
+  test->input_tasks.push_back(std::make_shared<EntryZCFastDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseLinear>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseLinearDir>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseCubic>());
+  test->input_tasks.push_back(std::make_shared<EntryZCPreciseCubicDir>());
 
   return test;
 }

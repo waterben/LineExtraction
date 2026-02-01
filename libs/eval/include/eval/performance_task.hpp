@@ -67,9 +67,9 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
   ~PerformanceTest() override = default;
 
   using Base::data_provider;
+  using Base::input_tasks;
   using Base::name;
   using Base::run;
-  using Base::tasks;
 
   bool show_total{false};
   bool show_mean{true};
@@ -78,11 +78,11 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
 
   /// @brief Generate result table from collected measures
   StringTable resultTable(bool /*fullReport*/ = false) override {
-    if (this->tasks.empty()) return StringTable();
+    if (this->input_tasks.empty()) return StringTable();
 
     // Collect all source names from first task
     std::vector<std::string> sources;
-    for (const auto& [source_name, measure] : this->tasks.front()->measures()) {
+    for (const auto& [source_name, measure] : this->input_tasks.front()->measures()) {
       sources.push_back(source_name);
     }
 
@@ -95,14 +95,14 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
 
     // +1 for accumulated totals
     std::size_t total_rows = (sources.size() + 1) * rows_per_source + 1;  // +1 for header
-    std::size_t total_cols = this->tasks.size() + 1;                      // +1 for row labels
+    std::size_t total_cols = this->input_tasks.size() + 1;                // +1 for row labels
 
     StringTable table(total_rows, total_cols);
 
     // Header row
     table(0, 0) = this->name.empty() ? "Source" : this->name;
-    for (std::size_t t = 0; t < this->tasks.size(); ++t) {
-      table(0, t + 1) = this->tasks[t]->name;
+    for (std::size_t t = 0; t < this->input_tasks.size(); ++t) {
+      table(0, t + 1) = this->input_tasks[t]->name;
     }
 
     // Data rows per source
@@ -120,8 +120,8 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
 
  protected:
   void writeMeasureRow(const std::string& source, StringTable& table, std::size_t row, std::size_t rows_per_source) {
-    for (std::size_t t = 0; t < this->tasks.size(); ++t) {
-      const auto& measures_map = this->tasks[t]->measures();
+    for (std::size_t t = 0; t < this->input_tasks.size(); ++t) {
+      const auto& measures_map = this->input_tasks[t]->measures();
       auto it = measures_map.find(source);
       if (it == measures_map.end()) continue;
 
@@ -131,8 +131,8 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
 
     // Row labels
     std::string label = source;
-    if (show_mega_pixel && !this->tasks.empty()) {
-      const auto& measures_map = this->tasks.front()->measures();
+    if (show_mega_pixel && !this->input_tasks.empty()) {
+      const auto& measures_map = this->input_tasks.front()->measures();
       auto it = measures_map.find(source);
       if (it != measures_map.end()) {
         double mpix = it->second.megaPixels();
@@ -146,8 +146,8 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
   }
 
   void writeTotalRow(StringTable& table, std::size_t row, std::size_t rows_per_source) {
-    for (std::size_t t = 0; t < this->tasks.size(); ++t) {
-      CVPerformanceMeasure acc = this->tasks[t]->accumulatedMeasure("Total");
+    for (std::size_t t = 0; t < this->input_tasks.size(); ++t) {
+      CVPerformanceMeasure acc = this->input_tasks[t]->accumulatedMeasure("Total");
       writeMeasure(acc, table, t + 1, row, rows_per_source);
     }
     std::size_t r = row;

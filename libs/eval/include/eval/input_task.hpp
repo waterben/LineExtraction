@@ -77,7 +77,7 @@ class InputTaskRunner : public TaskRunner {
   using TaskRunner::visual_results;
 
   DataProviderPtrList data_provider{};
-  InputTaskPtrList tasks{};
+  InputTaskPtrList input_tasks{};  ///< Typed tasks (shadows base class tasks)
 
   std::string target_path{};
 
@@ -87,7 +87,7 @@ class InputTaskRunner : public TaskRunner {
     int64 start = cv::getTickCount();
 
     // Reset all tasks before starting
-    for (auto& task : tasks) {
+    for (auto& task : input_tasks) {
       task->reset();
     }
 
@@ -101,7 +101,7 @@ class InputTaskRunner : public TaskRunner {
       InputData data;
       while (dp->get(data)) {
         prepareInputData(data);
-        for (auto& task : tasks) {
+        for (auto& task : input_tasks) {
           // Prepare task by providing new data input
           task->prepare(data);
           // Run task the specified number of loops

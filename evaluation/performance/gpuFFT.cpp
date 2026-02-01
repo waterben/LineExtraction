@@ -1,6 +1,7 @@
 /// @file gpuFFT.cpp
 /// @brief GPU FFT performance tests comparing CPU, OpenCL and CUDA implementations
 #include "performance_test.hpp"
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 
@@ -95,6 +96,7 @@ class EntryFFTCLNT : public CVPerformanceTaskBase {
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
     in_ = complexI_.getUMat(cv::ACCESS_READ);
     cv::dft(in_, tmp_, cv::DFT_COMPLEX_OUTPUT);
+    cv::ocl::finish();  // Synchronize to measure actual compute time, not queue time
   }
 };
 
@@ -171,12 +173,12 @@ class EntryFFTCudaNT : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createGpuFFTPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "GPU FFT");
 
-  test->tasks.push_back(std::make_shared<EntryFFTCPU>());
-  test->tasks.push_back(std::make_shared<EntryFFTCL>());
-  test->tasks.push_back(std::make_shared<EntryFFTCLNT>());
+  test->input_tasks.push_back(std::make_shared<EntryFFTCPU>());
+  test->input_tasks.push_back(std::make_shared<EntryFFTCL>());
+  test->input_tasks.push_back(std::make_shared<EntryFFTCLNT>());
 #ifdef ENABLE_CUDA
-  test->tasks.push_back(std::make_shared<EntryFFTCuda>());
-  test->tasks.push_back(std::make_shared<EntryFFTCudaNT>());
+  test->input_tasks.push_back(std::make_shared<EntryFFTCuda>());
+  test->input_tasks.push_back(std::make_shared<EntryFFTCudaNT>());
 #endif
 
   return test;

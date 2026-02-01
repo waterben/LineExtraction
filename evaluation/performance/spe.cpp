@@ -362,21 +362,21 @@ template <class FT>
 CVPerformanceTestPtr createSPEPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "SPE" + std::string(sizeof(FT) == 4 ? " 32F" : " 64F"));
 
-  test->tasks.push_back(EntryNearest<FT>::create());
-  test->tasks.push_back(EntrySpeLin<FT>::create());
-  test->tasks.push_back(EntrySpeQuad<FT>::create());
-  test->tasks.push_back(EntrySpeCog<FT>::create());
-  test->tasks.push_back(EntrySpeSobel<FT>::create());
+  test->input_tasks.push_back(EntryNearest<FT>::create());
+  test->input_tasks.push_back(EntrySpeLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuad<FT>::create());
+  test->input_tasks.push_back(EntrySpeCog<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobel<FT>::create());
 
-  test->tasks.push_back(EntrySpeLinDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeQuadDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeCogDirIpLin<FT>::create());
-  test->tasks.push_back(EntrySpeSobelDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeLinDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuadDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeCogDirIpLin<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobelDirIpLin<FT>::create());
 
-  test->tasks.push_back(EntrySpeLinDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeQuadDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeCogDirIpCubic<FT>::create());
-  test->tasks.push_back(EntrySpeSobelDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeLinDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeQuadDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeCogDirIpCubic<FT>::create());
+  test->input_tasks.push_back(EntrySpeSobelDirIpCubic<FT>::create());
 
   return test;
 }

@@ -95,29 +95,32 @@ class EntryPattern : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createSplitPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "Split");
 
-  test->tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, false>>>("Ramer"));
-  test->tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, true>>>("Ramer +m"));
-  test->tasks.push_back(std::make_shared<Entry<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("ExtRamer"));
-  test->tasks.push_back(std::make_shared<Entry<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>>("ExtRamer +m"));
-  test->tasks.push_back(std::make_shared<Entry<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>>("ExtRamer +es"));
-  test->tasks.push_back(
+  test->input_tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, false>>>("Ramer"));
+  test->input_tasks.push_back(std::make_shared<Entry<RamerSplit<float, Vec2i, true>>>("Ramer +m"));
+  test->input_tasks.push_back(std::make_shared<Entry<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("ExtRamer"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>>("ExtRamer +m"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>>("ExtRamer +es"));
+  test->input_tasks.push_back(
       std::make_shared<Entry<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>>("ExtRamer +m+es"));
-  test->tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float>>>("LSqr"));
-  test->tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float, Vec2i, false>>>("LSqr +p"));
-  test->tasks.push_back(std::make_shared<Entry<AdaptiveLeastSquareSplit<float>>>("ALSqr"));
+  test->input_tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float>>>("LSqr"));
+  test->input_tasks.push_back(std::make_shared<Entry<LeastSquareSplit<float, Vec2i, false>>>("LSqr +p"));
+  test->input_tasks.push_back(std::make_shared<Entry<AdaptiveLeastSquareSplit<float>>>("ALSqr"));
 
-  test->tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, false>>>("PRamer"));
-  test->tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, true>>>("PRamer +m"));
-  test->tasks.push_back(std::make_shared<EntryPattern<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("PExtRamer"));
-  test->tasks.push_back(
+  test->input_tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, false>>>("PRamer"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<RamerSplit<float, Vec2i, true>>>("PRamer +m"));
+  test->input_tasks.push_back(
+      std::make_shared<EntryPattern<ExtRamerSplit<NoMerge<SimpleSplitCheck<float>>>>>("PExtRamer"));
+  test->input_tasks.push_back(
       std::make_shared<EntryPattern<ExtRamerSplit<SimpleMerge<SimpleSplitCheck<float>>>>>("PExtRamer +m"));
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<EntryPattern<ExtRamerSplit<NoMerge<ExtSplitCheck<float, int>>>>>("PExtRamer +es"));
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<EntryPattern<ExtRamerSplit<SimpleMerge<ExtSplitCheck<float, int>>>>>("PExtRamer +m+es"));
-  test->tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float>>>("PLSqr"));
-  test->tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float, Vec2i, false>>>("PLSqr +p"));
-  test->tasks.push_back(std::make_shared<EntryPattern<AdaptiveLeastSquareSplit<float>>>("PALSqr"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float>>>("PLSqr"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<LeastSquareSplit<float, Vec2i, false>>>("PLSqr +p"));
+  test->input_tasks.push_back(std::make_shared<EntryPattern<AdaptiveLeastSquareSplit<float>>>("PALSqr"));
 
   return test;
 }

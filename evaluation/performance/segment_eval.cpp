@@ -61,10 +61,10 @@ class Entry : public CVPerformanceTaskBase {
 CVPerformanceTestPtr createSegEvalPerformanceTest(const DataProviderList& provider) {
   auto test = std::make_shared<CVPerformanceTest>(provider, "SegEval");
 
-  test->tasks.push_back(
+  test->input_tasks.push_back(
       std::make_shared<Entry<NfaContrast<int, float, index_type, std::map<int, float>>>>("NFA Contrast"));
-  test->tasks.push_back(std::make_shared<Entry<NfaBinom<short, float, index_type>>>("NFA Binom"));
-  test->tasks.push_back(std::make_shared<Entry<NfaBinom2<short, float, index_type>>>("NFA Binom2"));
+  test->input_tasks.push_back(std::make_shared<Entry<NfaBinom<short, float, index_type>>>("NFA Binom"));
+  test->input_tasks.push_back(std::make_shared<Entry<NfaBinom2<short, float, index_type>>>("NFA Binom2"));
 
   return test;
 }

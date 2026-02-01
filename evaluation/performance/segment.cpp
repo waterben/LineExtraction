@@ -55,12 +55,14 @@ CVPerformanceTestPtr createSegmentPerformanceTest(const DataProviderList& provid
   Grad grad;
   float mag_th = static_cast<float>(grad.magnitudeThreshold(TH_LOW));
 
-  test->tasks.push_back(std::make_shared<Entry>(new EsdSimple<int>, "ESD Simple"));
-  test->tasks.push_back(std::make_shared<Entry>(new EsdDrawing<int>(10, 3, mag_th), "ESD Drawing"));
-  test->tasks.push_back(std::make_shared<Entry>(new EsdLinking<int>(10, 3, 3, mag_th), "ESD Linking"));
-  test->tasks.push_back(std::make_shared<Entry>(new EsdPattern<int>(10, 3, 3, mag_th), "ESD Pattern"));
-  test->tasks.push_back(std::make_shared<Entry>(new EsdLinking<int, 8, true>(10, 3, 3, mag_th), "ESD Linking Corner"));
-  test->tasks.push_back(std::make_shared<Entry>(new EsdPattern<int, 8, true>(10, 3, 3, mag_th), "ESD Pattern Corner"));
+  test->input_tasks.push_back(std::make_shared<Entry>(new EsdSimple<int>, "ESD Simple"));
+  test->input_tasks.push_back(std::make_shared<Entry>(new EsdDrawing<int>(10, 3, mag_th), "ESD Drawing"));
+  test->input_tasks.push_back(std::make_shared<Entry>(new EsdLinking<int>(10, 3, 3, mag_th), "ESD Linking"));
+  test->input_tasks.push_back(std::make_shared<Entry>(new EsdPattern<int>(10, 3, 3, mag_th), "ESD Pattern"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry>(new EsdLinking<int, 8, true>(10, 3, 3, mag_th), "ESD Linking Corner"));
+  test->input_tasks.push_back(
+      std::make_shared<Entry>(new EsdPattern<int, 8, true>(10, 3, 3, mag_th), "ESD Pattern Corner"));
 
   return test;
 }

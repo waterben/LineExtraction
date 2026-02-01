@@ -64,10 +64,10 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
   ~MeasureTaskRunner() override = default;
 
   using Base::data_provider;
+  using Base::input_tasks;
   using Base::name;
   using Base::run;
   using Base::target_path;
-  using Base::tasks;
   using Base::verbose;
   using Base::visual_results;
 
@@ -77,7 +77,7 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
     int64 start = cv::getTickCount();
 
     // Reset all tasks before starting
-    for (auto& task : this->tasks) {
+    for (auto& task : this->input_tasks) {
       task->reset();
     }
 
@@ -91,7 +91,7 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
       InputData data;
       while (dp->get(data)) {
         this->prepareInputData(data);
-        for (auto& task : this->tasks) {
+        for (auto& task : this->input_tasks) {
           // Prepare task by providing new data input
           task->prepare(data);
           // Run task the specified number of loops
