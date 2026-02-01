@@ -655,9 +655,12 @@ class LineSegment : public Line<FT, PT> {
   //! trim line to box (default start is 0,0 and max_x is width and max_y is height)
   //! return true for success and false if line has no overlap with box
   inline bool trim2Box(FT max_x, FT max_y, FT min_x = FT(0), FT min_y = FT(0)) {
-    // only test left and right
+    // Use tolerance-based comparison for nearly horizontal/vertical lines
+    const FT tol = LIMITS<FT>::eps() * FT(100);
+
+    // only test left and right (nearly horizontal line)
     FT tmp;
-    if (this->nx_ == FT(0)) {
+    if (detail::abs(this->nx_) < tol) {
       if (this->ny_ < FT(0)) {
         tmp = max_x;
         max_x = -min_x;
@@ -679,8 +682,8 @@ class LineSegment : public Line<FT, PT> {
       if (this->end_ < min_x) this->end_ = min_x;
       return true;
     }
-    // only test upper and lower
-    if (this->ny_ == FT(0)) {
+    // only test upper and lower (nearly vertical line)
+    if (detail::abs(this->ny_) < tol) {
       if (this->nx_ > FT(0)) {
         tmp = max_y;
         max_y = -min_y;
@@ -719,8 +722,7 @@ class LineSegment : public Line<FT, PT> {
       setY(p, FT(0));
     };
 
-    zeroPoint(pb);
-    zeroPoint(pe);
+    // Initialize intersection points to zero (not the endpoints!)
     zeroPoint(ihl);
     zeroPoint(ihu);
     zeroPoint(ivl);

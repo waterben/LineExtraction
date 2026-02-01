@@ -627,7 +627,15 @@ void ControlWindow::setDetectorOption(int row, int col) {
   lsfm::Value tmp;
   tmp.fromString(ui->table_detector_params->item(row, col)->text().toStdString());
 
-  if (option.type() == lsfm::Value::FLOAT && tmp.type() == lsfm::Value::INT) tmp = static_cast<double>(tmp.getInt64());
+  // Handle type mismatches between option and parsed value
+  // Convert parsed INT to FLOAT if option expects FLOAT
+  if (option.type() == lsfm::Value::FLOAT && tmp.type() == lsfm::Value::INT) {
+    tmp = static_cast<double>(static_cast<int64_t>(tmp));
+  }
+  // Convert parsed FLOAT to INT if option expects INT
+  if (option.type() == lsfm::Value::INT && tmp.type() == lsfm::Value::FLOAT) {
+    tmp = static_cast<int64_t>(static_cast<double>(tmp));
+  }
 
   if (tmp.type() != option.type()) {
     ui->table_detector_params->blockSignals(true);
@@ -650,7 +658,13 @@ void ControlWindow::processData() {
   if (detectorIndex >= detectors.size()) return;
 
   DetectorPtr detector = detectors[detectorIndex];
-  if (detector->colorInput() && src.channels() != 3) return;
+  if (detector->colorInput() && src.channels() != 3) {
+    std::cerr << "Warning: Detector '" << detector->name.toStdString()
+              << "' requires a color image (3 channels), but input has " << src.channels() << " channel(s).\n"
+              << "Note: The 'Convert to Grayscale' option is enabled by default when loading images. "
+              << "Disable it to load color images." << std::endl;
+    return;
+  }
   double stime = double(cv::getTickCount());
   LineSegmentVector l = detector->detect(src);
   std::cout << "Time for line detection: " << (double(cv::getTickCount()) - stime) * 1000 / cv::getTickFrequency()
