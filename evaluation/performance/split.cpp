@@ -28,14 +28,14 @@ constexpr float TH_HIGH = 0.012F;
 template <class SPLIT>
 class Entry : public CVPerformanceTaskBase {
   SPLIT split_;
-  Grad grad_;
-  Nms nms_;
-  std::unique_ptr<Edge> edge_;
-  std::vector<Vec2i> points_;
+  Grad grad_{};
+  Nms nms_{};
+  std::unique_ptr<Edge> edge_{};
+  std::vector<Vec2i> points_{};
 
  public:
   Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : CVPerformanceTaskBase(n), split_(list) {}
+      : CVPerformanceTaskBase(n), split_(list), grad_(), nms_(), edge_(), points_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -60,14 +60,14 @@ class Entry : public CVPerformanceTaskBase {
 template <class SPLIT>
 class EntryPattern : public CVPerformanceTaskBase {
   SPLIT split_;
-  Grad grad_;
-  Nms nms_;
-  std::unique_ptr<Edge> edge_;
-  std::vector<Vec2i> points_;
+  Grad grad_{};
+  Nms nms_{};
+  std::unique_ptr<Edge> edge_{};
+  std::vector<Vec2i> points_{};
 
  public:
   EntryPattern(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : CVPerformanceTaskBase(n), split_(list) {}
+      : CVPerformanceTaskBase(n), split_(list), grad_(), nms_(), edge_(), points_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

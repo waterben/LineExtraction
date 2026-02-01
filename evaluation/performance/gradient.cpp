@@ -26,7 +26,7 @@ using namespace lsfm;
 template <class GT, class MT, class FT>
 class GradientEntry : public CVPerformanceTaskBase {
  public:
-  GradientEntry() : CVPerformanceTaskBase("") {}
+  GradientEntry() : CVPerformanceTaskBase(""), gradient_() {}
 
   GradientEntry(std::shared_ptr<GradientI<uchar, GT, MT, FT>> g, const std::string& n, int flags = 0)
       : CVPerformanceTaskBase(n, flags), gradient_(std::move(g)) {}

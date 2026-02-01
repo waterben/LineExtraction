@@ -24,10 +24,11 @@ using NmsFT = NonMaximaSuppression<FT, FT, FT, FastNMS8<FT, FT, FT>>;
 template <class FT>
 class Entry : public CVPerformanceTaskBase {
  protected:
-  GradFT<FT> grad_;
-  NmsFT<FT> nms_;
+  GradFT<FT> grad_{};
+  NmsFT<FT> nms_{};
 
-  Entry(const std::string& n) : CVPerformanceTaskBase(n + std::string(sizeof(FT) == 4 ? " 32F" : " 64F")) {}
+  Entry(const std::string& n)
+      : CVPerformanceTaskBase(n + std::string(sizeof(FT) == 4 ? " 32F" : " 64F")), grad_(), nms_() {}
 
   void prepareImpl(const cv::Mat& src) override {
     nms_ = NmsFT<FT>(0.004, 0.012, 2);
@@ -43,10 +44,10 @@ class Entry : public CVPerformanceTaskBase {
 
 template <class FT>
 class EntryNearest : public Entry<FT> {
-  PixelEstimator<FT, cv::Point> pe_;
+  PixelEstimator<FT, cv::Point> pe_{};
 
  public:
-  EntryNearest() : Entry<FT>("Nearest") {}
+  EntryNearest() : Entry<FT>("Nearest"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -67,10 +68,10 @@ class EntryNearest : public Entry<FT> {
 
 template <class FT>
 class EntrySpeLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeLin() : Entry<FT>("SpeLin") {}
+  EntrySpeLin() : Entry<FT>("SpeLin"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -91,10 +92,11 @@ class EntrySpeLin : public Entry<FT> {
 
 template <class FT>
 class EntrySpeQuad : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
+      pe_{};
 
  public:
-  EntrySpeQuad() : Entry<FT>("SpeQuad") {}
+  EntrySpeQuad() : Entry<FT>("SpeQuad"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -115,10 +117,10 @@ class EntrySpeQuad : public Entry<FT> {
 
 template <class FT>
 class EntrySpeCog : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeCog() : Entry<FT>("SpeCog") {}
+  EntrySpeCog() : Entry<FT>("SpeCog"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -139,10 +141,10 @@ class EntrySpeCog : public Entry<FT> {
 
 template <class FT>
 class EntrySpeSobel : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeSobel() : Entry<FT>("SpeSobel") {}
+  EntrySpeSobel() : Entry<FT>("SpeSobel"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -163,10 +165,10 @@ class EntrySpeSobel : public Entry<FT> {
 
 template <class FT>
 class EntrySpeLinDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear") {}
+  EntrySpeLinDirIpLin() : Entry<FT>("SpeLinDir IpLinear"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -187,10 +189,11 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
 
 template <class FT>
 class EntrySpeQuadDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, LinearInterpolator>>
+      pe_{};
 
  public:
-  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear") {}
+  EntrySpeQuadDirIpLin() : Entry<FT>("SpeQuadDir IpLinear"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -211,10 +214,10 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
 
 template <class FT>
 class EntrySpeCogDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear") {}
+  EntrySpeCogDirIpLin() : Entry<FT>("SpeCogDir IpLinear"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -235,10 +238,10 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
 
 template <class FT>
 class EntrySpeSobelDirIpLin : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, LinearInterpolator>> pe_{};
 
  public:
-  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear") {}
+  EntrySpeSobelDirIpLin() : Entry<FT>("SpeSobelDir IpLinear"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -259,10 +262,10 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
 
 template <class FT>
 class EntrySpeLinDirIpCubic : public Entry<FT> {
-  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>> pe_;
+  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, LinearEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic") {}
+  EntrySpeLinDirIpCubic() : Entry<FT>("SpeLinDir IpCubic"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -284,10 +287,10 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
 template <class FT>
 class EntrySpeQuadDirIpCubic : public Entry<FT> {
   PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, QuadraticEstimate, CubicInterpolator>>
-      pe_;
+      pe_{};
 
  public:
-  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic") {}
+  EntrySpeQuadDirIpCubic() : Entry<FT>("SpeQuadDir IpCubic"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -308,10 +311,10 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
 
 template <class FT>
 class EntrySpeCogDirIpCubic : public Entry<FT> {
-  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>> pe_;
+  PixelEstimator<FT, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, CoGEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic") {}
+  EntrySpeCogDirIpCubic() : Entry<FT>("SpeCogDir IpCubic"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
@@ -332,10 +335,10 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
 
 template <class FT>
 class EntrySpeSobelDirIpCubic : public Entry<FT> {
-  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>> pe_;
+  PixelEstimator<float, cv::Point_<FT>, SubPixelEstimator<FT, FT, cv::Point_, SobelEstimate, CubicInterpolator>> pe_{};
 
  public:
-  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic") {}
+  EntrySpeSobelDirIpCubic() : Entry<FT>("SpeSobelDir IpCubic"), pe_() {}
 
  protected:
   void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {

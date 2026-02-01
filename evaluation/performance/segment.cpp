@@ -26,11 +26,12 @@ constexpr float TH_HIGH = 0.012F;
 /// @brief Generic edge segment detection performance task
 class Entry : public CVPerformanceTaskBase {
   cv::Ptr<EsdBase<int>> edge_;
-  Grad grad_;
-  Nms nms_;
+  Grad grad_{};
+  Nms nms_{};
 
  public:
-  Entry(cv::Ptr<EsdBase<int>> edge, const std::string& n) : CVPerformanceTaskBase(n), edge_(std::move(edge)) {}
+  Entry(cv::Ptr<EsdBase<int>> edge, const std::string& n)
+      : CVPerformanceTaskBase(n), edge_(std::move(edge)), grad_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

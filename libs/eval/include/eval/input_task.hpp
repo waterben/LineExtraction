@@ -22,6 +22,7 @@ class InputTask : public Task {
   using InputData = InputDataT;
 
   using Task::name;
+  using Task::prepare;
   using Task::reset;
   using Task::run;
   using Task::saveVisualResults;

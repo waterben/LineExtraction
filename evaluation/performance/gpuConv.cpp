@@ -14,10 +14,10 @@ using namespace lsfm;
 /// @brief CPU Gaussian convolution performance task
 template <int KS>
 class EntryConvCPU : public CVPerformanceTaskBase {
-  cv::Mat tmp_;
+  cv::Mat tmp_{};
 
  public:
-  EntryConvCPU() : CVPerformanceTaskBase("Conv CPU " + std::to_string(KS)) {}
+  EntryConvCPU() : CVPerformanceTaskBase("Conv CPU " + std::to_string(KS)), tmp_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override { cv::GaussianBlur(src, tmp_, cv::Size(KS, KS), 0); }
@@ -59,11 +59,11 @@ class EntryConvCL : public CVPerformanceTaskBase {
 /// @brief OpenCL Gaussian convolution without memory transfer (compute only) performance task
 template <int KS>
 class EntryConvCLNT : public CVPerformanceTaskBase {
-  cv::UMat in_;
-  cv::UMat tmp_;
+  cv::UMat in_{};
+  cv::UMat tmp_{};
 
  public:
-  EntryConvCLNT() : CVPerformanceTaskBase("Conv CL NT " + std::to_string(KS)) {}
+  EntryConvCLNT() : CVPerformanceTaskBase("Conv CL NT " + std::to_string(KS)), in_(), tmp_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

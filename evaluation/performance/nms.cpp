@@ -16,11 +16,11 @@ using namespace lsfm;
 
 /// @brief NMS4 Fast (4-connected) performance task
 class EntryNMS4Fast : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_;
-  NonMaximaSuppression<short, int, float, FastNMS4<short, int, float>> nms_;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS4<short, int, float>> nms_{};
 
  public:
-  EntryNMS4Fast() : CVPerformanceTaskBase("NMS4 Fast") {}
+  EntryNMS4Fast() : CVPerformanceTaskBase("NMS4 Fast"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -39,11 +39,11 @@ class EntryNMS4Fast : public CVPerformanceTaskBase {
 
 /// @brief NMS Fast (8-connected) performance task
 class EntryNMSFast : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_;
-  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_{};
 
  public:
-  EntryNMSFast() : CVPerformanceTaskBase("NMS Fast") {}
+  EntryNMSFast() : CVPerformanceTaskBase("NMS Fast"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -62,11 +62,11 @@ class EntryNMSFast : public CVPerformanceTaskBase {
 
 /// @brief NMS Fast with direction input performance task
 class EntryNMSFastDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_;
-  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> nms_{};
 
  public:
-  EntryNMSFastDir() : CVPerformanceTaskBase("NMS Fast Dir") {}
+  EntryNMSFastDir() : CVPerformanceTaskBase("NMS Fast Dir"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -87,11 +87,11 @@ class EntryNMSFastDir : public CVPerformanceTaskBase {
 
 /// @brief NMS Precise Linear interpolation performance task
 class EntryNMSPreciseLinear : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_;
-  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false>> nms_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false>> nms_{};
 
  public:
-  EntryNMSPreciseLinear() : CVPerformanceTaskBase("NMS Precise Linear") {}
+  EntryNMSPreciseLinear() : CVPerformanceTaskBase("NMS Precise Linear"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -110,12 +110,12 @@ class EntryNMSPreciseLinear : public CVPerformanceTaskBase {
 
 /// @brief NMS Precise Linear with direction input performance task
 class EntryNMSPreciseLinearDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
   NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, LinearInterpolator, PolarCV>>
-      nms_;
+      nms_{};
 
  public:
-  EntryNMSPreciseLinearDir() : CVPerformanceTaskBase("NMS Precise Linear Dir") {}
+  EntryNMSPreciseLinearDir() : CVPerformanceTaskBase("NMS Precise Linear Dir"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -136,11 +136,11 @@ class EntryNMSPreciseLinearDir : public CVPerformanceTaskBase {
 
 /// @brief NMS Precise Cubic interpolation performance task
 class EntryNMSPreciseCubic : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_;
-  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator>> nms_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator>> nms_{};
 
  public:
-  EntryNMSPreciseCubic() : CVPerformanceTaskBase("NMS Precise Cubic") {}
+  EntryNMSPreciseCubic() : CVPerformanceTaskBase("NMS Precise Cubic"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -159,12 +159,12 @@ class EntryNMSPreciseCubic : public CVPerformanceTaskBase {
 
 /// @brief NMS Precise Cubic with direction input performance task
 class EntryNMSPreciseCubicDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
   NonMaximaSuppression<short, float, float, PreciseNMS<short, float, false, float, EMap8, CubicInterpolator, PolarCV>>
-      nms_;
+      nms_{};
 
  public:
-  EntryNMSPreciseCubicDir() : CVPerformanceTaskBase("NMS Precise Cubic Dir") {}
+  EntryNMSPreciseCubicDir() : CVPerformanceTaskBase("NMS Precise Cubic Dir"), sobel_(), nms_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -189,11 +189,11 @@ class EntryNMSPreciseCubicDir : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing without direction performance task
 class EntryZCNoDir : public CVPerformanceTaskBase {
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_;
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_{};
 
  public:
-  EntryZCNoDir() : CVPerformanceTaskBase("ZC No Dir") {}
+  EntryZCNoDir() : CVPerformanceTaskBase("ZC No Dir"), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override { laplace_.process(src); }
@@ -209,12 +209,12 @@ class EntryZCNoDir : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing fast performance task
 class EntryZCFast : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float>> zc_{};
 
  public:
-  EntryZCFast() : CVPerformanceTaskBase("ZC Fast") {}
+  EntryZCFast() : CVPerformanceTaskBase("ZC Fast"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -233,12 +233,12 @@ class EntryZCFast : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing fast with direction performance task
 class EntryZCFastDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, FastZC<short, short, float, NCC_BASIC, EZCMap8, PolarCV>> zc_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, FastZC<short, short, float, NCC_BASIC, EZCMap8, PolarCV>> zc_{};
 
  public:
-  EntryZCFastDir() : CVPerformanceTaskBase("ZC Fast Dir") {}
+  EntryZCFastDir() : CVPerformanceTaskBase("ZC Fast Dir"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -259,12 +259,12 @@ class EntryZCFastDir : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing precise linear interpolation performance task
 class EntryZCPreciseLinear : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator>> zc_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator>> zc_{};
 
  public:
-  EntryZCPreciseLinear() : CVPerformanceTaskBase("ZC Precise Linear") {}
+  EntryZCPreciseLinear() : CVPerformanceTaskBase("ZC Precise Linear"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -283,13 +283,13 @@ class EntryZCPreciseLinear : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing precise linear with direction performance task
 class EntryZCPreciseLinearDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
   ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, LinearInterpolator, PolarCV>>
-      zc_;
+      zc_{};
 
  public:
-  EntryZCPreciseLinearDir() : CVPerformanceTaskBase("ZC Precise Linear Dir") {}
+  EntryZCPreciseLinearDir() : CVPerformanceTaskBase("ZC Precise Linear Dir"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -310,12 +310,12 @@ class EntryZCPreciseLinearDir : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing precise cubic interpolation performance task
 class EntryZCPreciseCubic : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator>> zc_;
+  DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator>> zc_{};
 
  public:
-  EntryZCPreciseCubic() : CVPerformanceTaskBase("ZC Precise Cubic") {}
+  EntryZCPreciseCubic() : CVPerformanceTaskBase("ZC Precise Cubic"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -334,12 +334,13 @@ class EntryZCPreciseCubic : public CVPerformanceTaskBase {
 
 /// @brief Zero-crossing precise cubic with direction performance task
 class EntryZCPreciseCubicDir : public CVPerformanceTaskBase {
-  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_;
-  LaplaceSimple<uchar, short> laplace_;
-  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator, PolarCV>> zc_;
+  DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, FastDirection> sobel_{};
+  LaplaceSimple<uchar, short> laplace_{};
+  ZeroCrossing<short, short, float, PreciseZC<short, short, float, NCC_BASIC, EZCMap8, CubicInterpolator, PolarCV>>
+      zc_{};
 
  public:
-  EntryZCPreciseCubicDir() : CVPerformanceTaskBase("ZC Precise Cubic Dir") {}
+  EntryZCPreciseCubicDir() : CVPerformanceTaskBase("ZC Precise Cubic Dir"), sobel_(), laplace_(), zc_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

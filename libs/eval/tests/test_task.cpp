@@ -26,6 +26,9 @@ struct DummyInputTask : public lsfm::InputTask<DummyInputData> {
   DummyInputTask(const std::string& task_name, bool task_verbose = false)
       : InputTask(task_name, task_verbose), prepared(false), run_count(0), input_name() {}
 
+  // Bring base class prepare overloads into scope
+  using lsfm::InputTask<DummyInputData>::prepare;
+
   void prepare(const DummyInputData& data) override {
     prepared = true;
     input_name = data.name;

@@ -13,12 +13,12 @@ using namespace lsfm;
 
 /// @brief CPU FFT performance task
 class EntryFFTCPU : public CVPerformanceTaskBase {
-  cv::Mat padded_;
-  cv::Mat complexI_;
-  cv::Mat tmp_;
+  cv::Mat padded_{};
+  cv::Mat complexI_{};
+  cv::Mat tmp_{};
 
  public:
-  EntryFFTCPU() : CVPerformanceTaskBase("FFT CPU") {}
+  EntryFFTCPU() : CVPerformanceTaskBase("FFT CPU"), padded_(), complexI_(), tmp_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -42,10 +42,10 @@ class EntryFFTCPU : public CVPerformanceTaskBase {
 
 /// @brief OpenCL FFT with memory transfer performance task
 class EntryFFTCL : public CVPerformanceTaskBase {
-  cv::Mat complexI_;
+  cv::Mat complexI_{};
 
  public:
-  EntryFFTCL() : CVPerformanceTaskBase("FFT CL") {}
+  EntryFFTCL() : CVPerformanceTaskBase("FFT CL"), complexI_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
@@ -73,12 +73,12 @@ class EntryFFTCL : public CVPerformanceTaskBase {
 
 /// @brief OpenCL FFT without memory transfer (compute only) performance task
 class EntryFFTCLNT : public CVPerformanceTaskBase {
-  cv::Mat complexI_;
-  cv::UMat in_;
-  cv::UMat tmp_;
+  cv::Mat complexI_{};
+  cv::UMat in_{};
+  cv::UMat tmp_{};
 
  public:
-  EntryFFTCLNT() : CVPerformanceTaskBase("FFT CL NT") {}
+  EntryFFTCLNT() : CVPerformanceTaskBase("FFT CL NT"), complexI_(), in_(), tmp_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

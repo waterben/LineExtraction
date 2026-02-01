@@ -27,13 +27,13 @@ constexpr float TH_HIGH = 0.012F;
 template <class EVAL>
 class Entry : public CVPerformanceTaskBase {
   EVAL eval_;
-  Grad grad_;
-  Nms nms_;
-  std::unique_ptr<Edge> edge_;
+  Grad grad_{};
+  Nms nms_{};
+  std::unique_ptr<Edge> edge_{};
 
  public:
   Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : CVPerformanceTaskBase(n), eval_(list) {}
+      : CVPerformanceTaskBase(n), eval_(list), grad_(), nms_(), edge_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {

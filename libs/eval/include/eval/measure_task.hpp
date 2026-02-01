@@ -60,7 +60,7 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
                     const std::string& tr_target_path = std::string(),
                     bool tr_verbose = false,
                     bool tr_visual_results = false)
-      : Base(std::move(tr_data_provider), tr_name, tr_target_path, tr_verbose, tr_visual_results) {}
+      : Base(std::move(tr_data_provider), tr_name, tr_target_path, tr_verbose, tr_visual_results), results_() {}
   ~MeasureTaskRunner() override = default;
 
   using Base::data_provider;

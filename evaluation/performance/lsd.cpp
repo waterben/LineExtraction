@@ -30,10 +30,10 @@ using namespace lsfm;
 /// @brief Generic LSD performance task wrapper
 template <class FT>
 class Entry : public CVPerformanceTaskBase {
-  std::shared_ptr<LsdBase<FT>> lsd_;
+  std::shared_ptr<LsdBase<FT>> lsd_{};
 
  public:
-  Entry() : CVPerformanceTaskBase("") {}
+  Entry() : CVPerformanceTaskBase(""), lsd_() {}
 
   Entry(std::shared_ptr<LsdBase<FT>> lsd, const std::string& n) : CVPerformanceTaskBase(n), lsd_(std::move(lsd)) {}
 

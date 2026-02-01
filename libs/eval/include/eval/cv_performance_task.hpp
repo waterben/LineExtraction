@@ -154,20 +154,14 @@ class CVPerformanceTaskBase : public PerformanceTask<CVPerformanceData> {
   /// @brief Legacy interface: called for saving visual results
   virtual void saveResults() {}
 
-  /// @brief Legacy interface: set value by name (used by some tests to configure tasks)
+  /// @brief Set a parameter value by name (used by tests to configure tasks)
   virtual void value(const std::string& /*param_name*/, const lsfm::Value& /*param_value*/) {}
-
-  /// @brief Public wrapper for prepare - allows LegacyPerformanceTest to call it
-  void prepareTask(const InputData& data) { prepare(data); }
-
-  /// @brief Public wrapper for run - allows LegacyPerformanceTest to call it
-  void runTask(std::size_t loops) { run(loops); }
-
-  /// @brief Public wrapper for measure - allows LegacyPerformanceTest to call it
-  void recordMeasure() { measure(); }
 
   /// @brief Access current data (for subclasses that need it in runImpl)
   const InputData& currentData() const { return current_data_; }
+
+  // Bring base class prepare overloads into scope to avoid hiding
+  using InputTask<InputData>::prepare;
 
   // Public interface for TaskRunner
   void prepare(const InputData& data) override {

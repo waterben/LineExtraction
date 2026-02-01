@@ -22,15 +22,20 @@ template <class FT>
 class Entry : public CVPerformanceTaskBase {
   cv::Ptr<FilterI<uchar>> filter_;
   cv::Ptr<Threshold<FT>> threshold_;
-  FilterResults filterRes_;
-  cv::Mat thresholdRes_;
-  std::string resName_;
+  FilterResults filterRes_{};
+  cv::Mat thresholdRes_{};
+  std::string resName_{};
 
  public:
-  Entry() : CVPerformanceTaskBase("") {}
+  Entry() : CVPerformanceTaskBase(""), filterRes_(), thresholdRes_(), resName_() {}
 
   Entry(cv::Ptr<FilterI<uchar>> filter, cv::Ptr<Threshold<FT>> threshold, const std::string& n, int flags = 0)
-      : CVPerformanceTaskBase(n, flags), filter_(std::move(filter)), threshold_(std::move(threshold)) {}
+      : CVPerformanceTaskBase(n, flags),
+        filter_(std::move(filter)),
+        threshold_(std::move(threshold)),
+        filterRes_(),
+        thresholdRes_(),
+        resName_() {}
 
  protected:
   void prepareImpl(const cv::Mat& src) override {
