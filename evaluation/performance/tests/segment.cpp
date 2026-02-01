@@ -24,7 +24,7 @@ struct SegPerformaceData : public TaskData {
   Nms nms;
 };
 
-struct SegPerformanceTest : public PerformanceTest {
+struct SegPerformanceTest : public LegacyPerformanceTest {
   SegPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
   virtual ~SegPerformanceTest() {}
 
@@ -41,14 +41,14 @@ struct Entry : public PerformanceTaskBase {
   virtual ~Entry() {}
   virtual void run(const TaskData& data, int runs, bool verbose) {
     const SegPerformaceData& pdata = dynamic_cast<const SegPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       edge->detect(pdata.grad, pdata.nms);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)

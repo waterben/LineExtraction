@@ -25,7 +25,7 @@ struct SpePerformaceData : public TaskData {
 };
 
 template <class FT>
-struct SpePerformanceTest : public PerformanceTest {
+struct SpePerformanceTest : public LegacyPerformanceTest {
   SpePerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
   virtual ~SpePerformanceTest() {}
 
@@ -69,8 +69,8 @@ class EntryNearest : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -80,7 +80,7 @@ class EntryNearest : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -104,8 +104,8 @@ class EntrySpeLin : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -115,7 +115,7 @@ class EntrySpeLin : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -139,8 +139,8 @@ class EntrySpeQuad : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -150,7 +150,7 @@ class EntrySpeQuad : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -174,8 +174,8 @@ class EntrySpeCog : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -185,7 +185,7 @@ class EntrySpeCog : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -209,8 +209,8 @@ class EntrySpeSobel : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -220,7 +220,7 @@ class EntrySpeSobel : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convert(idxs, points, mag, n.directionMap());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -244,8 +244,8 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -256,7 +256,7 @@ class EntrySpeLinDirIpLin : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -280,8 +280,8 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -292,7 +292,7 @@ class EntrySpeQuadDirIpLin : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -316,8 +316,8 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -328,7 +328,7 @@ class EntrySpeCogDirIpLin : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -352,8 +352,8 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -364,7 +364,7 @@ class EntrySpeSobelDirIpLin : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -388,8 +388,8 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -400,7 +400,7 @@ class EntrySpeLinDirIpCubic : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -424,8 +424,8 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -436,7 +436,7 @@ class EntrySpeQuadDirIpCubic : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -460,8 +460,8 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -472,7 +472,7 @@ class EntrySpeCogDirIpCubic : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -496,8 +496,8 @@ class EntrySpeSobelDirIpCubic : public Entry<FT> {
                        const NmsFT<FT>& n,
                        int runs,
                        bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     IndexVector idxs = n.hysteresis_edgels();
@@ -508,7 +508,7 @@ class EntrySpeSobelDirIpCubic : public Entry<FT> {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       pe.convertDir(idxs, points, mag, dir);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)

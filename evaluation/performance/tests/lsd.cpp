@@ -35,15 +35,15 @@ struct Entry : public PerformanceTaskDefault {
 
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     lsd->detect(src);
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       lsd->detect(src);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -56,7 +56,7 @@ struct Entry : public PerformanceTaskDefault {
 };
 
 PerformanceTestPtr createLSDPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "LSD";
   try {
     test->data = provider;

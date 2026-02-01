@@ -28,7 +28,7 @@ struct SplitPerformaceData : public TaskData {
   Edge edge;
 };
 
-struct SplitPerformanceTest : public PerformanceTest {
+struct SplitPerformanceTest : public LegacyPerformanceTest {
   SplitPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
   virtual ~SplitPerformanceTest() {}
 
@@ -48,8 +48,8 @@ struct Entry : public PerformanceTaskBase {
 
   virtual void run(const TaskData& data, int runs, bool verbose) {
     const SplitPerformaceData& pdata = dynamic_cast<const SplitPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     EdgeSegmentVector out;
     // make sure segments are build form pattern segments
@@ -61,7 +61,7 @@ struct Entry : public PerformanceTaskBase {
       start = static_cast<uint64>(cv::getTickCount());
       split.setup(pdata.grad, pdata.nms);
       split.apply(pdata.edge, points, out);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -81,8 +81,8 @@ struct EntryPattern : public PerformanceTaskBase {
 
   virtual void run(const TaskData& data, int runs, bool verbose) {
     const SplitPerformaceData& pdata = dynamic_cast<const SplitPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     EdgeSegmentVector out;
     std::vector<Vec2i> points;
@@ -92,7 +92,7 @@ struct EntryPattern : public PerformanceTaskBase {
       start = static_cast<uint64>(cv::getTickCount());
       split.setup(pdata.grad, pdata.nms);
       split.applyP(pdata.edge, points, out);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)

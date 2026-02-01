@@ -25,8 +25,8 @@ struct Entry : public PerformanceTaskDefault {
   std::shared_ptr<GradientI<uchar, GT, MT, FT>> gradient;
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     gradient->process(src);
     gradient->magnitude();
@@ -36,7 +36,7 @@ struct Entry : public PerformanceTaskDefault {
       start = static_cast<uint64>(cv::getTickCount());
       gradient->process(src);
       tmp = gradient->magnitude();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -49,7 +49,7 @@ struct Entry : public PerformanceTaskDefault {
 };
 
 PerformanceTestPtr createGradientPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "Gradient";
   try {
     test->data = provider;

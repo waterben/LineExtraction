@@ -1,192 +1,175 @@
-#include "opencv2/imgproc/imgproc.hpp"
+/// @file gpuFFT.cpp
+/// @brief GPU FFT performance tests comparing CPU, OpenCL and CUDA implementations
 #include "performance_test.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
 
 
 using namespace lsfm;
 
-struct EntryFFTCPU : public PerformanceTaskDefault {
-  EntryFFTCPU() : PerformanceTaskDefault("FFT CPU") {}
 
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::Mat tmp, padded;
+// =============================================================================
+// CPU FFT Performance Tasks
+// =============================================================================
+
+/// @brief CPU FFT performance task
+class EntryFFTCPU : public CVPerformanceTaskBase {
+  cv::Mat padded_;
+  cv::Mat complexI_;
+  cv::Mat tmp_;
+
+ public:
+  EntryFFTCPU() : CVPerformanceTaskBase("FFT CPU") {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
     int m = cv::getOptimalDFTSize(src.rows);
-    int n = cv::getOptimalDFTSize(src.cols);  // on the border add zero values
-    cv::copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
-    cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
-    cv::Mat complexI;
-    cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start = 0;
-    cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    int n = cv::getOptimalDFTSize(src.cols);
+    cv::copyMakeBorder(src, padded_, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
+    cv::Mat planes[] = {cv::Mat_<float>(padded_), cv::Mat::zeros(padded_.size(), CV_32F)};
+    cv::merge(planes, 2, complexI_);
+    cv::dft(complexI_, tmp_, cv::DFT_COMPLEX_OUTPUT);
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    cv::dft(complexI_, tmp_, cv::DFT_COMPLEX_OUTPUT);
   }
 };
 
 
-struct EntryFFTCL : public PerformanceTaskDefault {
-  EntryFFTCL() : PerformanceTaskDefault("FFT CL") {}
+// =============================================================================
+// OpenCL FFT Performance Tasks
+// =============================================================================
 
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::Mat padded, tmp2;
+/// @brief OpenCL FFT with memory transfer performance task
+class EntryFFTCL : public CVPerformanceTaskBase {
+  cv::Mat complexI_;
+
+ public:
+  EntryFFTCL() : CVPerformanceTaskBase("FFT CL") {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    cv::Mat padded;
     int m = cv::getOptimalDFTSize(src.rows);
-    int n = cv::getOptimalDFTSize(src.cols);  // on the border add zero values
+    int n = cv::getOptimalDFTSize(src.cols);
     cv::copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
-    cv::Mat complexI;
-    cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start = 0;
-
-    cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
+    cv::merge(planes, 2, complexI_);
+    cv::UMat in = complexI_.getUMat(cv::ACCESS_READ);
+    cv::UMat tmp;
     cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
-    tmp.copyTo(tmp2);  // to RAM
+    cv::Mat tmp2;
+    tmp.copyTo(tmp2);
+  }
 
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
-      cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
-      tmp.copyTo(tmp2);  // to RAM
-
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    cv::UMat in = complexI_.getUMat(cv::ACCESS_READ);
+    cv::UMat tmp;
+    cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
+    cv::Mat tmp2;
+    tmp.copyTo(tmp2);
   }
 };
 
-struct EntryFFTCLNT : public PerformanceTaskDefault {
-  EntryFFTCLNT() : PerformanceTaskDefault("FFT CL NT") {}
+/// @brief OpenCL FFT without memory transfer (compute only) performance task
+class EntryFFTCLNT : public CVPerformanceTaskBase {
+  cv::Mat complexI_;
+  cv::UMat in_;
+  cv::UMat tmp_;
 
-  using PerformanceTaskDefault::run;
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::Mat padded, tmp2;
+ public:
+  EntryFFTCLNT() : CVPerformanceTaskBase("FFT CL NT") {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    cv::Mat padded;
     int m = cv::getOptimalDFTSize(src.rows);
-    int n = cv::getOptimalDFTSize(src.cols);  // on the border add zero values
+    int n = cv::getOptimalDFTSize(src.cols);
     cv::copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
-    cv::Mat complexI;
-    cv::merge(planes, 2, complexI);                        // Add to the expanded another plane with zeros
-    cv::UMat in = complexI.getUMat(cv::ACCESS_READ), tmp;  // to GPU
-    cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
+    cv::merge(planes, 2, complexI_);
+    in_ = complexI_.getUMat(cv::ACCESS_READ);
+    cv::dft(in_, tmp_, cv::DFT_COMPLEX_OUTPUT);
+  }
 
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
-      start = static_cast<uint64>(cv::getTickCount());
-      cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-      tmp.copyTo(tmp2);  // to RAM
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    in_ = complexI_.getUMat(cv::ACCESS_READ);
+    cv::dft(in_, tmp_, cv::DFT_COMPLEX_OUTPUT);
   }
 };
 
 
 #ifdef ENABLE_CUDA
-struct EntryFFTCuda : public PerformanceTaskDefault {
-  EntryFFTCuda() : PerformanceTaskDefault("FFT Cuda") {}
+// =============================================================================
+// CUDA FFT Performance Tasks
+// =============================================================================
 
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    cv::Mat padded, tmp2;
+/// @brief CUDA FFT with memory transfer performance task
+class EntryFFTCuda : public CVPerformanceTaskBase {
+  cv::Mat complexI_;
+  cv::cuda::GpuMat in_;
+  cv::cuda::GpuMat tmp_;
+
+ public:
+  EntryFFTCuda() : CVPerformanceTaskBase("FFT Cuda") {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
+    cv::Mat padded;
     int m = cv::getOptimalDFTSize(src.rows);
-    int n = cv::getOptimalDFTSize(src.cols);  // on the border add zero values
+    int n = cv::getOptimalDFTSize(src.cols);
     cv::copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
-    cv::Mat complexI;
-    cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start = 0;
-    cv::cuda::GpuMat in, tmp;
-    in.upload(complexI);
-    cv::cuda::dft(in, tmp, in.size());
-    tmp.download(tmp2);
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      in.upload(complexI);
-      cv::cuda::dft(in, tmp, in.size());
-      tmp.download(tmp2);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    cv::merge(planes, 2, complexI_);
+    in_.upload(complexI_);
+    cv::cuda::dft(in_, tmp_, in_.size());
+    cv::Mat tmp2;
+    tmp_.download(tmp2);
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    in_.upload(complexI_);
+    cv::cuda::dft(in_, tmp_, in_.size());
+    cv::Mat tmp2;
+    tmp_.download(tmp2);
   }
 };
 
-struct EntryFFTCudaNT : public PerformanceTaskDefault {
-  EntryFFTCudaNT() : PerformanceTaskDefault("FFT Cuda NT") {}
+/// @brief CUDA FFT without memory transfer (compute only) performance task
+class EntryFFTCudaNT : public CVPerformanceTaskBase {
+  cv::cuda::GpuMat in_;
+  cv::cuda::GpuMat tmp_;
 
-  virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
+ public:
+  EntryFFTCudaNT() : CVPerformanceTaskBase("FFT Cuda NT") {}
+
+ protected:
+  void prepareImpl(const cv::Mat& src) override {
     cv::Mat padded;
     int m = cv::getOptimalDFTSize(src.rows);
-    int n = cv::getOptimalDFTSize(src.cols);  // on the border add zero values
+    int n = cv::getOptimalDFTSize(src.cols);
     cv::copyMakeBorder(src, padded, 0, m - src.rows, 0, n - src.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
     cv::Mat planes[] = {cv::Mat_<float>(padded), cv::Mat::zeros(padded.size(), CV_32F)};
     cv::Mat complexI;
-    cv::merge(planes, 2, complexI);  // Add to the expanded another plane with zeros
-    uint64 start = 0;
-    cv::cuda::GpuMat in, tmp;
-    in.upload(complexI);
-    cv::cuda::dft(in, tmp, in.size());
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      cv::cuda::dft(in, tmp, in.size());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    cv::merge(planes, 2, complexI);
+    in_.upload(complexI);
+    cv::cuda::dft(in_, tmp_, in_.size());
+  }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
+    cv::cuda::dft(in_, tmp_, in_.size());
   }
 };
 #endif
 
 
-PerformanceTestPtr createGpuFFTPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
-  test->name = "GPU FFT";
-  try {
-    // add default
-    test->data = provider;
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+/// @brief Create GPU FFT performance test with all tasks
+CVPerformanceTestPtr createGpuFFTPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "GPU FFT");
 
   test->tasks.push_back(std::make_shared<EntryFFTCPU>());
   test->tasks.push_back(std::make_shared<EntryFFTCL>());
@@ -195,6 +178,7 @@ PerformanceTestPtr createGpuFFTPerformanceTest(const lsfm::DataProviderList& pro
   test->tasks.push_back(std::make_shared<EntryFFTCuda>());
   test->tasks.push_back(std::make_shared<EntryFFTCudaNT>());
 #endif
+
   return test;
 }
 

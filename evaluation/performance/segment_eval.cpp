@@ -1,96 +1,71 @@
+/// @file segment_eval.cpp
+/// @brief Edge segment evaluation (NFA) performance tests
 #include "performance_test.hpp"
 #include <edge/edge_linking.hpp>
 #include <edge/nfa.hpp>
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 
+#include <memory>
 
 using namespace lsfm;
 
-typedef DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> Grad;
-typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms;
-typedef EsdLinking<int> Edge;
 
-constexpr float th_low = 0.004f, th_high = 0.012f;
+using Grad = DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>;
+using Nms = NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>>;
+using Edge = EsdLinking<int>;
 
-struct SegEvalPerformaceData : public TaskData {
-  SegEvalPerformaceData(const std::string& n, const cv::Mat& s)
-      : TaskData(n, s),
-        grad(),
-        nms(th_low, th_high),
-        edge(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))) {
-    if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-    grad.process(src);
-    nms.process(grad);
-    edge.detect(grad, nms);
-  }
+constexpr float TH_LOW = 0.004F;
+constexpr float TH_HIGH = 0.012F;
 
-  virtual ~SegEvalPerformaceData() = default;
 
-  Grad grad;
-  Nms nms;
-  Edge edge;
-};
+// =============================================================================
+// Segment Evaluation Performance Tasks
+// =============================================================================
 
-struct SegEvalPerformanceTest : public PerformanceTest {
-  SegEvalPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
-  virtual ~SegEvalPerformanceTest() {}
+/// @brief Generic segment evaluation (NFA) performance task
+template <class EVAL>
+class Entry : public CVPerformanceTaskBase {
+  EVAL eval_;
+  Grad grad_;
+  Nms nms_;
+  std::unique_ptr<Edge> edge_;
+
+ public:
+  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
+      : CVPerformanceTaskBase(n), eval_(list) {}
 
  protected:
-  // prepare task data
-  std::unique_ptr<TaskData> prepareTaskData(const std::string& src_name, cv::Mat& src) override {
-    prepareSource(src);
-    return std::make_unique<SegEvalPerformaceData>(src_name, src);
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = Nms(TH_LOW, TH_HIGH);
+    grad_.process(src);
+    nms_.process(grad_);
+    edge_ = std::make_unique<Edge>(10, 3, 3, static_cast<float>(grad_.magnitudeThreshold(TH_LOW)));
+    edge_->detect(grad_, nms_);
   }
-};
 
-template <class EVAL>
-struct Entry : public PerformanceTaskBase {
-  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : PerformanceTaskBase(n), eval(list) {}
-  virtual ~Entry() {}
-
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const SegEvalPerformaceData& pdata = dynamic_cast<const SegEvalPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
     EdgeSegmentVector out;
-    std::vector<float> n;
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      eval.update(pdata.grad);
-      eval.eval(pdata.edge, out, n);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    std::vector<float> nfa_values;
+    eval_.update(grad_);
+    eval_.eval(*edge_, out, nfa_values);
   }
-
-  EVAL eval;
 };
 
-PerformanceTestPtr createSegEvalPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<SegEvalPerformanceTest>();
-  test->name = "SegEval";
-  try {
-    // add default
-    test->data = provider;
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+// =============================================================================
+// Test Registration
+// =============================================================================
+
+/// @brief Create segment evaluation performance test with all tasks
+CVPerformanceTestPtr createSegEvalPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "SegEval");
+
   test->tasks.push_back(
-      PerformanceTaskPtr(new Entry<NfaContrast<int, float, index_type, std::map<int, float>>>("NFA Contrast")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<NfaBinom<short, float, index_type>>("NFA Binom")));
-  test->tasks.push_back(PerformanceTaskPtr(new Entry<NfaBinom2<short, float, index_type>>("NFA Binom2")));
-  // one more variant using mag, patterns etc.
+      std::make_shared<Entry<NfaContrast<int, float, index_type, std::map<int, float>>>>("NFA Contrast"));
+  test->tasks.push_back(std::make_shared<Entry<NfaBinom<short, float, index_type>>>("NFA Binom"));
+  test->tasks.push_back(std::make_shared<Entry<NfaBinom2<short, float, index_type>>>("NFA Binom2"));
+
   return test;
 }
 

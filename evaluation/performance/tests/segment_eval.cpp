@@ -27,7 +27,7 @@ struct SegEvalPerformaceData : public TaskData {
   Edge edge;
 };
 
-struct SegEvalPerformanceTest : public PerformanceTest {
+struct SegEvalPerformanceTest : public LegacyPerformanceTest {
   SegEvalPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
   virtual ~SegEvalPerformanceTest() {}
 
@@ -47,8 +47,8 @@ struct Entry : public PerformanceTaskBase {
 
   virtual void run(const TaskData& data, int runs, bool verbose) {
     const SegEvalPerformaceData& pdata = dynamic_cast<const SegEvalPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     EdgeSegmentVector out;
     std::vector<float> n;
@@ -57,7 +57,7 @@ struct Entry : public PerformanceTaskBase {
       start = static_cast<uint64>(cv::getTickCount());
       eval.update(pdata.grad);
       eval.eval(pdata.edge, out, n);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)

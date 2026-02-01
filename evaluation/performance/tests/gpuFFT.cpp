@@ -8,8 +8,8 @@ struct EntryFFTCPU : public PerformanceTaskDefault {
   EntryFFTCPU() : PerformanceTaskDefault("FFT CPU") {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp, padded;
     int m = cv::getOptimalDFTSize(src.rows);
@@ -23,7 +23,7 @@ struct EntryFFTCPU : public PerformanceTaskDefault {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       cv::dft(complexI, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -38,8 +38,8 @@ struct EntryFFTCL : public PerformanceTaskDefault {
   EntryFFTCL() : PerformanceTaskDefault("FFT CL") {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat padded, tmp2;
     int m = cv::getOptimalDFTSize(src.rows);
@@ -60,7 +60,7 @@ struct EntryFFTCL : public PerformanceTaskDefault {
       cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
       tmp.copyTo(tmp2);  // to RAM
 
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -74,8 +74,8 @@ struct EntryFFTCLNT : public PerformanceTaskDefault {
   EntryFFTCLNT() : PerformanceTaskDefault("FFT CL NT") {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat padded, tmp2;
     int m = cv::getOptimalDFTSize(src.rows);
@@ -92,7 +92,7 @@ struct EntryFFTCLNT : public PerformanceTaskDefault {
       in = complexI.getUMat(cv::ACCESS_READ);  // to GPU
       start = static_cast<uint64>(cv::getTickCount());
       cv::dft(in, tmp, cv::DFT_COMPLEX_OUTPUT);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
       tmp.copyTo(tmp2);  // to RAM
     }
     if (verbose)
@@ -109,8 +109,8 @@ struct EntryFFTCuda : public PerformanceTaskDefault {
   EntryFFTCuda() : PerformanceTaskDefault("FFT Cuda") {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat padded, tmp2;
     int m = cv::getOptimalDFTSize(src.rows);
@@ -129,7 +129,7 @@ struct EntryFFTCuda : public PerformanceTaskDefault {
       in.upload(complexI);
       cv::cuda::dft(in, tmp, in.size());
       tmp.download(tmp2);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -143,8 +143,8 @@ struct EntryFFTCudaNT : public PerformanceTaskDefault {
   EntryFFTCudaNT() : PerformanceTaskDefault("FFT Cuda NT") {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat padded;
     int m = cv::getOptimalDFTSize(src.rows);
@@ -160,7 +160,7 @@ struct EntryFFTCudaNT : public PerformanceTaskDefault {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       cv::cuda::dft(in, tmp, in.size());
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -173,7 +173,7 @@ struct EntryFFTCudaNT : public PerformanceTaskDefault {
 
 
 PerformanceTestPtr createGpuFFTPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "GPU FFT";
   try {
     // add default

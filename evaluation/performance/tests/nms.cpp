@@ -15,8 +15,8 @@ class EntryNMS4Fast : public PerformanceTaskDefault {
  public:
   EntryNMS4Fast() : PerformanceTaskDefault("NMS4 Fast") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -26,7 +26,7 @@ class EntryNMS4Fast : public PerformanceTaskDefault {
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -45,8 +45,8 @@ class EntryNMSFast : public PerformanceTaskDefault {
  public:
   EntryNMSFast() : PerformanceTaskDefault("NMS Fast") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -56,7 +56,7 @@ class EntryNMSFast : public PerformanceTaskDefault {
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -75,8 +75,8 @@ class EntryNMSFastDir : public PerformanceTaskDefault {
  public:
   EntryNMSFastDir() : PerformanceTaskDefault("NMS Fast Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -88,7 +88,7 @@ class EntryNMSFastDir : public PerformanceTaskDefault {
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -107,8 +107,8 @@ class EntryNMSPreciseLinear : public PerformanceTaskDefault {
  public:
   EntryNMSPreciseLinear() : PerformanceTaskDefault("NMS Precise Linear") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -118,7 +118,7 @@ class EntryNMSPreciseLinear : public PerformanceTaskDefault {
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -138,8 +138,8 @@ class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
  public:
   EntryNMSPreciseLinearDir() : PerformanceTaskDefault("NMS Precise Linear Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -151,7 +151,7 @@ class EntryNMSPreciseLinearDir : public PerformanceTaskDefault {
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -170,8 +170,8 @@ class EntryNMSPreciseCubic : public PerformanceTaskDefault {
  public:
   EntryNMSPreciseCubic() : PerformanceTaskDefault("NMS Precise Cubic") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -181,7 +181,7 @@ class EntryNMSPreciseCubic : public PerformanceTaskDefault {
       nms.process(sobel.gx(), sobel.gy(), sobel.magnitude(), sobel.magnitudeThreshold(nms.thresholdLow()),
                   sobel.magnitudeThreshold(nms.thresholdHigh()));
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -201,8 +201,8 @@ class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
  public:
   EntryNMSPreciseCubicDir() : PerformanceTaskDefault("NMS Precise Cubic Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.magnitude();
@@ -214,7 +214,7 @@ class EntryNMSPreciseCubicDir : public PerformanceTaskDefault {
                   sobel.magnitudeThreshold(nms.thresholdHigh()), sobel.directionRange().lower,
                   sobel.directionRange().upper);
       cv::Mat tmp = nms.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -233,8 +233,8 @@ class EntryZCNoDir : public PerformanceTaskDefault {
  public:
   EntryZCNoDir() : PerformanceTaskDefault("ZC No Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     laplace.process(src);
     uint64 start = 0;
@@ -243,7 +243,7 @@ class EntryZCNoDir : public PerformanceTaskDefault {
       zc.process(laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -263,8 +263,8 @@ class EntryZCFast : public PerformanceTaskDefault {
  public:
   EntryZCFast() : PerformanceTaskDefault("ZC Fast") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
@@ -274,7 +274,7 @@ class EntryZCFast : public PerformanceTaskDefault {
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -294,8 +294,8 @@ class EntryZCFastDir : public PerformanceTaskDefault {
  public:
   EntryZCFastDir() : PerformanceTaskDefault("ZC Fast Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.direction();
@@ -307,7 +307,7 @@ class EntryZCFastDir : public PerformanceTaskDefault {
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -327,8 +327,8 @@ class EntryZCPreciseLinear : public PerformanceTaskDefault {
  public:
   EntryZCPreciseLinear() : PerformanceTaskDefault("ZC Precise Linear") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
@@ -338,7 +338,7 @@ class EntryZCPreciseLinear : public PerformanceTaskDefault {
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -358,8 +358,8 @@ class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
  public:
   EntryZCPreciseLinearDir() : PerformanceTaskDefault("ZC Precise Linear Dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.direction();
@@ -371,7 +371,7 @@ class EntryZCPreciseLinearDir : public PerformanceTaskDefault {
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -391,8 +391,8 @@ class EntryZCPreciseCubic : public PerformanceTaskDefault {
  public:
   EntryZCPreciseCubic() : PerformanceTaskDefault("ZC Precise Cubic") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     laplace.process(src);
@@ -402,7 +402,7 @@ class EntryZCPreciseCubic : public PerformanceTaskDefault {
       zc.process(sobel.gx(), sobel.gy(), laplace.laplace(), laplace.laplaceThreshold(zc.thresholdLow()),
                  laplace.laplaceThreshold(zc.thresholdHigh()));
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -422,8 +422,8 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
  public:
   EntryZCPreciseCubicDir() : PerformanceTaskDefault("ZC Precise Cubic dir") {}
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     sobel.process(src);
     sobel.direction();
@@ -435,7 +435,7 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
                  laplace.laplaceThreshold(zc.thresholdHigh()), sobel.directionRange().lower,
                  sobel.directionRange().upper);
       cv::Mat tmp = zc.hysteresis();
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -448,7 +448,7 @@ class EntryZCPreciseCubicDir : public PerformanceTaskDefault {
 };
 
 PerformanceTestPtr createNMSPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "NMS";
   try {
     // add default

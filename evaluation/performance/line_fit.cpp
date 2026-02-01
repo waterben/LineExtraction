@@ -1,3 +1,5 @@
+/// @file line_fit.cpp
+/// @brief Line fitting performance tests
 #include "performance_test.hpp"
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>
@@ -6,97 +8,67 @@
 #include <edge/split.hpp>
 #include <imgproc/derivative_gradient.hpp>
 
+#include <memory>
 
 using namespace lsfm;
 
-typedef DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> Grad;
-typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms;
-typedef EsdLinking<int> Edge;
-typedef std::vector<cv::Point> PointVector;
 
-constexpr float th_low = 0.004f, th_high = 0.012f;
+using Grad = DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>;
+using Nms = NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>>;
+using Edge = EsdLinking<int>;
+using PointVector = std::vector<cv::Point>;
 
-struct FitPerformaceData : public TaskData {
-  FitPerformaceData(const std::string& n, const cv::Mat& s)
-      : TaskData(n, s),
-        grad(),
-        nms(th_low, th_high),
-        edge(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
-        points() {
-    if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-    grad.process(src);
-    nms.process(grad);
-    edge.detect(grad, nms);
-    PixelEstimator<float, cv::Point>::convert(edge.points(), points, grad.magnitude(), nms.directionMap());
-  }
-  virtual ~FitPerformaceData() = default;
+constexpr float TH_LOW = 0.004F;
+constexpr float TH_HIGH = 0.012F;
 
-  Grad grad;
-  Nms nms;
-  Edge edge;
-  PointVector points;
-};
 
-struct FitPerformanceTest : public PerformanceTest {
-  FitPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
-  virtual ~FitPerformanceTest() {}
+// =============================================================================
+// Line Fitting Performance Tasks
+// =============================================================================
+
+/// @brief Generic line fitting performance task
+template <class FIT>
+class Entry : public CVPerformanceTaskBase {
+  FIT fit_;
+  Grad grad_;
+  Nms nms_;
+  std::unique_ptr<Edge> edge_;
+  PointVector points_;
+
+ public:
+  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
+      : CVPerformanceTaskBase(n), fit_(list) {}
 
  protected:
-  // prepare task data
-  std::unique_ptr<TaskData> prepareTaskData(const std::string& src_name, cv::Mat& src) override {
-    prepareSource(src);
-    return std::make_unique<FitPerformaceData>(src_name, src);
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = Nms(TH_LOW, TH_HIGH);
+    grad_.process(src);
+    nms_.process(grad_);
+    edge_ = std::make_unique<Edge>(10, 3, 3, static_cast<float>(grad_.magnitudeThreshold(TH_LOW)));
+    edge_->detect(grad_, nms_);
+    PixelEstimator<float, cv::Point>::convert(edge_->points(), points_, grad_.magnitude(), nms_.directionMap());
   }
-};
 
-template <class FIT>
-struct Entry : public PerformanceTaskBase {
-  Entry(const std::string& n, ValueManager::InitializerList list = ValueManager::InitializerList())
-      : PerformanceTaskBase(n), fit(list) {}
-  virtual ~Entry() {}
-
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const FitPerformaceData& pdata = dynamic_cast<const FitPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override {
     std::vector<LineSegment<float, Vec2>> lsegs;
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      fit.apply(pdata.edge.segments(), pdata.points, lsegs);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
+    fit_.apply(edge_->segments(), points_, lsegs);
   }
-
-  FIT fit;
 };
 
 
-PerformanceTestPtr createFitPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<FitPerformanceTest>();
-  test->name = "Line fit";
-  try {
-    // add default
-    test->data = provider;
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
-  test->tasks.push_back(
-      PerformanceTaskPtr(std::make_shared<Entry<FitLine<RegressionFit<float, cv::Point>>>>("RegressionFit")));
-  test->tasks.push_back(PerformanceTaskPtr(std::make_shared<Entry<FitLine<EigenFit<float, cv::Point>>>>("EigenFit")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(std::make_shared<Entry<FitLine<EigenCVFit<float, cv::Point>>>>("EigenCVFit")));
-  test->tasks.push_back(
-      PerformanceTaskPtr(std::make_shared<Entry<MEstimatorFitLine<float, cv::Point>>>("MEstimatorFit")));
+/// @brief Create line fitting performance test with all tasks
+CVPerformanceTestPtr createFitPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "Line fit");
+
+  test->tasks.push_back(std::make_shared<Entry<FitLine<RegressionFit<float, cv::Point>>>>("RegressionFit"));
+  test->tasks.push_back(std::make_shared<Entry<FitLine<EigenFit<float, cv::Point>>>>("EigenFit"));
+  test->tasks.push_back(std::make_shared<Entry<FitLine<EigenCVFit<float, cv::Point>>>>("EigenCVFit"));
+  test->tasks.push_back(std::make_shared<Entry<MEstimatorFitLine<float, cv::Point>>>("MEstimatorFit"));
+
   return test;
 }
 

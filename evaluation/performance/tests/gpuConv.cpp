@@ -9,8 +9,8 @@ struct EntryConvCPU : public PerformanceTaskDefault {
   EntryConvCPU() : PerformanceTaskDefault("Conv CPU " + std::to_string(KS)) {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp;
     uint64 start = 0;
@@ -18,7 +18,7 @@ struct EntryConvCPU : public PerformanceTaskDefault {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       cv::GaussianBlur(src, tmp, cv::Size(KS, KS), 0);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -34,8 +34,8 @@ struct EntryConvCL : public PerformanceTaskDefault {
   EntryConvCL() : PerformanceTaskDefault("Conv CL " + std::to_string(KS)) {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     cv::Mat tmp2;
@@ -50,7 +50,7 @@ struct EntryConvCL : public PerformanceTaskDefault {
       cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
       tmp.copyTo(tmp2);  // to RAM
 
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -65,8 +65,8 @@ struct EntryConvCLNT : public PerformanceTaskDefault {
   EntryConvCLNT() : PerformanceTaskDefault("Conv CL NT " + std::to_string(KS)) {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::UMat in = src.getUMat(cv::ACCESS_READ), tmp;  // to GPU
     cv::Mat tmp2;
@@ -78,7 +78,7 @@ struct EntryConvCLNT : public PerformanceTaskDefault {
       start = static_cast<uint64>(cv::getTickCount());
       cv::GaussianBlur(in, tmp, cv::Size(KS, KS), 0);
 
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
       tmp.copyTo(tmp2);  // to RAM
     }
     if (verbose)
@@ -96,8 +96,8 @@ struct EntryConvCuda : public PerformanceTaskDefault {
   EntryConvCuda() : PerformanceTaskDefault("Conv Cuda " + std::to_string(KS)) {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     cv::Mat tmp2;
     uint64 start = 0;
@@ -111,7 +111,7 @@ struct EntryConvCuda : public PerformanceTaskDefault {
       in.upload(src);
       gauss->apply(in, tmp);
       tmp.download(tmp2);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -126,8 +126,8 @@ struct EntryConvCudaNT : public PerformanceTaskDefault {
   EntryConvCudaNT() : PerformanceTaskDefault("Conv Cuda NT " + std::to_string(KS)) {}
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int runs, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     uint64 start = 0;
     cv::Ptr<cv::cuda::Filter> gauss = cv::cuda::createGaussianFilter(src.type(), src.type(), cv::Size(KS, KS), 0);
@@ -137,7 +137,7 @@ struct EntryConvCudaNT : public PerformanceTaskDefault {
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       gauss->apply(in, tmp);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -150,7 +150,7 @@ struct EntryConvCudaNT : public PerformanceTaskDefault {
 
 
 PerformanceTestPtr createGpuConvPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "GPU Conv";
   try {
     // add default

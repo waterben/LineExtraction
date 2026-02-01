@@ -27,8 +27,8 @@ struct Entry : public PerformanceTaskDefault {
 
 
   virtual void run(const std::string& src_name, const cv::Mat& src, int loops, bool verbose) {
-    this->measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(src_name, this->name, src.cols, src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     resName = "./results/visual/Threshold/" + src_name.substr(0, src_name.size() - 4) + "_" + this->name;
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     filter->process(src);
@@ -38,7 +38,7 @@ struct Entry : public PerformanceTaskDefault {
     for (int i = 0; i != loops; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       thresholdRes = threshold->process(mag);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
@@ -63,7 +63,7 @@ struct Entry : public PerformanceTaskDefault {
 
 
 PerformanceTestPtr createThresholdPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<PerformanceTest>();
+  auto test = std::make_shared<LegacyPerformanceTest>();
   test->name = "Threshold";
   try {
     test->data = provider;

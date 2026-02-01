@@ -1,3 +1,5 @@
+/// @file segment.cpp
+/// @brief Edge segment detection performance tests
 #include "performance_test.hpp"
 #include <edge/edge_drawing.hpp>
 #include <edge/edge_linking.hpp>
@@ -9,87 +11,56 @@
 
 using namespace lsfm;
 
-typedef DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude> Grad;
-typedef NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>> Nms;
 
-constexpr float th_low = 0.004f, th_high = 0.012f;
-struct SegPerformaceData : public TaskData {
-  SegPerformaceData(const std::string& n, const cv::Mat& s) : TaskData(n, s), grad(), nms(th_low, th_high) {
-    if (src.channels() == 3) cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-    grad.process(src);
-    nms.process(grad);
-  }
+using Grad = DerivativeGradient<uchar, short, int, float, SobelDerivative, QuadraticMagnitude>;
+using Nms = NonMaximaSuppression<short, int, float, FastNMS8<short, int, float>>;
 
-  virtual ~SegPerformaceData() = default;
+constexpr float TH_LOW = 0.004F;
+constexpr float TH_HIGH = 0.012F;
 
-  Grad grad;
-  Nms nms;
-};
 
-struct SegPerformanceTest : public PerformanceTest {
-  SegPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
-  virtual ~SegPerformanceTest() {}
+// =============================================================================
+// Edge Segment Detection Performance Tasks
+// =============================================================================
+
+/// @brief Generic edge segment detection performance task
+class Entry : public CVPerformanceTaskBase {
+  cv::Ptr<EsdBase<int>> edge_;
+  Grad grad_;
+  Nms nms_;
+
+ public:
+  Entry(cv::Ptr<EsdBase<int>> edge, const std::string& n) : CVPerformanceTaskBase(n), edge_(std::move(edge)) {}
 
  protected:
-  // prepare task data
-  std::unique_ptr<TaskData> prepareTaskData(const std::string& src_name, cv::Mat& src) override {
-    prepareSource(src);
-    return std::make_unique<SegPerformaceData>(src_name, src);
+  void prepareImpl(const cv::Mat& src) override {
+    nms_ = Nms(TH_LOW, TH_HIGH);
+    grad_.process(src);
+    nms_.process(grad_);
   }
+
+  void runImpl(const std::string& /*src_name*/, const cv::Mat& /*src*/) override { edge_->detect(grad_, nms_); }
 };
 
-struct Entry : public PerformanceTaskBase {
-  Entry(const cv::Ptr<EsdBase<int>>& e, const std::string& n) : PerformanceTaskBase(n), edge(e) {}
-  virtual ~Entry() {}
-  virtual void run(const TaskData& data, int runs, bool verbose) {
-    const SegPerformaceData& pdata = dynamic_cast<const SegPerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
-    if (verbose) std::cout << "    Running " << this->name << " ... ";
-    uint64 start = 0;
-    for (int i = 0; i != runs; ++i) {
-      start = static_cast<uint64>(cv::getTickCount());
-      edge->detect(pdata.grad, pdata.nms);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
-    }
-    if (verbose)
-      std::cout << std::setprecision(3)
-                << static_cast<double>((static_cast<uint64>(cv::getTickCount()) - start) * 1000) /
-                       (runs * static_cast<double>(cv::getTickFrequency()))
-                << "ms" << std::endl;
-  }
 
-  cv::Ptr<EsdBase<int>> edge;
-};
+// =============================================================================
+// Test Registration
+// =============================================================================
 
-PerformanceTestPtr createSegmentPerformanceTest(const lsfm::DataProviderList& provider) {
-  auto test = std::make_shared<SegPerformanceTest>();
-  test->name = "Segment";
-  try {
-    // add default
-    test->data = provider;
-
-    // add other
-  } catch (std::exception& e) {
-    std::cout << test->name << " parse error: " << e.what() << std::endl;
-    return PerformanceTestPtr();
-  }
+/// @brief Create segment detection performance test with all tasks
+CVPerformanceTestPtr createSegmentPerformanceTest(const DataProviderList& provider) {
+  auto test = std::make_shared<CVPerformanceTest>(provider, "Segment");
 
   Grad grad;
+  float mag_th = static_cast<float>(grad.magnitudeThreshold(TH_LOW));
 
-  test->tasks.push_back(PerformanceTaskPtr(new Entry(new EsdSimple<int>, "ESD Simple")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdDrawing<int>(10, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Drawing")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdLinking<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Linking")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdPattern<int>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))), "ESD Pattern")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdLinking<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
-                "ESD Linking Corner")));
-  test->tasks.push_back(PerformanceTaskPtr(
-      new Entry(new EsdPattern<int, 8, true>(10, 3, 3, static_cast<float>(grad.magnitudeThreshold(th_low))),
-                "ESD Pattern Corner")));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdSimple<int>, "ESD Simple"));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdDrawing<int>(10, 3, mag_th), "ESD Drawing"));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdLinking<int>(10, 3, 3, mag_th), "ESD Linking"));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdPattern<int>(10, 3, 3, mag_th), "ESD Pattern"));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdLinking<int, 8, true>(10, 3, 3, mag_th), "ESD Linking Corner"));
+  test->tasks.push_back(std::make_shared<Entry>(new EsdPattern<int, 8, true>(10, 3, 3, mag_th), "ESD Pattern Corner"));
+
   return test;
 }
 

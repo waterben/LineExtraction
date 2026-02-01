@@ -32,7 +32,7 @@ struct FitPerformaceData : public TaskData {
   PointVector points;
 };
 
-struct FitPerformanceTest : public PerformanceTest {
+struct FitPerformanceTest : public LegacyPerformanceTest {
   FitPerformanceTest(const std::string& testName = std::string()) : PerformanceTest(testName) {}
   virtual ~FitPerformanceTest() {}
 
@@ -52,15 +52,15 @@ struct Entry : public PerformanceTaskBase {
 
   virtual void run(const TaskData& data, int runs, bool verbose) {
     const FitPerformaceData& pdata = dynamic_cast<const PerformaceData&>(data);
-    this->measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
-    PerformanceMeasure& pm = this->measure.back();
+    this->perf_measure.push_back(PerformanceMeasure(pdata.name, this->name, pdata.src.cols, pdata.src.rows));
+    PerformanceMeasure& pm = this->perf_measure.back();
     if (verbose) std::cout << "    Running " << this->name << " ... ";
     std::vector<LineSegment<float, Vec2>> lsegs;
     uint64 start = 0;
     for (int i = 0; i != runs; ++i) {
       start = static_cast<uint64>(cv::getTickCount());
       fit.apply(pdata.edge.segments(), pdata.points, lsegs);
-      pm.measures.push_back(static_cast<uint64>(cv::getTickCount()) - start);
+      pm.durations.push_back(static_cast<uint64>(cv::getTickCount()) - start);
     }
     if (verbose)
       std::cout << std::setprecision(3)
