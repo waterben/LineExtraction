@@ -2,66 +2,126 @@
 
 #include <utility/string_table.hpp>
 
+#include <any>
 #include <memory>
 #include <string>
-
 
 namespace lsfm {
 
 /// @brief Generic input data struct
+///
+/// Base class for all input data types. Contains common fields
+/// that all data sources need. Extend this for domain-specific data.
 struct GenericInputData {
+  GenericInputData() = default;
+  explicit GenericInputData(const std::string& n) : name(n) {}
+  virtual ~GenericInputData() = default;
+
   /// Name of source
   std::string name{};
 };
 
-///@brief Base task class
-struct Task {
+/// @brief Type-erased task interface for Python binding
+///
+/// This interface provides a stable ABI that can be easily wrapped
+/// with pybind11. All methods use simple types (strings, size_t)
+/// instead of templates.
+///
+/// Usage with pybind11:
+/// @code
+/// py::class_<ITask, std::shared_ptr<ITask>>(m, "ITask")
+///     .def("prepare", &ITask::prepareAny)
+///     .def("run", &ITask::run)
+///     .def("name", &ITask::taskName);
+/// @endcode
+struct ITask {
+  virtual ~ITask() = default;
+
+  /// @brief Get task name
+  virtual const std::string& taskName() const = 0;
+
+  /// @brief Prepare task with type-erased input
+  /// @param data Input data wrapped in std::any
+  virtual void prepareAny(const std::any& data) = 0;
+
+  /// @brief Run the task
+  /// @param loops Number of iterations
+  virtual void run(std::size_t loops) = 0;
+
+  /// @brief Check if task is verbose
+  virtual bool isVerbose() const = 0;
+
+  /// @brief Reset task state
+  virtual void reset() = 0;
+
+  /// @brief Save visual results
+  virtual void saveVisualResults(const std::string& target_path) = 0;
+};
+
+using ITaskPtr = std::shared_ptr<ITask>;
+using ITaskPtrList = std::vector<ITaskPtr>;
+
+/// @brief Base task class with prepare() support
+///
+/// Design principles:
+/// - Implements ITask for Python binding compatibility
+/// - Provides prepare() method as per thesis architecture
+/// - Uses template method pattern for run loop
+struct Task : public ITask {
   Task(const std::string& task_name, bool task_verbose = false) : name(task_name), verbose(task_verbose) {}
-  virtual ~Task() {}
+  ~Task() override = default;
 
   using Ptr = std::shared_ptr<Task>;
   using PtrList = std::vector<Ptr>;
 
+  // ITask interface implementation
+  const std::string& taskName() const override { return name; }
+  bool isVerbose() const override { return verbose; }
+  void reset() override {}
+  void saveVisualResults(const std::string& /*target_path*/) override {}
 
-  /// @brief Prepare task by providing data input to process/copy required data for run (override has to downcast
-  /// source)
-  virtual void prepare(const GenericInputData& data) = 0;
+  /// @brief Prepare task with type-erased input (for Python)
+  void prepareAny(const std::any& data) override {
+    try {
+      const auto& input = std::any_cast<const GenericInputData&>(data);
+      prepare(input);
+    } catch (const std::bad_any_cast&) {
+      // Subclasses may override to handle their specific types
+    }
+  }
+
+  /// @brief Prepare task with generic input data
+  /// @param data Input data to prepare for processing
+  virtual void prepare(const GenericInputData& data) { static_cast<void>(data); }
 
   /// @brief Run eval task and collect data in measures
-  virtual void run(std::size_t loops) = 0;
-
-  /// @brief Save visual results, if any are available
-  virtual void saveVisualResults(const std::string&) {}
-
-  /// @brief Clears all, also collected data
-  virtual void reset() {}
+  void run(std::size_t loops) override = 0;
 
   /// Name of task
-  const std::string name{};
+  std::string name{};
   /// Verbose output
-  const bool verbose{};
+  bool verbose{};
 };
 
-
-/// @brief Task loader
-class TaskLoader {
+/// @brief Task runner that executes a collection of tasks
+class TaskRunner {
  public:
-  TaskLoader(const std::string& tl_name, bool tl_verbose = false, bool tl_visual_results = false)
-      : name(tl_name), verbose{tl_verbose}, visual_results{tl_visual_results} {}
-  virtual ~TaskLoader() = default;
+  TaskRunner(const std::string& tr_name, bool tr_verbose = false, bool tr_visual_results = false)
+      : name(tr_name), verbose{tr_verbose}, visual_results{tr_visual_results} {}
+  virtual ~TaskRunner() = default;
 
-  /// Name of task loader
-  const std::string name{};
+  /// Name of task runner
+  std::string name{};
   /// Enable verbose output
-  const bool verbose{};
+  bool verbose{};
   /// Enable visual output
-  const bool visual_results{};
+  bool visual_results{};
 
   /// @brief Run tasks
   virtual void run(std::size_t loops) = 0;
 
   /// @brief Collect result data from tasks
-  virtual void collect(const Task&) {}
+  virtual void collect(const Task& /*task*/) {}
 
   /// @brief Clears internal results
   virtual void clear() {}
@@ -70,11 +130,10 @@ class TaskLoader {
   virtual StringTable resultTable(bool fullReport = false) {
     static_cast<void>(fullReport);
     return StringTable();
-  };
+  }
 
   /// @brief List of tasks to run
   typename Task::PtrList tasks{};
 };
-
 
 }  // namespace lsfm

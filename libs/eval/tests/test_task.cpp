@@ -1,3 +1,4 @@
+#include <eval/input_task.hpp>
 #include <eval/task.hpp>
 
 #include <gtest/gtest.h>
@@ -8,11 +9,24 @@ struct DummyInputData : public lsfm::GenericInputData {
   DummyInputData(const std::string& n) : GenericInputData{n} {}
 };
 
+/// @brief Dummy task for testing base Task class (no prepare)
 struct DummyTask : public lsfm::Task {
-  DummyTask(const std::string& task_name, bool task_verbose = false)
-      : Task(task_name, task_verbose), prepared(false), run_count(0), input_name() {}
+  DummyTask(const std::string& task_name, bool task_verbose = false) : Task(task_name, task_verbose), run_count(0) {}
 
-  void prepare(const lsfm::GenericInputData& data) override {
+  void run(std::size_t loops) override { run_count += loops; }
+
+  void reset() override { run_count = 0; }
+
+  // Test state
+  std::size_t run_count;
+};
+
+/// @brief Dummy input task for testing InputTask class (with prepare)
+struct DummyInputTask : public lsfm::InputTask<DummyInputData> {
+  DummyInputTask(const std::string& task_name, bool task_verbose = false)
+      : InputTask(task_name, task_verbose), prepared(false), run_count(0), input_name() {}
+
+  void prepare(const DummyInputData& data) override {
     prepared = true;
     input_name = data.name;
   }
@@ -39,8 +53,23 @@ TEST(TaskTest, ConstructorSetsName) {
   EXPECT_TRUE(task.verbose);
 }
 
-TEST(TaskTest, PrepareAndRun) {
+TEST(TaskTest, Run) {
   DummyTask task("test_task");
+
+  // Initially no runs
+  EXPECT_EQ(task.run_count, static_cast<std::size_t>(0));
+
+  // Run task
+  task.run(5);
+  EXPECT_EQ(task.run_count, static_cast<std::size_t>(5));
+
+  // Run again to accumulate
+  task.run(3);
+  EXPECT_EQ(task.run_count, static_cast<std::size_t>(8));
+}
+
+TEST(InputTaskTest, PrepareAndRun) {
+  DummyInputTask task("test_task");
   DummyInputData data("input1");
 
   // Initially not prepared
@@ -61,8 +90,8 @@ TEST(TaskTest, PrepareAndRun) {
   EXPECT_EQ(task.run_count, static_cast<std::size_t>(8));
 }
 
-TEST(TaskTest, Reset) {
-  DummyTask task("test_task");
+TEST(InputTaskTest, Reset) {
+  DummyInputTask task("test_task");
   DummyInputData data("input1");
 
   task.prepare(data);
