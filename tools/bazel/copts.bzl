@@ -34,8 +34,9 @@ LE_COPTS_STRICT = [
 # Combines base + strict warnings with -Werror
 LE_COPTS = LE_COPTS_BASE + LE_COPTS_STRICT + ["-Werror"]
 
-# Compatibility alias for examples (deprecated, use LE_COPTS)
-LE_COPTS_COMPAT = LE_COPTS
+# Relaxed warnings for examples and legacy code
+# Base warnings without strict conversion checks
+LE_COPTS_COMPAT = LE_COPTS_BASE + ["-Werror"]
 
 # Warning flags for third-party C++ code (qplot, qplot3d)
 LE_THIRD_PARTY_COPTS = [
@@ -64,8 +65,14 @@ LE_THIRD_PARTY_C_COPTS = [
 ]
 
 # Warning suppressions for arpack++ headers (legacy C++98 code)
+# arpack++ is not a system include, so we need to suppress warnings manually
 ARPACKPP_COPTS = [
     "-Wno-shadow",
     "-Wno-overloaded-virtual",
     "-Wno-implicit-fallthrough",
+    "-Wno-conversion",
+    "-Wno-sign-conversion",
+    "-Wno-old-style-cast",
+    "-Wno-zero-as-null-pointer-constant",
+    "-Wno-effc++",
 ]
