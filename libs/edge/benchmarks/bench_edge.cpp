@@ -1,10 +1,15 @@
 /// @file bench_edge.cpp
 /// @brief Google Benchmark tests for Edge Detection algorithms.
 ///
-/// Benchmarks NMS (Non-Maximum Suppression) and gradient computation.
+/// Benchmarks NMS (Non-Maximum Suppression), gradient computation, and
+/// Edge Segment Detectors (ESD).
 /// Run with: bazel run //libs/edge:bench_edge -- --benchmark_format=console
 
 #include <benchmark/benchmark.h>
+#include <edge/edge_drawing.hpp>
+#include <edge/edge_linking.hpp>
+#include <edge/edge_pattern.hpp>
+#include <edge/edge_simple.hpp>
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <opencv2/imgproc.hpp>
@@ -125,6 +130,140 @@ void BM_NmsSimple(benchmark::State& state) {
 }
 
 BENCHMARK(BM_NmsSimple)->Args({480 * 640})->Args({720 * 1280})->Args({1080 * 1920})->Unit(benchmark::kMillisecond);
+
+// =============================================================================
+// Edge Segment Detector (ESD) Benchmarks
+// =============================================================================
+
+// Pre-computed data cache for ESD benchmarks
+struct EsdDataCache {
+  using Grad = lsfm::DerivativeGradient<uchar, short, int, double, lsfm::SobelDerivative, lsfm::QuadraticMagnitude>;
+  using Nms = lsfm::NonMaximaSuppression<short, int, double, lsfm::FastNMS8<short, int, double>>;
+
+  struct Data {
+    Grad grad{};
+    Nms nms{};
+    bool initialized = false;
+  };
+
+  Data data_480p{};
+  Data data_720p{};
+  Data data_1080p{};
+
+  void ensureInitialized(int64_t pixels) {
+    if (pixels <= 480 * 640) {
+      if (!data_480p.initialized) {
+        data_480p.grad.process(getImageCache().img_480p);
+        data_480p.nms.process(data_480p.grad);
+        data_480p.initialized = true;
+      }
+    } else if (pixels <= 720 * 1280) {
+      if (!data_720p.initialized) {
+        data_720p.grad.process(getImageCache().img_720p);
+        data_720p.nms.process(data_720p.grad);
+        data_720p.initialized = true;
+      }
+    } else {
+      if (!data_1080p.initialized) {
+        data_1080p.grad.process(getImageCache().img_1080p);
+        data_1080p.nms.process(data_1080p.grad);
+        data_1080p.initialized = true;
+      }
+    }
+  }
+
+  const Data& get(int64_t pixels) {
+    ensureInitialized(pixels);
+    if (pixels <= 480 * 640) {
+      return data_480p;
+    }
+    if (pixels <= 720 * 1280) {
+      return data_720p;
+    }
+    return data_1080p;
+  }
+};
+
+EsdDataCache& getEsdDataCache() {
+  static EsdDataCache cache;
+  return cache;
+}
+
+void BM_EsdSimple(benchmark::State& state) {
+  const auto& img = getImageCache().get(state.range(0));
+  const auto& data = getEsdDataCache().get(state.range(0));
+
+  lsfm::EsdSimple<int> esd(10);
+
+  for (auto _ : state) {
+    esd.detect(data.grad, data.nms);
+    benchmark::DoNotOptimize(esd.segments());
+    benchmark::DoNotOptimize(esd.points());
+  }
+
+  state.counters["segments"] = static_cast<double>(esd.segments().size());
+  state.counters["points"] = static_cast<double>(esd.points().size());
+  setBenchmarkCounters(state, img);
+}
+
+BENCHMARK(BM_EsdSimple)->Args({480 * 640})->Args({720 * 1280})->Args({1080 * 1920})->Unit(benchmark::kMillisecond);
+
+void BM_EsdDrawing(benchmark::State& state) {
+  const auto& img = getImageCache().get(state.range(0));
+  const auto& data = getEsdDataCache().get(state.range(0));
+
+  lsfm::EsdDrawing<int> esd(10, 3, 5);
+
+  for (auto _ : state) {
+    esd.detect(data.grad, data.nms);
+    benchmark::DoNotOptimize(esd.segments());
+    benchmark::DoNotOptimize(esd.points());
+  }
+
+  state.counters["segments"] = static_cast<double>(esd.segments().size());
+  state.counters["points"] = static_cast<double>(esd.points().size());
+  setBenchmarkCounters(state, img);
+}
+
+BENCHMARK(BM_EsdDrawing)->Args({480 * 640})->Args({720 * 1280})->Args({1080 * 1920})->Unit(benchmark::kMillisecond);
+
+void BM_EsdLinking(benchmark::State& state) {
+  const auto& img = getImageCache().get(state.range(0));
+  const auto& data = getEsdDataCache().get(state.range(0));
+
+  lsfm::EsdLinking<int> esd(10, 3, 3, 5);
+
+  for (auto _ : state) {
+    esd.detect(data.grad, data.nms);
+    benchmark::DoNotOptimize(esd.segments());
+    benchmark::DoNotOptimize(esd.points());
+  }
+
+  state.counters["segments"] = static_cast<double>(esd.segments().size());
+  state.counters["points"] = static_cast<double>(esd.points().size());
+  setBenchmarkCounters(state, img);
+}
+
+BENCHMARK(BM_EsdLinking)->Args({480 * 640})->Args({720 * 1280})->Args({1080 * 1920})->Unit(benchmark::kMillisecond);
+
+void BM_EsdPattern(benchmark::State& state) {
+  const auto& img = getImageCache().get(state.range(0));
+  const auto& data = getEsdDataCache().get(state.range(0));
+
+  lsfm::EsdPattern<int> esd(10, 3, 3, 5, 1);
+
+  for (auto _ : state) {
+    esd.detect(data.grad, data.nms);
+    benchmark::DoNotOptimize(esd.segments());
+    benchmark::DoNotOptimize(esd.points());
+  }
+
+  state.counters["segments"] = static_cast<double>(esd.segments().size());
+  state.counters["points"] = static_cast<double>(esd.points().size());
+  setBenchmarkCounters(state, img);
+}
+
+BENCHMARK(BM_EsdPattern)->Args({480 * 640})->Args({720 * 1280})->Args({1080 * 1920})->Unit(benchmark::kMillisecond);
 
 }  // namespace
 
