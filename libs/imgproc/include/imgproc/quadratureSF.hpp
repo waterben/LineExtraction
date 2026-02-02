@@ -1,5 +1,6 @@
 /// @file quadratureSF.hpp
 /// @brief Spherical Poisson quadrature filter operating in frequency domain.
+///
 /// This file implements a quadrature filter based on the Poisson kernel
 /// operating in the frequency domain using FFT. This is the frequency-domain
 /// version of QuadratureS, providing the same functionality with FFT-based
@@ -15,6 +16,7 @@
 namespace lsfm {
 
 /// @brief Spherical Poisson quadrature filter operating in frequency domain.
+///
 /// QuadratureSF implements a quadrature filter pair using the difference of
 /// Poisson kernels in the frequency domain. This is computationally efficient
 /// for larger images and provides exact Poisson filter responses.
@@ -36,6 +38,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   static constexpr FT PI2 = 2 * static_cast<FT>(CV_PI);
 
   /// @brief Difference of center-antisymmetric Poisson kernel in frequency domain.
+  ///
   /// Computes the odd quadrature filter value at frequency (u,v).
   /// @param u Horizontal frequency.
   /// @param v Vertical frequency.
@@ -48,6 +51,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Difference of Poisson kernel in frequency domain.
+  ///
   /// Computes the even quadrature filter value at frequency (u,v).
   /// @param u Horizontal frequency.
   /// @param v Vertical frequency.
@@ -246,6 +250,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Construct from scale-space parameters.
+  ///
   /// Computes scale and muls from a base scale and scale ratio.
   /// @param scale Base scale.
   /// @param l Scale ratio (lambda).
@@ -437,6 +442,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Process an image to compute quadrature filter responses.
+  ///
   /// Transforms the image to frequency domain using FFT. Filter
   /// responses are computed lazily when accessed.
   /// @param[in] img Input image.
@@ -474,6 +480,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isOddxyDone() const { return oddxy_done_; }
 
   /// @brief Get X and Y components of odd filter response.
+  ///
   /// Computes response in frequency domain and transforms back.
   /// @param[out] gx X component.
   /// @param[out] gy Y component.
@@ -496,6 +503,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isEvenDone() const { return even_done_; }
 
   /// @brief Get the even (symmetric) filter response.
+  ///
   /// Computed lazily via FFT inverse transform.
   /// @return Even filter response image.
   inline cv::Mat even() const {
@@ -516,6 +524,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isOddDone() const { return odd_done_; }
 
   /// @brief Get the odd (antisymmetric) filter response magnitude.
+  ///
   /// Computed as magnitude of X and Y odd components.
   /// @return Odd filter response magnitude image.
   inline cv::Mat odd() const {
@@ -537,6 +546,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isEnergyDone() const { return energy_done_; }
 
   /// @brief Get the local energy (magnitude of even and odd).
+  ///
   /// Energy = sqrt(even^2 + odd^2)
   /// @return Local energy image.
   inline cv::Mat energy() const {
@@ -557,6 +567,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get the local orientation/direction.
+  ///
   /// Computed from odd X and Y components using phase operator.
   /// @return Direction image.
   cv::Mat direction() const {
@@ -578,6 +589,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isPhaseDone() const { return phase_done_; }
 
   /// @brief Get the local phase.
+  ///
   /// Phase = atan2(odd, even) representing feature type.
   /// @return Phase image.
   cv::Mat phase() const {
@@ -589,6 +601,7 @@ class QuadratureSF : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Get filtered/thresholded phase.
+  ///
   /// Phase with small odd and even values zeroed to reduce noise.
   /// @return Filtered phase image.
   cv::Mat phaseF() const {

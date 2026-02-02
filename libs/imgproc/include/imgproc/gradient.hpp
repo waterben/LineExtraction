@@ -51,6 +51,7 @@
 namespace lsfm {
 
 /// @brief Abstract interface for gradient computation filters.
+///
 /// Provides a unified interface for computing image gradients, including
 /// magnitude, direction, and directional derivatives (gx, gy).
 /// Inherits from FilterI for the basic filter interface.
@@ -91,6 +92,7 @@ class GradientI : public FilterI<IT> {
   virtual MT magnitudeThreshold(double val) const { return static_cast<MT>(magnitudeRange().upper * val); }
 
   /// @brief Get the magnitude norm type used.
+  ///
   /// Indicates how magnitude relates to gx, gy derivatives.
   /// @return NormType::NONE if norm doesn't correspond to gx, gy
   virtual NormType normType() const { return NormType::NONE; }
@@ -104,6 +106,7 @@ class GradientI : public FilterI<IT> {
   virtual DirectionRange directionRange() const = 0;
 
   /// @brief Get directional derivatives (gx, gy).
+  ///
   /// Default implementation reconstructs from polar coordinates.
   /// @param[out] gx X-direction gradient output
   /// @param[out] gy Y-direction gradient output
@@ -165,6 +168,7 @@ class GradientI : public FilterI<IT> {
 };
 
 /// @brief Base implementation class for gradient computation.
+///
 /// Provides common functionality for gradient filters including
 /// intensity range management and default results() implementation.
 /// @tparam IT Input image pixel type (uchar, short, float, double)
@@ -201,6 +205,7 @@ class Gradient : public GradientI<IT, GT, MT, DT> {
   IntensityRange intensityRange() const { return intRange_; }
 
   /// @brief Get all gradient outputs as named results.
+  ///
   /// Returns gx, gy, magnitude, and direction as FilterData.
   /// @return Map of output name to FilterData
   virtual FilterResults results() const {

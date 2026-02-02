@@ -292,6 +292,7 @@ between "versions 1" and the combined program, version 2.
 namespace lsfm {
 
 /// @brief Safe type cast with compile-time type checking.
+///
 /// Returns the input value unchanged if InT and OutT are the same type,
 /// otherwise performs a static_cast.
 /// @tparam OutT Target output type.
@@ -308,6 +309,7 @@ constexpr inline OutT auto_cast(const InT& in) {
 }
 
 /// @brief SUSAN edge detector and gradient operator.
+///
 /// Implements the SUSAN (Smallest Univalue Segment Assimilating Nucleus)
 /// edge detection algorithm by Smith and Brady. SUSAN detects edges by
 /// examining the local brightness consistency within a circular mask
@@ -316,6 +318,7 @@ constexpr inline OutT auto_cast(const InT& in) {
 /// The algorithm uses a brightness look-up table (LUT) to efficiently
 /// compute the exponential similarity function between pixel intensities.
 /// @note This implementation is based on SUSAN Version 2l by Stephen Smith.
+///
 /// A UK patent applies to commercial use.
 /// @see Smith, S.M. and Brady, J.M., "SUSAN - A New Approach to Low Level
 /// Image Processing", Int. Journal of Computer Vision, 23(1), 1997.
@@ -341,6 +344,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
 
 
   /// @brief Initialize the brightness look-up table.
+  ///
   /// Computes e^(-x^6) for all possible brightness differences [-256, 256]
   /// and stores scaled values [0, 100] in the LUT for fast lookup.
   void initLut() {
@@ -422,6 +426,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   }
 
   /// @brief Process an image to compute SUSAN edge gradients.
+  ///
   /// Computes gradient magnitude and direction using the SUSAN algorithm.
   /// Results can be retrieved using magnitude(), direction(), gx(), gy().
   /// @param[in] img Input grayscale image (must be CV_8UC1).
@@ -499,6 +504,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get gradient direction image.
+  ///
   /// Direction is computed lazily on first access from the gradient components.
   /// @return Direction image in range determined by DO::range().
   cv::Mat direction() const {
@@ -533,6 +539,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
 
  private:
   /// @brief SUSAN edge detection using 3x3 kernel.
+  ///
   /// Faster version with smaller mask, suitable for fine detail but may
   /// produce more noise.
   /// @param[in] img Input grayscale image.
@@ -706,6 +713,7 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   }
 
   /// @brief SUSAN edge detection using 37-pixel circular mask.
+  ///
   /// Standard SUSAN edge detection with the full circular mask for
   /// robust edge detection with good noise immunity.
   /// @param[in] img Input grayscale image.

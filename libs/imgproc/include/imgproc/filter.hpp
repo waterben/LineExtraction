@@ -52,6 +52,7 @@
 namespace lsfm {
 
 /// @brief Container for filter output data with associated value range.
+///
 /// Stores a cv::Mat along with the expected range of values in that matrix,
 /// useful for normalization and visualization of filter results.
 struct FilterData {
@@ -74,6 +75,7 @@ struct FilterData {
 };
 
 /// @brief Map of named filter results.
+///
 /// Used to return multiple outputs from a filter (e.g., magnitude, direction).
 typedef std::map<std::string, FilterData> FilterResults;
 
@@ -81,6 +83,7 @@ typedef std::map<std::string, FilterData> FilterResults;
 typedef std::pair<std::string, FilterData> FilterResult;
 
 /// @brief Abstract base interface for image filters.
+///
 /// Provides a common interface for all image processing filters in the library.
 /// Derived classes implement specific filtering algorithms (gradient, laplacian, etc.).
 /// Inherits from ValueManager for runtime parameter configuration.

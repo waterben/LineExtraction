@@ -42,6 +42,7 @@
 
 /// @file image_operator.hpp
 /// @brief Image preprocessing operators for pipeline-based processing.
+///
 /// This file provides a framework for composable image operations including
 /// geometric transforms (rotation, scaling, translation), filtering (blur,
 /// Gaussian, bilateral, median), and noise generation. Operators can be
@@ -61,6 +62,7 @@
 namespace lsfm {
 
 /// @brief Abstract base class for image processing operators.
+///
 /// Provides a common interface for image transformation operations that
 /// can be applied in-place or with separate input/output images. Operators
 /// can be composed into pipelines using PipelineOperator.
@@ -107,6 +109,7 @@ typedef std::vector<ImageOperatorPtr> ImageOperatorPtrVec;  ///< Vector of opera
 
 
 /// @brief Operator pipeline for chaining multiple image operations.
+///
 /// Allows building a sequence of image operators that are applied
 /// in order to an input image.
 class PipelineOperator : public ImageOperator {
@@ -328,6 +331,7 @@ class PerspectiveOperator : public ImageOperator {
 };
 
 /// @brief No-operation placeholder operator.
+///
 /// Passes through images unchanged. Useful as a placeholder in pipelines.
 class NoOp : public ImageOperator {
  public:
@@ -427,6 +431,7 @@ class GaussianBlurOperator : public ImageOperator {
 };
 
 /// @brief Apply median blur filter for noise reduction.
+///
 /// Median filtering is effective for salt-and-pepper noise removal
 /// while preserving edges.
 class MedianBlurOperator : public ImageOperator {
@@ -450,6 +455,7 @@ class MedianBlurOperator : public ImageOperator {
 };
 
 /// @brief Apply bilateral filter for edge-preserving smoothing.
+///
 /// Bilateral filtering smooths images while keeping edges sharp by considering
 /// both spatial distance and color similarity.
 class BilateralOperator : public ImageOperator {
@@ -483,6 +489,7 @@ class BilateralOperator : public ImageOperator {
 
 #ifdef HAVE_OPENCV_PHOTO
 /// @brief Apply Fast Non-Local Means Denoising filter.
+///
 /// Advanced denoising filter that searches for similar patches in the image
 /// to perform averaging, providing excellent noise removal while preserving
 /// texture and detail.
@@ -519,6 +526,7 @@ class FastNlMeansOperator : public ImageOperator {
 
 
 /// @brief Add uniform random noise to an image.
+///
 /// Adds noise sampled from a uniform distribution U[lower, upper] to each pixel.
 class UniformNoiseOperator : public ImageOperator {
   double lower_;  ///< Lower bound of uniform distribution.
@@ -559,6 +567,7 @@ class UniformNoiseOperator : public ImageOperator {
 
 
 /// @brief Add Gaussian random noise to an image.
+///
 /// Adds noise sampled from a Gaussian (normal) distribution N(mean, sigma²)
 /// to each pixel. Commonly used for simulating sensor noise.
 class GaussianNoiseOperator : public ImageOperator {

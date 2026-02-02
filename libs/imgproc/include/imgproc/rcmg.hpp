@@ -40,6 +40,7 @@
 namespace lsfm {
 
 /// @brief Robust Colour Morphological Gradient (RCMG) edge detector.
+///
 /// Computes edges in multi-channel images using the morphological gradient
 /// approach. The algorithm finds the median-centered difference within a
 /// sliding window, rejecting s pairs of pixels that are furthest apart in
@@ -148,6 +149,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
 
 
   /// @brief Process an image to compute RCMG edge gradients.
+  ///
   /// Computes gradient magnitude and components using the morphological
   /// gradient algorithm. Results can be retrieved using magnitude(), gx(), gy().
   /// @param img Input multi-channel image.
@@ -209,6 +211,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get gradient direction image.
+  ///
   /// Direction is computed lazily on first access.
   /// @return Direction image in range determined by DO::range().
   cv::Mat direction() const {
@@ -437,6 +440,7 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
 };
 
 /// @brief Single-channel specialization of RCMG gradient operator.
+///
 /// Specialized implementation of the RCMG algorithm for grayscale images.
 /// Uses scalar intensity differences instead of vector color differences.
 /// @tparam IT Input image type (e.g., uchar).

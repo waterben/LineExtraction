@@ -1,5 +1,6 @@
 /// @file quadratureG2.hpp
 /// @brief Second-order Gaussian quadrature filter (G2/H2) for edge detection.
+///
 /// This file implements a steerable quadrature filter pair using second-order
 /// Gaussian derivatives (G2) and their Hilbert transform pairs (H2). The filters
 /// can be steered to any orientation to detect oriented features like edges.
@@ -18,6 +19,7 @@
 namespace lsfm {
 
 /// @brief Second-order Gaussian quadrature filter for steerable edge detection.
+///
 /// QuadratureG2 implements a quadrature filter pair using second-order Gaussian
 /// derivatives (G2 - even symmetric) and their Hilbert transforms (H2 - odd symmetric).
 /// These filters can be steered to any orientation using steering coefficients,
@@ -183,6 +185,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   mutable bool eo_done_;
 
   /// @brief Create all filter kernels.
+  ///
   /// Creates separable G2 and H2 basis filters using the configured
   /// kernel size and spacing. Also applies DC offset correction.
   void create_kernels() {
@@ -206,6 +209,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Compute maximum filter responses.
+  ///
   /// Creates a step edge test pattern and processes it to determine
   /// the maximum possible energy, odd, and even response values.
   void max_response() {
@@ -225,6 +229,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Initialize option manager entries.
+  ///
   /// Registers kernel_size and kernel_spacing as configurable options.
   void init() {
     this->add("grad_kernel_size", std::bind(&QuadratureG2<IT, FT, P>::valueKernelSize, this, std::placeholders::_1),
@@ -409,6 +414,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   int kernelSize() const { return ksize_; }
 
   /// @brief Set the kernel size.
+  ///
   /// The kernel size must be odd and in range [3, 99].
   /// Even values are automatically incremented.
   /// @param ks New kernel size.
@@ -436,6 +442,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   FT kernelSpacing() const { return kspacing_; }
 
   /// @brief Set the kernel spacing.
+  ///
   /// The spacing controls the sampling density of the filter kernel.
   /// Smaller values give higher resolution.
   /// @param ks New kernel spacing (must be positive).
@@ -446,6 +453,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Process an image to compute quadrature filter responses.
+  ///
   /// Applies all G2 and H2 basis filters to the image and computes
   /// the dominant orientation at each pixel. Energy, phase, and
   /// steered responses are computed lazily when accessed.
@@ -518,6 +526,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
 #endif
 
   /// @brief Get the odd filter response as X and Y components.
+  ///
   /// Converts the dominant orientation to unit vector components.
   /// @param[out] ox X component of odd response direction.
   /// @param[out] oy Y component of odd response direction.
@@ -531,6 +540,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Steer the filters to a given orientation image.
+  ///
   /// Computes the G2 and H2 responses at the orientations specified
   /// in the theta image using the steering equations.
   /// @param[in] theta Orientation image (angles).
@@ -546,6 +556,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Steer filters using pre-computed gradient components.
+  ///
   /// Computes the G2 and H2 responses using gradient X/Y components
   /// as steering direction (avoids trigonometric functions).
   /// @param[in] gx X-gradient component (cos(theta)).
@@ -565,6 +576,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isEvenDone() const { return eo_done_; }
 
   /// @brief Get the even filter response at dominant orientation.
+  ///
   /// Returns the G2 (even symmetric) response steered to the
   /// dominant orientation at each pixel.
   /// @return Even filter response image.
@@ -585,6 +597,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isOddDone() const { return eo_done_; }
 
   /// @brief Get the odd filter response at dominant orientation.
+  ///
   /// Returns the H2 (odd symmetric) response steered to the
   /// dominant orientation at each pixel. The absolute value is returned.
   /// @return Odd filter response image (absolute values).
@@ -597,6 +610,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Get both even and odd filter responses at dominant orientation.
+  ///
   /// Steers both G2 and H2 filters to the dominant orientation and
   /// returns the responses.
   /// @param[out] e Even (G2) filter response.
@@ -620,6 +634,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isEnergyDone() const { return energy_done_; }
 
   /// @brief Get the local energy.
+  ///
   /// Local energy is computed as the magnitude of the complex
   /// quadrature response (even + i*odd).
   /// @return Energy image.
@@ -640,6 +655,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isPhaseDone() const { return phase_done_; }
 
   /// @brief Get the local phase.
+  ///
   /// Local phase is the angle of the complex quadrature response.
   /// It indicates the type of feature (edge, line, etc.).
   /// @return Phase image.
@@ -656,6 +672,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   PhaseRange phaseRange() const { return P<FT, FT>::range(); }
 
   /// @brief Get both energy and phase.
+  ///
   /// Efficiently computes both energy and phase together using
   /// a single cart2Polar call if neither has been computed yet.
   /// @param[out] en Energy image.

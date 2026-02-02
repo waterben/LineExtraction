@@ -42,6 +42,7 @@
 
 /// @file polygon.hpp
 /// @brief 2D polygon representation.
+///
 /// This file provides a class for representing 2D polygons defined by
 /// vertices relative to a pivot point. Features include:
 /// - Construction from line segments (intersection-based)
@@ -62,6 +63,7 @@
 namespace lsfm {
 
 /// @brief 2D polygon representation.
+///
 /// Represents a polygon as a list of vertices relative to a pivot point.
 /// The pivot serves as the local coordinate origin for all vertices,
 /// allowing efficient translation of the entire polygon.
@@ -85,6 +87,7 @@ class Polygon {
   virtual ~Polygon() = default;
 
   /// @brief Construct polygon from line segments.
+  ///
   /// Creates vertices at the intersection points of consecutive segments.
   /// Useful for constructing polygons from detected edges.
   /// @param segments Vector of line segments forming the polygon.
@@ -117,6 +120,7 @@ class Polygon {
   inline const VertexVector& verticies() const { return verticies_; }
 
   /// @brief Get polygon edges as line segments.
+  ///
   /// Creates line segments connecting consecutive vertices,
   /// including an edge from the last to the first vertex.
   /// @return Vector of line segments (local coordinates).
@@ -171,6 +175,7 @@ class Polygon {
   inline void push_back(const point_type& vertex) { verticies_.push_back(vertex); }
 
   /// @brief Add vertex in world coordinates.
+  ///
   /// The vertex is converted to local coordinates by subtracting
   /// the pivot position.
   /// @param vertex Vertex to add (world coordinates).
@@ -194,6 +199,7 @@ class Polygon {
   inline void translate(const point_type& t) { piviot_ += t; }
 
   /// @brief Rotate polygon around pivot.
+  ///
   /// Rotates all vertices around the pivot point.
   /// @param angle Rotation angle in radians.
   inline void rotate(FT angle) {
@@ -247,6 +253,7 @@ class Polygon {
   inline const point_type& piviot() const { return piviot_; }
 
   /// @brief Move pivot while keeping polygon in place.
+  ///
   /// Adjusts all vertices to compensate for the pivot movement,
   /// so the polygon remains at the same world position.
   /// @param t Translation to apply to pivot.
@@ -262,6 +269,7 @@ class Polygon {
   /// @{
 
   /// @brief Fill convex polygon on image.
+  ///
   /// Uses OpenCV's fillConvexPoly for efficient filling of convex polygons.
   /// @param img Image to draw on.
   /// @param color Fill color.
@@ -279,6 +287,7 @@ class Polygon {
   }
 
   /// @brief Fill potentially non-convex polygon on image.
+  ///
   /// Uses OpenCV's fillPoly which handles complex (non-convex) polygons.
   /// @param img Image to draw on.
   /// @param color Fill color.
@@ -321,6 +330,7 @@ class Polygon {
   /// @{
 
   /// @brief Test if polygon is convex.
+  ///
   /// Checks if all cross products of consecutive edges have the
   /// same sign, indicating the polygon turns consistently in one direction.
   /// @return True if polygon is convex, false otherwise.

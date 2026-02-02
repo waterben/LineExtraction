@@ -47,6 +47,7 @@
 namespace lsfm {
 
 /// @brief Abstract interface for phase congruency computation.
+///
 /// Phase congruency is a measure of feature significance based on the principle
 /// that features occur at points where Fourier components are maximally in phase.
 /// It provides illumination and contrast invariant edge/feature detection.
@@ -74,6 +75,7 @@ class PhaseCongruencyI {
 };
 
 /// @brief Base implementation for phase congruency with quadrature filter support.
+///
 /// Combines phase congruency interface with quadrature filter functionality.
 /// @tparam IT Input image pixel type
 /// @tparam GT Gradient type
@@ -132,6 +134,7 @@ class PhaseCongruency : public PhaseCongruencyI<ET>, public QuadratureI<IT, GT, 
 
 
 /// @brief Abstract interface for phase congruency Laplacian responses.
+///
 /// Extends phase congruency with directional Laplacian responses for
 /// more detailed feature characterization.
 /// @tparam ET Energy type (float or double)
@@ -175,6 +178,7 @@ class PhaseCongruencyLaplaceI {
 };
 
 /// @brief Base implementation for phase congruency with Laplacian support.
+///
 /// Combines phase congruency Laplacian interface with quadrature filter functionality.
 /// @tparam IT Input image pixel type
 /// @tparam GT Gradient type

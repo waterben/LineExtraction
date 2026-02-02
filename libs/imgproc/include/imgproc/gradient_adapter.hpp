@@ -42,6 +42,7 @@
 
 /// @file gradient_adapter.hpp
 /// @brief Adapter classes for using quadrature filters as gradient operators.
+///
 /// This file provides adapter classes that wrap quadrature filter implementations
 /// to expose them through the standard Gradient interface. This allows quadrature-
 /// based edge detection methods to be used interchangeably with traditional
@@ -54,6 +55,7 @@
 namespace lsfm {
 
 /// @brief Adapter to use the odd component of a quadrature filter as gradient.
+///
 /// Wraps a quadrature filter (QUAD) and exposes its odd filter response
 /// (imaginary part) as gradient magnitude. The odd filter response corresponds
 /// to edges in the image.
@@ -175,6 +177,7 @@ class GradientOdd : public GradientI<typename QUAD::img_type,
 };
 
 /// @brief Adapter to use local energy from a quadrature filter as gradient.
+///
 /// Wraps a quadrature filter (QUAD) and exposes its local energy response
 /// (sqrt(even² + odd²)) as gradient magnitude. Local energy provides a
 /// combined measure of edges and lines.
@@ -238,6 +241,7 @@ class GradientEnergy : public GradientOdd<QUAD> {
 
 
 /// @brief Adapter to use phase congruency from a quadrature filter as gradient.
+///
 /// Wraps a quadrature filter (QUAD) and exposes its phase congruency response
 /// as gradient magnitude. Phase congruency provides illumination-invariant
 /// feature detection by measuring the consistency of phase across scales.
@@ -280,6 +284,7 @@ class GradientPC : public GradientOdd<QUAD> {
   virtual MagnitudeRange magnitudeRange() const { return this->quad_.phaseCongruencyRange(); }
 
   /// @brief Convert normalized threshold to phase congruency threshold.
+  ///
   /// For phase congruency, the normalized value is used directly since
   /// phase congruency is already normalized to [0, 1].
   /// @param val Normalized threshold value in [0, 1].

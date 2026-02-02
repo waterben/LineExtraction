@@ -1,5 +1,6 @@
 /// @file visualizeRviz.hpp
 /// @brief ROS RViz visualization utilities.
+///
 /// Provides functions for visualizing 3D line segments and points in RViz
 /// using ROS visualization markers.
 
@@ -15,6 +16,7 @@ namespace lsfm {
 
 
 /// @brief Visualize 3D line segments in RViz.
+///
 /// Publishes line segments as ROS visualization markers without text labels.
 /// @tparam MyLine3Dsegment Line segment type with startPoint()/endPoint() methods.
 /// @tparam FT Floating-point type.
@@ -28,6 +30,7 @@ void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments, const 
 }
 
 /// @brief Visualize 3D line segments in RViz with labels and poses.
+///
 /// Publishes line segments as red LINE_LIST markers with optional text labels
 /// and robot poses as green ARROW markers.
 /// @tparam MyLine3Dsegment Line segment type with startPoint()/endPoint() methods.
@@ -177,6 +180,7 @@ void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments,
 
 
 /// @brief Visualize 3D points in RViz with labels and poses.
+///
 /// Publishes points as red SPHERE_LIST markers with optional text labels
 /// and robot poses as green ARROW markers.
 /// @tparam MyPoint3D Point type with point member having x(), y(), z() methods.

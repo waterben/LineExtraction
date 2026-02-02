@@ -1,5 +1,6 @@
 /// @file object3d.hpp
 /// @brief 3D object representation with OBJ file I/O.
+///
 /// Provides Triangle and Object3D structures for representing 3D meshes,
 /// along with functions for reading and writing Wavefront OBJ files.
 
@@ -29,6 +30,7 @@ inline void trim_inplace(std::string& s) {
 }
 
 /// @brief Triangle face with vertex indices and texture coordinates.
+///
 /// Represents a triangle in a 3D mesh by storing indices into vertex,
 /// normal, and texture coordinate arrays.
 struct Triangle {
@@ -54,6 +56,7 @@ struct Triangle {
 };
 
 /// @brief 3D object with mesh data and OBJ file I/O.
+///
 /// Represents a 3D mesh consisting of vertices, normals, triangular faces,
 /// and texture coordinates. Supports reading and writing Wavefront OBJ format.
 /// @tparam FT Floating-point type.
@@ -87,6 +90,7 @@ struct Object3D {
   Object3D(const std::istream& in) { read(in); }
 
   /// @brief Read single object from OBJ stream.
+  ///
   /// Parses OBJ format including vertices (v), normals (vn), texture
   /// coordinates (vt), and faces (f). Updates offset counts for multi-object files.
   /// @param in Input stream.
@@ -202,6 +206,7 @@ struct Object3D {
   }
 
   /// @brief Get all edges including duplicates.
+  ///
   /// Extracts all three edges from each triangle without removing duplicates.
   /// @return List of all triangle edges.
   EdgeList edgesAll() const {
@@ -215,6 +220,7 @@ struct Object3D {
   }
 
   /// @brief Get unique edges excluding coplanar duplicates.
+  ///
   /// Extracts edges from triangles, removing duplicates that lie on the same
   /// plane (internal mesh edges). Keeps silhouette/boundary edges.
   /// @return List of unique boundary edges.
@@ -285,6 +291,7 @@ struct Object3D {
 
 
   /// @brief Find similar (nearly coincident) vertices.
+  ///
   /// Searches for vertex pairs within a distance threshold of 0.01 units.
   /// Useful for detecting mesh issues or merging vertices.
   void findSimilarVertexes() {
@@ -330,6 +337,7 @@ template <class FT>
 using Object3DList = std::vector<Object3D<FT>>;
 
 /// @brief Load multiple objects from OBJ stream.
+///
 /// Reads all objects from an OBJ file stream, handling multi-object files
 /// with proper vertex index offsets.
 /// @tparam FT Floating-point type.

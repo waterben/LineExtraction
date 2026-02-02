@@ -42,6 +42,7 @@
 
 /// @file steerable.hpp
 /// @brief Steerable Gaussian derivative filter generation.
+///
 /// This file provides functions for generating steerable Gaussian derivative
 /// filters, which can be oriented to any angle by linear combination of
 /// basis filters. Steerable filters are useful for detecting oriented
@@ -56,6 +57,7 @@
 namespace lsfm {
 
 /// @brief Generate a steerable first-derivative Gaussian filter at a specified angle.
+///
 /// Creates a 2D kernel that responds to edges at the given orientation by
 /// combining basis filters (G0 and G90) using the steering equation.
 /// @tparam FT Floating-point type for kernel values (e.g., float, double).
@@ -72,6 +74,7 @@ cv::Mat_<FT> SteerGaussianD1(FT angle, int size = 5, FT range = 3) {
 }
 
 /// @brief Steer a first-derivative Gaussian filter using precomputed basis filters.
+///
 /// Uses precomputed basis filter responses (k0 = G0, k1 = G90) to compute
 /// the response at an arbitrary angle without recomputing the full convolution.
 /// @tparam FT Floating-point type for calculations.
@@ -97,6 +100,7 @@ cv::Mat_<FT> SteerGaussianD1(double angle, const cv::Mat& Ik0, const cv::Mat& Ik
 }
 
 /// @brief Generate a steerable second-derivative Gaussian filter at a specified angle.
+///
 /// Creates a 2D kernel that responds to ridges/valleys at the given orientation
 /// by combining three basis filters using the second-order steering equation.
 /// @tparam FT Floating-point type for kernel values (e.g., float, double).
@@ -116,6 +120,7 @@ cv::Mat_<FT> SteerGaussianD2(FT angle, int size = 5, FT range = 3) {
 }
 
 /// @brief Steer a second-derivative Gaussian filter using precomputed basis filters.
+///
 /// Uses precomputed basis filter responses (k0 = G0°, k1 = G45°, k2 = G90°) to
 /// compute the response at an arbitrary angle without recomputing the full convolution.
 /// @tparam FT Floating-point type for calculations.

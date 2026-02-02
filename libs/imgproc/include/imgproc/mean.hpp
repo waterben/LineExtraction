@@ -48,6 +48,7 @@
 namespace lsfm {
 
 /// @brief Compute mean value along a line segment with sub-pixel interpolation.
+///
 /// This struct provides methods to sample pixel values along a line segment and
 /// compute statistical measures (mean, variance). The sampling uses a configurable
 /// interpolator for sub-pixel accuracy and walks along the line at specified
@@ -62,6 +63,7 @@ struct Mean {
   typedef IP interpolation_type;  ///< Interpolation policy type.
 
   /// @brief Compute mean value along a line segment.
+  ///
   /// Samples the image at regular intervals along the line segment and returns
   /// the arithmetic mean of all sampled values. The line is trimmed to fit
   /// within the image boundaries before sampling.
@@ -95,6 +97,7 @@ struct Mean {
   }
 
   /// @brief Compute mean value and variance along a line segment.
+  ///
   /// Samples the image at regular intervals along the line segment and computes
   /// both the arithmetic mean and variance of all sampled values.
   /// @tparam PT Point template type (e.g., Vec2).
@@ -136,6 +139,7 @@ struct Mean {
   }
 
   /// @brief Collect all sample values along a line segment.
+  ///
   /// Samples the image at regular intervals along the line segment and stores
   /// all values in the provided container.
   /// @tparam V Container type for output values (e.g., std::vector<FT>).
@@ -165,6 +169,7 @@ struct Mean {
 };
 
 /// @brief Compute mean value along a line segment using sample count.
+///
 /// This struct wraps Mean to provide sampling based on a specified number of
 /// samples rather than a fixed distance. The distance between samples is
 /// computed from the line length and desired sample count.
@@ -214,11 +219,13 @@ struct MeanSampled {
 };
 
 /// @brief Fast mean computation along a line segment using axis-aligned traversal.
+///
 /// This struct provides an optimized implementation of line sampling by walking
 /// along the dominant axis (X or Y) rather than walking along the actual line
 /// direction. This is faster because it avoids computing line distances for
 /// each sample point.
 /// @note This implementation may produce slightly different results than Mean
+///
 /// for diagonal lines due to the axis-aligned sampling strategy.
 /// @tparam FT Floating-point type for calculations (e.g., float, double).
 /// @tparam MT Matrix element type for the input image.
@@ -230,6 +237,7 @@ struct FastMean {
   typedef IP interpolation_type;  ///< Interpolation policy type.
 
   /// @brief Compute mean value along a line segment using fast axis-aligned traversal.
+  ///
   /// Walks along the dominant axis direction and interpolates the perpendicular
   /// coordinate for each sample. This is faster than walking along the actual
   /// line direction.
@@ -532,6 +540,7 @@ struct FastMean {
 };
 
 /// @brief Fast mean computation along a line segment using sample count.
+///
 /// This struct wraps FastMean to provide sampling based on a specified number
 /// of samples rather than a fixed distance.
 /// @tparam FT Floating-point type for calculations (e.g., float, double).
@@ -581,6 +590,7 @@ struct FastMeanSampled {
 
 
 /// @brief Helper struct for obtaining function pointers to mean computation functions.
+///
 /// This helper provides type aliases for function pointers to the templated mean
 /// functions, enabling their use in optimization routines that require function
 /// pointers as parameters.

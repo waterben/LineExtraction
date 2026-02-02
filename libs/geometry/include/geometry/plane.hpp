@@ -42,6 +42,7 @@
 
 /// @file plane.hpp
 /// @brief 3D plane representation.
+///
 /// This file provides a class for representing 3D planes in Hesse normal form:
 /// n · x = d, where n is the unit normal vector and d is the signed distance
 /// to the origin. Features include:
@@ -58,6 +59,7 @@
 namespace lsfm {
 
 /// @brief 3D plane representation in Hesse normal form.
+///
 /// Represents a plane as n · x = d, where:
 /// - n is the unit normal vector
 /// - d is the signed distance from origin to plane along the normal
@@ -84,6 +86,7 @@ class Plane {
   Plane(const FT& dist, const Vec3<FT>& n) : d_(dist), n_(n) {}
 
   /// @brief Construct plane from point and normal.
+  ///
   /// Creates a plane passing through the given point with the
   /// specified normal direction. The normal is automatically normalized.
   /// @param pnt A point on the plane.
@@ -101,6 +104,7 @@ class Plane {
   }
 
   /// @brief Construct plane from three points.
+  ///
   /// Creates a plane passing through all three points. The normal
   /// direction is computed from (p2-p1) × (p3-p1).
   /// @param p1 First point on the plane.
@@ -119,6 +123,7 @@ class Plane {
   }
 
   /// @brief Construct plane from a point and a line.
+  ///
   /// Creates a plane containing both the point and the line.
   /// @param p A point on the plane.
   /// @param l A line contained in the plane.
@@ -162,6 +167,7 @@ class Plane {
   /// @{
 
   /// @brief Compute signed distance from point to plane.
+  ///
   /// Uses the plane equation n·x = d. Positive distance means the
   /// point is on the same side as the normal points.
   /// @param p Point to compute distance to.
@@ -273,6 +279,7 @@ class Plane {
   }
 
   /// @brief Translate plane by a vector.
+  ///
   /// Moves the plane along the translation vector by updating
   /// the distance parameter.
   /// @param trans Translation vector.
@@ -283,6 +290,7 @@ class Plane {
   }
 
   /// @brief Translate plane orthogonally by a scalar distance.
+  ///
   /// Moves the plane along its normal direction.
   /// @param d Distance to move (positive = along normal).
   /// @return Reference to this plane for chaining.
@@ -307,6 +315,7 @@ class Plane {
   inline FT angle(Line3<FT>& line) const { return std::acos(n_.dot(line.n_)); }
 
   /// @brief Flip the plane normal direction.
+  ///
   /// Reverses the normal and negates the distance to maintain
   /// the same geometric plane but with opposite orientation.
   virtual void flip() {

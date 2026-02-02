@@ -42,6 +42,7 @@
 
 /// @file stereo.hpp
 /// @brief Stereo vision triangulation utilities.
+///
 /// Provides classes and functions for stereo triangulation of points
 /// and lines from corresponding 2D observations in rectified stereo pairs.
 
@@ -196,6 +197,7 @@ inline Plane<FT> planeFromLine(
 /// @}
 
 /// @brief Stereo triangulation class using ray intersection.
+///
 /// Triangulates points and lines from corresponding observations
 /// in a rectified stereo pair. Points are triangulated by finding
 /// the midpoint of the closest approach between rays. Lines are
@@ -229,6 +231,7 @@ class Stereo {
   /// @{
 
   /// @brief Triangulate 3D point from stereo correspondences.
+  ///
   /// Computes 3D point by finding the midpoint of closest approach
   /// between rays from left and right camera origins through the
   /// corresponding pixels.
@@ -273,6 +276,7 @@ class Stereo {
   /// @{
 
   /// @brief Triangulate 3D line from stereo line correspondences.
+  ///
   /// Triangulates by computing 3D points at two y-coordinates
   /// on the line and constructing a line through them.
   /// @param lineL Left image line.
@@ -327,6 +331,7 @@ class Stereo {
   /// @{
 
   /// @brief Triangulate 3D line segment from stereo correspondences.
+  ///
   /// Computes endpoints by triangulating at the union of y-extents
   /// from both image segments.
   /// @param lineL Left image line segment.
@@ -393,6 +398,7 @@ typedef Stereo<float> Stereof;
 typedef Stereo<double> Stereod;
 
 /// @brief Stereo triangulation using plane intersection for lines.
+///
 /// Triangulates lines by intersecting the interpretation planes
 /// from each camera. Works for non-rectified stereo pairs.
 /// @tparam FT Floating-point type.
@@ -423,6 +429,7 @@ class StereoPlane : public Stereo<FT> {
   /// @{
 
   /// @brief Triangulate 3D line via plane intersection.
+  ///
   /// Constructs interpretation planes from each camera through
   /// the 2D lines and finds their intersection line.
   /// @param lineL Left image line.
@@ -476,6 +483,7 @@ class StereoPlane : public Stereo<FT> {
   /// @{
 
   /// @brief Triangulate 3D line segment via plane intersection.
+  ///
   /// Triangulates the supporting line via plane intersection,
   /// then computes segment endpoints by projecting the 2D
   /// endpoints onto the 3D line.

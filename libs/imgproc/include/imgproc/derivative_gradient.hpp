@@ -42,6 +42,7 @@
 
 /// @file derivative_gradient.hpp
 /// @brief Gradient computation using derivative operators.
+///
 /// This file provides a flexible gradient operator that combines configurable
 /// derivative operators (Sobel, Scharr, etc.) with magnitude and direction
 /// computation policies.
@@ -53,6 +54,7 @@
 namespace lsfm {
 
 /// @brief Gradient operator using configurable derivative, magnitude, and direction policies.
+///
 /// This class provides a flexible gradient computation framework by combining
 /// three configurable policies:
 /// - GO: Derivative operator (e.g., SobelDerivative, ScharrDerivative)
@@ -148,6 +150,7 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
   }
 
   /// @brief Process an image to compute gradients.
+  ///
   /// Computes X and Y derivatives. Magnitude and direction are computed
   /// lazily when accessed via magnitude() or direction().
   /// @param[in] img Input image.
@@ -219,6 +222,7 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
   inline bool isMagnitudeDone() const { return mag_done_; }
 
   /// @brief Get gradient magnitude image.
+  ///
   /// Magnitude is computed lazily on first access using the MO policy.
   /// @return Magnitude image.
   cv::Mat magnitude() const {
@@ -234,6 +238,7 @@ class DerivativeGradient : public Gradient<IT, GT, MT, DT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get gradient direction image.
+  ///
   /// Direction is computed lazily on first access using the DO policy.
   /// @return Direction image.
   cv::Mat direction() const {

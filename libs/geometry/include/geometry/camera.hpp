@@ -42,6 +42,7 @@
 
 /// @file camera.hpp
 /// @brief Camera models for 3D-to-2D projection using Eigen-based types.
+///
 /// This file provides camera classes that model the projection from 3D world
 /// coordinates to 2D image coordinates using pinhole camera models. The cameras
 /// combine intrinsic parameters (focal length, principal point) with extrinsic
@@ -64,6 +65,7 @@
 namespace lsfm {
 
 /// @brief Pinhole camera model without lens distortion.
+///
 /// Models a camera as the combination of intrinsic parameters (focal length,
 /// principal point, image size) and extrinsic parameters (pose in world).
 /// Inherits from Pose to provide position and orientation.
@@ -126,6 +128,7 @@ class Camera : public Pose<FT> {
   }
 
   /// @brief Construct camera from field of view and image size.
+  ///
   /// Creates a camera with the principal point at the image center.
   /// @param fov Horizontal field of view (radians).
   /// @param imageSize Image dimensions (width, height).
@@ -199,6 +202,7 @@ class Camera : public Pose<FT> {
   }
 
   /// @brief Construct camera from 3x4 projection matrix.
+  ///
   /// Decomposes P = K[R|t] to extract intrinsics and extrinsics.
   /// @param proj 3x4 projection matrix.
   /// @param imageSize Image dimensions.
@@ -578,6 +582,7 @@ typedef Camera<float> Cameraf;
 typedef Camera<double> Camerad;
 
 /// @brief Camera with cached homogeneous projection matrix.
+///
 /// Extends Camera with pre-computed projection matrix for efficient
 /// point projection. Does not support line transformations.
 /// @tparam FT Floating-point type.
@@ -813,6 +818,7 @@ typedef CameraHom<float> CameraHomf;
 typedef CameraHom<double> CameraHomd;
 
 /// @brief Camera with Plücker line and homogeneous point projection.
+///
 /// Extends CameraHom with support for 3D line projection using
 /// Plücker coordinates. Can project both points and lines.
 /// @tparam FT Floating-point type.
@@ -1039,6 +1045,7 @@ class CameraPluecker : public CameraHom<FT> {
   }
 
   /// @brief Project Plücker line from point and direction.
+  ///
   /// Projects a 3D line using Plücker coordinates where the line is
   /// defined by a point and direction vector.
   /// @param cam Camera intrinsic matrix (3x3).
@@ -1053,6 +1060,7 @@ class CameraPluecker : public CameraHom<FT> {
   }
 
   /// @brief Project Plücker line from momentum and direction.
+  ///
   /// Projects a 3D line using Plücker coordinates (momentum m, direction l).
   /// @param cam Camera intrinsic matrix (3x3).
   /// @param trans Translation vector.
@@ -1066,6 +1074,7 @@ class CameraPluecker : public CameraHom<FT> {
   }
 
   /// @brief Project Plücker line using camera cofactor matrix.
+  ///
   /// Projects a 3D line using pre-computed camera matrix cofactors
   /// for efficiency when projecting multiple lines.
   /// @param camCOF Camera matrix cofactors.
@@ -1135,6 +1144,7 @@ typedef CameraPluecker<float> CameraPlueckerf;
 typedef CameraPluecker<double> CameraPlueckerd;
 
 /// @brief Camera projecting 3D lines via two-point projection.
+///
 /// Alternative to CameraPluecker that projects 3D lines by projecting
 /// two points on the line and constructing a 2D line from them. Less
 /// mathematically elegant but simpler to understand.
@@ -1240,6 +1250,7 @@ class Camera2P : public CameraHom<FT> {
   using CameraHom<FT>::project;
 
   /// @brief Project 3D line to 2D via two-point projection.
+  ///
   /// Projects two points on the line (origin and a distant point)
   /// and constructs a 2D line through their projections.
   /// @param line 3D line to project.

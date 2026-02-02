@@ -1,5 +1,6 @@
 /// @file pc_lgf.hpp
 /// @brief Phase Congruency using Log-Gabor Filters in frequency domain.
+///
 /// Implements the phase congruency model using Log-Gabor filters as described
 /// by Kovesi. Log-Gabor filters have Gaussian transfer functions when viewed
 /// on a logarithmic frequency scale, providing zero DC component in the even
@@ -16,6 +17,7 @@
 namespace lsfm {
 
 /// @brief Phase Congruency detector using Log-Gabor Filters.
+///
 /// This class implements phase congruency computation using Log-Gabor filters
 /// in the frequency domain. Log-Gabor filters are particularly well-suited
 /// for phase congruency because:
@@ -35,6 +37,7 @@ template <class IT, class FT, template <typename, typename> class P = Polar>
 class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
  public:
   /// @brief Create Log-Gabor filter bank for phase congruency.
+  ///
   /// Generates a bank of Log-Gabor filters across multiple scales in the
   /// frequency domain. Each filter has Gaussian transfer function on
   /// logarithmic frequency scale.
@@ -409,6 +412,7 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Get or set noise estimation method.
+  ///
   /// - -1: Median-based estimation
   /// - -2: Rayleigh distribution mode
   /// - >= 0: Fixed threshold value
@@ -420,6 +424,7 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Process an image to compute phase congruency.
+  ///
   /// Applies Log-Gabor filter bank across multiple scales,
   /// accumulates responses, estimates noise, and computes
   /// frequency spread weighting. Results are cached for lazy access.
@@ -596,6 +601,7 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
   PhaseRange phaseRange() const { return P<FT, FT>::range(); }
 
   /// @brief Get phase congruency measure.
+  ///
   /// Computes weighted, noise-compensated phase congruency:
   /// PC = weight * (1 - deviation) * (energy - T) / energy
   /// @return Phase congruency image [0, 1].

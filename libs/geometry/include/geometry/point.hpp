@@ -1,5 +1,6 @@
 /// @file point.hpp
 /// @brief Point utilities for image coordinate access and type conversions.
+///
 /// Provides helper functions for:
 /// - Setting and getting pixel values at point coordinates
 /// - Coordinate accessor functions (getX, getY, setX, setY)

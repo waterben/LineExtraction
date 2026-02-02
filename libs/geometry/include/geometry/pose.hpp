@@ -42,6 +42,7 @@
 
 /// @file pose.hpp
 /// @brief 3D pose representation with rotation and translation.
+///
 /// Provides Pose class representing position and orientation in 3D space
 /// using Rodrigues rotation vectors and translation vectors.
 
@@ -58,6 +59,7 @@ using namespace std;
 };  // namespace detail
 
 /// @brief 3D pose with translation and rotation.
+///
 /// Represents a 6-DOF pose in 3D space using a translation vector
 /// and a Rodrigues rotation vector. Supports transformation operations
 /// and conversion to/from homogeneous matrices.
@@ -69,6 +71,7 @@ class Pose {
   Vec3<FT> rot_;    ///< Rodrigues rotation vector (orientation).
 
   /// @brief Update internal cached members.
+  ///
   /// Override in derived classes to update cached values when pose changes.
   virtual void updateInternals() {}
 
@@ -241,6 +244,7 @@ class Pose {
   /// @{
 
   /// @brief Concatenate pose (add pose "underneath" current one).
+  ///
   /// Computes the composition of this pose with another, effectively
   /// chaining transformations.
   /// @param p Pose to concatenate.
@@ -276,6 +280,7 @@ class Pose {
   }
 
   /// @brief Concatenate inverse pose.
+  ///
   /// Computes the composition of this pose with the inverse of another,
   /// effectively "subtracting" the other pose.
   /// @param p Pose whose inverse to concatenate.

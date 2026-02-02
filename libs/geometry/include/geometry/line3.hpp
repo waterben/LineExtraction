@@ -42,6 +42,7 @@
 
 /// @file line3.hpp
 /// @brief 3D line and line segment representations.
+///
 /// This file provides classes for representing 3D infinite lines and line segments
 /// using point-direction form. Features include:
 /// - Point and direction vector representation
@@ -63,6 +64,7 @@
 namespace lsfm {
 
 /// @brief 3D infinite line representation.
+///
 /// Represents a 3D line using point-direction form: p + t*v,
 /// where p is the origin point and v is the normalized direction vector.
 /// Provides conversions to/from Plücker and Cayley representations
@@ -90,6 +92,7 @@ class Line3 {
   Line3(const Vec3<FT>& pnt, const Vec3<FT>& vec, bool) : p_(pnt), v_(vec) {}
 
   /// @brief Construct line from point and direction with normalization.
+  ///
   /// Normalizes the direction vector. If the vector is too short (length < tau),
   /// creates an empty line.
   /// @param pnt Origin point on the line.
@@ -140,6 +143,7 @@ class Line3 {
   inline const Vec3<FT>& origin() const { return p_; }
 
   /// @brief Compute the momentum vector for Plücker representation.
+  ///
   /// The momentum m = p × v is used with the direction v to form
   /// the Plücker coordinates (v, m) of the line.
   /// @return Momentum vector (cross product of origin and direction).
@@ -151,6 +155,7 @@ class Line3 {
   /// @{
 
   /// @brief Compute signed distance from point to perpendicular plane.
+  ///
   /// Computes the distance from a point to the plane through the line
   /// origin with normal equal to the line direction.
   /// @param p Point to compute distance to.
@@ -158,6 +163,7 @@ class Line3 {
   inline FT normalDistance(const Vec3<FT>& p) const { return v_.dot(p - p_); }
 
   /// @brief Compute parameter for nearest point to another line.
+  ///
   /// Computes the parameter t such that p_ + t*v_ is the point on this
   /// line nearest to the given line.
   /// @param l Other line to find distance to.
@@ -177,6 +183,7 @@ class Line3 {
   inline Vec3<FT> nearestPointOnLine(const Vec3<FT>& p) const { return p_ + v_ * normalDistance(p); }
 
   /// @brief Compute nearest point on this line to another line.
+  ///
   /// Finds the point on this line that is closest to the given line
   /// and returns the parameter sc (distance from origin along direction).
   /// @param l Other line.
@@ -205,6 +212,7 @@ class Line3 {
   }
 
   /// @brief Compute nearest points on both lines.
+  ///
   /// Finds the pair of points (one on each line) that represent
   /// the shortest distance between the two lines.
   /// @param l Other line.
@@ -277,6 +285,7 @@ class Line3 {
   /// @{
 
   /// @brief Rotate direction around line origin.
+  ///
   /// Rotates only the direction vector, keeping the origin fixed.
   /// @param rotMat 3x3 rotation matrix.
   /// @return Reference to this line for chaining.
@@ -291,6 +300,7 @@ class Line3 {
   inline Line3<FT>& rotateDirection(const Vec3<FT>& rot) { return rotate(rodrigues(rot)); }
 
   /// @brief Rotate line around coordinate origin.
+  ///
   /// Rotates both the origin point and direction vector.
   /// @param rotMat 3x3 rotation matrix.
   /// @return Reference to this line for chaining.
@@ -353,6 +363,7 @@ class Line3 {
   /// @{
 
   /// @brief Get Cayley representation of the line.
+  ///
   /// The Cayley representation uses 4 parameters (w, s) where s is a 3-vector,
   /// suitable for optimization algorithms.
   /// @param[out] w Scalar component of Cayley representation.
@@ -394,6 +405,7 @@ class Line3 {
   }
 
   /// @brief Convert Plücker coordinates to Cayley representation.
+  ///
   /// Converts from Plücker line representation (m, l) to the Cayley
   /// representation (w, s) which is better suited for optimization.
   /// @param m Momentum vector (m = p × v).
@@ -475,6 +487,7 @@ class Line3 {
   }
 
   /// @brief Convert Cayley representation to Plücker coordinates.
+  ///
   /// Converts from Cayley representation (w, s) back to Plücker
   /// line representation (m, l).
   /// @param w Scalar component of Cayley representation.
@@ -542,6 +555,7 @@ typedef Line3<float> Line3f;
 typedef Line3<double> Line3d;
 
 /// @brief 3D line segment.
+///
 /// Represents a finite portion of a 3D line defined by start and end
 /// distances along the line direction from the origin point.
 /// @tparam FT Floating-point type for coordinates.
@@ -555,6 +569,7 @@ class LineSegment3 : public Line3<FT> {
   FT end_;  //!< End distance from origin along direction.
 
   /// @brief Swap direction and adjust distances.
+  ///
   /// Internal helper to ensure beg_ <= end_ after construction.
   void swapDir() {
     Line3<FT>::flip();
@@ -703,6 +718,7 @@ class LineSegment3 : public Line3<FT> {
   /// @{
 
   /// @brief Find nearest point on segment to another line.
+  ///
   /// Similar to nearestPointOnLine but clamps the result to segment bounds.
   /// @param l Other line to find distance to.
   /// @return Nearest point on this segment (clamped to endpoints if needed).
@@ -729,6 +745,7 @@ class LineSegment3 : public Line3<FT> {
   inline void endPointSwap() { std::swap(beg_, end_); }
 
   /// @brief Flip the segment direction.
+  ///
   /// Reverses the direction vector and adjusts distances to maintain
   /// the same physical segment.
   virtual void flip() {
@@ -744,6 +761,7 @@ class LineSegment3 : public Line3<FT> {
   /// @{
 
   /// @brief Compute squared endpoint distance error.
+  ///
   /// Calculates the sum of squared distances from both endpoints
   /// to a ground truth line. Useful for evaluating segment accuracy.
   /// @param gtLine Ground truth line to measure against.
@@ -767,6 +785,7 @@ class LineSegment3 : public Line3<FT> {
 };
 
 /// @brief Stream output operator for LineSegment3.
+///
 /// Outputs the segment in format: "S: sx, sy, sz  E: ex, ey, ez,"
 /// @tparam FT Floating-point type.
 /// @param os Output stream.

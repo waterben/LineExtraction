@@ -42,10 +42,12 @@
 
 /// @file line.hpp
 /// @brief 2D line and line segment representations.
+///
 /// Provides Line and LineSegment classes for 2D geometric computations.
 /// Lines are represented in normal form: n·p = d, where n is the unit normal,
 /// p is a point on the line, and d is the signed distance to the origin.
 /// @note The normal has the direction of the corresponding gradient.
+///
 /// The gradient direction is always from dark to bright, so the normal angle
 /// is -PI/2 from the line angle (90° counterclockwise to line direction).
 /// Since the positive y-axis for images is top-to-bottom, positive rotation
@@ -65,6 +67,7 @@
 namespace lsfm {
 
 /// @brief 2D infinite line in normal form.
+///
 /// Represents a 2D line using Hesse normal form: n·p = d, where:
 /// - n = (nx, ny) is the unit normal vector
 /// - d is the signed perpendicular distance to the origin
@@ -529,6 +532,7 @@ typedef Line2Vector<double> Line2Vectord;  ///< Vector of double lines.
 /// @}
 
 /// @brief 2D line segment with finite extent.
+///
 /// Extends Line with start/end distances along the line direction,
 /// defining a finite segment. Supports clipping, overlap detection,
 /// and segment-specific transformations.
@@ -1096,6 +1100,7 @@ class LineSegment : public Line<FT, PT> {
 };
 
 /// @brief Stream output operator for LineSegment.
+///
 /// Outputs the line segment in the format: "S: sx, sy  E: ex, ey"
 /// where (sx, sy) is the start point and (ex, ey) is the end point.
 /// @tparam FT Floating-point type for coordinates.
@@ -1134,6 +1139,7 @@ typedef LineSegment2Vector<float> LineSegment2Vectorf;
 typedef LineSegment2Vector<double> LineSegment2Vectord;
 
 /// @brief Trim an infinite line to a bounding box.
+///
 /// Creates a line segment by trimming the infinite line to fit within
 /// the specified rectangular bounding box. If the line does not intersect
 /// the box, returns an empty line segment.
@@ -1158,6 +1164,7 @@ inline LineSegment<FT, LPT> trim2Box(const Line<FT, LPT>& l, FT max_x, FT max_y,
 }
 
 /// @brief Implementation of line drawing.
+///
 /// Draws the line by first trimming it to the image bounds using trim2Box(),
 /// then delegating to the line segment's draw method.
 /// @param img Image to draw on.

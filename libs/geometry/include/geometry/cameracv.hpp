@@ -42,6 +42,7 @@
 
 /// @file cameracv.hpp
 /// @brief OpenCV-based camera projection implementation.
+///
 /// Provides CameraCV class that uses OpenCV's cv::projectPoints()
 /// for 3D-to-2D projection. Offers better accuracy for distorted
 /// projections while maintaining interface compatibility.
@@ -55,6 +56,7 @@
 namespace lsfm {
 
 /// @brief Camera using OpenCV projection methods.
+///
 /// Uses cv::projectPoints() for point projection, providing compatibility
 /// with OpenCV's camera model and distortion handling. Projects lines
 /// using two-point method through OpenCV's projection pipeline.

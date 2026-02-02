@@ -52,6 +52,7 @@
 namespace lsfm {
 
 /// @brief Precise direction computation using atan2.
+///
 /// Computes gradient direction with full precision, returning angles
 /// in the range [-PI, PI] radians.
 /// @tparam GT Gradient input type (short, float, or double)
@@ -104,6 +105,7 @@ struct Direction {
 
 
 /// @brief Fast direction computation using cv::fastAtan2.
+///
 /// Computes gradient direction with lookup table approximation, returning
 /// angles in the range [0, 360] degrees. Faster but less precise than Direction.
 /// @tparam GT Gradient input type (short, float, or double)
@@ -138,6 +140,7 @@ struct FastDirection {
 #endif
 
   /// @brief Compute fast direction from cv::Mat gradient images.
+  ///
   /// Uses cv::phase() for float types for efficiency.
   /// @param gx X-direction gradient matrix
   /// @param gy Y-direction gradient matrix

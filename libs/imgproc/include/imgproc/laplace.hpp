@@ -49,6 +49,7 @@
 namespace lsfm {
 
 /// @brief Abstract interface for Laplacian filters.
+///
 /// Provides interface for computing second-order derivatives (Laplacian)
 /// used for blob detection and edge enhancement.
 /// @tparam IT Input image pixel type (uchar, short, float, double)
@@ -81,6 +82,7 @@ class LaplaceI : public FilterI<IT> {
 };
 
 /// @brief Base implementation class for Laplacian filters.
+///
 /// Provides common functionality including intensity range management.
 /// @tparam IT Input image pixel type
 /// @tparam LT Laplacian output type
@@ -115,6 +117,7 @@ class Laplace : public LaplaceI<IT, LT> {
 };
 
 /// @brief Simple 3x3 Laplacian filter.
+///
 /// Uses standard 3x3 kernel with all neighbors weighted 1 and center -8.
 /// Fast but sensitive to noise.
 /// @tparam IT Input image pixel type
@@ -170,6 +173,7 @@ class LaplaceSimple : public Laplace<IT, LT> {
 };
 
 /// @brief Laplacian of Gaussian (LoG) filter.
+///
 /// Combines Gaussian smoothing with Laplacian for noise-robust blob detection.
 /// Also known as "Mexican hat" filter due to its 2D shape.
 /// @tparam IT Input image pixel type
@@ -270,6 +274,7 @@ class LoG : public LaplaceSimple<IT, LT> {
   int kernelSize() const { return ksize_; }
 
   /// @brief Set kernel size.
+  ///
   /// Range 3-99, must be odd (even values corrected to ksize+1).
   /// @note Large kernels need larger GT type like int or long long int
   /// @param ks New kernel size
@@ -349,6 +354,7 @@ class LoG : public LaplaceSimple<IT, LT> {
 };
 
 /// @brief OpenCV Laplacian filter wrapper.
+///
 /// Uses cv::Laplacian internally with configurable kernel size.
 /// @tparam IT Input image pixel type
 /// @tparam LT Laplacian output type
@@ -397,6 +403,7 @@ class LaplaceCV : public Laplace<IT, LT> {
   int kernelSize() const { return ksize_; }
 
   /// @brief Set kernel size.
+  ///
   /// Range 1-31, must be odd (even values corrected to ksize+1).
   /// @note Large kernels need larger GT type like float or double
   /// @param ks New kernel size

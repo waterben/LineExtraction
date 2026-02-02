@@ -1,5 +1,6 @@
 /// @file render_gl.hpp
 /// @brief OpenGL rendering utilities for 3D geometry.
+///
 /// Provides functions for rendering 3D objects, poses, and line segments
 /// using OpenGL. Includes utilities for converting between OpenGL and
 /// OpenCV coordinate systems and reading rendered images.
@@ -35,6 +36,7 @@ namespace lsfm {
 void testRenderingTR();
 
 /// @brief Convert OpenGL pose to OpenCV coordinate system.
+///
 /// Transforms a pose from OpenGL conventions to OpenCV conventions
 /// by rotating 180° around the X-axis.
 /// @tparam FT Floating-point type.
@@ -62,6 +64,7 @@ void renderPoses3d(std::vector<lsfm::Pose<FT>> keyFramePoses) {
 }
 
 /// @brief Render single pose as 3D sphere with coordinate axes.
+///
 /// Draws a solid sphere at the pose origin with X, Y, Z axis lines
 /// showing the orientation.
 /// @tparam FT Floating-point type.
@@ -108,6 +111,7 @@ void renderObjects3d(const Object3DList<FT> objs) {
 }
 
 /// @brief Render single 3D object as filled mesh with lighting.
+///
 /// Draws triangles with normals and optional texture coordinates.
 /// @tparam FT Floating-point type.
 /// @param obj Object to render.
@@ -161,6 +165,7 @@ void renderWireIdObjects3d(const Object3DList<FT> objs,
 }
 
 /// @brief Render single object as wireframe with unique line IDs.
+///
 /// Renders edges with unique colors for line identification. Removes
 /// near-duplicate edges based on distance and angle thresholds.
 /// @tparam FT Floating-point type.
@@ -247,6 +252,7 @@ void renderWireIdObject3d(const Object3D<FT>& obj, std::vector<std::pair<lsfm::V
 
 
 /// @brief Render 3D objects projected to 2D using OpenCV.
+///
 /// Projects 3D edges to 2D using camera parameters and draws them
 /// on an OpenCV image.
 /// @tparam FT Floating-point type.
@@ -278,6 +284,7 @@ void renderObjects3dCV(const Object3DList<FT> objs, const Camera<FT>& cam, cv::M
 
 
 /// @brief Read current OpenGL framebuffer into OpenCV Mat.
+///
 /// Captures the current OpenGL rendering to an existing OpenCV image,
 /// converting from RGB to BGR and flipping vertically.
 /// @tparam MatType OpenCV Mat type (default cv::Mat).
@@ -299,6 +306,7 @@ void getGlImageAsOpenCvMat(int width, int height, MatType& img) {
 }
 
 /// @brief Read OpenGL buffer to OpenCV Mat with format control.
+///
 /// Reads from the OpenGL framebuffer with specified format and data type,
 /// creating a new OpenCV Mat. Supports various pixel formats and depths.
 /// @tparam MT OpenCV data type (e.g., CV_8UC3, CV_32FC1).
@@ -385,6 +393,7 @@ cv::Mat getGlBufferAsOpenCvMat(int width, int height, GLenum format = GL_RGB) {
 }
 
 /// @brief Render 3D line segments in OpenGL.
+///
 /// Draws white line segments using OpenGL immediate mode.
 /// @tparam FT Floating-point type.
 /// @tparam LineType Container type for line segments.

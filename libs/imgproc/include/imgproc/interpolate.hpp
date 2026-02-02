@@ -50,6 +50,7 @@ namespace lsfm {
 
 /// @defgroup interpolation Interpolation Functions and Classes
 /// @brief Sub-pixel interpolation for image access.
+///
 /// This module provides various interpolation methods for accessing image values
 /// at non-integer (sub-pixel) positions. Interpolators are template structs that
 /// provide static methods for 1D and 2D interpolation with optional boundary handling.
@@ -160,6 +161,7 @@ inline MT readVal(
 }
 
 /// @brief Nearest neighbor interpolation (floor).
+///
 /// Returns the value at the integer position obtained by truncating
 /// the floating-point coordinates. Fast but low quality.
 /// @tparam FT Floating point type for coordinates
@@ -370,6 +372,7 @@ struct NearestInterpolator {
 };
 
 /// @brief Rounded nearest neighbor interpolation.
+///
 /// Returns the value at the nearest integer position (using std::round).
 /// Better quality than NearestInterpolator for centered sampling.
 /// @tparam FT Floating point type for coordinates
@@ -476,6 +479,7 @@ struct RoundNearestInterpolator {
 };
 
 /// @brief Fast rounded nearest neighbor interpolation.
+///
 /// Similar to RoundNearestInterpolator but uses +0.5 instead of std::round
 /// for better performance with positive coordinates.
 /// @tparam FT Floating point type for coordinates
@@ -615,6 +619,7 @@ inline FT interpolate_linear(MT a, MT b, FT x) {
 }
 
 /// @brief Bilinear interpolation.
+///
 /// Provides smooth interpolation using weighted average of 4 neighboring pixels.
 /// Better quality than nearest neighbor but slower.
 /// @tparam FT Floating point type for coordinates and result
@@ -852,6 +857,7 @@ struct LinearInterpolator {
 
 
 /// @brief 1D cubic interpolation using Catmull-Rom spline.
+///
 /// Interpolates between 4 sample points with C1 continuity.
 /// @see http://www.paulinternet.nl/?page=bicubic
 /// @tparam FT Floating point result type
@@ -893,6 +899,7 @@ inline FT interpolate_cubic(MT a, MT b, MT c, MT d, FT x) {
 }
 
 /// @brief Bicubic interpolation using Catmull-Rom splines.
+///
 /// Uses 16 neighboring pixels (4x4) for smooth interpolation with C1 continuity.
 /// Highest quality but slowest of the standard interpolators.
 /// @tparam FT Floating point type for coordinates and result
@@ -1223,6 +1230,7 @@ struct CubicInterpolator {
 };
 
 /// @brief Interpolator wrapper with fixed border handling.
+///
 /// Wraps any interpolator with compile-time fixed border type and value,
 /// eliminating the need to specify boundary parameters at each call.
 /// @tparam Interpolator Base interpolator class
@@ -1257,6 +1265,7 @@ struct FixedBorderInterpolator {
 };
 
 /// @brief Interpolator wrapper with separate x/y border handling.
+///
 /// Wraps any interpolator with compile-time fixed but separate border types
 /// and values for x and y axes.
 /// @tparam Interpolator Base interpolator class
@@ -1297,6 +1306,7 @@ struct Fixed2BorderInterpolator {
 
 
 /// @brief Helper for templated interpolation function pointers.
+///
 /// Provides type aliases for function pointers to interpolation functions,
 /// enabling runtime selection of interpolation methods.
 /// @tparam FT Floating point coordinate type

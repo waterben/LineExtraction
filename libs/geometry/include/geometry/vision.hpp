@@ -42,6 +42,7 @@
 
 /// @file vision.hpp
 /// @brief Computer vision utilities for camera decomposition.
+///
 /// Provides utility functions for decomposing camera projection matrices
 /// using OpenCV's calibration functions.
 
@@ -55,6 +56,7 @@
 namespace lsfm {
 
 /// @brief Decompose camera projection matrix into intrinsics and extrinsics.
+///
 /// Extracts camera matrix (intrinsics), rotation matrix, and translation
 /// from a 3x4 projection matrix using OpenCV's decomposeProjectionMatrix.
 /// @tparam FT Floating-point type.

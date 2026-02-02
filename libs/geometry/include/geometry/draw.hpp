@@ -42,6 +42,7 @@
 
 /// @file draw.hpp
 /// @brief Drawing utilities for geometric primitives.
+///
 /// This file provides comprehensive drawing functions for visualizing
 /// geometric objects on OpenCV images. Includes:
 /// - Basic primitives: text, lines, points
@@ -881,6 +882,7 @@ void drawEdge(cv::Mat& img, const LineSegment<FT, PT>& edge, size_t idx) {
 }
 
 /// @brief Draw an edge (infinite line) with index label.
+///
 /// The line is trimmed to fit within the image bounds.
 /// @tparam FT Floating-point type.
 /// @tparam PT Point type template.
@@ -951,6 +953,7 @@ cv::Mat drawGeometry(const LV& lines, const cv::Mat& img) {
 /// @{
 
 /// @brief Draw quiver plot from 2D orientation field.
+///
 /// Visualizes a vector field by drawing arrows at regular intervals.
 /// @tparam GT Gradient type.
 /// @param image Background image.

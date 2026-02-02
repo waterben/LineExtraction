@@ -1,5 +1,6 @@
 /// @file quadratureLGF.hpp
 /// @brief Log-Gabor Filter (LGF) quadrature filter operating in frequency domain.
+///
 /// This file implements a spherical Log-Gabor quadrature filter that operates
 /// in the frequency domain using FFT. Log-Gabor filters have the advantage of
 /// having no DC component and extended high-frequency coverage compared to
@@ -16,6 +17,7 @@
 namespace lsfm {
 
 /// @brief Spherical Log-Gabor quadrature filter operating in frequency domain.
+///
 /// QuadratureLGF implements a Log-Gabor filter in the frequency domain using FFT.
 /// Log-Gabor filters are defined by their transfer function, which has no DC
 /// component and covers the high-frequency end of the spectrum better than
@@ -36,6 +38,7 @@ template <class IT, class FT, template <typename, typename> class P = Polar>
 class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
  public:
   /// @brief Create Log-Gabor filter kernels in frequency domain.
+  ///
   /// Creates both the even (real) and odd (imaginary) filter components
   /// in the frequency domain. A low-pass filter is applied to prevent
   /// aliasing artifacts.
@@ -98,6 +101,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   cv::Mat_<FT> lgf_;              ///< Log-Gabor filter (even).
 
   /// @brief Compute maximum filter response ranges.
+  ///
   /// Creates a step edge test pattern and processes it to determine
   /// the maximum energy, odd, and even response values.
   void max_response() {
@@ -275,6 +279,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   FT waveLength() const { return waveL_; }
 
   /// @brief Set the filter wavelength.
+  ///
   /// The wavelength controls the scale of features detected.
   /// Larger wavelengths detect larger-scale features.
   /// @param w New wavelength (must be positive).
@@ -297,6 +302,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   FT sigmaOnf() const { return sigmaOnf_; }
 
   /// @brief Set the bandwidth parameter.
+  ///
   /// sigmaOnf is the ratio of std deviation to center frequency.
   /// Smaller values give narrower bandwidth (more selective).
   /// @param s New sigmaOnf value (must be positive).
@@ -307,6 +313,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
   /// @brief Process an image to compute quadrature filter responses.
+  ///
   /// Applies the Log-Gabor filter in the frequency domain using FFT.
   /// The image is padded to optimal DFT size if necessary.
   /// @param[in] img Input image.
@@ -368,6 +375,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isOddDone() const { return odd_done_; }
 
   /// @brief Get the odd filter response magnitude.
+  ///
   /// Computes magnitude from X/Y components if not already computed.
   /// @return Odd filter response magnitude image.
   cv::Mat odd() const {
@@ -387,6 +395,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get the direction image.
+  ///
   /// Direction is computed from the odd X/Y components.
   /// @return Direction image.
   cv::Mat direction() const {
@@ -406,6 +415,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isEnergyDone() const { return energy_done_; }
 
   /// @brief Get the local energy.
+  ///
   /// Energy is computed as the magnitude of the complex
   /// quadrature response (even + i*odd).
   /// @return Energy image.
@@ -426,6 +436,7 @@ class QuadratureLGF : public Quadrature<IT, FT, FT, FT, FT> {
   inline bool isPhaseDone() const { return phase_done_; }
 
   /// @brief Get the local phase.
+  ///
   /// Phase is the angle of the complex quadrature response.
   /// It indicates the type of feature (edge, line, etc.).
   /// @return Phase image.

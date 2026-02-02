@@ -1,5 +1,6 @@
 /// @file pc_sqf.hpp
 /// @brief Phase Congruency using Spherical Quadrature Filters.
+///
 /// Implements phase congruency computation using Spherical Quadrature Filters
 /// (difference of Poisson kernels) in both frequency and spatial domains.
 /// Includes variants with Laplacian-based phase congruency for improved
@@ -21,6 +22,7 @@
 namespace lsfm {
 
 /// @brief Phase Congruency detector using Spherical Quadrature Filters.
+///
 /// Implements multi-scale phase congruency using difference of Poisson (DoP)
 /// kernels in the frequency domain. This approach combines the benefits of
 /// spherical quadrature filters with Kovesi-style phase congruency weighting.
@@ -80,6 +82,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   using QuadratureSF<IT, FT, P>::even_done_;
 
   /// @brief Update filter bank for new image size.
+  ///
   /// Creates DoP filters for each scale in frequency domain.
   /// @param img Input image (for size).
   /// @param force If true, always rebuild; if false, only if size changed.
@@ -321,6 +324,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   }
 
   /// @brief Get or set noise estimation method.
+  ///
   /// - -1: Median-based estimation
   /// - -2: Rayleigh distribution mode
   /// - >= 0: Fixed threshold value
@@ -332,6 +336,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   }
 
   /// @brief Process an image to compute phase congruency.
+  ///
   /// Applies multi-scale DoP filter bank, accumulates responses,
   /// estimates noise, and computes frequency spread weighting.
   /// @param[in] img Input image.
@@ -417,6 +422,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   }
 
   /// @brief Get phase congruency measure.
+  ///
   /// Computes weighted, noise-compensated phase congruency:
   /// PC = weight * (1 - deviation) * (energy - T) / energy
   /// @return Phase congruency image [0, 1].
@@ -484,6 +490,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
 };
 
 /// @brief Phase Congruency with Laplacian using SQF in frequency domain.
+///
 /// Extends QuadratureSF with scale-derivative filters to compute the
 /// Laplacian of phase congruency. This provides improved edge localization
 /// through zero-crossing detection.
@@ -552,6 +559,7 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
   mutable cv::Mat_<FT> ly_;     ///< Laplacian Y component.
 
   /// @brief Update filter bank for new image size.
+  ///
   /// Creates both standard and scale-derivative filters.
   /// @param img Input image (for size).
   /// @param force If true, always rebuild; if false, only if size changed.
@@ -676,6 +684,7 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
   }
 
   /// @brief Get X and Y components of phase congruency Laplacian.
+  ///
   /// Computes L = even * d(odd)/ds - odd * d(even)/ds
   /// @param[out] pdsx Laplacian X component.
   /// @param[out] pdsy Laplacian Y component.
@@ -786,6 +795,7 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
 };
 
 /// @brief Phase Congruency with Laplacian using SQF in spatial domain.
+///
 /// Implements phase congruency Laplacian computation using difference of
 /// Poisson (DoP) kernels with 2D convolution in the spatial domain.
 /// Provides the same functionality as PCLSqf but with spatial domain
@@ -999,6 +1009,7 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
   }
 
   /// @brief Get X and Y components of phase congruency Laplacian.
+  ///
   /// Computes L = even * d(odd)/ds - odd * d(even)/ds
   /// using spatial convolution.
   /// @param[out] pdsx Laplacian X component.

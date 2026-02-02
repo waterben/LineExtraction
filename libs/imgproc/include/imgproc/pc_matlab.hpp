@@ -1,5 +1,6 @@
 /// @file pc_matlab.hpp
 /// @brief MATLAB-compatible Phase Congruency implementation.
+///
 /// Computes the PC_2 measure of phase congruency following the original
 /// MATLAB implementation by Kovesi. For maximum speed the input image
 /// should be square and have a size that is a power of 2, but the code
@@ -17,6 +18,7 @@
 namespace lsfm {
 
 /// @brief MATLAB-compatible Phase Congruency detector.
+///
 /// This class implements phase congruency using the algorithm from Kovesi's
 /// MATLAB toolbox. It uses double precision throughout for compatibility
 /// with the original MATLAB implementation.
@@ -302,6 +304,7 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
   }
 
   /// @brief Get or set noise estimation method.
+  ///
   /// - -1: Median-based estimation
   /// - -2: Rayleigh distribution mode
   /// - >= 0: Fixed threshold value
@@ -313,6 +316,7 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
   }
 
   /// @brief Process an image to compute phase congruency.
+  ///
   /// Uses the PhaseCong backend to compute all filter responses
   /// and phase congruency in one call. Results are cached.
   /// @param[in] img Input image.

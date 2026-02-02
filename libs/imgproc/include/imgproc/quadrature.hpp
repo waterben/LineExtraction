@@ -48,6 +48,7 @@
 namespace lsfm {
 
 /// @brief Abstract interface for quadrature filters (local energy computation).
+///
 /// Quadrature filters use pairs of filters that are in quadrature relationship
 /// (90 degrees phase difference). The even filter detects lines/edges and the
 /// odd filter detects steps/gradients. Combined they compute local energy and phase.
@@ -160,6 +161,7 @@ class QuadratureI : public LaplaceI<IT, GT> {
   virtual DirectionRange directionRange() const = 0;
 
   /// @brief Get local energy image.
+  ///
   /// Local energy = sqrt(even² + odd²)
   /// @return Energy image
   virtual cv::Mat energy() const = 0;
@@ -174,6 +176,7 @@ class QuadratureI : public LaplaceI<IT, GT> {
   virtual ET energyThreshold(double val) const { return static_cast<ET>(energyRange().upper * val); }
 
   /// @brief Get local phase image.
+  ///
   /// Phase = atan2(odd, even)
   /// @return Phase image in radians or degrees
   virtual cv::Mat phase() const = 0;
@@ -184,6 +187,7 @@ class QuadratureI : public LaplaceI<IT, GT> {
 };
 
 /// @brief Base implementation class for quadrature filters.
+///
 /// Provides common functionality including intensity range management.
 /// @tparam IT Input image pixel type
 /// @tparam GT Gradient/even-odd response type
@@ -240,6 +244,7 @@ class Quadrature : public QuadratureI<IT, GT, MT, ET, DT> {
 };
 
 /// @brief Simple quadrature filter combining gradient and Laplacian operators.
+///
 /// Combines a gradient operator (odd filter) with a Laplacian operator (even filter)
 /// to compute quadrature responses. Note that this is not a true quadrature pair
 /// since the signals don't satisfy the Hilbert constraint, so phase may be invalid.
@@ -404,6 +409,7 @@ class QuadratureSimple : public Quadrature<IT, GT, FT, FT, FT> {
   DirectionRange directionRange() const { return grad_.directionRange(); }
 
   /// @brief Get local energy image.
+  ///
   /// Computed lazily as sqrt(even² + odd²).
   /// @return Energy image
   cv::Mat energy() const {
@@ -419,6 +425,7 @@ class QuadratureSimple : public Quadrature<IT, GT, FT, FT, FT> {
   EnergyRange energyRange() const { return energyRange_; }
 
   /// @brief Get local phase image.
+  ///
   /// Computed lazily as atan2(odd, even).
   /// @return Phase image
   cv::Mat phase() const {

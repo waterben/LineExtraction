@@ -42,6 +42,7 @@
 
 /// @file eigen2cv.hpp
 /// @brief OpenCV type aliases and conversion utilities.
+///
 /// This file provides OpenCV-based type aliases and rotation conversion
 /// functions as an alternative to the Eigen-based types in base.hpp.
 /// Includes:
@@ -332,6 +333,7 @@ Vec3<FT> euler(const Matx33<FT>& rot) {
 /// @{
 
 /// @brief Convert homogeneous row/col vectors to normalized Euclidean vectors.
+///
 /// Converts a matrix of homogeneous row or column vectors to normalized
 /// Euclidean coordinates by dividing by the last component. Handles 2D (3->2)
 /// and 3D (4->3) conversions.
@@ -470,6 +472,7 @@ inline void fromHomogeneous(const std::vector<Vec4<FT>>& in, std::vector<Vec3<FT
 }
 
 /// @brief Convert Euclidean row/col vectors to homogeneous vectors.
+///
 /// Converts a matrix of Euclidean row or column vectors to homogeneous
 /// coordinates by appending 1 as the last component. Handles 2D (2->3)
 /// and 3D (3->4) conversions.
@@ -698,6 +701,7 @@ inline Vec2<FT> matxMul(const Matx33<FT>& mtx, const Point2<FT>& data) {
 }
 
 /// @brief Multiply 4x4 matrix with 3D direction vector (w=0).
+///
 /// Direction vectors are not translated, only rotated and scaled.
 /// @tparam FT Floating-point type.
 /// @param mtx 4x4 transformation matrix.
@@ -811,6 +815,7 @@ inline std::vector<Point2<FT>> operator*(const Matx22<FT>& mtx, const std::vecto
 /// @}
 
 /// @brief OpenCV DataType specialization for lsfm::Matx.
+///
 /// Enables using lsfm::Matx types with OpenCV functions that require
 /// DataType traits.
 /// @tparam FT Element type.

@@ -42,6 +42,7 @@
 
 /// @file stereocv.hpp
 /// @brief OpenCV-based stereo triangulation implementation.
+///
 /// Provides StereoCV class that uses OpenCV's cv::triangulatePoints()
 /// for point and line triangulation from stereo correspondences.
 
@@ -54,6 +55,7 @@
 namespace lsfm {
 
 /// @brief Stereo triangulation using OpenCV functions.
+///
 /// Uses cv::triangulatePoints() for point triangulation. Lines are
 /// triangulated by triangulating two points on each line.
 /// @tparam FT Floating-point type.
@@ -125,6 +127,7 @@ class StereoCV {
   /// @{
 
   /// @brief Triangulate 3D line using OpenCV point triangulation.
+  ///
   /// Triangulates two points at y=0 and y=100 on each line,
   /// then constructs a 3D line through them.
   /// @param lineL Left image line.
@@ -249,6 +252,7 @@ class StereoCV {
   /// @{
 
   /// @brief Triangulate 3D line segment using OpenCV.
+  ///
   /// Computes segment endpoints by triangulating at the union
   /// of y-extents from both image segments.
   /// @param lineL Left image line segment.

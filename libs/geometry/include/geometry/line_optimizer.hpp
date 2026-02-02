@@ -42,10 +42,12 @@
 
 /// @file line_optimizer.hpp
 /// @brief Line segment optimization using gradient magnitude.
+///
 /// Provides LineOptimizer for refining line segment positions by maximizing
 /// gradient magnitude response. Uses dlib optimization with box constraints
 /// for rotation and orthogonal translation.
 /// @note Detects junction or corner areas and skips them for optimization
+///
 /// to reduce error for wide-range interpolation like cubic.
 
 #pragma once
@@ -56,6 +58,7 @@
 namespace lsfm {
 
 /// @brief Line segment optimizer using gradient magnitude maximization.
+///
 /// Optimizes line segment position by adjusting rotation and orthogonal
 /// translation to maximize gradient magnitude response along the line.
 /// Uses dlib's box-constrained optimization with configurable search
@@ -68,6 +71,7 @@ template <class mat_type,
           class stop_strategy_type = dlib::objective_delta_stop_strategy>
 struct LineOptimizer {
   /// @brief Optimize line parameters for gradient magnitude fit.
+  ///
   /// Finds optimal rotation and orthogonal translation to maximize
   /// gradient magnitude response along the line segment.
   /// @tparam FT Floating-point type.
@@ -123,6 +127,7 @@ struct LineOptimizer {
   }
 
   /// @brief Optimize line segment in place.
+  ///
   /// Same as optimize() but applies the optimized parameters directly
   /// to the line segment object.
   /// @tparam FT Floating-point type.
@@ -161,6 +166,7 @@ struct LineOptimizer {
   }
 
   /// @brief Optimize vector of line segments in place.
+  ///
   /// Applies optimize_line() to each line segment in the vector.
   /// @tparam FT Floating-point type.
   /// @tparam LPT Line point type template.
@@ -194,6 +200,7 @@ struct LineOptimizer {
   }
 
   /// @brief Optimize vector of line segments with error output.
+  ///
   /// Applies optimize_line() to each line segment, recording optimization errors.
   /// @tparam FT Floating-point type.
   /// @tparam LPT Line point type template.
@@ -231,6 +238,7 @@ struct LineOptimizer {
   }
 
   /// @brief Optimize line segments to new output vector.
+  ///
   /// Copies input lines to output and optimizes the copies.
   /// @tparam FT Floating-point type.
   /// @tparam LPT Line point type template.
@@ -270,6 +278,7 @@ struct LineOptimizer {
   }
 
   /// @brief Optimize line segments to output vector with errors.
+  ///
   /// Copies input lines to output, optimizes the copies, and records errors.
   /// @tparam FT Floating-point type.
   /// @tparam LPT Line point type template.

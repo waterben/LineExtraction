@@ -42,6 +42,7 @@
 
 /// @file base.hpp
 /// @brief Base geometric types built on Eigen library.
+///
 /// Provides fundamental matrix and vector types for geometric computations,
 /// wrapping Eigen matrices with convenient interfaces. Includes:
 /// - Matx: Fixed-size matrix template (up to 4x4)
@@ -96,6 +97,7 @@ FT getScalar(FT val) {
 }
 
 /// @brief Determine storage order based on matrix dimensions.
+///
 /// Uses row-major storage for matrices with multiple rows and columns,
 /// and disables alignment for STL container compatibility.
 /// @tparam rows Number of rows.
@@ -115,6 +117,7 @@ struct Major {
 
 
 /// @brief Fixed-size matrix class extending Eigen::Matrix.
+///
 /// Provides a convenient wrapper around Eigen matrices with:
 /// - Direct element access via x(), y(), z(), w() for vectors
 /// - Linear indexing via operator[]
@@ -426,6 +429,7 @@ typedef RowVec4<double> RowVec4d;  ///< 4D double row vector.
 /// @{
 
 /// @brief Convert rotation vector to rotation matrix (Rodrigues formula).
+///
 /// The rotation vector encodes both the axis and angle: the direction
 /// is the rotation axis, and the magnitude is the rotation angle in radians.
 /// @tparam FT Floating point type.
@@ -602,6 +606,7 @@ void decomposeHom(const Matx33<FT>& m, Matx22<FT>& m22) {
 }  // namespace lsfm
 
 /// @brief Eigen traits specialization for lsfm::Matx.
+///
 /// Enables seamless integration of Matx with Eigen's expression templates.
 namespace Eigen {
 namespace internal {

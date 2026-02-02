@@ -50,6 +50,7 @@
 namespace lsfm {
 
 /// @brief Enumeration of magnitude norm types.
+///
 /// Indicates how magnitude was computed from gradient components.
 enum NormType {
   NONE = 0,   ///< Norm doesn't correspond to gx, gy
@@ -59,6 +60,7 @@ enum NormType {
 };
 
 /// @brief Quadratic (squared L2) magnitude computation.
+///
 /// Computes gx² + gy² without square root for speed.
 /// Useful when relative magnitude ordering matters but not actual distance.
 /// @tparam GT Gradient input type (short, float, or double)
@@ -126,6 +128,7 @@ struct QuadraticMagnitude {
 };
 
 /// @brief Euclidean (L2) magnitude computation.
+///
 /// Computes sqrt(gx² + gy²) for true distance magnitude.
 /// @tparam GT Gradient input type (short, float, or double)
 /// @tparam MT Magnitude output type (must be float or double)
@@ -162,6 +165,7 @@ struct Magnitude {
   }
 
   /// @brief Compute Euclidean magnitude from cv::Mat gradient images.
+  ///
   /// Uses cv::magnitude() for float types for efficiency.
   /// @param gx X-direction gradient matrix
   /// @param gy Y-direction gradient matrix
@@ -195,6 +199,7 @@ struct Magnitude {
 
 
 /// @brief Absolute (L1) magnitude computation.
+///
 /// Computes |gx| + |gy| for Manhattan distance magnitude.
 /// Faster than L2 but provides less accurate distance.
 /// @tparam GT Gradient input type (short, float, or double)

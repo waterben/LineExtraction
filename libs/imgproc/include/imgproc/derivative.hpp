@@ -50,6 +50,7 @@
 namespace lsfm {
 
 /// @brief Maximum derivative values for unit intensity change.
+///
 /// Stores the maximum possible derivative response values for a given operator
 /// when the intensity changes by 1. Used for normalization and thresholding.
 /// @tparam GT Gradient/derivative type (short, float, or double)
@@ -69,6 +70,7 @@ struct DerivativeMax {
 };
 
 /// @brief Abstract base class for derivative operators.
+///
 /// Provides interface for computing image derivatives (gradients) using
 /// various convolution kernels (Sobel, Scharr, Prewitt, etc.).
 /// @tparam IT Input image pixel type (uchar for 8-bit, short for 16-bit)
@@ -95,6 +97,7 @@ struct Derivative {
 
 
 /// @brief Roberts cross derivative operator.
+///
 /// Computes diagonal derivatives using 2x2 cross-difference kernels.
 /// Fast but sensitive to noise due to small kernel size.
 /// @tparam IT Input image pixel type
@@ -110,6 +113,7 @@ class RobertsDerivative : public Derivative<IT, GT> {
   typedef GT grad_type;  ///< Gradient output type
 
   /// @brief Construct Roberts derivative operator.
+  ///
   /// Initializes 2x2 diagonal difference kernels.
   RobertsDerivative() : kx(), ky(), da(), bc(), anchor(0, 0) {
     kx.create(2, 2, cv::DataType<GT>::type);
@@ -148,6 +152,7 @@ class RobertsDerivative : public Derivative<IT, GT> {
 };
 
 /// @brief Prewitt derivative operator.
+///
 /// Uses 3x3 separable kernel with uniform smoothing perpendicular to
 /// the derivative direction. Simple and fast with moderate noise reduction.
 /// @tparam IT Input image pixel type
@@ -162,6 +167,7 @@ class PrewittDerivative : public Derivative<IT, GT> {
   typedef GT grad_type;  ///< Gradient output type
 
   /// @brief Construct Prewitt derivative operator.
+  ///
   /// Initializes 3x3 separable kernels with uniform weights.
   PrewittDerivative() : kx(), ky(), anchor(-1, -1) {
     kx.create(3, 1, cv::DataType<GT>::type);
@@ -195,6 +201,7 @@ class PrewittDerivative : public Derivative<IT, GT> {
 
 
 /// @brief Sobel derivative operator with configurable kernel size.
+///
 /// Uses separable Gaussian-weighted kernels for noise-robust gradient estimation.
 /// The most commonly used derivative operator with good balance of accuracy and
 /// noise reduction. Supports kernel sizes from 3 to 31.
@@ -233,6 +240,7 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
 
 
   /// @brief Set kernel size.
+  ///
   /// Larger kernels provide more noise reduction but less localization.
   /// @param ks New kernel size (3-31, odd values only, even values rounded up)
   /// @note Large kernels require larger GT type (float or double)
@@ -281,6 +289,7 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
 };
 
 /// @brief Scharr derivative operator.
+///
 /// Optimized 3x3 kernel providing more rotational symmetry than Sobel.
 /// Better approximation to true image gradient at the cost of fixed kernel size.
 /// @tparam IT Input image pixel type (default: uchar)
@@ -295,6 +304,7 @@ class ScharrDerivative : public Derivative<IT, GT> {
   typedef GT grad_type;  ///< Gradient output type
 
   /// @brief Construct Scharr derivative operator.
+  ///
   /// Uses optimized 3x3 kernel with weights [-3, 0, 3] and [3, 10, 3].
   ScharrDerivative() : kx(), ky(), anchor(-1, -1) {
     cv::getDerivKernels(kx, ky, 1, 0, -1, false, std::max<int>(CV_32F, cv::DataType<GT>::type));
@@ -323,6 +333,7 @@ class ScharrDerivative : public Derivative<IT, GT> {
 
 
 /// @brief Gaussian derivative operator with scale-space support.
+///
 /// Computes first derivative of Gaussian for scale-space edge detection.
 /// Configurable kernel size, range (sigma-equivalent), and scale factor.
 /// @tparam IT Input image pixel type (default: uchar)
@@ -427,6 +438,7 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   double range() const { return range_; }
 
   /// @brief Set range parameter.
+  ///
   /// Larger range values produce narrower Gaussians (smaller sigma equivalent).
   /// @param r New range value (must be > 0)
   void range(double r) {
@@ -448,6 +460,7 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   double scale() const { return scale_; }
 
   /// @brief Set scale factor.
+  ///
   /// Scales the kernel values to control output magnitude range.
   /// @param sc New scale value (must be > 0)
   void scale(double sc) {

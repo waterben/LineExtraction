@@ -1,5 +1,6 @@
 /// @file quadratureS.hpp
 /// @brief Spherical quadrature filter using difference of Poisson kernels.
+///
 /// This file implements a quadrature filter based on the difference of
 /// Poisson (DoP) kernels. The Poisson kernel and its derivatives form
 /// a quadrature pair with good localization properties.
@@ -14,6 +15,7 @@
 namespace lsfm {
 
 /// @brief Spherical quadrature filter using difference of Poisson kernels.
+///
 /// QuadratureS implements a quadrature filter pair using the difference of
 /// Poisson (DoP) kernels. The even (symmetric) filter uses dop() and the
 /// odd (antisymmetric) filter uses docp().
@@ -30,6 +32,7 @@ template <class IT = uchar, class GT = float, class FT = float, template <typena
 class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
  public:
   /// @brief Difference of Poisson kernel (center-antisymmetric, odd).
+  ///
   /// Computes the odd quadrature filter kernel value at position (x,y).
   /// @param x X coordinate.
   /// @param y Y coordinate.
@@ -43,6 +46,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   }
 
   /// @brief Difference of Poisson kernel (center-symmetric, even).
+  ///
   /// Computes the even quadrature filter kernel value at position (x,y).
   /// @param x X coordinate.
   /// @param y Y coordinate.
@@ -123,6 +127,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   }
 
   /// @brief Create all filter kernels.
+  ///
   /// Creates the odd X, odd Y, and even kernels using the configured
   /// scale and spacing parameters.
   virtual void create_kernels() {
@@ -231,6 +236,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   }
 
   /// @brief Construct from scale-space parameters.
+  ///
   /// Computes scale and muls from a base scale and scale ratio.
   /// @param scale Base scale.
   /// @param l Scale ratio (lambda).
@@ -364,6 +370,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   int kernelSize() const { return ksize_; }
 
   /// @brief Set the kernel size.
+  ///
   /// The kernel size must be odd and in range [3, 99].
   /// Even values are automatically incremented.
   /// @param ks New kernel size.
@@ -474,6 +481,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   cv::Mat kernel() const { return ke_; }
 
   /// @brief Process an image to compute quadrature filter responses.
+  ///
   /// Applies the odd X and Y filters to the image. Even response is
   /// computed lazily when accessed via even().
   /// @param[in] img Input image.
@@ -504,6 +512,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   inline bool isEvenDone() const { return even_done_; }
 
   /// @brief Get the even filter response.
+  ///
   /// Computed lazily from the cached input image.
   /// @return Even filter response image.
   inline cv::Mat even() const {
@@ -523,6 +532,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   inline bool isOddDone() const { return odd_done_; }
 
   /// @brief Get the odd filter response magnitude.
+  ///
   /// Computes magnitude from X/Y components if not already computed.
   /// @return Odd filter response magnitude image.
   inline cv::Mat odd() const {
@@ -547,6 +557,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   inline bool isEnergyDone() const { return energy_done_; }
 
   /// @brief Get the local energy.
+  ///
   /// Energy is computed as the magnitude of the complex
   /// quadrature response (even + i*odd).
   /// @return Energy image.
@@ -567,6 +578,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   inline bool isDirectionDone() const { return dir_done_; }
 
   /// @brief Get the direction image.
+  ///
   /// Direction is computed from the odd X/Y components.
   /// @return Direction image.
   cv::Mat direction() const {
@@ -586,6 +598,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   inline bool isPhaseDone() const { return phase_done_; }
 
   /// @brief Get the local phase.
+  ///
   /// Phase is the angle of the complex quadrature response.
   /// It indicates the type of feature (edge, line, etc.).
   /// @return Phase image.
@@ -598,6 +611,7 @@ class QuadratureS : public Quadrature<IT, GT, FT, FT, FT> {
   }
 
   /// @brief Get filtered phase with near-zero values set to zero.
+  ///
   /// Useful for avoiding phase noise in low-energy regions.
   /// @return Filtered phase image.
   cv::Mat phaseF() const {
