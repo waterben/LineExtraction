@@ -1,18 +1,23 @@
 /// @file main.cpp
 /// @brief Performance test main executable
 #include "performance_test.hpp"
+#include <eval/runfiles.hpp>
 #include <utility/high_prio.hpp>
 
 #include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <string>
 
 
 namespace fs = std::filesystem;
 
 namespace lsfm {
+
+/// @brief Global runfiles instance for resolving data paths
+std::unique_ptr<Runfiles> g_runfiles;
 
 /// @brief Global test registry
 std::vector<CVPerformanceTestPtr>& getTests() {
@@ -24,19 +29,76 @@ std::vector<CVPerformanceTestPtr>& getTests() {
 void addPerformanceTest(CVPerformanceTestPtr test) { getTests().push_back(test); }
 
 /// @brief Get default data providers
+/// Uses Bazel runfiles when available, falls back to relative paths otherwise.
 const DataProviderList& getDefaultProvider() {
   static DataProviderList list;
   if (list.empty()) {
     try {
-      // list.push_back(std::make_shared<FileDataProvider>("../images", "images"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/small/a", "a"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/small/b", "b"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/small/c", "c"));
-      // list.push_back(std::make_shared<FileDataProvider>("../images/Selection", "Selection"));
-      list.push_back(std::make_shared<FileDataProvider>("../images/BSDS500", "BSDS500"));
-      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-Q", "MDB-Q"));
-      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-H", "MDB-H"));
-      list.push_back(std::make_shared<FileDataProvider>("../images/MDB/MiddEval3-F", "MDB-F"));
+      if (g_runfiles && g_runfiles->isBazelRun()) {
+        // =====================================================================
+        // Bazel build: use runfiles for path resolution
+        // =====================================================================
+
+        // BSDS500 - from external @bsds500 repository (train + test + val)
+        std::string bsds_path = g_runfiles->Rlocation("bsds500/BSDS500/data/images");
+        list.push_back(std::make_shared<FileDataProvider>(bsds_path + "/train", "BSDS500-train"));
+        list.push_back(std::make_shared<FileDataProvider>(bsds_path + "/test", "BSDS500-test"));
+        list.push_back(std::make_shared<FileDataProvider>(bsds_path + "/val", "BSDS500-val"));
+
+        // MDB - from local resources
+        std::string mdb_path = g_runfiles->Rlocation("line_extraction/resources/datasets/MDB");
+        list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-Q", "MDB-Q"));
+        list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-H", "MDB-H"));
+        list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-F", "MDB-F"));
+
+      } else {
+        // =====================================================================
+        // CMake/standalone build: use relative paths from workspace root
+        // Expected structure: resources/datasets/{BSDS500,MDB,noise}
+        // =====================================================================
+
+        // Try to find resources directory (check multiple possible locations)
+        std::vector<std::string> search_paths = {
+            "resources/datasets",        // From workspace root
+            "../resources/datasets",     // From build/bin directory
+            "../../resources/datasets",  // From deeper build directory
+        };
+
+        std::string base_path;
+        for (const auto& path : search_paths) {
+          if (fs::exists(path)) {
+            base_path = path;
+            break;
+          }
+        }
+
+        if (base_path.empty()) {
+          std::cout << "Warning: Could not find resources/datasets directory" << std::endl;
+          std::cout << "  Expected at: resources/datasets/ (relative to working directory)" << std::endl;
+          return list;
+        }
+
+        // BSDS500 - flat directory with all images combined
+        std::string bsds_path = base_path + "/BSDS500";
+        if (fs::exists(bsds_path) && !fs::is_empty(bsds_path)) {
+          list.push_back(std::make_shared<FileDataProvider>(bsds_path, "BSDS500"));
+        } else {
+          std::cout << "Warning: BSDS500 not found at " << bsds_path << std::endl;
+        }
+
+        // MDB - Middlebury dataset
+        std::string mdb_path = base_path + "/MDB";
+        if (fs::exists(mdb_path + "/MiddEval3-Q")) {
+          list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-Q", "MDB-Q"));
+        }
+        if (fs::exists(mdb_path + "/MiddEval3-H")) {
+          list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-H", "MDB-H"));
+        }
+        if (fs::exists(mdb_path + "/MiddEval3-F")) {
+          list.push_back(std::make_shared<FileDataProvider>(mdb_path + "/MiddEval3-F", "MDB-F"));
+        }
+      }
+
     } catch (std::exception& e) {
       std::cout << "Default provider parse error: " << e.what() << std::endl;
     }
@@ -75,6 +137,13 @@ void help() {
 
 int main(int argc, char** argv) {
   std::cout << "C++ version: " << __cplusplus << std::endl;
+
+  // Initialize runfiles for Bazel data dependency resolution
+  lsfm::g_runfiles = lsfm::Runfiles::Create(argv[0]);
+  if (lsfm::g_runfiles->isBazelRun()) {
+    std::cout << "Running under Bazel with runfiles support" << std::endl;
+  }
+
   bool verbose = false;
   bool printTables = false;
   bool highPriority = false;

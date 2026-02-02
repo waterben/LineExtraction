@@ -26,6 +26,7 @@ cc_library(
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/utility:lib_utility",
+        "@bazel_tools//tools/cpp/runfiles",
     ],
 )
 
