@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file vision.hpp
+/// @brief Computer vision utilities for camera decomposition.
+/// Provides utility functions for decomposing camera projection matrices
+/// using OpenCV's calibration functions.
+
 #pragma once
 
 #include <geometry/base.hpp>
@@ -48,7 +53,15 @@
 
 
 namespace lsfm {
-//! decompose camera projection matrix
+
+/// @brief Decompose camera projection matrix into intrinsics and extrinsics.
+/// Extracts camera matrix (intrinsics), rotation matrix, and translation
+/// from a 3x4 projection matrix using OpenCV's decomposeProjectionMatrix.
+/// @tparam FT Floating-point type.
+/// @param proj 3x4 projection matrix P = K[R|t].
+/// @param cam Output 3x3 camera intrinsic matrix K.
+/// @param trans Output translation vector (camera position in world).
+/// @param rot Output 3x3 rotation matrix R.
 template <class FT>
 inline void decomposeProjectionMatrix(const Matx34<FT>& proj, Matx33<FT>& cam, Vec3<FT>& trans, Matx33<FT>& rot) {
   cv::Vec<FT, 4> tmp;

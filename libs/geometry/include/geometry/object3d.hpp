@@ -1,3 +1,8 @@
+/// @file object3d.hpp
+/// @brief 3D object representation with OBJ file I/O.
+/// Provides Triangle and Object3D structures for representing 3D meshes,
+/// along with functions for reading and writing Wavefront OBJ files.
+
 #pragma once
 
 #include <geometry/line3.hpp>
@@ -15,13 +20,26 @@
 
 namespace lsfm {
 
+/// @brief Trim whitespace from both ends of a string in place.
+/// @param s String to trim.
 inline void trim_inplace(std::string& s) {
   auto not_space = [](unsigned char ch) { return !std::isspace(ch); };
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
   s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
 }
 
+/// @brief Triangle face with vertex indices and texture coordinates.
+/// Represents a triangle in a 3D mesh by storing indices into vertex,
+/// normal, and texture coordinate arrays.
 struct Triangle {
+  /// @brief Construct triangle with vertex and texture indices.
+  /// @param va First vertex index (default 0).
+  /// @param vb Second vertex index (default 0).
+  /// @param vc Third vertex index (default 0).
+  /// @param vn Normal index (default 0).
+  /// @param texa First texture coordinate index (default 0).
+  /// @param texb Second texture coordinate index (default 0).
+  /// @param texc Third texture coordinate index (default 0).
   Triangle(std::size_t va = 0,
            std::size_t vb = 0,
            std::size_t vc = 0,
@@ -31,30 +49,50 @@ struct Triangle {
            std::size_t texc = 0)
       : a(va), b(vb), c(vc), normal(vn), ta(texa), tb(texb), tc(texc) {}
 
-  std::size_t a, b, c, normal;
-  std::size_t ta, tb, tc;  // Texture Coordinates
+  std::size_t a, b, c, normal;  ///< Vertex and normal indices.
+  std::size_t ta, tb, tc;       ///< Texture coordinate indices.
 };
 
+/// @brief 3D object with mesh data and OBJ file I/O.
+/// Represents a 3D mesh consisting of vertices, normals, triangular faces,
+/// and texture coordinates. Supports reading and writing Wavefront OBJ format.
+/// @tparam FT Floating-point type.
 template <class FT>
 struct Object3D {
-  typedef std::vector<Vec3<FT>> VertexList;
-  typedef std::vector<Vec3<FT>> NormalList;
-  typedef std::vector<Triangle> TriangleList;
-  typedef std::vector<Vec2<FT>> TexCoordList;
-  typedef std::vector<LineSegment3<FT>> EdgeList;
+  typedef std::vector<Vec3<FT>> VertexList;        ///< List of 3D vertices.
+  typedef std::vector<Vec3<FT>> NormalList;        ///< List of normal vectors.
+  typedef std::vector<Triangle> TriangleList;      ///< List of triangle faces.
+  typedef std::vector<Vec2<FT>> TexCoordList;      ///< List of texture coordinates.
+  typedef std::vector<LineSegment3<FT>> EdgeList;  ///< List of 3D line segment edges.
 
-  VertexList points;
-  NormalList normals;
-  TriangleList triangles;
-  TexCoordList textureCoords;
-  std::string name;
+  VertexList points;           ///< Mesh vertices.
+  NormalList normals;          ///< Vertex normals.
+  TriangleList triangles;      ///< Triangle faces.
+  TexCoordList textureCoords;  ///< Texture coordinates.
+  std::string name;            ///< Object name.
 
+  /// @brief Default constructor.
   Object3D() {}
+
+  /// @brief Construct with name, vertices, triangles, and texture coordinates.
+  /// @param n Object name.
+  /// @param p Vertex list.
+  /// @param tri Triangle list.
+  /// @param texC Texture coordinate list.
   Object3D(const std::string& n, const VertexList& p, const TriangleList& tri, const TexCoordList& texC)
       : name(n), points(p), triangles(tri), textureCoords(texC) {}
+
+  /// @brief Construct from input stream.
+  /// @param in Input stream containing OBJ data.
   Object3D(const std::istream& in) { read(in); }
 
-  //! read single object from stream
+  /// @brief Read single object from OBJ stream.
+  /// Parses OBJ format including vertices (v), normals (vn), texture
+  /// coordinates (vt), and faces (f). Updates offset counts for multi-object files.
+  /// @param in Input stream.
+  /// @param pointCount Running vertex count offset.
+  /// @param normalCount Running normal count offset.
+  /// @param textureCount Running texture coordinate count offset.
   void read(std::istream& in, int& pointCount, int& normalCount, int& textureCount) {
     name.clear();
     points.clear();
@@ -152,7 +190,8 @@ struct Object3D {
     }
   }
 
-  //! write single object to stream
+  /// @brief Write object to OBJ stream.
+  /// @param out Output stream.
   void write(std::ostream& out) const {
     out << "o " << name << std::endl;
     for_each(points.begin(), points.end(),
@@ -162,7 +201,9 @@ struct Object3D {
              [&](const Triangle& t) { out << "f " << t.a + 1 << " " << t.b + 1 << " " << t.c + 1 << std::endl; });
   }
 
-  //! all edges, no removal
+  /// @brief Get all edges including duplicates.
+  /// Extracts all three edges from each triangle without removing duplicates.
+  /// @return List of all triangle edges.
   EdgeList edgesAll() const {
     EdgeList ret;
     for_each(triangles.begin(), triangles.end(), [&](const Triangle& t) {
@@ -173,7 +214,10 @@ struct Object3D {
     return ret;
   }
 
-  //! convert triangles to edge list without duplicates
+  /// @brief Get unique edges excluding coplanar duplicates.
+  /// Extracts edges from triangles, removing duplicates that lie on the same
+  /// plane (internal mesh edges). Keeps silhouette/boundary edges.
+  /// @return List of unique boundary edges.
   EdgeList edges() const {
     typedef std::map<std::size_t, Vec3<FT>> InternMap;
     typedef typename InternMap::iterator InternMapIter;
@@ -240,6 +284,9 @@ struct Object3D {
   }
 
 
+  /// @brief Find similar (nearly coincident) vertices.
+  /// Searches for vertex pairs within a distance threshold of 0.01 units.
+  /// Useful for detecting mesh issues or merging vertices.
   void findSimilarVertexes() {
     std::vector<std::pair<int, int>> similarities;
 
@@ -256,21 +303,38 @@ struct Object3D {
   }
 };
 
+/// @brief Stream output operator for Object3D.
+/// @tparam FT Floating-point type.
+/// @param os Output stream.
+/// @param obj Object to write.
+/// @return Reference to output stream.
 template <class FT>
 std::ostream& operator<<(std::ostream& os, const Object3D<FT>& obj) {
   obj.write(os);
   return os;
 }
 
+/// @brief Stream input operator for Object3D.
+/// @tparam FT Floating-point type.
+/// @param is Input stream.
+/// @param obj Object to read into.
+/// @return Reference to input stream.
 template <class FT>
 std::istream& operator<<(std::istream& is, Object3D<FT>& obj) {
   obj.read(is);
   return is;
 }
 
+/// @brief Type alias for list of 3D objects.
 template <class FT>
 using Object3DList = std::vector<Object3D<FT>>;
 
+/// @brief Load multiple objects from OBJ stream.
+/// Reads all objects from an OBJ file stream, handling multi-object files
+/// with proper vertex index offsets.
+/// @tparam FT Floating-point type.
+/// @param is Input stream.
+/// @param data Output object list.
 template <class FT>
 void loadObjects(std::istream& is, Object3DList<FT>& data) {
   Object3D<FT> obj;
@@ -290,6 +354,12 @@ void loadObjects(std::istream& is, Object3DList<FT>& data) {
         return loadObjects(file,data);
     }
 */
+
+/// @brief Load objects from OBJ file.
+/// @tparam FT Floating-point type.
+/// @param file Path to OBJ file.
+/// @param data Output object list.
+/// @return True if file opened successfully.
 template <class FT>
 bool loadObjects(const std::string& file, Object3DList<FT>& data) {
   std::fstream fs;
@@ -301,17 +371,31 @@ bool loadObjects(const std::string& file, Object3DList<FT>& data) {
   return false;
 }
 
+/// @brief Save objects to OBJ stream.
+/// @tparam FT Floating-point type.
+/// @param os Output stream.
+/// @param data Objects to save.
 template <class FT>
 void saveObjects(std::ostream& os, const Object3DList<FT>& data) {
   os << "# obj file generator" << std::endl;
   for_each(data.begin(), data.end(), [&](const Object3D<FT>& obj) { obj.write(os); });
 }
 
+/// @brief Save objects to OBJ file (non-const path).
+/// @tparam FT Floating-point type.
+/// @param file Path to OBJ file.
+/// @param data Objects to save.
+/// @return True if file opened successfully.
 template <class FT>
 bool saveObjects(std::string& file, Object3DList<FT>& data) {
   return saveObjects(file, data);
 }
 
+/// @brief Save objects to OBJ file.
+/// @tparam FT Floating-point type.
+/// @param file Path to OBJ file.
+/// @param data Objects to save.
+/// @return True if file opened successfully.
 template <class FT>
 bool saveObjects(const std::string& file, Object3DList<FT>& data) {
   std::fstream fs;

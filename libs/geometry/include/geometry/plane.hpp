@@ -40,6 +40,16 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file plane.hpp
+/// @brief 3D plane representation.
+/// This file provides a class for representing 3D planes in Hesse normal form:
+/// n · x = d, where n is the unit normal vector and d is the signed distance
+/// to the origin. Features include:
+/// - Multiple construction methods (point+normal, 3 points, line+point)
+/// - Distance and projection computations
+/// - Line-plane and plane-plane intersections
+/// - Rotation and translation transformations
+/// @see line3.hpp for 3D line representation.
 
 #pragma once
 
@@ -47,28 +57,37 @@
 
 namespace lsfm {
 
-/**
- * plane object
- */
+/// @brief 3D plane representation in Hesse normal form.
+/// Represents a plane as n · x = d, where:
+/// - n is the unit normal vector
+/// - d is the signed distance from origin to plane along the normal
+/// @tparam FT Floating-point type for coordinates (float or double).
 template <class FT>
 class Plane {
  protected:
-  // plane internals
-  // normal
-  Vec3<FT> n_;
-  // distance of plane to origin
-  FT d_;
+  Vec3<FT> n_;  //!< Unit normal vector.
+  FT d_;        //!< Signed distance from origin to plane.
 
  public:
-  typedef FT value_type;
+  typedef FT value_type;  //!< Value type alias.
+
+  //! Virtual destructor for proper inheritance.
   virtual ~Plane() = default;
 
+  /// @brief Default constructor creating an invalid plane.
   Plane() : d_(0), n_(0, 0, 0) {}
 
-  //! Init Plane by distance and normal (has to be normalized!)
+  /// @brief Construct plane from distance and normal.
+  /// @param dist Distance from origin to plane.
+  /// @param n Normal vector (must already be normalized).
+  /// @note The normal must be pre-normalized for correct behavior.
   Plane(const FT& dist, const Vec3<FT>& n) : d_(dist), n_(n) {}
 
-  //! Init Plane by Point and normal
+  /// @brief Construct plane from point and normal.
+  /// Creates a plane passing through the given point with the
+  /// specified normal direction. The normal is automatically normalized.
+  /// @param pnt A point on the plane.
+  /// @param n Normal direction (will be normalized).
   Plane(const Vec3<FT>& pnt, const Vec3<FT>& n) : n_(n), d_(0) {
     // normalize direction
     FT norm = std::sqrt(n_.dot(n_));
@@ -81,7 +100,13 @@ class Plane {
     d_ = n_.dot(pnt);
   }
 
-  //! Init Plane by three points
+  /// @brief Construct plane from three points.
+  /// Creates a plane passing through all three points. The normal
+  /// direction is computed from (p2-p1) × (p3-p1).
+  /// @param p1 First point on the plane.
+  /// @param p2 Second point on the plane.
+  /// @param p3 Third point on the plane.
+  /// @note Points must not be collinear.
   Plane(const Vec3<FT>& p1, const Vec3<FT>& p2, const Vec3<FT>& p3) : n_(p2 - p1), d_(0) {
     // compute two directions and normal from this direction
     n_ = n_.cross(p3 - p1);
@@ -93,7 +118,11 @@ class Plane {
     d_ = n_.dot(p1);
   }
 
-  //! Init Plane by Line3 and point
+  /// @brief Construct plane from a point and a line.
+  /// Creates a plane containing both the point and the line.
+  /// @param p A point on the plane.
+  /// @param l A line contained in the plane.
+  /// @note Point must not be on the line.
   Plane(const Vec3<FT>& p, const Line3<FT>& l) : n_(l.origin() - p), d_(0) {
     n_ = n_.cross(l.direction());
     if (n_.dot(n_) <= LIMITS<FT>::tau()) {
@@ -104,42 +133,75 @@ class Plane {
     d_ = n_.dot(p);
   }
 
+  /// @brief Check if the plane is valid (has unit normal).
+  /// @return True if normal vector has unit length.
   bool valid() const { return detail::abs(n_.dot(n_) - 1) <= LIMITS<FT>::tau(); }
 
+  /// @brief Check if the plane is empty (zero normal).
+  /// @return True if normal vector is zero.
   bool empty() const { return n_.dot(n_) == 0; }
 
-  //! get line direction vector
+  /// @name Attribute Accessors
+  /// @{
+
+  /// @brief Get the plane normal vector.
+  /// @return Const reference to the unit normal.
   inline const Vec3<FT>& normal() const { return n_; }
 
-  //! get line origin
+  /// @brief Get a point on the plane (closest to origin).
+  /// @return The point on the plane nearest to the coordinate origin.
   inline const Vec3<FT>& origin() const { return n_ * d_; }
 
-  //! get distance to origin
+  /// @brief Get the signed distance from origin to plane.
+  /// @return Signed distance along the normal direction.
   inline const FT dist2origin() const { return d_; }
 
-  //! compute shortest distance between plane and point
+  /// @}
+
+  /// @name Distance and Projection
+  /// @{
+
+  /// @brief Compute signed distance from point to plane.
+  /// Uses the plane equation n·x = d. Positive distance means the
+  /// point is on the same side as the normal points.
+  /// @param p Point to compute distance to.
+  /// @return Signed distance from point to plane.
   inline FT distance(const Vec3<FT>& p) const {
     // plane: nx = d -> d = (np - d)/|n| -> |n| = 1 -> d = np - d
     return n_.dot(p) - d_;
   }
 
-  //! compute projected point on plane by shortest distance
+  /// @brief Project point onto plane.
+  /// @param p Point to project.
+  /// @return Nearest point on plane to p.
   inline Vec3<FT> nearestPointOnPlane(const Vec3<FT>& p) const { return p - distance(p) * n_; }
 
-  //! compute intersection between line and plane
+  /// @}
+
+  /// @name Intersection Tests
+  /// @{
+
+  /// @brief Check if line intersects plane.
+  /// @param l Line to test.
+  /// @return True if line is not parallel to plane.
   inline bool intersection(const Line3<FT>& l) const {
     FT nu = n_.dot(l.direction());
     return nu > LIMITS<FT>::tau();
   }
 
-  //! compute intersection between two planes
+  /// @brief Check if two planes intersect.
+  /// @param p Other plane.
+  /// @return True if planes are not parallel.
   inline bool intersection(const Plane<FT>& p) const {
     // plane1: n1x = d1, plane2: n2x = d2 -> line direction u = n1xn2
     FT u = n_.cross(p.n_);
     return u.dot(u) > LIMITS<FT>::tau();
   }
 
-  //! compute intersection between line and plane
+  /// @brief Compute line-plane intersection point.
+  /// @param l Line to intersect.
+  /// @param[out] intp Intersection point (if exists).
+  /// @return True if intersection exists.
   inline bool intersection(const Line3<FT>& l, Vec3<FT>& intp) const {
     // plane: nx = d, line: p + tu -> np+tnu = d -> t = (d-np/nu)
     FT nu = n_.dot(l.direction());
@@ -149,7 +211,10 @@ class Plane {
     return true;
   }
 
-  //! compute intersection between two planes
+  /// @brief Compute plane-plane intersection line.
+  /// @param p Other plane.
+  /// @param[out] intl Intersection line (if exists).
+  /// @return True if intersection exists (planes not parallel).
   inline bool intersection(const Plane<FT>& p, Line3<FT>& intl) const {
     // plane1: n1x = d1, plane2: n2x = d2 -> line direction u = n1xn2
     // std::cout << "pl: " << n_ << ", pr: " << p.n_ << std::endl;
@@ -164,62 +229,98 @@ class Plane {
     return true;
   }
 
-  //! rotate around origin
+  /// @}
+
+  /// @name Transformations
+  /// @{
+
+  /// @brief Rotate plane around coordinate origin.
+  /// @param rotMat 3x3 rotation matrix.
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& rotate(const Matx33<FT>& rotMat) {
     n_ = rotMat * n_;
     d_ = n_.dot(rotMat * origin());
     return *this;
   }
 
-  //! rotate around origin
+  /// @brief Rotate plane around coordinate origin using Rodrigues vector.
+  /// @param rot Rodrigues rotation vector.
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& rotate(const Vec3<FT>& rot) {
     Matx33<FT> rotMat;
     Rodrigues(rot, rotMat);
     return rotate(rotMat);
   }
 
-  //! rotate around given pivot
+  /// @brief Rotate plane around given pivot point.
+  /// @param rotMat 3x3 rotation matrix.
+  /// @param pivot Pivot point for rotation.
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& rotate(const Matx33<FT>& rotMat, const Vec3<FT>& pivot) {
     n_ = rotMat * n_;
     d_ = n_.dot((rotMat * (origin() - pivot)) + pivot);
     return *this;
   }
 
-  //! rotate around given pivot
+  /// @brief Rotate plane around given pivot using Rodrigues vector.
+  /// @param rot Rodrigues rotation vector.
+  /// @param pivot Pivot point for rotation.
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& rotate(const Vec3<FT>& rot, const Vec3<FT>& pivot) {
     Matx33<FT> rotMat;
     Rodrigues(rot, rotMat);
     return rotate(rotMat);
   }
 
-  //! change distance by translation
+  /// @brief Translate plane by a vector.
+  /// Moves the plane along the translation vector by updating
+  /// the distance parameter.
+  /// @param trans Translation vector.
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& translate(const Vec3<FT>& trans) {
     d_ = n_.dot(origin() + trans);
     return *this;
   }
 
-  //! change distance by scalar (orthogonal translation)
+  /// @brief Translate plane orthogonally by a scalar distance.
+  /// Moves the plane along its normal direction.
+  /// @param d Distance to move (positive = along normal).
+  /// @return Reference to this plane for chaining.
   inline Plane<FT>& translate(FT d) {
     d_ += d;
     return *this;
   }
 
-  //! compute angle between two planes
+  /// @}
+
+  /// @name Geometric Properties
+  /// @{
+
+  /// @brief Compute angle between two planes.
+  /// @param plane Other plane.
+  /// @return Angle in radians [0, π].
   inline FT angle(Plane<FT>& plane) const { return std::acos(n_.dot(plane.n_)); }
 
-  //! compute angle plane and line
+  /// @brief Compute angle between plane and line.
+  /// @param line Line to compute angle with.
+  /// @return Angle in radians.
   inline FT angle(Line3<FT>& line) const { return std::acos(n_.dot(line.n_)); }
 
-
-  //! flip direction
+  /// @brief Flip the plane normal direction.
+  /// Reverses the normal and negates the distance to maintain
+  /// the same geometric plane but with opposite orientation.
   virtual void flip() {
     n_ *= -1;
     d_ *= -1;
   }
+
+  /// @}
 };
 
-
+/// @brief Single-precision 3D plane.
 typedef Plane<float> Planef;
+
+/// @brief Double-precision 3D plane.
 typedef Plane<double> Planed;
 
 }  // namespace lsfm
