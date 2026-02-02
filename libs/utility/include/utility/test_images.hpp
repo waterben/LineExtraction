@@ -6,7 +6,7 @@
 ///
 /// @example
 /// @code
-/// #include <eval/test_images.hpp>
+/// #include <utility/test_images.hpp>
 ///
 /// int main(int argc, char** argv) {
 ///     // Initialize once at program start
@@ -110,7 +110,7 @@ class TestImages {
   }
 
  private:
-  TestImages() = default;
+  TestImages() : argv0_{}, search_paths_{}, initialized_{false} {}
   static TestImages& instance() {
     static TestImages inst;
     return inst;
@@ -180,7 +180,7 @@ class TestImages {
 
   std::string argv0_;
   std::vector<std::string> search_paths_;
-  bool initialized_ = false;
+  bool initialized_;
 };
 
 }  // namespace lsfm

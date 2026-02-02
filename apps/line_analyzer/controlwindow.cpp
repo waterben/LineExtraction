@@ -3,6 +3,8 @@
 #include "ui_controlwindow.h"
 #include <imgproc/image_operator.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <utility/test_images.hpp>
+
 
 using namespace std;
 
@@ -81,7 +83,9 @@ ControlWindow::ControlWindow(QWidget* parent)
 
   indicator = nullptr;
 
-  ui->le_image_filename->setText("../../images/office1_low.JPG");
+  // Set default image to windmill (resolved via TestImages)
+  lsfm::TestImages::init(nullptr);
+  ui->le_image_filename->setText(QString::fromStdString(lsfm::TestImages::windmill()));
   ui->pb_pre->setEnabled(true);
   ui->pb_load->setEnabled(true);
   ui->pb_line_color->setEnabled(true);

@@ -1,6 +1,5 @@
 #include <edge/nms.hpp>
 #include <edge/threshold_estimator.hpp>
-#include <eval/test_images.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/rcmg.hpp>
@@ -8,6 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>

@@ -69,6 +69,14 @@ new_local_repository(
     path = "/usr",
 )
 
+# GTK3 - for OpenCV highgui support (optional, Linux only)
+# Install: sudo apt install libgtk-3-dev
+new_local_repository(
+    name = "ubuntu_gtk_deps",
+    build_file = "@opencv//:test/ubuntu-gtk-deps.BUILD.bazel",
+    path = "/",
+)
+
 # =============================================================================
 # Datasets for evaluation and testing
 # =============================================================================

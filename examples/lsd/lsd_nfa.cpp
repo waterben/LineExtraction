@@ -1,11 +1,11 @@
 #include <edge/nfa.hpp>
-#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <lsd/lsd_el.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
+#include <utility/test_images.hpp>
 
 #include <iostream>
 

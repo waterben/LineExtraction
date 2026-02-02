@@ -87,6 +87,9 @@ cc_binary(
     copts = QT5_COPTS + [
         "-I$(GENDIR)/apps/line_analyzer",  # For ui_*.h files
     ],
+    data = [
+        "//resources:windmill",
+    ],
     linkopts = [
         "-lGL",
     ],
@@ -99,6 +102,7 @@ cc_binary(
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/lsd:lib_lsd",
+        "//libs/utility:lib_utility",
         "//third-party/qplot:lib_qplot",
         "//third-party/qplot3d:lib_qplot3d",
         "@opencv",

@@ -1,7 +1,7 @@
-#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <utility/test_images.hpp>
 
 #include <iostream>
 #define GRADIENT_MAX_CHECK

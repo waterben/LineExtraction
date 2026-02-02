@@ -1,4 +1,3 @@
-#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <lfd/FeatureMatcher.hpp>
 #include <lfd/LRDescriptor.hpp>
@@ -7,6 +6,7 @@
 #include <lsd/lsd_cc.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>

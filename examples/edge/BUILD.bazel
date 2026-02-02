@@ -6,7 +6,7 @@ package(default_visibility = ["//visibility:public"])
 
 # Common dependencies for all edge examples
 _EDGE_DEPS = [
-    "//libs/eval:lib_eval",
+    "//libs/utility:lib_utility",
     "//libs/edge:lib_edge",
     "//libs/imgproc:lib_imgproc",
     "@opencv",

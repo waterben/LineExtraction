@@ -7,7 +7,7 @@ package(default_visibility = ["//visibility:public"])
 
 # Common dependencies for imgproc examples
 _IMGPROC_DEPS = [
-    "//libs/eval:lib_eval",
+    "//libs/utility:lib_utility",
     "//libs/edge:lib_edge",
     "//libs/imgproc:lib_imgproc",
     "@opencv",
@@ -49,7 +49,6 @@ cc_binary(
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = [
-        "//libs/eval:lib_eval",
         "//libs/utility:lib_utility",
         "@opencv",
     ],
@@ -69,8 +68,8 @@ cc_binary(
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = [
-        "//libs/eval:lib_eval",
         "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
         "@opencv",
     ],
 )

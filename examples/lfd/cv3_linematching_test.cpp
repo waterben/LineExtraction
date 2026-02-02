@@ -3,7 +3,6 @@
 #if CV_MAJOR_VERSION > 2
 
 #  include "opencv2/core/utility.hpp"
-#  include <eval/test_images.hpp>
 #  include <geometry/draw.hpp>
 #  include <lfd/FeatureDescriptorLBD.hpp>
 #  include <lfd/LRDescriptor.hpp>
@@ -14,6 +13,7 @@
 #  include <opencv2/line_descriptor.hpp>
 #  include <opencv2/line_descriptor/descriptor.hpp>
 #  include <opencv2/opencv.hpp>
+#  include <utility/test_images.hpp>
 
 #  include <chrono>
 #  include <ctime>

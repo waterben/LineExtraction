@@ -6,7 +6,7 @@ package(default_visibility = ["//visibility:public"])
 
 # Common dependencies for all LSD examples
 _LSD_DEPS = [
-    "//libs/eval:lib_eval",
+    "//libs/utility:lib_utility",
     "//libs/lsd:lib_lsd",
     "@opencv",
 ]
