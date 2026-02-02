@@ -4,80 +4,72 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+# Common dependencies for all edge examples
+_EDGE_DEPS = [
+    "//libs/eval:lib_eval",
+    "//libs/edge:lib_edge",
+    "//libs/imgproc:lib_imgproc",
+    "@opencv",
+]
+
+# Common data dependencies for test images
+_TEST_DATA = [
+    "//resources:windmill",
+    "//resources/datasets:noise",
+]
+
 cc_binary(
     name = "edge_precision",
     srcs = ["edge_precision.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "edge_test",
     srcs = ["edge_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nfa_test",
     srcs = ["nfa_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nms_test",
     srcs = ["nms_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nms_variant_test",
     srcs = ["nms_variant_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "pattern_test",
     srcs = ["pattern_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "zc_test",
     srcs = ["zc_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "zc_variant_test",
     srcs = ["zc_variant_test.cpp"],
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _EDGE_DEPS,
 )

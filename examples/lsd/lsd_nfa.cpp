@@ -1,4 +1,5 @@
 #include <edge/nfa.hpp>
+#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <lsd/lsd_el.hpp>
@@ -113,7 +114,8 @@ static void help() {
 }
 
 int main(int argc, char** argv) {
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, 0);
   if (src.empty()) {

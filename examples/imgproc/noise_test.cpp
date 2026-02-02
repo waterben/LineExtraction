@@ -1,3 +1,4 @@
+#include <eval/test_images.hpp>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
@@ -13,7 +14,8 @@ using namespace lsfm;
 using namespace cv;
 
 int main(int argc, char** argv) {
-  string filename = argc >= 2 ? argv[1] : "../../images/noise/circle.png";
+  lsfm::TestImages::init(argv[0]);
+  string filename = argc >= 2 ? argv[1] : lsfm::TestImages::noise("circle.png");
 
   cv::Mat src = cv::imread(filename);
   if (src.empty()) {

@@ -6,6 +6,7 @@
 
 #define USE_PERIODIC_FFT
 #include <edge/nms.hpp>
+#include <eval/test_images.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>
 #include <imgproc/image_operator.hpp>
@@ -102,12 +103,8 @@ void showNMS(const std::string& name, NMS& nms, bool use_dir = false) {
 
 
 int main(int argc, char** argv) {
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/bike.png";
-  const char* filename = argc >= 2 ? argv[1] : "../../images/geom.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
   if (src.empty()) {

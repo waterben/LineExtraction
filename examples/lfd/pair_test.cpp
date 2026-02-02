@@ -1,3 +1,4 @@
+#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>
 #include <lfd/LRDescriptor.hpp>
@@ -20,15 +21,10 @@ using namespace cv;
 
 
 int main(int argc, char** argv) {
-#ifdef WIN32
-  std::string filename1 = "../../images/elas/Adirondack/im0.png";
-  std::string filename2 = "../../images/elas/Adirondack/im1.png";
-#else
-  std::string filename1 = "../images/im2.png";
-  std::string filename2 = "../images/im6.png";
-#endif
-  // std::string filename1 = "../../MiddEval3/im0.png";
-  // std::string filename2 = "../../MiddEval3/im1.png";
+  TestImages::init(argv[0]);
+
+  // Get stereo pair - defaults to Adirondack scene from MDB dataset
+  auto [filename1, filename2] = TestImages::stereoPair("Adirondack", "H");
 
   if (argc > 2) {
     filename1 = argv[1];

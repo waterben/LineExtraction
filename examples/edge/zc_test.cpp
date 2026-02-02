@@ -1,4 +1,5 @@
 #include <edge/zc.hpp>
+#include <eval/test_images.hpp>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/laplace.hpp>
 #include <imgproc/pc_sqf.hpp>
@@ -119,15 +120,8 @@ double phaseError(const cv::Mat& gt, const cv::Mat& dir, bool hr = false) {
 }
 
 int main(int argc, char** argv) {
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/bike.png";
-  const char* filename = argc >= 2 ? argv[1] : "../../images/geom.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/Mono/step_line.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/Mono/synthetic3d.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/Mono/blox.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/lopez.png";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
   if (src.empty()) {

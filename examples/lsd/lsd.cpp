@@ -1,3 +1,4 @@
+#include <eval/test_images.hpp>
 #include <geometry/draw.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <lsd/lsd_cp.hpp>
@@ -47,7 +48,8 @@ struct Entry {
 static void help() {
   cout << "\nThis program demonstrates lsd.\n"
           "Usage:\n"
-          "./test_lsd <image_name>, Default is ../images/office1_low.jpg\n"
+          "./lsd <image_name>\n"
+          "Default: windmill.jpg from resources/datasets/\n"
        << endl;
 }
 
@@ -74,7 +76,8 @@ void showData(const cv::Mat& src, const Entry<FT>& e) {
 }
 
 int main(int argc, char** argv) {
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  TestImages::init(argv[0]);
+  const std::string filename = argc >= 2 ? argv[1] : TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, 0);
   if (src.empty()) {
