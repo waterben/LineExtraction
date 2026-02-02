@@ -11,7 +11,10 @@ A comprehensive C++ library for line detection and analysis in digital images, f
   - `lfd/` - Line Feature Detector implementation
   - `lsd/` - Line Segment Detector implementation
   - `utility/` - Common utilities (option managers, data structures)
-  - `eval/` - Evaluation and benchmarking framework
+  - `eval/` - Evaluation framework with test image support
+
+- **`resources/`** - Data resources:
+  - `datasets/` - Image datasets (BSDS500 auto-download, MDB manual setup)
 
 - **`apps/`** - Applications:
   - `line_analyzer/` - Qt-based interactive GUI for line analysis
@@ -63,6 +66,10 @@ bazel run //apps/line_analyzer:app_line_analyzer
 # Advanced: sanitizer testing
 bazel test --config=asan //libs/...  # Memory errors
 bazel test --config=tsan //libs/...  # Data races
+
+# Run benchmarks
+bazel run //libs/lsd:bench_lsd     # LSD algorithm benchmarks
+bazel run //libs/edge:bench_edge   # Edge detection benchmarks
 ```
 
 **Why Bazel?**
@@ -96,6 +103,7 @@ All dependencies are automatically managed by both build systems:
 | SuperLU | 7.0+ | Sparse linear algebra |
 | dlib | 19.24+ | Machine learning utilities |
 | Google Test | 1.15+ | Unit testing |
+| Google Benchmark | 1.9+ | Performance benchmarking |
 | Qt5 | 5.15+ | GUI applications (optional) |
 
 ## Documentation

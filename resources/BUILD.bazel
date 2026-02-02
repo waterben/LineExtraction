@@ -1,0 +1,9 @@
+"""Test resources for examples and tests."""
+
+package(default_visibility = ["//visibility:public"])
+
+# Single test image - windmill
+filegroup(
+    name = "windmill",
+    srcs = ["windmill.jpg"],
+)
