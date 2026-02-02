@@ -14,11 +14,9 @@ constexpr double DEG2RAD = CV_PI / 180;
 constexpr double RAD2DEG = 180 / CV_PI;
 
 /// @brief Polar coordinate conversion utilities.
-///
 /// Provides static methods for converting between Cartesian (x, y) and
 /// polar (magnitude, phase) representations. Uses std::atan2 for phase
 /// computation with range [-PI, PI].
-///
 /// @tparam GT Gradient/Cartesian coordinate type
 /// @tparam FT Floating point type for polar values
 template <class GT, class FT>
@@ -154,16 +152,12 @@ struct Polar {
     }
   }
 
-  /**
-   * @brief Convert phase angle to unit Cartesian components.
-   *
-   * Generates unit vectors (dx, dy) from phase angles alone, effectively
-   * treating magnitude as 1.0 for all pixels.
-   *
-   * @param[in] phase Input phase angle image in radians.
-   * @param[out] dx Output X-component (cos(phase)).
-   * @param[out] dy Output Y-component (sin(phase)).
-   */
+  /// @brief Convert phase angle to unit Cartesian components.
+  /// Generates unit vectors (dx, dy) from phase angles alone, effectively
+  /// treating magnitude as 1.0 for all pixels.
+  /// @param[in] phase Input phase angle image in radians.
+  /// @param[out] dx Output X-component (cos(phase)).
+  /// @param[out] dy Output Y-component (sin(phase)).
   static inline void polar2Cart(const cv::Mat& phase, cv::Mat& dx, cv::Mat& dy) {
     dx.create(phase.rows, phase.cols, cv::DataType<GT>::type);
     dy.create(phase.rows, phase.cols, cv::DataType<GT>::type);
@@ -188,17 +182,13 @@ struct Polar {
     }
   }
 
-  /**
-   * @brief Convert phase angle to scaled Cartesian components.
-   *
-   * Generates Cartesian vectors from phase angles with a uniform scale factor,
-   * resulting in dx = scale * cos(phase) and dy = scale * sin(phase).
-   *
-   * @param[in] phase Input phase angle image in radians.
-   * @param[in] scale Uniform scale factor applied to all output vectors.
-   * @param[out] dx Output X-component (scale * cos(phase)).
-   * @param[out] dy Output Y-component (scale * sin(phase)).
-   */
+  /// @brief Convert phase angle to scaled Cartesian components.
+  /// Generates Cartesian vectors from phase angles with a uniform scale factor,
+  /// resulting in dx = scale * cos(phase) and dy = scale * sin(phase).
+  /// @param[in] phase Input phase angle image in radians.
+  /// @param[in] scale Uniform scale factor applied to all output vectors.
+  /// @param[out] dx Output X-component (scale * cos(phase)).
+  /// @param[out] dy Output Y-component (scale * sin(phase)).
   static inline void polar2Cart(const cv::Mat& phase, FT scale, cv::Mat& dx, cv::Mat& dy) {
     dx.create(phase.rows, phase.cols, cv::DataType<GT>::type);
     dy.create(phase.rows, phase.cols, cv::DataType<GT>::type);
@@ -224,39 +214,28 @@ struct Polar {
   }
 };
 
-/**
- * @brief Polar coordinate converter using OpenCV built-in functions.
- *
- * This struct provides the same interface as Polar but delegates to OpenCV's
- * optimized `cv::phase()`, `cv::magnitude()`, `cv::cartToPolar()`, and
- * `cv::polarToCart()` functions. Suitable when OpenCV's implementations are
- * preferred or when consistency with other OpenCV operations is desired.
- *
- * @note OpenCV's phase function returns angles in range [0, 2π).
- *
- * @tparam GT Gradient component type (e.g., short, float).
- * @tparam FT Floating-point type for phase and magnitude (e.g., float, double).
- */
+/// @brief Polar coordinate converter using OpenCV built-in functions.
+/// This struct provides the same interface as Polar but delegates to OpenCV's
+/// optimized `cv::phase()`, `cv::magnitude()`, `cv::cartToPolar()`, and
+/// `cv::polarToCart()` functions. Suitable when OpenCV's implementations are
+/// preferred or when consistency with other OpenCV operations is desired.
+/// @note OpenCV's phase function returns angles in range [0, 2π).
+/// @tparam GT Gradient component type (e.g., short, float).
+/// @tparam FT Floating-point type for phase and magnitude (e.g., float, double).
 template <class GT, class FT>
 struct PolarCV {
   typedef GT grad_type;   ///< Type for gradient components.
   typedef FT float_type;  ///< Type for floating-point results.
 
-  /**
-   * @brief Get the valid phase angle range.
-   * @return Range [0, 2π) for OpenCV phase convention.
-   */
+  /// @brief Get the valid phase angle range.
+  /// @return Range [0, 2π) for OpenCV phase convention.
   inline static const Range<FT> range() { return Range<FT>(0, static_cast<FT>(2 * CV_PI)); }
 
-  /**
-   * @brief Compute phase angle from gradient components using OpenCV.
-   *
-   * Uses `cv::phase()` to compute atan2(dy, dx) for each pixel.
-   *
-   * @param[in] dx Gradient X-component image.
-   * @param[in] dy Gradient Y-component image.
-   * @param[out] phase Output phase angle image in radians [0, 2π).
-   */
+  /// @brief Compute phase angle from gradient components using OpenCV.
+  /// Uses `cv::phase()` to compute atan2(dy, dx) for each pixel.
+  /// @param[in] dx Gradient X-component image.
+  /// @param[in] dy Gradient Y-component image.
+  /// @param[out] phase Output phase angle image in radians [0, 2π).
   static inline void phase(const cv::Mat& dx, const cv::Mat& dy, cv::Mat& phase) {
     cv::Mat tdx, tdy;
     if (cv::DataType<GT>::type != cv::DataType<FT>::type) {
@@ -270,15 +249,11 @@ struct PolarCV {
     cv::phase(tdx, tdy, phase);
   }
 
-  /**
-   * @brief Compute gradient magnitude using OpenCV.
-   *
-   * Uses `cv::magnitude()` to compute sqrt(dx² + dy²) for each pixel.
-   *
-   * @param[in] dx Gradient X-component image.
-   * @param[in] dy Gradient Y-component image.
-   * @param[out] mag Output magnitude image.
-   */
+  /// @brief Compute gradient magnitude using OpenCV.
+  /// Uses `cv::magnitude()` to compute sqrt(dx² + dy²) for each pixel.
+  /// @param[in] dx Gradient X-component image.
+  /// @param[in] dy Gradient Y-component image.
+  /// @param[out] mag Output magnitude image.
   static inline void magnitude(const cv::Mat& dx, const cv::Mat& dy, cv::Mat& mag) {
     cv::Mat tdx, tdy;
     if (cv::DataType<GT>::type != cv::DataType<FT>::type) {
@@ -292,17 +267,13 @@ struct PolarCV {
     cv::magnitude(tdx, tdy, mag);
   }
 
-  /**
-   * @brief Convert Cartesian gradients to polar coordinates using OpenCV.
-   *
-   * Uses `cv::cartToPolar()` to compute both magnitude and phase simultaneously,
-   * which may be more efficient than computing them separately.
-   *
-   * @param[in] dx Gradient X-component image.
-   * @param[in] dy Gradient Y-component image.
-   * @param[out] mag Output magnitude image.
-   * @param[out] phase Output phase angle image in radians [0, 2π).
-   */
+  /// @brief Convert Cartesian gradients to polar coordinates using OpenCV.
+  /// Uses `cv::cartToPolar()` to compute both magnitude and phase simultaneously,
+  /// which may be more efficient than computing them separately.
+  /// @param[in] dx Gradient X-component image.
+  /// @param[in] dy Gradient Y-component image.
+  /// @param[out] mag Output magnitude image.
+  /// @param[out] phase Output phase angle image in radians [0, 2π).
   static inline void cart2Polar(const cv::Mat& dx, const cv::Mat& dy, cv::Mat& mag, cv::Mat& phase) {
     cv::Mat tdx, tdy;
     if (cv::DataType<GT>::type != cv::DataType<FT>::type) {
@@ -316,17 +287,13 @@ struct PolarCV {
     cv::cartToPolar(tdx, tdy, mag, phase);
   }
 
-  /**
-   * @brief Convert polar coordinates to Cartesian gradients using OpenCV.
-   *
-   * Uses `cv::polarToCart()` to compute dx = mag * cos(phase) and
-   * dy = mag * sin(phase) for each pixel.
-   *
-   * @param[in] mag Input magnitude image.
-   * @param[in] phase Input phase angle image in radians.
-   * @param[out] dx Output X-component image.
-   * @param[out] dy Output Y-component image.
-   */
+  /// @brief Convert polar coordinates to Cartesian gradients using OpenCV.
+  /// Uses `cv::polarToCart()` to compute dx = mag * cos(phase) and
+  /// dy = mag * sin(phase) for each pixel.
+  /// @param[in] mag Input magnitude image.
+  /// @param[in] phase Input phase angle image in radians.
+  /// @param[out] dx Output X-component image.
+  /// @param[out] dy Output Y-component image.
   static inline void polar2Cart(const cv::Mat& mag, const cv::Mat& phase, cv::Mat& dx, cv::Mat& dy) {
     cv::Mat tdx, tdy;
     cv::polarToCart(mag, phase, tdx, tdy);
@@ -340,15 +307,11 @@ struct PolarCV {
     }
   }
 
-  /**
-   * @brief Convert phase angle to unit Cartesian components using OpenCV.
-   *
-   * Uses `cv::polarToCart()` with empty magnitude to generate unit vectors.
-   *
-   * @param[in] phase Input phase angle image in radians.
-   * @param[out] dx Output X-component (cos(phase)).
-   * @param[out] dy Output Y-component (sin(phase)).
-   */
+  /// @brief Convert phase angle to unit Cartesian components using OpenCV.
+  /// Uses `cv::polarToCart()` with empty magnitude to generate unit vectors.
+  /// @param[in] phase Input phase angle image in radians.
+  /// @param[out] dx Output X-component (cos(phase)).
+  /// @param[out] dy Output Y-component (sin(phase)).
   static inline void polar2Cart(const cv::Mat& phase, cv::Mat& dx, cv::Mat& dy) {
     cv::Mat tdx, tdy;
     cv::polarToCart(cv::Mat(), phase, tdx, tdy);
@@ -362,16 +325,12 @@ struct PolarCV {
     }
   }
 
-  /**
-   * @brief Convert phase angle to scaled Cartesian components using OpenCV.
-   *
-   * Uses `cv::polarToCart()` and then scales the output vectors uniformly.
-   *
-   * @param[in] phase Input phase angle image in radians.
-   * @param[in] scale Uniform scale factor applied to all output vectors.
-   * @param[out] dx Output X-component (scale * cos(phase)).
-   * @param[out] dy Output Y-component (scale * sin(phase)).
-   */
+  /// @brief Convert phase angle to scaled Cartesian components using OpenCV.
+  /// Uses `cv::polarToCart()` and then scales the output vectors uniformly.
+  /// @param[in] phase Input phase angle image in radians.
+  /// @param[in] scale Uniform scale factor applied to all output vectors.
+  /// @param[out] dx Output X-component (scale * cos(phase)).
+  /// @param[out] dy Output Y-component (scale * sin(phase)).
   static inline void polar2Cart(const cv::Mat& phase, FT scale, cv::Mat& dx, cv::Mat& dy) {
     cv::Mat tdx, tdy;
     cv::polarToCart(cv::Mat(), phase, tdx, tdy);
@@ -387,15 +346,11 @@ struct PolarCV {
     }
   }
 
-  /**
-   * @brief Wrap phase angles from [0, 2π) to (-π, π] range.
-   *
-   * Converts angles greater than π to their equivalent negative angles,
-   * which is useful for algorithms that expect signed angle representation.
-   *
-   * @param[in] angle Input angle image in range [0, 2π).
-   * @param[out] output Output angle image in range (-π, π].
-   */
+  /// @brief Wrap phase angles from [0, 2π) to (-π, π] range.
+  /// Converts angles greater than π to their equivalent negative angles,
+  /// which is useful for algorithms that expect signed angle representation.
+  /// @param[in] angle Input angle image in range [0, 2π).
+  /// @param[out] output Output angle image in range (-π, π].
   static inline void wrap(const cv::Mat& angle, cv::Mat& output) {
     output = angle.clone();
     cv::Mat tmp = (static_cast<FT>(-CV_PI) - (static_cast<FT>(CV_PI) - angle));

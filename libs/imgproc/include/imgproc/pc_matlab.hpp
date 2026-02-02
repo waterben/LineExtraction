@@ -1,18 +1,13 @@
-/**
- * @file pc_matlab.hpp
- * @brief MATLAB-compatible Phase Congruency implementation.
- *
- * Computes the PC_2 measure of phase congruency following the original
- * MATLAB implementation by Kovesi. For maximum speed the input image
- * should be square and have a size that is a power of 2, but the code
- * will operate on images of arbitrary size.
- *
- * This implementation uses the PhaseCong helper class which wraps
- * MATLAB-style computation routines for compatibility with existing
- * workflows and comparison with reference implementations.
- *
- * @see http://www.csse.uwa.edu.au/~pk/research/matlabfns/
- */
+/// @file pc_matlab.hpp
+/// @brief MATLAB-compatible Phase Congruency implementation.
+/// Computes the PC_2 measure of phase congruency following the original
+/// MATLAB implementation by Kovesi. For maximum speed the input image
+/// should be square and have a size that is a power of 2, but the code
+/// will operate on images of arbitrary size.
+/// This implementation uses the PhaseCong helper class which wraps
+/// MATLAB-style computation routines for compatibility with existing
+/// workflows and comparison with reference implementations.
+/// @see http://www.csse.uwa.edu.au/~pk/research/matlabfns/
 
 #pragma once
 
@@ -21,28 +16,21 @@
 
 namespace lsfm {
 
-/**
- * @brief MATLAB-compatible Phase Congruency detector.
- *
- * This class implements phase congruency using the algorithm from Kovesi's
- * MATLAB toolbox. It uses double precision throughout for compatibility
- * with the original MATLAB implementation.
- *
- * The implementation inherits from both PhaseCongruency (for the interface)
- * and PhaseCong (for the MATLAB-style computation backend).
- *
- * Features:
- * - Compatible with Kovesi's MATLAB phasecong2 function
- * - Multi-scale Log-Gabor filter bank
- * - Automatic noise estimation
- * - Frequency spread weighting
- *
- * @tparam IT Input image pixel type.
- *
- * @see PhaseCongruency Base interface
- * @see PhaseCong MATLAB computation backend
- * @see PCLgf Alternative Log-Gabor implementation
- */
+/// @brief MATLAB-compatible Phase Congruency detector.
+/// This class implements phase congruency using the algorithm from Kovesi's
+/// MATLAB toolbox. It uses double precision throughout for compatibility
+/// with the original MATLAB implementation.
+/// The implementation inherits from both PhaseCongruency (for the interface)
+/// and PhaseCong (for the MATLAB-style computation backend).
+/// Features:
+/// - Compatible with Kovesi's MATLAB phasecong2 function
+/// - Multi-scale Log-Gabor filter bank
+/// - Automatic noise estimation
+/// - Frequency spread weighting
+/// @tparam IT Input image pixel type.
+/// @see PhaseCongruency Base interface
+/// @see PhaseCong MATLAB computation backend
+/// @see PCLgf Alternative Log-Gabor implementation
 template <class IT>
 class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, public PhaseCong {
   double k_;              ///< Noise threshold multiplier.
@@ -69,9 +57,7 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
   Range<double> oddRange_;     ///< Valid odd response range.
   Range<double> evenRange_;    ///< Valid even response range.
 
-  /**
-   * @brief Calculate maximum response ranges for normalization.
-   */
+  /// @brief Calculate maximum response ranges for normalization.
   void max_response() {
     cv::Mat_<IT> tmp(128, 128);
     tmp.setTo(this->intRange_.lower);
@@ -87,17 +73,13 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     evenRange_.lower = -evenRange_.upper;
   }
 
-  /**
-   * @brief Force filter update and recalculate ranges.
-   */
+  /// @brief Force filter update and recalculate ranges.
   void update() {
     rows_ = 0;
     max_response();
   }
 
-  /**
-   * @brief Initialize ValueManager parameters.
-   */
+  /// @brief Initialize ValueManager parameters.
   void init() {
     this->add("grad_numScales", std::bind(&PCMatlab<IT>::numScales, this, std::placeholders::_1), "Number of scales.");
     this->add("grad_minWaveLength", std::bind(&PCMatlab<IT>::minWaveLength, this, std::placeholders::_1),
@@ -129,21 +111,18 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
   typedef Range<double> DirectionRange;  ///< Direction value range.
   typedef Range<double> PhaseRange;      ///< Phase value range.
 
-  /**
-   * @brief Construct MATLAB-compatible Phase Congruency detector.
-   *
-   * @param nscale Number of filter scales (default: 4).
-   * @param minWaveLength Minimum wavelength in pixels (default: 3).
-   * @param mult Wavelength multiplier between scales (default: 2.1).
-   * @param sigmaOnf Bandwidth parameter (default: 0.55).
-   * @param k Noise threshold multiplier (default: 3).
-   * @param cutOff Frequency spread weighting cutoff (default: 0.5).
-   * @param g Frequency spread weighting gain (default: 10).
-   * @param deviationGain Frequency deviation penalty (default: 1.5).
-   * @param noiseMethod Noise estimation: -1=median, -2=Rayleigh, >=0=fixed.
-   * @param it_low Minimum input intensity.
-   * @param it_high Maximum input intensity.
-   */
+  /// @brief Construct MATLAB-compatible Phase Congruency detector.
+  /// @param nscale Number of filter scales (default: 4).
+  /// @param minWaveLength Minimum wavelength in pixels (default: 3).
+  /// @param mult Wavelength multiplier between scales (default: 2.1).
+  /// @param sigmaOnf Bandwidth parameter (default: 0.55).
+  /// @param k Noise threshold multiplier (default: 3).
+  /// @param cutOff Frequency spread weighting cutoff (default: 0.5).
+  /// @param g Frequency spread weighting gain (default: 10).
+  /// @param deviationGain Frequency deviation penalty (default: 1.5).
+  /// @param noiseMethod Noise estimation: -1=median, -2=Rayleigh, >=0=fixed.
+  /// @param it_low Minimum input intensity.
+  /// @param it_high Maximum input intensity.
   PCMatlab(int nscale = 4,
            int minWaveLength = 3,
            double mult = 2.1,
@@ -179,13 +158,10 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     init();
   }
 
-  /**
-   * @brief Construct from name-value parameter list.
-   *
-   * @param options Vector of parameter name-value pairs.
-   * @param int_lower Minimum input intensity.
-   * @param int_upper Maximum input intensity.
-   */
+  /// @brief Construct from name-value parameter list.
+  /// @param options Vector of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCMatlab(const ValueManager::NameValueVector& options,
            img_type int_lower = std::numeric_limits<img_type>::lowest(),
            img_type int_upper = std::numeric_limits<img_type>::max())
@@ -214,13 +190,10 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     value(options);
   }
 
-  /**
-   * @brief Construct from initializer list of parameters.
-   *
-   * @param options Initializer list of parameter name-value pairs.
-   * @param int_lower Minimum input intensity.
-   * @param int_upper Maximum input intensity.
-   */
+  /// @brief Construct from initializer list of parameters.
+  /// @param options Initializer list of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCMatlab(ValueManager::InitializerList options,
            img_type int_lower = std::numeric_limits<img_type>::lowest(),
            img_type int_upper = std::numeric_limits<img_type>::max())
@@ -249,11 +222,9 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     value(options);
   }
 
-  /**
-   * @brief Get or set number of filter scales.
-   * @param ns Optional new value.
-   * @return Current number of scales.
-   */
+  /// @brief Get or set number of filter scales.
+  /// @param ns Optional new value.
+  /// @return Current number of scales.
   Value numScales(const Value& ns = Value::NAV()) {
     if (ns.type()) {
       nscale_ = ns;
@@ -262,11 +233,9 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return nscale_;
   }
 
-  /**
-   * @brief Get or set minimum wavelength.
-   * @param mw Optional new value.
-   * @return Current minimum wavelength.
-   */
+  /// @brief Get or set minimum wavelength.
+  /// @param mw Optional new value.
+  /// @return Current minimum wavelength.
   Value minWaveLength(const Value& mw = Value::NAV()) {
     if (mw.type()) {
       minW_ = mw;
@@ -275,11 +244,9 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return minW_;
   }
 
-  /**
-   * @brief Get or set wavelength multiplier.
-   * @param m Optional new value.
-   * @return Current multiplier.
-   */
+  /// @brief Get or set wavelength multiplier.
+  /// @param m Optional new value.
+  /// @return Current multiplier.
   Value mult(const Value& m = Value::NAV()) {
     if (m.type()) {
       mult_ = m;
@@ -288,11 +255,9 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return mult_;
   }
 
-  /**
-   * @brief Get or set bandwidth parameter.
-   * @param so Optional new value.
-   * @return Current sigmaOnf.
-   */
+  /// @brief Get or set bandwidth parameter.
+  /// @param so Optional new value.
+  /// @return Current sigmaOnf.
   Value sigmaOnf(const Value& so = Value::NAV()) {
     if (so.type()) {
       sigmaOnf_ = so;
@@ -301,74 +266,56 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return sigmaOnf_;
   }
 
-  /**
-   * @brief Get or set noise threshold multiplier.
-   * @param kv Optional new value.
-   * @return Current k value.
-   */
-  /**
-   * @brief Get or set noise threshold multiplier.
-   * @param kv Optional new value.
-   * @return Current k value.
-   */
+  /// @brief Get or set noise threshold multiplier.
+  /// @param kv Optional new value.
+  /// @return Current k value.
+  /// @brief Get or set noise threshold multiplier.
+  /// @param kv Optional new value.
+  /// @return Current k value.
   Value k(const Value& kv = Value::NAV()) {
     if (kv.type()) k_ = kv;
     return k_;
   }
 
-  /**
-   * @brief Get or set frequency spread weighting cutoff.
-   * @param cutOff Optional new value.
-   * @return Current cutoff.
-   */
+  /// @brief Get or set frequency spread weighting cutoff.
+  /// @param cutOff Optional new value.
+  /// @return Current cutoff.
   Value cutOff(const Value& cutOff = Value::NAV()) {
     if (cutOff.type()) cutOff_ = cutOff;
     return cutOff_;
   }
 
-  /**
-   * @brief Get or set frequency spread weighting gain.
-   * @param gv Optional new value.
-   * @return Current g value.
-   */
+  /// @brief Get or set frequency spread weighting gain.
+  /// @param gv Optional new value.
+  /// @return Current g value.
   Value g(const Value& gv = Value::NAV()) {
     if (gv.type()) g_ = gv;
     return g_;
   }
 
-  /**
-   * @brief Get or set frequency deviation penalty.
-   * @param g Optional new value.
-   * @return Current deviation gain.
-   */
+  /// @brief Get or set frequency deviation penalty.
+  /// @param g Optional new value.
+  /// @return Current deviation gain.
   Value deviationGain(const Value& g = Value::NAV()) {
     if (g.type()) deviationGain_ = g;
     return deviationGain_;
   }
 
-  /**
-   * @brief Get or set noise estimation method.
-   *
-   * - -1: Median-based estimation
-   * - -2: Rayleigh distribution mode
-   * - >= 0: Fixed threshold value
-   *
-   * @param n Optional new value.
-   * @return Current noise method.
-   */
+  /// @brief Get or set noise estimation method.
+  /// - -1: Median-based estimation
+  /// - -2: Rayleigh distribution mode
+  /// - >= 0: Fixed threshold value
+  /// @param n Optional new value.
+  /// @return Current noise method.
   Value noiseMethod(const Value& n = Value::NAV()) {
     if (n.type()) noiseMethod_ = n;
     return noiseMethod_;
   }
 
-  /**
-   * @brief Process an image to compute phase congruency.
-   *
-   * Uses the PhaseCong backend to compute all filter responses
-   * and phase congruency in one call. Results are cached.
-   *
-   * @param[in] img Input image.
-   */
+  /// @brief Process an image to compute phase congruency.
+  /// Uses the PhaseCong backend to compute all filter responses
+  /// and phase congruency in one call. Results are cached.
+  /// @param[in] img Input image.
   void process(const cv::Mat& img) {
     odd_done_ = false;
     dir_done_ = false;
@@ -376,38 +323,28 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     this->run(img, e_, ox_, oy_, energy_, pc_, k_, cutOff_, g_, deviationGain_, noiseMethod_);
   }
 
-  /**
-   * @brief Get X and Y odd filter response components.
-   * @param[out] ox X component.
-   * @param[out] oy Y component.
-   */
+  /// @brief Get X and Y odd filter response components.
+  /// @param[out] ox X component.
+  /// @param[out] oy Y component.
   void odd(cv::Mat& ox, cv::Mat& oy) const {
     ox = ox_;
     oy = oy_;
   }
 
-  /**
-   * @brief Get local energy.
-   * @return Energy image.
-   */
+  /// @brief Get local energy.
+  /// @return Energy image.
   inline cv::Mat energy() const { return energy_; }
 
-  /**
-   * @brief Get energy value range.
-   * @return Valid range for energy values.
-   */
+  /// @brief Get energy value range.
+  /// @return Valid range for energy values.
   inline EnergyRange energyRange() const { return energyRange_; }
 
-  /**
-   * @brief Check if direction has been computed.
-   * @return True if direction() has been called, false otherwise.
-   */
+  /// @brief Check if direction has been computed.
+  /// @return True if direction() has been called, false otherwise.
   inline bool isDirectionDone() const { return dir_done_; }
 
-  /**
-   * @brief Get local orientation/direction.
-   * @return Direction computed from odd X/Y components.
-   */
+  /// @brief Get local orientation/direction.
+  /// @return Direction computed from odd X/Y components.
   cv::Mat direction() const {
     if (!dir_done_) {
       Polar<double, double>::phase(ox_, oy_, dir_);
@@ -416,16 +353,12 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return dir_;
   }
 
-  /**
-   * @brief Get direction value range.
-   * @return Range depending on Polar phase operator.
-   */
+  /// @brief Get direction value range.
+  /// @return Range depending on Polar phase operator.
   DirectionRange directionRange() const { return Polar<double, double>::range(); }
 
-  /**
-   * @brief Get odd filter response magnitude.
-   * @return Magnitude of odd X/Y components.
-   */
+  /// @brief Get odd filter response magnitude.
+  /// @return Magnitude of odd X/Y components.
   cv::Mat odd() const {
     if (!odd_done_) {
       Polar<double, double>::magnitude(ox_, oy_, odd_);
@@ -434,40 +367,28 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return odd_;
   }
 
-  /**
-   * @brief Get odd response magnitude range.
-   * @return Valid range for odd values.
-   */
+  /// @brief Get odd response magnitude range.
+  /// @return Valid range for odd values.
   MagnitudeRange oddRange() const { return oddRange_; }
 
-  /**
-   * @brief Check if odd magnitude has been computed.
-   * @return True if odd() has been called, false otherwise.
-   */
+  /// @brief Check if odd magnitude has been computed.
+  /// @return True if odd() has been called, false otherwise.
   inline bool isOddDone() const { return odd_done_; }
 
-  /**
-   * @brief Get even filter response.
-   * @return Even (symmetric) response.
-   */
+  /// @brief Get even filter response.
+  /// @return Even (symmetric) response.
   cv::Mat even() const { return e_; }
 
-  /**
-   * @brief Get even response value range.
-   * @return Valid range for even values.
-   */
+  /// @brief Get even response value range.
+  /// @return Valid range for even values.
   GradientRange evenRange() const { return evenRange_; }
 
-  /**
-   * @brief Check if phase has been computed.
-   * @return True if phase() has been called, false otherwise.
-   */
+  /// @brief Check if phase has been computed.
+  /// @return True if phase() has been called, false otherwise.
   inline bool isPhaseDone() const { return phase_done_; }
 
-  /**
-   * @brief Get local phase.
-   * @return Phase = atan2(odd, even).
-   */
+  /// @brief Get local phase.
+  /// @return Phase = atan2(odd, even).
   cv::Mat phase() const {
     if (!phase_done_) {
       Polar<double, double>::phase(odd(), e_, phase_);
@@ -476,22 +397,16 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
     return phase_;
   }
 
-  /**
-   * @brief Get phase value range.
-   * @return Range depending on Polar phase operator.
-   */
+  /// @brief Get phase value range.
+  /// @return Range depending on Polar phase operator.
   PhaseRange phaseRange() const { return Polar<double, double>::range(); }
 
-  /**
-   * @brief Get phase congruency measure.
-   * @return Phase congruency image [0, 1].
-   */
+  /// @brief Get phase congruency measure.
+  /// @return Phase congruency image [0, 1].
   cv::Mat phaseCongruency() const { return pc_; }
 
-  /**
-   * @brief Get the name of the detector.
-   * @return "pc_matlab".
-   */
+  /// @brief Get the name of the detector.
+  /// @return "pc_matlab".
   std::string name() const { return "pc_matlab"; }
 
   using ValueManager::value;

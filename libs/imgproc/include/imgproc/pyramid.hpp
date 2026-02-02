@@ -52,11 +52,9 @@
 namespace lsfm {
 
 /// @brief Gaussian image pyramid for multi-scale analysis.
-///
 /// Creates and manages a sequence of progressively downsampled images using
 /// Gaussian filtering (cv::pyrDown). Used for scale-space analysis, feature
 /// detection at multiple scales, and coarse-to-fine processing.
-///
 /// @tparam MT Matrix element type (uchar, float, double, etc.)
 template <class MT>
 class Pyramid {
@@ -436,9 +434,7 @@ inline Pyramid<MT> div(const Pyramid<MT>& a, const Pyramid<MT>& b) {
 }
 
 /// @brief Visualize pyramid as single image.
-///
 /// Draws all pyramid levels arranged in a single canvas for visualization.
-///
 /// @tparam MT Matrix element type
 /// @param pyramid Pyramid to visualize
 /// @return Canvas image showing all levels

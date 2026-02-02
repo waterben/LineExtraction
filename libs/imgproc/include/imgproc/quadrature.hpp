@@ -48,11 +48,9 @@
 namespace lsfm {
 
 /// @brief Abstract interface for quadrature filters (local energy computation).
-///
 /// Quadrature filters use pairs of filters that are in quadrature relationship
 /// (90 degrees phase difference). The even filter detects lines/edges and the
 /// odd filter detects steps/gradients. Combined they compute local energy and phase.
-///
 /// @tparam IT Input image pixel type (uchar, short, float, double)
 /// @tparam GT Gradient/even-odd response type (short, float, double)
 /// @tparam MT Magnitude of odd operators (int, float, double)
@@ -242,11 +240,9 @@ class Quadrature : public QuadratureI<IT, GT, MT, ET, DT> {
 };
 
 /// @brief Simple quadrature filter combining gradient and Laplacian operators.
-///
 /// Combines a gradient operator (odd filter) with a Laplacian operator (even filter)
 /// to compute quadrature responses. Note that this is not a true quadrature pair
 /// since the signals don't satisfy the Hilbert constraint, so phase may be invalid.
-///
 /// @tparam IT Input image pixel type
 /// @tparam GT Gradient type
 /// @tparam FT Floating point type for energy/phase
