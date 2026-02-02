@@ -1,3 +1,16 @@
+/**
+ * @file pc_lgf.hpp
+ * @brief Phase Congruency using Log-Gabor Filters in frequency domain.
+ *
+ * Implements the phase congruency model using Log-Gabor filters as described
+ * by Kovesi. Log-Gabor filters have Gaussian transfer functions when viewed
+ * on a logarithmic frequency scale, providing zero DC component in the even
+ * symmetric filter and constant bandwidth on a log scale.
+ *
+ * The implementation uses FFT for efficient frequency domain processing
+ * across multiple scales.
+ */
+
 #pragma once
 
 #include <imgproc/phase_congruency.hpp>
@@ -5,9 +18,50 @@
 #include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
+
+/**
+ * @brief Phase Congruency detector using Log-Gabor Filters.
+ *
+ * This class implements phase congruency computation using Log-Gabor filters
+ * in the frequency domain. Log-Gabor filters are particularly well-suited
+ * for phase congruency because:
+ * - They have zero DC component in the even symmetric filter
+ * - Gaussian transfer function on logarithmic frequency scale
+ * - Constant shape ratio (bandwidth on log scale)
+ * - Extended tail at high frequencies (better detection of fine features)
+ *
+ * The filter bank consists of multiple scales with wavelengths increasing
+ * by a multiplicative factor. Noise estimation can use various methods
+ * including median-based or Rayleigh distribution fitting.
+ *
+ * @tparam IT Input image pixel type.
+ * @tparam FT Floating-point type for computations (float or double).
+ * @tparam P Phase computation policy (default: Polar).
+ *
+ * @see PhaseCongruency Base class interface
+ * @see QuadratureLGF Log-Gabor quadrature filter
+ */
 template <class IT, class FT, template <typename, typename> class P = Polar>
 class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
  public:
+  /**
+   * @brief Create Log-Gabor filter bank for phase congruency.
+   *
+   * Generates a bank of Log-Gabor filters across multiple scales in the
+   * frequency domain. Each filter has Gaussian transfer function on
+   * logarithmic frequency scale.
+   *
+   * @param[out] lgf Array of filter responses (size nscale).
+   * @param[out] H Complex transfer function for odd filter computation.
+   * @param[in] rows Filter height.
+   * @param[in] cols Filter width.
+   * @param[in] minW Minimum wavelength (scale 0).
+   * @param[in] mult Wavelength multiplier between scales.
+   * @param[in] sigmaOnf Ratio of standard deviation to center frequency.
+   * @param[in] nscale Number of scales.
+   * @param[in] cutoff Low-pass filter cutoff (default 0.45).
+   * @param[in] n Low-pass filter order (default 15).
+   */
   static void logGaborFilter(cv::Mat* lgf,
                              cv::Mat& H,
                              int rows,
@@ -38,20 +92,54 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
   }
 
  private:
-  int rows_, cols_, rows_ext_, cols_ext_, nscale_;
-  FT minW_, mult_, sigmaOnf_, k_, cutOff_, g_, deviationGain_, T_, eps_;
-  double noiseMethod_;
-  cv::Mat_<FT> weight, sumAn, ox_, oy_, e_, zeros;
+  int rows_;      ///< Image rows.
+  int cols_;      ///< Image columns.
+  int rows_ext_;  ///< Extended rows for FFT.
+  int cols_ext_;  ///< Extended columns for FFT.
+  int nscale_;    ///< Number of filter scales.
 
-  mutable cv::Mat_<FT> odd_, dir_, phase_, energy_, oddSqr_, pc_;
-  mutable bool dir_done_, phase_done_, odd_done_, energy_done_, oddSqr_done_, pc_done_;
+  FT minW_;             ///< Minimum wavelength.
+  FT mult_;             ///< Wavelength multiplier.
+  FT sigmaOnf_;         ///< Bandwidth parameter.
+  FT k_;                ///< Noise threshold multiplier.
+  FT cutOff_;           ///< Weighting function cutoff.
+  FT g_;                ///< Weighting function gain.
+  FT deviationGain_;    ///< Frequency spread penalty.
+  FT T_;                ///< Estimated noise threshold.
+  FT eps_;              ///< Small value to avoid division by zero.
+  double noiseMethod_;  ///< Noise estimation method.
 
-  cv::Mat_<std::complex<FT>> H_;
-  std::vector<cv::Mat_<std::complex<FT>>> lgf_;
+  cv::Mat_<FT> weight;  ///< Frequency spread weighting.
+  cv::Mat_<FT> sumAn;   ///< Sum of amplitudes across scales.
+  cv::Mat_<FT> ox_;     ///< Odd response X component.
+  cv::Mat_<FT> oy_;     ///< Odd response Y component.
+  cv::Mat_<FT> e_;      ///< Even response.
+  cv::Mat_<FT> zeros;   ///< Zero matrix for max operations.
 
-  Range<FT> energyRange_, oddRange_, evenRange_;
+  mutable cv::Mat_<FT> odd_;     ///< Cached odd magnitude.
+  mutable cv::Mat_<FT> dir_;     ///< Cached direction.
+  mutable cv::Mat_<FT> phase_;   ///< Cached phase.
+  mutable cv::Mat_<FT> energy_;  ///< Cached energy.
+  mutable cv::Mat_<FT> oddSqr_;  ///< Cached odd squared.
+  mutable cv::Mat_<FT> pc_;      ///< Cached phase congruency.
 
+  mutable bool dir_done_;     ///< Direction computed flag.
+  mutable bool phase_done_;   ///< Phase computed flag.
+  mutable bool odd_done_;     ///< Odd magnitude computed flag.
+  mutable bool energy_done_;  ///< Energy computed flag.
+  mutable bool oddSqr_done_;  ///< Odd squared computed flag.
+  mutable bool pc_done_;      ///< Phase congruency computed flag.
 
+  cv::Mat_<std::complex<FT>> H_;                 ///< Transfer function.
+  std::vector<cv::Mat_<std::complex<FT>>> lgf_;  ///< Log-Gabor filters.
+
+  Range<FT> energyRange_;  ///< Valid energy range.
+  Range<FT> oddRange_;     ///< Valid odd response range.
+  Range<FT> evenRange_;    ///< Valid even response range.
+
+  /**
+   * @brief Update filter bank for new image size.
+   */
   void updateFilter() {
     lgf_.resize(static_cast<size_t>(nscale_));
     std::vector<cv::Mat_<FT>> lgfTmp;
@@ -68,6 +156,9 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     zeros = cv::Mat_<FT>::zeros(rows_, cols_);
   }
 
+  /**
+   * @brief Calculate maximum response ranges for normalization.
+   */
   void max_response() {
     cv::Mat_<IT> tmp(128, 128);
     tmp.setTo(this->intRange_.lower);
@@ -85,6 +176,9 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     evenRange_.lower = -evenRange_.upper;
   }
 
+  /**
+   * @brief Initialize ValueManager parameters.
+   */
   void init() {
     this->add("grad_numScales", std::bind(&PCLgf::numScales, this, std::placeholders::_1), "Number of scales.");
     this->add("grad_minWaveLength", std::bind(&PCLgf::minWaveLength, this, std::placeholders::_1),
@@ -102,20 +196,35 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
 
 
  public:
-  typedef IT img_type;
-  typedef FT grad_type;
-  typedef FT mag_type;
-  typedef FT energy_type;
-  typedef FT dir_type;
-  typedef FT phase_type;
+  typedef IT img_type;     ///< Input image type.
+  typedef FT grad_type;    ///< Gradient type.
+  typedef FT mag_type;     ///< Magnitude type.
+  typedef FT energy_type;  ///< Energy type.
+  typedef FT dir_type;     ///< Direction type.
+  typedef FT phase_type;   ///< Phase type.
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<FT> GradientRange;
-  typedef Range<FT> MagnitudeRange;
-  typedef Range<FT> EnergyRange;
-  typedef Range<FT> DirectionRange;
-  typedef Range<FT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Intensity value range.
+  typedef Range<FT> GradientRange;   ///< Gradient value range.
+  typedef Range<FT> MagnitudeRange;  ///< Magnitude value range.
+  typedef Range<FT> EnergyRange;     ///< Energy value range.
+  typedef Range<FT> DirectionRange;  ///< Direction value range.
+  typedef Range<FT> PhaseRange;      ///< Phase value range.
 
+  /**
+   * @brief Construct Phase Congruency detector with Log-Gabor filters.
+   *
+   * @param nscale Number of filter scales (default: 4).
+   * @param minWaveLength Minimum wavelength in pixels (default: 3).
+   * @param mult Wavelength multiplier between scales (default: 2.1).
+   * @param sigmaOnf Bandwidth parameter sigma/center freq (default: 0.55).
+   * @param k Noise threshold multiplier (default: 3).
+   * @param cutOff Frequency spread weighting cutoff (default: 0.5).
+   * @param g Frequency spread weighting gain (default: 10).
+   * @param deviationGain Frequency deviation penalty (default: 1.5).
+   * @param noiseMethod Noise estimation: -1=median, -2=Rayleigh, >=0=fixed.
+   * @param int_lower Minimum input intensity.
+   * @param int_upper Maximum input intensity.
+   */
   PCLgf(int nscale = 4,
         FT minWaveLength = 3,
         FT mult = static_cast<FT>(2.1),
@@ -169,6 +278,13 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     init();
   }
 
+  /**
+   * @brief Construct from name-value parameter list.
+   *
+   * @param options Vector of parameter name-value pairs.
+   * @param int_lower Minimum input intensity.
+   * @param int_upper Maximum input intensity.
+   */
   PCLgf(const ValueManager::NameValueVector& options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -192,6 +308,13 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     value(options);
   }
 
+  /**
+   * @brief Construct from initializer list of parameters.
+   *
+   * @param options Initializer list of parameter name-value pairs.
+   * @param int_lower Minimum input intensity.
+   * @param int_upper Maximum input intensity.
+   */
   PCLgf(ValueManager::InitializerList options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -238,6 +361,11 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     value(options);
   }
 
+  /**
+   * @brief Get or set number of filter scales.
+   * @param ns Optional new value.
+   * @return Current number of scales.
+   */
   Value numScales(const Value& ns = Value::NAV()) {
     if (ns.type()) {
       nscale_ = ns;
@@ -245,6 +373,12 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     }
     return nscale_;
   }
+
+  /**
+   * @brief Get or set minimum wavelength.
+   * @param mw Optional new value.
+   * @return Current minimum wavelength.
+   */
   Value minWaveLength(const Value& mw = Value::NAV()) {
     if (mw.type()) {
       minW_ = mw;
@@ -252,6 +386,12 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     }
     return minW_;
   }
+
+  /**
+   * @brief Get or set wavelength multiplier.
+   * @param m Optional new value.
+   * @return Current multiplier.
+   */
   Value mult(const Value& m = Value::NAV()) {
     if (m.type()) {
       mult_ = m;
@@ -259,6 +399,12 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     }
     return mult_;
   }
+
+  /**
+   * @brief Get or set bandwidth parameter.
+   * @param so Optional new value.
+   * @return Current sigmaOnf.
+   */
   Value sigmaOnf(const Value& so = Value::NAV()) {
     if (so.type()) {
       sigmaOnf_ = so;
@@ -267,28 +413,70 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return sigmaOnf_;
   }
 
+  /**
+   * @brief Get or set noise threshold multiplier.
+   * @param kv Optional new value.
+   * @return Current k value.
+   */
   Value k(const Value& kv = Value::NAV()) {
     if (kv.type()) k_ = kv;
     return k_;
   }
+
+  /**
+   * @brief Get or set frequency spread weighting cutoff.
+   * @param cutOff Optional new value.
+   * @return Current cutoff.
+   */
   Value cutOff(const Value& cutOff = Value::NAV()) {
     if (cutOff.type()) cutOff_ = cutOff;
     return cutOff_;
   }
+
+  /**
+   * @brief Get or set frequency spread weighting gain.
+   * @param gv Optional new value.
+   * @return Current g value.
+   */
   Value g(const Value& gv = Value::NAV()) {
     if (gv.type()) g_ = gv;
     return g_;
   }
+
+  /**
+   * @brief Get or set frequency deviation penalty.
+   * @param g Optional new value.
+   * @return Current deviation gain.
+   */
   Value deviationGain(const Value& g = Value::NAV()) {
     if (g.type()) deviationGain_ = g;
     return deviationGain_;
   }
+
+  /**
+   * @brief Get or set noise estimation method.
+   *
+   * - -1: Median-based estimation
+   * - -2: Rayleigh distribution mode
+   * - >= 0: Fixed threshold value
+   *
+   * @param n Optional new value.
+   * @return Current noise method.
+   */
   Value noiseMethod(const Value& n = Value::NAV()) {
     if (n.type()) noiseMethod_ = n;
     return noiseMethod_;
   }
 
-  //! process gradient
+  /**
+   * @brief Process an image to compute phase congruency.
+   *
+   * Applies Log-Gabor filter bank across multiple scales,
+   * accumulates responses, estimates noise, and computes
+   * frequency spread weighting. Results are cached for lazy access.
+   *
+   * @param[in] img Input image.
+   */
   void process(const cv::Mat& img) {
     cv::Mat_<std::complex<FT>> IM, tmpv;
     cv::Mat_<FT> tmp1, tmp2, tmp3, An, maxAn;
@@ -378,12 +566,20 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     }
   }
 
-  //! get x,y odd repsonses
+  /**
+   * @brief Get X and Y odd filter response components.
+   * @param[out] ox X component.
+   * @param[out] oy Y component.
+   */
   void odd(cv::Mat& ox, cv::Mat& oy) const {
     ox = ox_;
     oy = oy_;
   }
 
+  /**
+   * @brief Get squared odd response magnitude.
+   * @return Squared odd response (ox^2 + oy^2).
+   */
   cv::Mat oddSqr() const {
     if (!oddSqr_done_) {
       oddSqr_ = ox_.mul(ox_) + oy_.mul(oy_);
@@ -392,7 +588,10 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return oddSqr_;
   }
 
-  //! get energy
+  /**
+   * @brief Get odd filter response magnitude.
+   * @return sqrt(ox^2 + oy^2).
+   */
   cv::Mat odd() const {
     if (odd_done_) return odd_;
     cv::sqrt(oddSqr(), odd_);
@@ -400,15 +599,34 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return odd_;
   }
 
+  /**
+   * @brief Get odd response value range.
+   * @return Valid range for odd values.
+   */
   MagnitudeRange oddRange() const { return oddRange_; }
 
-  //! test if mag is computed
+  /**
+   * @brief Check if odd magnitude has been computed.
+   * @return True if odd() has been called, false otherwise.
+   */
   inline bool isOddDone() const { return odd_done_; }
 
+  /**
+   * @brief Get even filter response.
+   * @return Even (symmetric) response.
+   */
   cv::Mat even() const { return e_; }
 
+  /**
+   * @brief Get even response value range.
+   * @return Valid range for even values.
+   */
   GradientRange evenRange() const { return evenRange_; }
 
+  /**
+   * @brief Get local energy.
+   * @return sqrt(even^2 + odd^2).
+   */
   cv::Mat energy() const {
     if (energy_done_) return energy_;
     cv::sqrt(e_.mul(e_) + oddSqr(), energy_);
@@ -416,9 +634,16 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return energy_;
   }
 
+  /**
+   * @brief Get energy value range.
+   * @return Valid range for energy values.
+   */
   EnergyRange energyRange() const { return energyRange_; }
 
-  //! get direction
+  /**
+   * @brief Get local orientation/direction.
+   * @return Direction computed from odd X/Y components.
+   */
   cv::Mat direction() const {
     if (dir_done_) return dir_;
     P<FT, FT>::phase(ox_, oy_, dir_);
@@ -426,11 +651,16 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return dir_;
   }
 
-
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /**
+   * @brief Get direction value range.
+   * @return Range depending on phase operator.
+   */
   DirectionRange directionRange() const { return P<FT, FT>::range(); }
 
-  //! get phase (optinal, since not all gradient support phase)
+  /**
+   * @brief Get local phase.
+   * @return Phase = atan2(odd, even).
+   */
   cv::Mat phase() const {
     if (phase_done_) return phase_;
     P<FT, FT>::phase(odd(), e_, phase_);
@@ -438,10 +668,20 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return phase_;
   }
 
-  //! get phase range ([-PI,PI], [0,2PI] or [0,360])
+  /**
+   * @brief Get phase value range.
+   * @return Range depending on phase operator.
+   */
   PhaseRange phaseRange() const { return P<FT, FT>::range(); }
 
-  //! get magnitude
+  /**
+   * @brief Get phase congruency measure.
+   *
+   * Computes weighted, noise-compensated phase congruency:
+   * PC = weight * (1 - deviation) * (energy - T) / energy
+   *
+   * @return Phase congruency image [0, 1].
+   */
   cv::Mat phaseCongruency() const {
     if (pc_done_) return pc_;
     energy();
@@ -455,7 +695,10 @@ class PCLgf : public PhaseCongruency<IT, FT, FT, FT, FT> {
     return pc_;
   }
 
-  //! get name of direction operator
+  /**
+   * @brief Get the name of the detector.
+   * @return "pc_lgf".
+   */
   std::string name() const { return "pc_lgf"; }
 
   using ValueManager::value;

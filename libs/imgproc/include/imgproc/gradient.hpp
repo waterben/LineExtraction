@@ -50,13 +50,14 @@
 
 namespace lsfm {
 
-//! Gradient interface class
-//! Use IT to define Image Type (8Bit, 16Bit, 32Bit, or floating type float or double)
-//! Use GT to define directional Derivative or Separable orientation Type (short, float or double)
-//! Use MT to define Magnitude Type (int, float or double)
-//! Use DT to define Direction Type (float or double)
-//! For 8 Bit images use GT = short, for 16 Bit images float.
-//! For images with floating values, use IT and GT = image floating type (float or double)
+/// @brief Abstract interface for gradient computation filters.
+/// Provides a unified interface for computing image gradients, including
+/// magnitude, direction, and directional derivatives (gx, gy).
+/// Inherits from FilterI for the basic filter interface.
+/// @tparam IT Input image pixel type (uchar, short, float, double)
+/// @tparam GT Gradient/derivative type (short for 8-bit, float for 16-bit)
+/// @tparam MT Magnitude type (int, float, or double)
+/// @tparam DT Direction type (float or double)
 template <class IT, class GT, class MT, class DT>
 class GradientI : public FilterI<IT> {
   GradientI(const GradientI&);
@@ -65,37 +66,47 @@ class GradientI : public FilterI<IT> {
   GradientI() {}
 
  public:
-  typedef IT img_type;
-  typedef MT mag_type;
-  typedef GT grad_type;
-  typedef DT dir_type;
-  typedef Range<IT> IntensityRange;
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<DT> DirectionRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef MT mag_type;               ///< Magnitude value type
+  typedef GT grad_type;              ///< Gradient/derivative value type
+  typedef DT dir_type;               ///< Direction value type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef Range<GT> GradientRange;   ///< Range type for gradient values
+  typedef Range<MT> MagnitudeRange;  ///< Range type for magnitude values
+  typedef Range<DT> DirectionRange;  ///< Range type for direction values
 
   virtual ~GradientI() {}
 
-  //! get magnitude
+  /// @brief Get the gradient magnitude image.
+  /// @return Matrix containing gradient magnitude at each pixel
   virtual cv::Mat magnitude() const = 0;
 
-  //! get magnitude range for intensity range
+  /// @brief Get the expected magnitude value range.
+  /// @return Range of possible magnitude values based on intensity range
   virtual MagnitudeRange magnitudeRange() const = 0;
 
-  //! convert threshold between 0-1 to magnitude threshold
+  /// @brief Convert normalized threshold [0,1] to magnitude threshold.
+  /// @param val Normalized threshold value in range [0,1]
+  /// @return Corresponding magnitude threshold value
   virtual MT magnitudeThreshold(double val) const { return static_cast<MT>(magnitudeRange().upper * val); }
 
-  //! get information about magnitude norm type
-  //! default: NONE -> norm does not correspond gx, gy
+  /// @brief Get the magnitude norm type used.
+  /// Indicates how magnitude relates to gx, gy derivatives.
+  /// @return NormType::NONE if norm doesn't correspond to gx, gy
   virtual NormType normType() const { return NormType::NONE; }
 
-  //! get direction
+  /// @brief Get the gradient direction image.
+  /// @return Matrix containing gradient direction at each pixel
   virtual cv::Mat direction() const = 0;
 
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /// @brief Get the direction value range.
+  /// @return Range of direction values (e.g., [-PI,PI] or [0,360])
   virtual DirectionRange directionRange() const = 0;
 
-  //! get x,y derivatives or directional data
+  /// @brief Get directional derivatives (gx, gy).
+  /// Default implementation reconstructs from polar coordinates.
+  /// @param[out] gx X-direction gradient output
+  /// @param[out] gy Y-direction gradient output
   virtual void directionals(cv::Mat& gx, cv::Mat& gy) const {
     switch (normType()) {
       case NormType::NORM_L2:
@@ -115,21 +126,24 @@ class GradientI : public FilterI<IT> {
     }
   }
 
-  //! get x derivative
+  /// @brief Get X-direction gradient.
+  /// @return Matrix containing gradient in X direction
   virtual cv::Mat gx() const {
     cv::Mat gx, gy;
     directionals(gx, gy);
     return gx;
   }
 
-  //! get y derivative
+  /// @brief Get Y-direction gradient.
+  /// @return Matrix containing gradient in Y direction
   virtual cv::Mat gy() const {
     cv::Mat gx, gy;
     directionals(gx, gy);
     return gy;
   }
 
-  //! get gradient range
+  /// @brief Get the gradient value range for single direction.
+  /// @return Range of possible gradient values
   virtual GradientRange gradientRange() const {
     GT val = 0;
     switch (normType()) {
@@ -150,40 +164,45 @@ class GradientI : public FilterI<IT> {
   }
 };
 
-//! Gradient base class
-//! Use IT to define Image Type (8Bit, 16Bit, 32Bit, or floating type float or double)
-//! Use GT to define directional Derivative or Separable orientation Type (short, float or double)
-//! Use MT to define Magnitude Type (int, float or double)
-//! Use DT to define Direction Type (float or double)
-//! For 8 Bit images use GT = short, for 16 Bit images float.
-//! For images with floating values, use IT and GT = image floating type (float or double)
+/// @brief Base implementation class for gradient computation.
+/// Provides common functionality for gradient filters including
+/// intensity range management and default results() implementation.
+/// @tparam IT Input image pixel type (uchar, short, float, double)
+/// @tparam GT Gradient/derivative type (short for 8-bit, float for 16-bit)
+/// @tparam MT Magnitude type (int, float, or double)
+/// @tparam DT Direction type (float or double)
 template <class IT, class GT, class MT, class DT>
 class Gradient : public GradientI<IT, GT, MT, DT> {
   Gradient();
   Gradient(const Gradient&);
 
  protected:
-  Range<IT> intRange_;
+  Range<IT> intRange_;  ///< Input intensity range
 
+  /// @brief Construct with intensity range.
+  /// @param int_lower Lower bound of input intensity range
+  /// @param int_upper Upper bound of input intensity range
   Gradient(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
     if (intRange_.lower > intRange_.upper) intRange_.swap();
   }
 
  public:
-  typedef IT img_type;
-  typedef MT mag_type;
-  typedef GT grad_type;
-  typedef DT dir_type;
-  typedef Range<IT> IntensityRange;
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<DT> DirectionRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef MT mag_type;               ///< Magnitude value type
+  typedef GT grad_type;              ///< Gradient/derivative value type
+  typedef DT dir_type;               ///< Direction value type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef Range<GT> GradientRange;   ///< Range type for gradient values
+  typedef Range<MT> MagnitudeRange;  ///< Range type for magnitude values
+  typedef Range<DT> DirectionRange;  ///< Range type for direction values
 
-
-  //! get image intensity range (for single channel)
+  /// @brief Get the expected input image intensity range.
+  /// @return The intensity range for single-channel input images
   IntensityRange intensityRange() const { return intRange_; }
 
-  //! generic interface to get processed data
+  /// @brief Get all gradient outputs as named results.
+  /// Returns gx, gy, magnitude, and direction as FilterData.
+  /// @return Map of output name to FilterData
   virtual FilterResults results() const {
     FilterResults ret;
     ret["gx"] = FilterData(this->gx(), this->gradientRange());

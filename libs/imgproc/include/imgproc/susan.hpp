@@ -291,6 +291,17 @@ between "versions 1" and the combined program, version 2.
 
 namespace lsfm {
 
+/**
+ * @brief Safe type cast with compile-time type checking.
+ *
+ * Returns the input value unchanged if InT and OutT are the same type,
+ * otherwise performs a static_cast.
+ *
+ * @tparam OutT Target output type.
+ * @tparam InT Input type (deduced).
+ * @param[in] in Input value to cast.
+ * @return Value cast to OutT.
+ */
 template <typename OutT, typename InT>
 constexpr inline OutT auto_cast(const InT& in) {
   if constexpr (std::is_same<InT, OutT>::value) {
@@ -300,6 +311,29 @@ constexpr inline OutT auto_cast(const InT& in) {
   }
 }
 
+/**
+ * @brief SUSAN edge detector and gradient operator.
+ *
+ * Implements the SUSAN (Smallest Univalue Segment Assimilating Nucleus)
+ * edge detection algorithm by Smith and Brady. SUSAN detects edges by
+ * examining the local brightness consistency within a circular mask
+ * around each pixel, making it robust to noise while preserving edge
+ * localization.
+ *
+ * The algorithm uses a brightness look-up table (LUT) to efficiently
+ * compute the exponential similarity function between pixel intensities.
+ *
+ * @note This implementation is based on SUSAN Version 2l by Stephen Smith.
+ *       A UK patent applies to commercial use.
+ *
+ * @see Smith, S.M. and Brady, J.M., "SUSAN - A New Approach to Low Level
+ *      Image Processing", Int. Journal of Computer Vision, 23(1), 1997.
+ *
+ * @tparam GT Gradient component type (default: short).
+ * @tparam MT Magnitude type (default: short).
+ * @tparam DT Direction type (default: float).
+ * @tparam DO Direction operator type (default: Direction<GT, DT>).
+ */
 template <class GT = short, class MT = short, class DT = float, class DO = Direction<GT, DT>>
 class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   // Thresholds for brightness and distance
@@ -309,13 +343,20 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   mutable bool dir_done_;
 
   // LUT
-  uchar bp_[516];
+  uchar bp_[516];  ///< Brightness look-up table for exponential function.
 
-  cv::Mat_<MT> mag_;
-  cv::Mat_<GT> dx_, dy_;
-  mutable cv::Mat_<DT> dir_;
+  cv::Mat_<MT> mag_;          ///< Computed magnitude image.
+  cv::Mat_<GT> dx_;           ///< Computed X-gradient image.
+  cv::Mat_<GT> dy_;           ///< Computed Y-gradient image.
+  mutable cv::Mat_<DT> dir_;  ///< Computed direction image (lazy evaluation).
 
 
+  /**
+   * @brief Initialize the brightness look-up table.
+   *
+   * Computes e^(-x^6) for all possible brightness differences [-256, 256]
+   * and stores scaled values [0, 100] in the LUT for fast lookup.
+   */
   void initLut() {
     uchar* bp = bp_ + 258;
 
@@ -332,17 +373,24 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
   typedef uchar img_type;
   typedef MT mag_type;
   typedef GT grad_type;
-  typedef DT dir_type;
+  typedef DT dir_type;  ///< Direction component type.
 
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<DT> DirectionRange;
+  typedef Range<GT> GradientRange;   ///< Range type for gradient values.
+  typedef Range<MT> MagnitudeRange;  ///< Range type for magnitude values.
+  typedef Range<DT> DirectionRange;  ///< Range type for direction values.
 
 
-  //! SUSAN Gradient Constructor
-  //! PARAMETERS:
-  //! bt to define the brightness threshold [0-256]?
-  //! three_by_three to use the small kernel, default:false
+  /**
+   * @brief Construct a SUSAN gradient operator.
+   *
+   * @param[in] bt Brightness threshold [0-256], controls edge sensitivity.
+   *               Lower values give more edges (default: 20).
+   * @param[in] small_kernel Use 3x3 kernel instead of 37-pixel circular mask.
+   *                         Gives finer detail but may be noisier (default: false).
+   * @param[in] max_no Maximum response value for normalization (default: 2650).
+   * @param[in] int_lower Lower bound of input intensity range.
+   * @param[in] int_upper Upper bound of input intensity range.
+   */
   SusanGradient(MT bt = 20,
                 bool small_kernel = false,
                 MT max_no = 2650,
@@ -390,7 +438,14 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
     return max_no_;
   }
 
-  //! process gradient
+  /**
+   * @brief Process an image to compute SUSAN edge gradients.
+   *
+   * Computes gradient magnitude and direction using the SUSAN algorithm.
+   * Results can be retrieved using magnitude(), direction(), gx(), gy().
+   *
+   * @param[in] img Input grayscale image (must be CV_8UC1).
+   */
   inline void process(const cv::Mat& img) {
     dx_.create(img.rows, img.cols);
     dx_.setTo(0);
@@ -407,20 +462,41 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
       susan_edges(img);
   }
 
-  //! process gradient and get results
+  /**
+   * @brief Process image and retrieve gradient components.
+   *
+   * @param[in] img Input grayscale image.
+   * @param[out] gx Output X-gradient image.
+   * @param[out] gy Output Y-gradient image.
+   */
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) {
     process(img);
     directionals(gx, gy);
   }
 
-  //! process gradient and get results
+  /**
+   * @brief Process image and retrieve gradients and magnitude.
+   *
+   * @param[in] img Input grayscale image.
+   * @param[out] gx Output X-gradient image.
+   * @param[out] gy Output Y-gradient image.
+   * @param[out] mag Output magnitude image.
+   */
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
     process(img);
     directionals(gx, gy);
     mag = magnitude();
   }
 
-  //! process gradient and get results
+  /**
+   * @brief Process image and retrieve all gradient outputs.
+   *
+   * @param[in] img Input grayscale image.
+   * @param[out] gx Output X-gradient image.
+   * @param[out] gy Output Y-gradient image.
+   * @param[out] mag Output magnitude image.
+   * @param[out] dir Output direction image.
+   */
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
     process(img);
     directionals(gx, gy);
@@ -428,25 +504,47 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
     dir = direction();
   }
 
-  //! get x,y derivatives
+  /**
+   * @brief Get both gradient components.
+   * @param[out] gx X-gradient image reference.
+   * @param[out] gy Y-gradient image reference.
+   */
   void directionals(cv::Mat& gx, cv::Mat& gy) const {
     gx = dx_;
     gy = dy_;
   }
 
-  //! get x derivative
+  /**
+   * @brief Get X-gradient image.
+   * @return X-gradient component image.
+   */
   cv::Mat gx() const { return dx_; }
 
-  //! get y derivative
+  /**
+   * @brief Get Y-gradient image.
+   * @return Y-gradient component image.
+   */
   cv::Mat gy() const { return dy_; }
 
-  //! get magnitude
+  /**
+   * @brief Get gradient magnitude image.
+   * @return Magnitude image computed from SUSAN response.
+   */
   cv::Mat magnitude() const { return mag_; }
 
-  //! test if direction is computed
+  /**
+   * @brief Check if direction has been computed.
+   * @return True if direction() has been called, false otherwise.
+   */
   inline bool isDirectionDone() const { return dir_done_; }
 
-  //! get direction
+  /**
+   * @brief Get gradient direction image.
+   *
+   * Direction is computed lazily on first access from the gradient components.
+   *
+   * @return Direction image in range determined by DO::range().
+   */
   cv::Mat direction() const {
     if (!dir_done_) {
       DO::process(dx_, dy_, dir_);
@@ -455,23 +553,45 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
     return dir_;
   }
 
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /**
+   * @brief Get direction value range.
+   * @return Range of direction values (e.g., [-π, π], [0, 2π], or [0, 360]).
+   */
   DirectionRange directionRange() const { return DO::range(); }
 
+  /**
+   * @brief Get magnitude value range.
+   * @return Range of possible magnitude values.
+   */
   MagnitudeRange magnitudeRange() const {
     return MagnitudeRange(0, small_kernel_ ? static_cast<MT>(static_cast<int>(max_no_ * 0.277)) : max_no_);
   }
 
+  /**
+   * @brief Get gradient value range.
+   * @return Range of possible gradient component values.
+   */
   GradientRange gradientRange() const {
     GT val = small_kernel_ ? 6 * this->intensityRange().upper : 26 * this->intensityRange().upper;
     return GradientRange(-val, val);
   }
 
 
-  //! get name of gradient operator
+  /**
+   * @brief Get the name of this gradient operator.
+   * @return String "susan".
+   */
   inline std::string name() const { return "susan"; }
 
  private:
+  /**
+   * @brief SUSAN edge detection using 3x3 kernel.
+   *
+   * Faster version with smaller mask, suitable for fine detail but may
+   * produce more noise.
+   *
+   * @param[in] img Input grayscale image.
+   */
   void susan_edges_small(const cv::Mat& img) {
     int x_size = img.cols, y_size = img.rows;
     const uchar* in = img.ptr<uchar>();
@@ -641,6 +761,14 @@ class SusanGradient : public Gradient<uchar, GT, MT, DT> {
       }
   }
 
+  /**
+   * @brief SUSAN edge detection using 37-pixel circular mask.
+   *
+   * Standard SUSAN edge detection with the full circular mask for
+   * robust edge detection with good noise immunity.
+   *
+   * @param[in] img Input grayscale image.
+   */
   void susan_edges(const cv::Mat& img) {
     int x_size = img.cols, y_size = img.rows;
     const uchar* in = img.ptr<uchar>();

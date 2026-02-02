@@ -40,6 +40,16 @@
 // C by Benjamin Wassermann
 //M*/
 
+/**
+ * @file image_operator.hpp
+ * @brief Image preprocessing operators for pipeline-based processing.
+ *
+ * This file provides a framework for composable image operations including
+ * geometric transforms (rotation, scaling, translation), filtering (blur,
+ * Gaussian, bilateral, median), and noise generation. Operators can be
+ * chained into processing pipelines.
+ */
+
 #pragma once
 
 #include <opencv2/core/core.hpp>
@@ -53,66 +63,112 @@
 
 namespace lsfm {
 
+/**
+ * @brief Abstract base class for image processing operators.
+ *
+ * Provides a common interface for image transformation operations that
+ * can be applied in-place or with separate input/output images. Operators
+ * can be composed into pipelines using PipelineOperator.
+ */
 class ImageOperator {
-  std::string name_;
-  ImageOperator(const ImageOperator&);
+  std::string name_;                    ///< Operator name for identification.
+  ImageOperator(const ImageOperator&);  ///< Deleted copy constructor.
 
  public:
   virtual ~ImageOperator() {}
 
+  /**
+   * @brief Get the operator name.
+   * @return Name string identifying the operator type.
+   */
   inline std::string name() const { return name_; }
 
+  /**
+   * @brief Apply the operator to an image in-place.
+   * @param[in,out] img Image to transform.
+   */
   virtual void apply(cv::Mat& img) = 0;
 
+  /**
+   * @brief Apply the operator with separate input/output images.
+   * @param[in] in Input image.
+   * @param[out] out Output image (copy of input with transformation applied).
+   */
   inline void apply(const cv::Mat& in, cv::Mat& out) {
     in.copyTo(out);
     apply(out);
   }
 
+  /** @brief Function call operator for in-place application. */
   inline void operator()(cv::Mat& img) { this->apply(img); }
 
+  /** @brief Function call operator with separate input/output. */
   inline void operator()(const cv::Mat& in, cv::Mat& out) {
     in.copyTo(out);
     apply(out);
   }
 
  protected:
+  /**
+   * @brief Construct an operator with a name.
+   * @param[in] n Operator name string.
+   */
   ImageOperator(const std::string& n) : name_(n) {}
 };
 
-typedef std::shared_ptr<ImageOperator> ImageOperatorPtr;
-typedef std::vector<ImageOperatorPtr> ImageOperatorPtrVec;
+typedef std::shared_ptr<ImageOperator> ImageOperatorPtr;    ///< Shared pointer type.
+typedef std::vector<ImageOperatorPtr> ImageOperatorPtrVec;  ///< Vector of operator pointers.
 
 
+/**
+ * @brief Operator pipeline for chaining multiple image operations.
+ *
+ * Allows building a sequence of image operators that are applied
+ * in order to an input image.
+ */
 class PipelineOperator : public ImageOperator {
  public:
-  std::vector<ImageOperatorPtr> pipePtr;
-  std::vector<ImageOperator*> pipe;
+  std::vector<ImageOperatorPtr> pipePtr;  ///< Owned operator pointers.
+  std::vector<ImageOperator*> pipe;       ///< Raw pointers for execution.
 
+  /** @brief Construct an empty pipeline. */
   PipelineOperator() : ImageOperator("Pipeline"), pipePtr{}, pipe{} {}
-  // PipelineOperator(const PipelineOperator& op) : ImageOperator("Pipeline"), pipe(op.pipe) {}
   virtual ~PipelineOperator() {}
 
+  /**
+   * @brief Add an owned operator to the pipeline.
+   * @param[in] op Shared pointer to operator (takes ownership).
+   */
   void push(const ImageOperatorPtr& op) {
     pipePtr.push_back(op);
     pipe.push_back(op.get());
   }
 
+  /**
+   * @brief Add a non-owned operator to the pipeline.
+   * @param[in] op Raw pointer to operator (caller retains ownership).
+   */
   void push(ImageOperator* op) {
     pipePtr.push_back(ImageOperatorPtr());
     pipe.push_back(op);
   }
 
+  /** @brief Remove the last operator from the pipeline. */
   void pop() {
     pipe.pop_back();
     pipePtr.pop_back();
   }
 
+  /** @brief Clear all operators from the pipeline. */
   void clear() {
     pipe.clear();
     pipePtr.clear();
   }
 
+  /**
+   * @brief Apply all operators in sequence.
+   * @param[in,out] img Image to process through the pipeline.
+   */
   virtual void apply(cv::Mat& img) {
     for_each(pipe.begin(), pipe.end(), [&img](ImageOperator* op) { op->apply(img); });
   }
@@ -120,19 +176,30 @@ class PipelineOperator : public ImageOperator {
   using ImageOperator::apply;
   using ImageOperator::name;
 
+  /** @brief Factory method to create a pipeline operator. */
   static ImageOperatorPtr create() { return ImageOperatorPtr(new PipelineOperator()); }
 };
 
+/**
+ * @brief Rotate an image around a pivot point.
+ *
+ * @tparam T Numeric type for angle and coordinates (e.g., float, double).
+ */
 template <class T>
 class RotateOperator : public ImageOperator {
-  T angle_;
-  cv::Point_<T> pivot_;
-  int interp_;
+  T angle_;              ///< Rotation angle in radians.
+  cv::Point_<T> pivot_;  ///< Center of rotation.
+  int interp_;           ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct a rotation operator.
+   * @param[in] a Rotation angle in radians.
+   * @param[in] p Pivot point (center of rotation, default: origin).
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   RotateOperator(T a, const cv::Point_<T>& p = cv::Point_<T>(0, 0), int i = cv::INTER_LINEAR)
       : ImageOperator("Rotate"), angle_(a), pivot_(p), interp_(i) {}
-  // PipelineOperator(const RotateOperator& op) : ImageOperator("Rotate"), angle_(op.angle), pivot_(op.pivot_) {}
   virtual ~RotateOperator() {}
 
   virtual void apply(cv::Mat& img) {
@@ -152,14 +219,33 @@ class RotateOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief Scale an image around a pivot point.
+ *
+ * @tparam T Numeric type for scale factors and coordinates.
+ */
 template <class T>
 class ScaleOperator : public ImageOperator {
-  cv::Point_<T> scale_, pivot_;
-  int interp_;
+  cv::Point_<T> scale_;  ///< Scale factors (x, y).
+  cv::Point_<T> pivot_;  ///< Center of scaling.
+  int interp_;           ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct with separate X/Y scale factors.
+   * @param[in] s Scale factors as (sx, sy).
+   * @param[in] p Pivot point (default: origin).
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   ScaleOperator(const cv::Point_<T>& s, const cv::Point_<T>& p = cv::Point_<T>(0, 0), int i = cv::INTER_LINEAR)
       : ImageOperator("Scale"), scale_(s), pivot_(p), interp_(i) {}
+
+  /**
+   * @brief Construct with uniform scale factor.
+   * @param[in] s Uniform scale factor.
+   * @param[in] p Pivot point (default: origin).
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   ScaleOperator(T s, const cv::Point_<T>& p = cv::Point_<T>(0, 0), int i = cv::INTER_LINEAR)
       : ImageOperator("Scale"), scale_(s, s), pivot_(p), interp_(i) {}
   virtual ~ScaleOperator() {}
@@ -186,12 +272,22 @@ class ScaleOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief Translate (shift) an image by a fixed offset.
+ *
+ * @tparam T Numeric type for translation coordinates.
+ */
 template <class T>
 class TranslateOperator : public ImageOperator {
-  cv::Point_<T> trans_;
-  int interp_;
+  cv::Point_<T> trans_;  ///< Translation offset (dx, dy).
+  int interp_;           ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct a translation operator.
+   * @param[in] t Translation offset as (dx, dy).
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   TranslateOperator(const cv::Point_<T>& t, int i = cv::INTER_LINEAR)
       : ImageOperator("Translate"), trans_(t), interp_(i) {}
   virtual ~TranslateOperator() {}
@@ -212,12 +308,22 @@ class TranslateOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief Apply an affine transformation to an image.
+ *
+ * @tparam T Numeric type for transformation matrix elements.
+ */
 template <class T>
 class AffineOperator : public ImageOperator {
-  cv::Matx<T, 2, 3> map_;
-  int interp_;
+  cv::Matx<T, 2, 3> map_;  ///< 2x3 affine transformation matrix.
+  int interp_;             ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct an affine transformation operator.
+   * @param[in] m 2x3 affine transformation matrix.
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   AffineOperator(const cv::Matx<T, 2, 3>& m, int i = cv::INTER_LINEAR) : ImageOperator("Affine"), map_(m), interp_(i) {}
   virtual ~AffineOperator() {}
 
@@ -236,12 +342,22 @@ class AffineOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief Apply a perspective transformation to an image.
+ *
+ * @tparam T Numeric type for transformation matrix elements.
+ */
 template <class T>
 class PerspectiveOperator : public ImageOperator {
-  cv::Matx<T, 3, 3> map_;
-  int interp_;
+  cv::Matx<T, 3, 3> map_;  ///< 3x3 perspective transformation matrix.
+  int interp_;             ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct a perspective transformation operator.
+   * @param[in] m 3x3 perspective (homography) matrix.
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   PerspectiveOperator(const cv::Matx<T, 3, 3>& m, int i = cv::INTER_LINEAR)
       : ImageOperator("Perspective"), map_(m), interp_(i) {}
   virtual ~PerspectiveOperator() {}
@@ -261,23 +377,42 @@ class PerspectiveOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief No-operation placeholder operator.
+ *
+ * Passes through images unchanged. Useful as a placeholder in pipelines.
+ */
 class NoOp : public ImageOperator {
  public:
+  /** @brief Construct a no-op operator. */
   NoOp() : ImageOperator("Noop") {}
   virtual ~NoOp() {}
 
+  /** @brief Does nothing to the image. */
   virtual void apply(cv::Mat& /*img*/) {}
 
   using ImageOperator::apply;
   using ImageOperator::name;
 
+  /** @brief Factory method. */
   static ImageOperatorPtr create() { return ImageOperatorPtr(new NoOp); }
 };
 
+/**
+ * @brief Resize an image to specified dimensions.
+ */
 class ResizeOperator : public ImageOperator {
-  int width_, height_, interp_;
+  int width_;   ///< Target width.
+  int height_;  ///< Target height.
+  int interp_;  ///< Interpolation method.
 
  public:
+  /**
+   * @brief Construct a resize operator.
+   * @param[in] w Target width in pixels.
+   * @param[in] h Target height in pixels.
+   * @param[in] i Interpolation method (default: cv::INTER_LINEAR).
+   */
   ResizeOperator(int w, int h, int i = cv::INTER_LINEAR) : ImageOperator("Resize"), width_(w), height_(h), interp_(i) {}
   virtual ~ResizeOperator() {}
 
@@ -296,10 +431,17 @@ class ResizeOperator : public ImageOperator {
   }
 };
 
+/**
+ * @brief Apply box blur (uniform averaging) filter.
+ */
 class BlurOperator : public ImageOperator {
-  int blur_;
+  int blur_;  ///< Kernel size for blur.
 
  public:
+  /**
+   * @brief Construct a blur operator.
+   * @param[in] b Kernel size (blur x blur).
+   */
   BlurOperator(int b) : ImageOperator("Blur"), blur_(b) {}
   virtual ~BlurOperator() {}
 
@@ -314,13 +456,26 @@ class BlurOperator : public ImageOperator {
   static ImageOperatorPtr create(int b) { return ImageOperatorPtr(new BlurOperator(b)); }
 };
 
+/**
+ * @brief Apply Gaussian blur filter.
+ */
 class GaussianBlurOperator : public ImageOperator {
-  double sigma_;
-  cv::Size ksize_;
+  double sigma_;    ///< Gaussian sigma (standard deviation).
+  cv::Size ksize_;  ///< Kernel size (computed from sigma if zero).
 
  public:
+  /**
+   * @brief Construct with sigma and optional kernel size.
+   * @param[in] s Gaussian sigma.
+   * @param[in] ks Kernel size (if zero, computed from sigma).
+   */
   GaussianBlurOperator(double s, const cv::Size& ks = cv::Size(0, 0))
       : ImageOperator("GaussionBlur"), sigma_(s), ksize_(ks) {}
+
+  /**
+   * @brief Construct with explicit kernel size.
+   * @param[in] b Kernel size (sigma computed automatically).
+   */
   GaussianBlurOperator(int b) : ImageOperator("GaussionBlur"), sigma_(0), ksize_(b, b) {}
   virtual ~GaussianBlurOperator() {}
 
@@ -338,10 +493,20 @@ class GaussianBlurOperator : public ImageOperator {
   static ImageOperatorPtr create(int b) { return ImageOperatorPtr(new GaussianBlurOperator(b)); }
 };
 
+/**
+ * @brief Apply median blur filter for noise reduction.
+ *
+ * Median filtering is effective for salt-and-pepper noise removal
+ * while preserving edges.
+ */
 class MedianBlurOperator : public ImageOperator {
-  int ksize_;
+  int ksize_;  ///< Kernel size (must be odd).
 
  public:
+  /**
+   * @brief Construct a median blur operator.
+   * @param[in] ks Kernel size, must be odd (default: 3).
+   */
   MedianBlurOperator(int ks = 3) : ImageOperator("MedianBlur"), ksize_(ks) {}
   virtual ~MedianBlurOperator() {}
 
@@ -356,11 +521,24 @@ class MedianBlurOperator : public ImageOperator {
   static ImageOperatorPtr create(int ks = 3) { return ImageOperatorPtr(new MedianBlurOperator(ks)); }
 };
 
+/**
+ * @brief Apply bilateral filter for edge-preserving smoothing.
+ *
+ * Bilateral filtering smooths images while keeping edges sharp by considering
+ * both spatial distance and color similarity.
+ */
 class BilateralOperator : public ImageOperator {
-  double sCol_, sSpace_;
-  int d_;
+  double sCol_;    ///< Filter sigma in color space.
+  double sSpace_;  ///< Filter sigma in coordinate space.
+  int d_;          ///< Diameter of pixel neighborhood.
 
  public:
+  /**
+   * @brief Construct a bilateral filter operator.
+   * @param[in] d Diameter of neighborhood (if <= 0, computed from sigmaSpace).
+   * @param[in] sigmaColor Filter sigma in color space.
+   * @param[in] sigmaSpace Filter sigma in coordinate space.
+   */
   BilateralOperator(int d = 5, double sigmaColor = 50, double sigmaSpace = 50)
       : ImageOperator("BilateralFilter"), sCol_(sigmaColor), sSpace_(sigmaSpace), d_(d) {}
   virtual ~BilateralOperator() {}
@@ -381,11 +559,27 @@ class BilateralOperator : public ImageOperator {
 };
 
 #ifdef HAVE_OPENCV_PHOTO
+/**
+ * @brief Apply Fast Non-Local Means Denoising filter.
+ *
+ * Advanced denoising filter that searches for similar patches in the image
+ * to perform averaging, providing excellent noise removal while preserving
+ * texture and detail.
+ *
+ * @note Requires OpenCV photo module (opencv_photo).
+ */
 class FastNlMeansOperator : public ImageOperator {
-  float h_;
-  int tmpWinSize_, searchWinSize_;
+  float h_;            ///< Filter strength (higher h removes more noise).
+  int tmpWinSize_;     ///< Template window size (should be odd).
+  int searchWinSize_;  ///< Search window size (should be odd).
 
  public:
+  /**
+   * @brief Construct a Fast NL Means denoising operator.
+   * @param[in] h Filter strength parameter (default: 3).
+   * @param[in] templateWindowSize Size of template patch (default: 7).
+   * @param[in] searchWindowSize Size of search area (default: 21).
+   */
   FastNlMeansOperator(float h = 3, int templateWindowSize = 7, int searchWindowSize = 21)
       : ImageOperator("FastNlMeansFilter"), h_(h), tmpWinSize_(templateWindowSize), searchWinSize_(searchWindowSize) {}
   virtual ~FastNlMeansOperator() {}
@@ -407,10 +601,21 @@ class FastNlMeansOperator : public ImageOperator {
 #endif  // HAVE_OPENCV_PHOTO
 
 
+/**
+ * @brief Add uniform random noise to an image.
+ *
+ * Adds noise sampled from a uniform distribution U[lower, upper] to each pixel.
+ */
 class UniformNoiseOperator : public ImageOperator {
-  double lower_, upper_;
+  double lower_;  ///< Lower bound of uniform distribution.
+  double upper_;  ///< Upper bound of uniform distribution.
 
  public:
+  /**
+   * @brief Construct a uniform noise operator.
+   * @param[in] l Lower bound of noise range.
+   * @param[in] u Upper bound of noise range.
+   */
   UniformNoiseOperator(double l, double u) : ImageOperator("UniformNoise"), lower_(l), upper_(u) {}
   virtual ~UniformNoiseOperator() {}
 
@@ -441,10 +646,22 @@ class UniformNoiseOperator : public ImageOperator {
 };
 
 
+/**
+ * @brief Add Gaussian random noise to an image.
+ *
+ * Adds noise sampled from a Gaussian (normal) distribution N(mean, sigma²)
+ * to each pixel. Commonly used for simulating sensor noise.
+ */
 class GaussianNoiseOperator : public ImageOperator {
-  double sigma_, mean_;
+  double sigma_;  ///< Standard deviation of Gaussian noise.
+  double mean_;   ///< Mean of Gaussian noise.
 
  public:
+  /**
+   * @brief Construct a Gaussian noise operator.
+   * @param[in] s Standard deviation (sigma) of noise.
+   * @param[in] m Mean of noise distribution (default: 0).
+   */
   GaussianNoiseOperator(double s, double m = 0) : ImageOperator("GaussionNoise"), sigma_(s), mean_(m) {}
   virtual ~GaussianNoiseOperator() {}
 
