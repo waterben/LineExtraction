@@ -1,3 +1,8 @@
+/// @file filter_results.cpp
+/// @brief Thesis evaluation: Filter response comparison on standard test images
+/// @param Compares multiple gradient filters (Sobel, Laplace, Quadrature, etc.)
+/// @param Generates filter response visualization and statistics for thesis figures
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 

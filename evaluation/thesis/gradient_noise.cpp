@@ -1,3 +1,8 @@
+/// @file gradient_noise.cpp
+/// @brief Thesis evaluation: Gradient computation robustness under noise
+/// @param Tests various gradient operators under noise conditions
+/// @param Evaluates filter response quality and noise sensitivity for different algorithms
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
