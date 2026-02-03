@@ -1,3 +1,7 @@
+/// @file cv_data_provider.hpp
+/// @brief OpenCV-based image data providers.
+/// Provides implementations for supplying image data to evaluation tasks.
+
 #pragma once
 
 #include <eval/data_provider.hpp>

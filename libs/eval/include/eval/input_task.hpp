@@ -1,3 +1,7 @@
+/// @file input_task.hpp
+/// @brief Input data handling task interface.
+/// Provides interface for tasks that process input data.
+
 #pragma once
 
 #include <eval/data_provider.hpp>

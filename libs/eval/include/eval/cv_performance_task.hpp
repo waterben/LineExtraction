@@ -1,3 +1,7 @@
+/// @file cv_performance_task.hpp
+/// @brief Performance measurement task for OpenCV algorithms.
+/// Provides base implementation for measuring performance of computer vision operations.
+
 #pragma once
 
 #include <eval/cv_data_provider.hpp>
