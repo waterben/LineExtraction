@@ -43,6 +43,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_simple.hpp
+/// @brief Simple edge segment detector with basic linking strategy.
+/// Provides a lightweight edge segment detection implementation without advanced
+/// optimization techniques, suitable for quick edge tracing and segment extraction.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
@@ -51,6 +56,11 @@
 
 namespace lsfm {
 
+/// @brief Simple Edge Segment Detector.
+/// Basic implementation of edge segment detection that links edgels into connected
+/// segments using simple neighborhood tracing without continuity optimization.
+/// @tparam MT Magnitude data type (typically float or uchar)
+/// @tparam NUM_DIR Number of directions to consider (4 or 8)
 template <class MT, int NUM_DIR = 8>
 class EsdSimple : public EsdBase<MT, index_type> {
   cv::Mat dir_{};
@@ -75,6 +85,8 @@ class EsdSimple : public EsdBase<MT, index_type> {
   using EsdBase<MT, index_type>::segments_;
 
  public:
+  /// @brief Construct a simple edge segment detector.
+  /// @param minPix Minimum number of pixels required for a segment to be kept (default: 10)
   EsdSimple(int minPix = 10) : EsdBase<MT, index_type>(), min_pix_(minPix) {
     dmap = &dmapStore_[8];
 
@@ -88,17 +100,29 @@ class EsdSimple : public EsdBase<MT, index_type> {
   EsdSimple(const EsdSimple&) = delete;
   EsdSimple& operator=(const EsdSimple&) = delete;
 
+  /// @brief Get or set minimum pixels parameter via value interface.
+  /// @param mp Value object containing the new minimum pixels count (optional)
+  /// @return Current minimum pixels value
   Value valueMinPixels(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;
   }
 
+  /// @brief Get the minimum number of pixels for a valid segment.
+  /// @return Minimum pixel count threshold
   int minPixels() const { return min_pix_; }
 
+  /// @brief Set the minimum number of pixels for a valid segment.
+  /// @param mp New minimum pixel count threshold
   void minPixels(int mp) { min_pix_ = mp; }
 
   using EsdBase<MT, index_type>::detect;
 
+  /// @brief Detect edge segments from edge pixels and direction map.
+  /// Traces connected edges starting from seed points, building segments of linked edgels.
+  /// @param dir Direction map indicating edge direction at each pixel (8 directions)
+  /// @param mag Magnitude map with edge strength values
+  /// @param seeds Vector of edgel indices (indices into flattened image) to start tracing from
   void detect(const cv::Mat& dir, const cv::Mat& mag, const IndexVector& seeds) {
     points_.clear();
     points_.reserve(seeds.size() * 3);
@@ -183,7 +207,12 @@ class EsdSimple : public EsdBase<MT, index_type> {
   std::string name() const { return "simple"; }
 
  private:
-  // check for vaild adjacent pixel by given direction and retun new index
+  /// @brief Check if an adjacent pixel exists in the specified direction.
+  /// Validates that the adjacent pixel has not been used yet (pdir >= 0) and
+  /// that its edge direction is compatible (within +/-1 of current direction).
+  /// @param idx Current pixel index in linear storage
+  /// @param dir Desired movement direction (0-7 for 8-connected or 0-3 for 4-connected)
+  /// @return Adjacent pixel index if valid, 0 otherwise
   inline index_type checkAdjacent(index_type idx, char dir) {
     const int dirIndex = static_cast<int>(dir);
     const ptrdiff_t offset = pdmap[dirIndex];
@@ -196,7 +225,11 @@ class EsdSimple : public EsdBase<MT, index_type> {
 
 #ifndef NO_EDGE_THICK_CHECK
 
-  // check for thick lines and remove pixels
+  /// @brief Mark perpendicular neighbors as used to prevent thick line artifacts.
+  /// When edge directions are diagonal (odd), marks the two orthogonal neighbors
+  /// as used (pdir = -3) to suppress spurious parallel edges.
+  /// @param idx Current pixel index
+  /// @param dir Direction offset to check perpendicular pixels
   inline void checkThick(index_type idx, char dir) {
     const int dirIndex = static_cast<int>(dir);
     const ptrdiff_t offset = pdmap[dirIndex];
@@ -206,7 +239,12 @@ class EsdSimple : public EsdBase<MT, index_type> {
   }
 
 #  ifndef NO_GRADIENT_MAX_CHECK
-  // find pixel near (fw + left, fw + right) current pixel
+  /// @brief Find next pixel in neighboring directions (±1) with gradient magnitude check.
+  /// Searches left (dir-1) and right (dir+1) of current direction, selecting the
+  /// neighbor with highest magnitude. Marks unused perpendicular pixel as thick.
+  /// @param idx Current pixel index
+  /// @param dir Current edge direction
+  /// @return Adjacent pixel index with maximum magnitude, or 0 if none valid
   index_type findNear(index_type idx, char dir) {
     index_type nidxp = checkAdjacent(idx, dir + 1);
     index_type nidxn = checkAdjacent(idx, dir - 1);
@@ -228,6 +266,11 @@ class EsdSimple : public EsdBase<MT, index_type> {
     return nidxp;
   }
 #  else
+  /// @brief Find next pixel in neighboring directions (±1) without gradient magnitude check.
+  /// Searches left (dir-1) and right (dir+1) of current direction, returning first valid match.
+  /// @param idx Current pixel index
+  /// @param dir Current edge direction
+  /// @return Adjacent pixel index in priority order: left, then right, or 0 if none valid
   index_type findNear(index_type idx, char dir) {
     index_type nidx = checkAdjacent(idx, dir + 1);
     if (nidx) {
@@ -240,7 +283,11 @@ class EsdSimple : public EsdBase<MT, index_type> {
   }
 #  endif
 
-  // find adjacent pixel
+  /// @brief Find the next adjacent pixel in current segment traversal.
+  /// First tries checkAdjacent in the primary direction, then falls back to
+  /// findNear for diagonal or ambiguous cases. Handles thick line suppression.
+  /// @param idx Current pixel index
+  /// @return Index of next pixel in segment chain, or 0 if segment ends
   inline index_type findAdjacent(index_type idx) {
     char dir = pdir_[idx];
     index_type nidx = checkAdjacent(idx, dir);
@@ -255,42 +302,62 @@ class EsdSimple : public EsdBase<MT, index_type> {
     }
     return findNear(idx, dir);
   }
+
 #else
 
 #  ifndef NO_GRADIENT_MAX_CHECK
+  /// @brief Find next pixel without thick line checking but with magnitude validation.
+  /// Searches left (dir-1) and right (dir+1) directions, selecting max gradient magnitude.
+  /// Used when NO_EDGE_THICK_CHECK is disabled.
+  /// @param idx Current pixel index
+  /// @param dir Current edge direction
+  /// @return Adjacent pixel with maximum magnitude, or 0 if none valid
   index_type findNear(index_type idx, char dir) {
     index_type nidxp = checkAdjacent(idx, dir + 1);
     index_type nidxn = checkAdjacent(idx, dir - 1);
     return nidxp == 0 ? nidxn : nidxn == 0 ? nidxp : pmag_[nidxn] > pmag_[nidxp] ? nidxn : nidxp;
   };
 #  else
+  /// @brief Find next pixel without thick checking or magnitude validation.
+  /// Simplest variant - just searches left and right directions sequentially.
+  /// @param idx Current pixel index
+  /// @param dir Current edge direction
+  /// @return First valid adjacent pixel found, or 0 if none
   index_type findNear(index_type idx, char dir) {
     index_type nidx = checkAdjacent(idx, dir + 1);
     return nidx ? nidx : checkAdjacent(idx, dir - 1);
   };
 #  endif
 
-  // find next pixel without thickness check
+  /// @brief Find next adjacent pixel without thick line checking.
+  /// Tries direct continuation first, then falls back to neighboring directions.
+  /// @param idx Current pixel index
+  /// @return Index of next pixel in segment chain, or 0 if segment ends
   inline index_type findAdjacent(index_type idx) {
     char dir = pdir_[idx];
     index_type nidx = checkAdjacent(idx, dir);
     return nidx ? nidx : findNear(idx, dir);
   }
 #endif
-  void extractSegment(index_type idx) {
-    index_type tmp;
-    while (idx) {
-#ifdef DRAW_MODE
-      draw.ptr<cv::Vec3b>()[idx] = col;
-      cv::imshow("draw", draw);
-      cv::waitKey(1);
+  char dir = pdir_[idx];
+  index_type nidx = checkAdjacent(idx, dir);
+  return nidx ? nidx : findNear(idx, dir);
+}
 #endif
-      points_.push_back(idx);
-      tmp = idx;
-      idx = findAdjacent(idx);
-      pdir_[tmp] = -2;
-    }
+void extractSegment(index_type idx) {
+  index_type tmp;
+  while (idx) {
+#ifdef DRAW_MODE
+    draw.ptr<cv::Vec3b>()[idx] = col;
+    cv::imshow("draw", draw);
+    cv::waitKey(1);
+#endif
+    points_.push_back(idx);
+    tmp = idx;
+    idx = findAdjacent(idx);
+    pdir_[tmp] = -2;
   }
+}
 };
 
 }  // namespace lsfm

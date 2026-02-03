@@ -43,6 +43,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_linking.hpp
+/// @brief Edge linking algorithm with continuity optimization.
+/// Implements edge segment detection by linking adjacent edgels while optimizing
+/// for spatial continuity and magnitude consistency.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
@@ -53,35 +58,49 @@
 
 namespace lsfm {
 
+/// @brief Edge Segment Detector using edge linking with continuity optimization.
+/// Links edgels (edge pixels) into connected segments by tracing along edge directions
+/// while maintaining continuity and enforcing magnitude constraints. Supports both
+/// continuous linking and pattern-based linking strategies.
+/// @tparam MT Magnitude data type (typically float or uchar)
+/// @tparam NUM_DIR Number of directions to consider (4 or 8)
+/// @tparam USE_CORNER_RULE Whether to apply corner rule for linking
 template <class MT, int NUM_DIR = 8, bool USE_CORNER_RULE = false>
 class EsdLinking : public EsdBase<MT, index_type> {
-  cv::Mat dir_;
-  char* pdir_{nullptr};
+  cv::Mat dir_;          ///< Encoded direction map for each edge pixel
+  char* pdir_{nullptr};  ///< Pointer to direction data for faster access
 
 #ifdef DRAW_MODE
-  cv::Mat draw;
-  cv::Vec3b col;
+  cv::Mat draw;   ///< Debug visualization of segment linking
+  cv::Vec3b col;  ///< Current segment color for debug visualization
 #endif
 
-  short dmapStore_[20];
-  char abs_diffmapStore_[15];
+  short dmapStore_[20];        ///< Direction offset lookup table (size 20 for wraparound)
+  char abs_diffmapStore_[15];  ///< Precomputed absolute difference map for direction angles
 
-  const short* dmap{nullptr};
-  const short* pdmap{nullptr};
-  const short* rvdmap{nullptr};
-  const short* fwdmap{nullptr};
-  const MT* pmag_{nullptr};
+  const short* dmap{nullptr};    ///< Pointer to direction offset map (centered at index 8)
+  const short* pdmap{nullptr};   ///< Current direction map pointer (either rvdmap or fwdmap)
+  const short* rvdmap{nullptr};  ///< Reverse direction map (backward traversal)
+  const short* fwdmap{nullptr};  ///< Forward direction map (forward traversal)
+  const MT* pmag_{nullptr};      ///< Pointer to gradient magnitude data
 
-  int minPixels_, maxGap_;
-  float magMul_, magTh_;
+  int minPixels_,  ///< Minimum segment length filter
+      maxGap_;     ///< Maximum allowed gap when linking segments
+  float magMul_,   ///< Magnitude multiplier for determining search penalty
+      magTh_;      ///< Magnitude threshold for edge acceptance
 #ifndef NO_ADDED_SEEDS
-  IndexVector addedSeeds_;
+  IndexVector addedSeeds_;  ///< Cache of seed points added during search for deferred processing
 #endif
 
   using EsdBase<MT, index_type>::points_;
   using EsdBase<MT, index_type>::segments_;
 
  public:
+  /// @brief Construct an edge linking detector with continuity optimization.
+  /// @param minPix Minimum number of pixels for a valid segment (default: 10)
+  /// @param maxGap Maximum allowed gap in pixels when connecting edges (default: 3)
+  /// @param magMul Magnitude multiplier for gap penalty (default: 3.0)
+  /// @param magTh Magnitude threshold for edge acceptance (default: 5.0)
   EsdLinking(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5)
       : EsdBase<MT, index_type>(),
         dir_(),
@@ -111,29 +130,48 @@ class EsdLinking : public EsdBase<MT, index_type> {
   EsdLinking(const EsdLinking&) = delete;
   EsdLinking& operator=(const EsdLinking&) = delete;
 
+  /// @brief Get or set minimum pixels via value interface.
+  /// @param mp Value object with new minimum pixels (optional)
+  /// @return Current minimum pixels value
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return minPixels_;
   }
 
+  /// @brief Get minimum pixels for valid segment.
+  /// @return Minimum pixel count
   int minPixels() const { return minPixels_; }
 
+  /// @brief Set minimum pixels for valid segment.
+  /// @param mp New minimum pixel count
   void minPixels(int mp) { minPixels_ = mp; }
 
+  /// @brief Get or set maximum gap via value interface.
+  /// @param mg Value object with new maximum gap (optional)
+  /// @return Current maximum gap value
   Value valueMaxGap(const Value& mg = Value::NAV()) {
     if (mg.type()) maxGap(mg.getInt());
     return maxGap_;
   }
 
+  /// @brief Get maximum allowed gap in pixels.
+  /// @return Maximum gap value
   int maxGap() const { return maxGap_; }
 
+  /// @brief Set maximum allowed gap in pixels.
+  /// @param mg New maximum gap value
   void maxGap(int mg) { maxGap_ = mg; }
 
+  /// @brief Get or set magnitude multiplier via value interface.
+  /// @param mm Value object with new magnitude multiplier (optional)
+  /// @return Current magnitude multiplier value
   Value valueMagMul(const Value& mm = Value::NAV()) {
     if (mm.type()) magMul(mm.getFloat());
     return magMul_;
   }
 
+  /// @brief Get magnitude multiplier for gap penalty.
+  /// @return Magnitude multiplier value
   float magMul() const { return magMul_; }
 
   void magMul(float mm) { magMul_ = mm; }
@@ -201,7 +239,12 @@ class EsdLinking : public EsdBase<MT, index_type> {
   std::string name() const { return "link"; }
 
  private:
-  // check for vaild adjacent pixel by given direction and retun new index
+  /// @brief Check if an adjacent pixel is valid and unvisited in specified direction.
+  /// Validates that neighbor has not been processed (pdir >= 0) and that its gradient
+  /// direction is compatible with current. May add seed if direction mismatch detected.
+  /// @param idx Current pixel index
+  /// @param dir Desired movement direction
+  /// @return Adjacent pixel index if valid, 0 otherwise
   inline index_type checkAdjacent(index_type idx, char dir) {
     const ptrdiff_t offset = pdmap[static_cast<int>(dir)];
     index_type nidx = static_cast<index_type>(static_cast<ptrdiff_t>(idx) + offset);
@@ -421,6 +464,11 @@ class EsdLinking : public EsdBase<MT, index_type> {
     return nidx;
   }
 
+  /// @brief Extract a connected segment with continuity optimization.
+  /// Traverses the edge chain using findAdjacent with direction refinement. Handles gaps
+  /// up to maxGap_ pixels and tracks direction changes for continuity. Marks visited
+  /// pixels as used (pdir = -3).
+  /// @param idx Starting pixel index for segment extraction
   void extractSegment(index_type idx) {
     char tdir = -1, dir = 0;
     int gap = 0;
@@ -444,6 +492,11 @@ class EsdLinking : public EsdBase<MT, index_type> {
     }
   }
 
+  /// @brief Process seed pixel for segment linking with continuity optimization.
+  /// Explores both forward and reverse directions from seed, handles closure detection,
+  /// and validates minimum pixel count before creating segment. Uses direction maps
+  /// (rvdmap/fwdmap) for bi-directional tracing.
+  /// @param idx Seed pixel index to begin segment extraction
   void search(index_type idx) {
     char dir = pdir_[idx];
     if (dir < 0) return;
@@ -496,8 +549,18 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // do fw
     pdmap = fwdmap;
     extractSegment(idx);
-    seg_end = this->points_.size();
-    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    /// @brief Extract segment starting at pixel with specified direction using corner rule.
+    /// Overloaded convenience method that reads direction from pdir_[idx].
+    /// @param idx Seed pixel index for segment extraction
+    inline void extractSegmentC(index_type idx) { extractSegmentC(idx, pdir_[idx]); }
+
+    /// @brief Extract segment with corner-detection rule enabled.
+    /// Corner rule: processes pixels where gradient direction changes abruptly,
+    /// allowing continuity across corners. Uses DataPair struct to track multiple
+    /// candidate directions and validates consistency.
+    /// @param idx Starting pixel index
+    /// @param ndir Initial neighbor direction to explore    if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
+    /// segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 
 

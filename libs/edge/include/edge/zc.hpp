@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file zc.hpp
+/// @brief Zero-crossing edge detection methods.
+/// Implements edge detection via zero-crossing detection in Laplacian or other
+/// differential operators, supporting sub-pixel localization and hysteresis.
+
 #pragma once
 
 #include <edge/nms.hpp>

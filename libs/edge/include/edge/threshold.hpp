@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file threshold.hpp
+/// @brief Threshold computation and application for edge detection.
+/// Provides global and adaptive thresholding methods for converting edge magnitude maps
+/// to binary edge maps using various statistical estimators (Otsu, etc.).
+
 #pragma once
 
 #include <edge/threshold_estimator.hpp>
@@ -50,33 +55,53 @@
 
 namespace lsfm {
 
+/// @brief Abstract base class for threshold-based edge detection.
+/// Defines the interface for converting magnitude maps to binary edge maps.
+/// @tparam IT Image element type (typically uint8_t or float)
 template <class IT>
 class Threshold {
  protected:
   Threshold() {}
 
  public:
+  /// @typedef img_type
+  /// @brief Image element type
   typedef IT img_type;
 
   virtual ~Threshold() {}
 
+  /// @brief Apply threshold to magnitude map.
+  /// @param img Input magnitude map
+  /// @return Binary edge map (IT type with 0 for non-edges, non-zero for edges)
   virtual cv::Mat_<IT> process(const cv::Mat& img) const = 0;
 
+  /// @brief Get the name of this threshold method.
+  /// @return String describing the threshold method
   virtual std::string name() const = 0;
 };
 
-//! Global threshold class
+/// @brief Global threshold using automatic estimation (e.g., Otsu's method).
+/// Computes a single threshold value for the entire image and applies it globally.
+/// @tparam IT Image element type
+/// @tparam E Threshold estimator (default: ThresholdOtsu)
+/// @tparam PARALLEL_FOR Whether to use parallel processing for large images
 template <class IT, class E = ThresholdOtsu<IT, 512, float>, bool PARALLEL_FOR = false>
 class GlobalThreshold : public Threshold<IT> {
   E th_{};
 
  public:
+  /// @typedef img_type
+  /// @brief Image element type
   typedef IT img_type;
 
+  /// @brief Construct a global threshold with value range.
+  /// @param r_max Maximum possible value (default: max value for type)
+  /// @param r_min Minimum possible value (default: 0)
   GlobalThreshold(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0) : th_(r_max, r_min) {}
 
-
-  //! Compute global threshold
+  /// @brief Compute and apply global threshold to magnitude map.
+  /// @param mag Input magnitude map
+  /// @return Binary output map with edges marked as 255 (or IT max value)
   cv::Mat_<IT> process(const cv::Mat& mag) const {
     cv::Mat_<IT> ret(mag.size());
 

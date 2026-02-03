@@ -43,6 +43,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_pattern.hpp
+/// @brief Pattern-based edge segment detector.
+/// Implements edge segment detection using pattern matching and structural analysis
+/// to identify connected edge segments with consistent direction.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
@@ -55,57 +60,83 @@
 
 namespace lsfm {
 
+/// @brief Pattern-based edge segment detector with structural matching.
+/// Detects edge segments by analyzing structural patterns (sequences of direction changes)
+/// and matching them against expected patterns for more robust segmentation.
+/// @tparam MT Magnitude data type (typically float or uchar)
+/// @tparam NUM_DIR Number of directions to consider (4 or 8)
+/// @tparam USE_CORNER_RULE Whether to apply corner detection rule for pattern matching
 template <class MT, int NUM_DIR = 8, bool USE_CORNER_RULE = false>
 class EsdPattern : public EsdBasePattern<MT, index_type> {
-  cv::Mat dir_;
-  char* pdir_{nullptr};
+  cv::Mat dir_;          ///< Encoded direction map for each edge pixel
+  char* pdir_{nullptr};  ///< Pointer to direction data for faster access
 
 #ifdef DRAW_MODE
-  cv::Mat draw;
-  cv::Vec3b col;
+  cv::Mat draw;   ///< Debug visualization of pattern matching and linking
+  cv::Vec3b col;  ///< Current pattern color for debug visualization
 #endif
 
-  short dmapStore_[20];
-  char abs_diffmapStore_[15];
+  short dmapStore_[20];        ///< Direction offset lookup table with wraparound space
+  char abs_diffmapStore_[15];  ///< Precomputed absolute difference for direction angles
 
-  const short* dmap{nullptr};
-  const short* pdmap{nullptr};
-  const short* rvdmap{nullptr};
-  const short* fwdmap{nullptr};
-  const MT* pmag_{nullptr};
+  const short* dmap{nullptr};    ///< Pointer to direction offset map (centered at index 8)
+  const short* pdmap{nullptr};   ///< Current direction map pointer (rvdmap or fwdmap)
+  const short* rvdmap{nullptr};  ///< Reverse direction map for backward traversal
+  const short* fwdmap{nullptr};  ///< Forward direction map for forward traversal
+  const MT* pmag_{nullptr};      ///< Pointer to gradient magnitude data
 
-  int minPixels_, maxGap_, patTol_;
-  float magMul_, magTh_;
+  int minPixels_,  ///< Minimum segment length filter
+      maxGap_,     ///< Maximum allowed gap when linking patterns
+      patTol_;     ///< Pattern tolerance for matching primitive sequences
+  float magMul_,   ///< Magnitude multiplier for gap penalty calculation
+      magTh_;      ///< Magnitude threshold for edge acceptance
 #ifndef NO_ADDED_SEEDS
-  IndexVector addedSeeds_;
+  IndexVector addedSeeds_;  ///< Cache of seed points for deferred processing
 #endif
 
   using EsdBase<MT, index_type>::points_;
   using EsdBase<MT, index_type>::segments_;
-  EdgeSegmentVector patterns_;
-  EdgeSegmentVector patternSegments_;
+  EdgeSegmentVector patterns_;         ///< Extracted primitive patterns from edges
+  EdgeSegmentVector patternSegments_;  ///< Segments composed of linked patterns
 
  public:
+  /// @brief Primitive pattern element representing a sequence of pixels with consistent direction.
   struct Primitive {
+    /// @brief Construct a primitive pattern element.
+    /// @param s Size/length of the primitive (number of pixels)
+    /// @param d Primary direction of pixels in the primitive
+    /// @param dn Direction change to the next primitive
     Primitive(ushort s = 0, char d = -1, char dn = -1) : size(s), dir(d), dir_next(dn) {}
 
-    // primitive size
+    /// @brief Size/length of the primitive in pixels
     ushort size;
-    // primitive direction
+
+    /// @brief Primary direction of pixels in this primitive
     char dir;
-    // direction change to next primitive
+
+    /// @brief Direction change from this primitive to the next
     char dir_next;
 
-    //! match PatternPrimitive by tolerance
+    /// @brief Match this primitive against another with tolerance.
+    /// Matches if directions are the same and sizes are within tolerance.
+    /// @param rhs Right-hand side primitive to compare
+    /// @param tol Tolerance for size difference
+    /// @return True if primitives match within tolerance
     inline bool match(const Primitive& rhs, int tol) const {
       return dir == rhs.dir && (size == rhs.size || std::abs(size - rhs.size) <= tol);
     }
 
-    //! compare operator
+    /// @brief Check equality of two primitives.
+    /// Primitives are equal if size, direction, and direction change are all equal.
+    /// @param rhs Right-hand side primitive to compare
+    /// @return True if primitives are exactly equal
     inline bool operator==(const Primitive& rhs) const {
       return size == rhs.size && dir == rhs.dir && dir_next == rhs.dir_next;
     }
 
+    /// @brief Check inequality of two primitives.
+    /// @param rhs Right-hand side primitive to compare
+    /// @return True if primitives are not equal
     inline bool operator!=(const Primitive& rhs) const { return !operator==(rhs); }
   };
 
@@ -113,8 +144,16 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
   std::vector<Primitive> primitives_;
 
  public:
+  /// @typedef PrimitiveVector
+  /// @brief Vector of primitive pattern elements
   typedef std::vector<Primitive> PrimitiveVector;
 
+  /// @brief Construct a pattern-based edge detector.
+  /// @param minPix Minimum number of pixels for a valid segment (default: 10)
+  /// @param maxGap Maximum allowed gap in pixels when connecting edges (default: 3)
+  /// @param magMul Magnitude multiplier for gap penalty (default: 3.0)
+  /// @param magTh Magnitude threshold for edge acceptance (default: 5.0)
+  /// @param pat_tol Tolerance for pattern matching (default: 2)
   EsdPattern(int minPix = 10, int maxGap = 3, float magMul = 3, float magTh = 5, int pat_tol = 2)
       : EsdBasePattern<MT, index_type>(),
         dir_(),
@@ -275,14 +314,24 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
   const EdgeSegmentVector& patternSegments() const { return patternSegments_; }
 
  private:
+  /// @brief Internal pattern container linking a primitive with its segment range.
+  /// Used internally to track extracted primitives and their pixel indices during processing.
   struct Pattern {
+    /// @brief Construct a pattern container.
+    /// @param b Beginning index in patterns_ vector
+    /// @param e Ending index in patterns_ vector
     Pattern(size_t b = 0, size_t e = 0) : prim(), seg(b, e) {}
 
-    Primitive prim;
-    EdgeSegment seg;
+    Primitive prim;   ///< Primitive pattern descriptor
+    EdgeSegment seg;  ///< Segment range referencing pixels in this pattern
   };
 
-  // check for vaild adjacent pixel by given direction and retun new index
+  /// @brief Check if an adjacent pixel is valid and unvisited in specified direction.
+  /// Validates neighbor availability and direction compatibility. May enqueue new seed
+  /// if direction mismatch detected.
+  /// @param idx Current pixel index
+  /// @param dir Desired movement direction
+  /// @return Adjacent pixel index if valid, 0 otherwise
   inline index_type checkAdjacent(index_type idx, char dir) {
     const int dirIndex = static_cast<int>(dir);
     const ptrdiff_t offset = pdmap[dirIndex];

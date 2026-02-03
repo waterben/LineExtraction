@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file nfa.hpp
+/// @brief Number of False Alarms (NFA) validation for edge segments.
+/// Provides statistical tests (contrast, binomial) to validate edge segments based on
+/// the number of expected false alarms under random distribution assumptions.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
