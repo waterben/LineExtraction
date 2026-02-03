@@ -1,3 +1,14 @@
+/// @file motion_match_test.cpp
+/// @brief Motion-based line matching for video sequences.
+///
+/// Demonstrates line matching between consecutive video frames:
+/// - Motion-based candidate filtering (MotionLineFilter)
+/// - LBD descriptor matching with motion constraints
+/// - Temporal consistency enforcement
+///
+/// @usage ./motion_match_test [video_path]
+/// @param video_path Optional path to video file
+
 #include <geometry/draw.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>
 #include <lfd/LRDescriptor.hpp>

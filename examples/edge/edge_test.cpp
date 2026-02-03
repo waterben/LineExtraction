@@ -1,3 +1,15 @@
+/// @file edge_test.cpp
+/// @brief Comprehensive edge detection demonstration with various linking strategies.
+///
+/// Demonstrates the complete edge detection pipeline including gradient computation,
+/// Non-Maximum Suppression (NMS), and edge segment linking using different strategies:
+/// - Simple linking (EsdSimple)
+/// - Continuity-optimized linking (EsdLinking)
+/// - Pattern-based detection (EsdPattern)
+///
+/// @usage ./edge_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <geometry/draw.hpp>
 #include <imgproc/derivative_gradient.hpp>

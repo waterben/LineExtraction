@@ -1,3 +1,16 @@
+/// @file lsd_cc_test.cpp
+/// @brief Connected component-based LSD demonstration.
+///
+/// Demonstrates the LsdCC algorithm which uses connected component
+/// analysis on edge maps for line segment detection:
+/// - Edge map generation from gradients
+/// - Connected component labeling
+/// - Line fitting within components
+/// - Comparison with other LSD variants
+///
+/// @usage ./lsd_cc_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <geometry/draw.hpp>
 #include <imgproc/image_operator.hpp>
 #include <lsd/lsd_burns.hpp>

@@ -1,3 +1,14 @@
+/// @file derivative_filters.cpp
+/// @brief Sobel and Laplacian filter visualization for thesis figures.
+///
+/// Generates derivative filter output images for thesis Chapter 2:
+/// - Sobel gradient magnitude visualization
+/// - Laplacian response visualization
+/// - Writes results to ./results/chapter_02/
+///
+/// @usage ./derivative_filters
+/// @author Benjamin Wassermann
+
 // C by Benjamin Wassermann
 
 #include <imgproc/derivative_gradient.hpp>

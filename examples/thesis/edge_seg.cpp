@@ -1,3 +1,14 @@
+/// @file edge_seg.cpp
+/// @brief Edge segmentation figure generation for thesis.
+///
+/// Generates edge segmentation visualizations:
+/// - Different edge linking strategies comparison
+/// - NFA-validated vs unvalidated segments
+/// - Color-coded segment visualization
+///
+/// @usage ./edge_seg [options]
+/// @see EvalApp for command-line options
+
 #include <edge/draw.hpp>
 #include <edge/nfa.hpp>
 #include <edge/nms.hpp>

@@ -1,3 +1,13 @@
+/// @file steer_test.cpp
+/// @brief Steerable filter response visualization for thesis.
+///
+/// Generates steerable filter visualizations:
+/// - First derivative Gaussian (edge detection)
+/// - Second derivative Gaussian (line detection)
+/// - Interactive rotation of filter kernels
+///
+/// @usage ./steer_test
+
 #include <imgproc/steerable.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>

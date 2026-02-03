@@ -1,3 +1,15 @@
+/// @file step_line_test.cpp
+/// @brief Step and line edge model analysis.
+///
+/// Compares detection of step edges vs line (ridge) edges:
+/// - Gradient-based step edge detection
+/// - Second derivative line edge detection
+/// - Quadrature filter responses for both models
+/// - SUSAN detector behavior on different edge types
+///
+/// @usage ./step_line_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>

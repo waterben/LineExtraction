@@ -1,3 +1,15 @@
+/// @file dsc_test.cpp
+/// @brief Descriptor creation and distance computation demonstration.
+///
+/// Demonstrates Line-Region (LR) descriptor creation and matching:
+/// - LRDescriptor for combined line and region features
+/// - Stereo line filtering to reduce candidate matches
+/// - Descriptor distance computation and matching
+///
+/// @usage ./dsc_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+
 #include <geometry/draw.hpp>
 #include <lfd/FeatureMatcher.hpp>
 #include <lfd/LRDescriptor.hpp>

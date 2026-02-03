@@ -1,3 +1,14 @@
+/// @file stereo_test.cpp
+/// @brief Stereo vision geometry and triangulation.
+///
+/// Demonstrates stereo geometry operations:
+/// - Stereo camera calibration and rectification
+/// - Point and line triangulation
+/// - Epipolar geometry constraints
+/// - 3D reconstruction visualization
+///
+/// @usage ./stereo_test
+
 #include <geometry/draw.hpp>
 #include <geometry/stereocv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

@@ -1,3 +1,17 @@
+/// @file zc_test.cpp
+/// @brief Zero-crossing edge detection with Laplacian operators.
+///
+/// Demonstrates zero-crossing based edge detection using various
+/// Laplacian operators:
+/// - Simple Laplacian (3x3)
+/// - Laplacian of Gaussian (LoG)
+/// - Quadrature filter-based Laplacian
+///
+/// Compares detection quality and performance across methods.
+///
+/// @usage ./zc_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/zc.hpp>
 #include <imgproc/image_operator.hpp>
 #include <imgproc/laplace.hpp>

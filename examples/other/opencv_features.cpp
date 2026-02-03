@@ -1,3 +1,16 @@
+/// @file opencv_features.cpp
+/// @brief OpenCV feature detector integration.
+///
+/// Demonstrates OpenCV feature detection and matching:
+/// - AKAZE feature detector
+/// - Feature matching with nearest neighbor ratio
+/// - RANSAC-based outlier rejection
+/// - Real-time object tracking in video
+///
+/// @usage ./opencv_features [video_path]
+/// @param video_path Optional path to video file (default: webcam)
+/// @note Requires OpenCV with xfeatures2d module.
+
 #include "stats.h"  // Stats structure definition
 #include "utils.h"  // Drawing and printing functions
 #include <opencv2/features2d.hpp>

@@ -1,3 +1,14 @@
+/// @file nfa_test.cpp
+/// @brief Number of False Alarms (NFA) validation for edge segments.
+///
+/// Demonstrates the NFA-based statistical validation of detected edge segments.
+/// Uses the Helmholtz principle to filter out edge segments that could have
+/// occurred by chance in a random image. Displays validated segments with
+/// their NFA scores and benchmarks validation performance.
+///
+/// @usage ./nfa_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>

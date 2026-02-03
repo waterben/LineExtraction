@@ -1,3 +1,16 @@
+/// @file cv3_linematching_test.cpp
+/// @brief OpenCV line descriptor matching comparison.
+///
+/// Compares line matching using OpenCV's line_descriptor module with
+/// custom LBD (Line Band Descriptor) implementation:
+/// - OpenCV BinaryDescriptor and BinaryDescriptorMatcher
+/// - Custom LBD descriptor creation and matching
+/// - Performance and accuracy comparison
+///
+/// @usage ./cv3_linematching_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+/// @note Requires OpenCV 3.x or higher with line_descriptor module.
 
 #include "opencv2/core/version.hpp"
 #if CV_MAJOR_VERSION > 2

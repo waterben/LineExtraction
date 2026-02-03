@@ -1,3 +1,15 @@
+/// @file fft_test.cpp
+/// @brief FFT and periodic FFT for frequency domain analysis.
+///
+/// Demonstrates Fast Fourier Transform operations:
+/// - Standard FFT computation (fft2)
+/// - Periodic FFT (perfft2) for reduced boundary artifacts
+/// - FFT shift for centered spectrum visualization
+/// - Inverse FFT reconstruction
+///
+/// @usage ./fft_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <utility/matlab_helpers.hpp>

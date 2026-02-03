@@ -1,3 +1,15 @@
+/// @file test_dlib.cpp
+/// @brief dlib machine learning library integration.
+///
+/// Demonstrates dlib optimization algorithms:
+/// - Conjugate gradient method
+/// - BFGS (Broyden-Fletcher-Goldfarb-Shanno)
+/// - L-BFGS (Limited-memory BFGS)
+/// - BOBYQA (Bound Optimization BY Quadratic Approximation)
+///
+/// @usage ./test_dlib
+/// @note Requires dlib library.
+
 // The contents of this file are in the public domain. See LICENSE_FOR_EXAMPLE_PROGRAMS.txt
 /*
 

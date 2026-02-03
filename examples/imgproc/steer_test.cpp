@@ -1,3 +1,13 @@
+/// @file steer_test.cpp
+/// @brief Steerable filters for oriented feature detection.
+///
+/// Demonstrates steerable Gaussian derivative filters:
+/// - First derivative steerable filters (edge detection)
+/// - Second derivative steerable filters (line detection)
+/// - Interactive rotation visualization
+///
+/// @usage ./steer_test
+
 #include <imgproc/steerable.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>

@@ -1,3 +1,14 @@
+/// @file line_test.cpp
+/// @brief Line primitive operations and transformations.
+///
+/// Demonstrates 2D line primitive operations:
+/// - Line construction from points and angles
+/// - Coordinate system transformations (world <-> line)
+/// - Distance calculations and projections
+/// - Intersection computations
+///
+/// @usage ./line_test
+
 #include <geometry/line.hpp>
 #include <imgproc/rcmg.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

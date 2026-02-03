@@ -1,3 +1,19 @@
+/// @file video_match_test.cpp
+/// @brief Video line matching with motion descriptors.
+///
+/// Comprehensive video line matching demonstration:
+/// - Stereo video processing with rectification
+/// - Motion-based line filtering (MotionLineFilter)
+/// - Motion descriptor for temporal consistency
+/// - StereoLineMatcher for cross-view matching
+/// - 3D line triangulation from stereo matches
+///
+/// @usage ./video_match_test [intrinsic_file] [extrinsic_file] [video_left] [video_right]
+/// @param intrinsic_file Camera intrinsic calibration file
+/// @param extrinsic_file Camera extrinsic calibration file
+/// @param video_left Left camera video file
+/// @param video_right Right camera video file
+
 #include <geometry/draw.hpp>
 #include <geometry/line3.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>

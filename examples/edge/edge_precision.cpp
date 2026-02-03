@@ -1,3 +1,16 @@
+/// @file edge_precision.cpp
+/// @brief Sub-pixel edge localization precision evaluation.
+///
+/// Evaluates the precision of various edge detection and localization methods
+/// using synthetic ground truth geometry (hexagon). Compares:
+/// - NMS-based methods (Sobel, Scharr, RCMG, Phase Congruency)
+/// - Zero-crossing methods (Laplacian, LoG)
+/// - Sub-pixel estimation techniques (Linear, Quadratic, Gaussian)
+///
+/// Results are written to ./results/ directory for analysis.
+///
+/// @usage ./edge_precision
+
 #include <edge/nms.hpp>
 #include <edge/spe.hpp>
 #include <edge/zc.hpp>

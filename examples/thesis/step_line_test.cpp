@@ -1,3 +1,14 @@
+/// @file step_line_test.cpp
+/// @brief Step/line edge model illustration for thesis.
+///
+/// Compares step edge vs line (ridge) edge detection:
+/// - Gradient response on step edges
+/// - Second derivative response on line edges
+/// - Quadrature filter behavior on both models
+///
+/// @usage ./step_line_test [image_path]
+/// @param image_path Optional path to input image
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>

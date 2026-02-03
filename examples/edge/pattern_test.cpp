@@ -1,3 +1,14 @@
+/// @file pattern_test.cpp
+/// @brief Pattern-based edge segment detection demonstration.
+///
+/// Demonstrates the EsdPattern detector which groups edge pixels into
+/// patterns (consistent edge directions) before linking into segments.
+/// This approach is more robust to noise and provides better
+/// segmentation at junctions and corners.
+///
+/// @usage ./pattern_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>

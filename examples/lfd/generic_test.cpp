@@ -1,3 +1,15 @@
+/// @file generic_test.cpp
+/// @brief Generic feature matching framework usage.
+///
+/// Demonstrates the generic descriptor and matcher interfaces:
+/// - GenericDescriptor for flexible descriptor types
+/// - FeatureMatcher template for type-safe matching
+/// - Custom descriptor distance functions
+///
+/// @usage ./generic_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+
 #include <geometry/draw.hpp>
 #include <lfd/FeatureMatcher.hpp>
 #include <lfd/GenericDescriptor.hpp>

@@ -1,3 +1,16 @@
+/// @file video_cv_matching_test.cpp
+/// @brief Video line tracking with OpenCV integration.
+///
+/// Demonstrates video line tracking using OpenCV's line_descriptor:
+/// - Frame-by-frame LSD detection
+/// - OpenCV BinaryDescriptor matching
+/// - Motion descriptor for temporal filtering
+/// - Visualization of tracked lines across frames
+///
+/// @usage ./video_cv_matching_test [video_path]
+/// @param video_path Optional path to video file
+/// @note Requires OpenCV with line_descriptor module.
+
 #include <geometry/draw.hpp>
 #include <lfd/MotionDescriptor.hpp>
 #include <lsd/lsd_cc.hpp>
