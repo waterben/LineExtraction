@@ -184,14 +184,24 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     // pattern control flags
     uchar flags{};
 
+    //! @brief Get the starting position in the global point vector.
+    //! @return The index of the first point in this pattern.
     inline size_t begpos() const { return beg; }
 
+    //! @brief Get the ending position in the global point vector.
+    //! @return The index past the last point in this pattern.
     inline size_t endpos() const { return beg + size; }
 
+    //! @brief Check if this pattern is marked for reversal.
+    //! @return True if the CP_PATTERN_REVERSE flag is set.
     inline bool reverse() const { return flags & CP_PATTERN_REVERSE; }
 
+    //! @brief Check if this pattern should be terminated (end of line).
+    //! @return True if the CP_PATTERN_TERMINATE flag is set.
     inline bool terminate() const { return (flags & CP_PATTERN_TERMINATE) != 0; }
 
+    //! @brief Check if this pattern should be ignored during processing.
+    //! @return True if the CP_PATTERN_IGNORE flag is set.
     inline bool ignore() const { return (flags & CP_PATTERN_IGNORE) != 0; }
   };
 
@@ -203,6 +213,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     const PatternVector* patterns_;
 
    public:
+    //! @brief Construct line data from pattern positions and point vector.
+    //! @param b Starting position in the pattern list.
+    //! @param s Number of patterns in this line.
+    //! @param po Pointer to the global point vector.
+    //! @param pa Pointer to the global pattern vector.
     LineData(size_t b = 0, unsigned int s = 0, const PointVector* po = 0, const PatternVector* pa = 0)
         : points_(po), patterns_(pa), pat_beg(b), pat_size(s) {}
 
@@ -211,67 +226,113 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     // number of patterns
     unsigned int pat_size{};
 
+    //! @brief Get the starting position in the global pattern vector.
+    //! @return The index of the first pattern in this line.
     inline size_t pattern_begpos() const { return pat_beg; }
 
+    //! @brief Get the ending position in the global pattern vector.
+    //! @return The index past the last pattern in this line.
     inline size_t pattern_endpos() const { return pat_beg + pat_size; }
 
+    //! @brief Get the number of patterns in this line data.
+    //! @return The size of the pattern range (pat_size).
     inline size_t pattern_size() const { return pat_size; }
 
+    //! @brief Get iterator to the first pattern in this line data.
+    //! @return Constant iterator pointing to the beginning of the pattern range.
     inline typename PatternVector::const_iterator pattern_begin() const {
       return patterns_->cbegin() + pattern_begpos();
     }
 
+    //! @brief Get iterator to the position past the last pattern in this line data.
+    //! @return Constant iterator pointing to the end of the pattern range.
     inline typename PatternVector::const_iterator pattern_end() const { return patterns_->cbegin() + pattern_endpos(); }
 
+    //! @brief Get reverse iterator to the first pattern (from end) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse beginning of the pattern range.
     inline typename PatternVector::const_reverse_iterator pattern_rbegin() const {
       return PatternVector::const_reverse_iterator(pattern_end());
     }
 
+    //! @brief Get reverse iterator to the position past the last pattern (from start) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse end of the pattern range.
     inline typename PatternVector::const_reverse_iterator pattern_rend() const {
       return PatternVector::const_reverse_iterator(pattern_begin());
     }
 
+    //! @brief Get the first pattern in this line data.
+    //! @return Constant reference to the first pattern.
     inline const Pattern& pattern_front() const { return (*patterns_)[pattern_begpos()]; }
 
+    //! @brief Get the last pattern in this line data.
+    //! @return Constant reference to the last pattern.
     inline const Pattern& pattern_back() const { return (*patterns_)[pattern_endpos() - 1]; }
 
+    //! @brief Get a copy of all patterns in this line data.
+    //! @return A new PatternVector containing all patterns from pattern_begin() to pattern_end().
     inline PatternVector patterns() const { return PatternVector(pattern_begin(), pattern_end()); }
 
+    //! @brief Check if this line is marked for reversal.
+    //! @return True if the first pattern has the reverse flag set.
     inline bool reverse() const { return pattern_front().reverse(); }
 
+    //! @brief Get the number of points in this line data.
+    //! @return The total point span covered by all patterns.
     inline size_t size() const { return pattern_back().endpos() - pattern_front().begpos(); }
 
+    //! @brief Get the starting position in the global point vector.
+    //! @return The index of the first point in this line.
     inline size_t begpos() const { return pattern_front().begpos(); }
 
+    //! @brief Get the ending position in the global point vector.
+    //! @return The index past the last point in this line.
     inline size_t endpos() const { return pattern_back().endpos(); }
 
+    //! @brief Get iterator to the first point in this line data.
+    //! @return Constant iterator pointing to the beginning of the point range.
     inline typename PointVector::const_iterator begin() const {
       return points_->cbegin() + static_cast<std::ptrdiff_t>(begpos());
     }
 
+    //! @brief Get iterator to the position past the last point in this line data.
+    //! @return Constant iterator pointing to the end of the point range.
     inline typename PointVector::const_iterator end() const {
       return points_->cbegin() + static_cast<std::ptrdiff_t>(endpos());
     }
 
+    //! @brief Get reverse iterator to the first point (from end) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse beginning of the point range.
     inline typename PointVector::const_reverse_iterator rbegin() const {
       return PointVector::const_reverse_iterator(end());
     }
 
+    //! @brief Get reverse iterator to the position past the last point (from start) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse end of the point range.
     inline typename PointVector::const_reverse_iterator rend() const {
       return PointVector::const_reverse_iterator(begin());
     }
 
+    //! @brief Get the first point in this line data.
+    //! @return Constant reference to the first point.
     inline const PT& front() const { return (*points_)[begpos()]; }
 
+    //! @brief Get the last point in this line data.
+    //! @return Constant reference to the last point.
     inline const PT& back() const { return (*points_)[endpos() - 1]; }
 
-
+    //! @brief Get a copy of all points in this line data in original order.
+    //! @return A new PointVector containing all points from begin() to end().
     inline PointVector points() const { return PointVector(begin(), end()); }
 
+    //! @brief Get a copy of all points in this line data, respecting the reverse flag.
+    //! @return A new PointVector with points in forward or reverse order based on the reverse() flag.
     inline PointVector ordered_points() const {
-      return PointVector(reverse() ? rbegin() : begin(), reverse ? rend() : end());
+      return PointVector(reverse() ? rbegin() : begin(), reverse() ? rend() : end());
     }
 
+    //! @brief Calculate the average magnitude of gradient along this line.
+    //! @param mag The magnitude matrix from gradient computation.
+    //! @return The average magnitude normalized by line size. Returns 0 if line is empty.
     inline FT magnitude(const cv::Mat& mag) const {
       FT m = 0;
       for_each(begin(), end(), [&](const PT& p) { m += sqrt(static_cast<FT>(mag.at<int>(p))); });
@@ -321,49 +382,90 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     this->value(options);
   }
 
+  //! @brief Get or set the minimum number of supporting pixels for line region detection.
+  //! @param mp The new minimum pixels value, or Value::NAV() to only query.
+  //! @return The current minimum pixels value.
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;
   }
 
+  //! @brief Get the minimum number of supporting pixels for line region detection.
+  //! @return The current minimum pixels value. Typical range [5..20].
   int minPixels() const { return min_pix_; }
 
+  //! @brief Set the minimum number of supporting pixels for line region detection.
+  //! @param mp The new minimum pixels value. Must be > 1. Typical range [5..20].
   void minPixels(int mp) { min_pix_ = mp; }
 
+  //! @brief Get or set the maximum gap search distance for connecting nearby pixels.
+  //! @param mg The new maximum gap value, or Value::NAV() to only query.
+  //! @return The current maximum gap value.
   Value valueMaxGap(const Value& mg = Value::NAV()) {
     if (mg.type()) maxGap(mg.getInt());
     return max_gap_;
   }
 
+  //! @brief Get the maximum gap search distance for connecting nearby pixels.
+  //! @return The current maximum gap value. Typical range [0..X].
   int maxGap() const { return max_gap_; }
 
+  //! @brief Set the maximum gap search distance for connecting nearby pixels.
+  //! @param mg The new maximum gap value. Must be >= 0. Typical range [0..X].
   void maxGap(int mg) { max_gap_ = mg; }
 
+  //! @brief Get or set the error distance threshold for pattern merge/split operations.
+  //! @param d The new distance value in pixels, or Value::NAV() to only query.
+  //! @return The current error distance value.
   Value valueDistance(const Value& d = Value::NAV()) {
     if (d.type()) distance(d.get<FT>());
     return err_dist_;
   }
 
+  //! @brief Get the error distance threshold for pattern merge/split operations.
+  //! @return The current error distance value. Distance in pixels. Typical range > 0.
   FT distance() const { return err_dist_; }
 
+  //! @brief Set the error distance threshold for pattern merge/split operations.
+  //! @param d The new error distance value in pixels. Must be > 0.
   void distance(FT d) { err_dist_ = d; }
 
+  //! @brief Get or set the pattern tolerance for primitive matching.
+  //! @param pt The new pattern tolerance value, or Value::NAV() to only query.
+  //! @return The current pattern tolerance value.
+  //! Pattern tolerance indicates how many pixels primitives can change before a new pattern is detected.
   Value valueTolerance(const Value& pt = Value::NAV()) {
     if (pt.type()) tolerance(pt.getInt());
     return pat_tol_;
   }
 
+  //! @brief Get the pattern tolerance for primitive matching.
+  //! @return The current pattern tolerance value. Indicates allowed pixel number changes for primitives. Typical range
+  //! [0..X].
   int tolerance() const { return pat_tol_; }
 
+  //! @brief Set the pattern tolerance for primitive matching.
+  //! @param pt The new pattern tolerance value. Must be >= 0. Typical range [0..X].
   void tolerance(int pt) { pat_tol_ = pt; }
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - CP_FIND_NEAR_COMPLEX: Use complex decision algorithm to determine near pixels
+  //! - CP_CORNER_RULE: Enable corner rule for detecting sharp edges
+  //! - CP_MERGE: Use merge mode instead of split mode (faster but less precise)
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
   using LsdCCBase<FT, LPT, PT, GRAD, FIT>::detect;
@@ -376,8 +478,12 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   using LsdCCBase<FT, LPT, PT, GRAD, FIT>::points;
   using LsdCCBase<FT, LPT, PT, GRAD, FIT>::indexes;
 
+  //! @brief Get the pattern vector containing all detected patterns.
+  //! @return Constant reference to vector of Pattern structures.
   const PatternVector& patternData() const { return patterns_; }
 
+  //! @brief Get edge segments for all detected patterns.
+  //! @return Vector of EdgeSegment structures representing all patterns as edge segments.
   EdgeSegmentVector patterns() const {
     EdgeSegmentVector ret;
     ret.resize(patterns_.size());
@@ -386,8 +492,12 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     return ret;
   }
 
+  //! @brief Get the line data segments detected in the image.
+  //! @return Constant reference to vector of LineData structures for detected line segments.
   const LineDataVector& lineDataSegments() const { return lineData_; }
 
+  //! @brief Get edge segments that support each detected line segment.
+  //! @return Vector of EdgeSegment structures representing the supporting edge segments for line data.
   EdgeSegmentVector lineSupportSegments() const {
     EdgeSegmentVector ret;
     ret.resize(lineData_.size());
@@ -397,6 +507,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     return ret;
   }
 
+  //! @brief Get edge segments for all detected line data.
+  //! @return Vector of EdgeSegment structures representing all line data as edge segments.
   EdgeSegmentVector segments() const {
     EdgeSegmentVector ret;
     if (patterns_.empty()) return ret;

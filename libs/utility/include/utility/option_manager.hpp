@@ -136,6 +136,5 @@ class OptionManager {
   /// @param value New value.
   virtual void setOptionImpl(const std::string& /*name*/, double /*value*/) {};
 };
-};
 
 }  // namespace lsfm

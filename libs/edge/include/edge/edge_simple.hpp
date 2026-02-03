@@ -339,25 +339,21 @@ class EsdSimple : public EsdBase<MT, index_type> {
     return nidx ? nidx : findNear(idx, dir);
   }
 #endif
-  char dir = pdir_[idx];
-  index_type nidx = checkAdjacent(idx, dir);
-  return nidx ? nidx : findNear(idx, dir);
-}
-#endif
-void extractSegment(index_type idx) {
-  index_type tmp;
-  while (idx) {
+
+  void extractSegment(index_type idx) {
+    index_type tmp;
+    while (idx) {
 #ifdef DRAW_MODE
-    draw.ptr<cv::Vec3b>()[idx] = col;
-    cv::imshow("draw", draw);
-    cv::waitKey(1);
+      draw.ptr<cv::Vec3b>()[idx] = col;
+      cv::imshow("draw", draw);
+      cv::waitKey(1);
 #endif
-    points_.push_back(idx);
-    tmp = idx;
-    idx = findAdjacent(idx);
-    pdir_[tmp] = -2;
+      points_.push_back(idx);
+      tmp = idx;
+      idx = findAdjacent(idx);
+      pdir_[tmp] = -2;
+    }
   }
-}
 };
 
 }  // namespace lsfm

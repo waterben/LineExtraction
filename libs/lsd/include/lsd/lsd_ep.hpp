@@ -139,13 +139,22 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
     this->value(options);
   }
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - EP_USE_PRECISE_SPE: Use precise sub-pixel estimation for endpoint localization
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
   using LsdBase<FT, LPT>::detect;
@@ -213,8 +222,12 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
     return imageData_;
   }
 
+  //! @brief Get the patterns detected during edge pattern detection.
+  //! @return Constant reference to vector of edge segments representing patterns.
   const EdgeSegmentVector& patterns() const { return edge_.patterns(); }
 
+  //! @brief Get the edge segments detected in the image.
+  //! @return Constant reference to vector of edge segments.
   const EdgeSegmentVector& segments() const { return edge_.segments(); }
 
   virtual const EdgeSegmentVector& lineSupportSegments() const final { return segments_; }
@@ -223,20 +236,36 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
 
   virtual const IndexVector& indexes() const final { return edge_.points(); }
 
+  //! @brief Get access to the edge source containing gradient information.
+  //! @return Reference to the edge source providing gradient and edge maps.
   ESOURCE& edgeSource() { return esource_; }
 
+  //! @brief Get const access to the edge source containing gradient information.
+  //! @return Constant reference to the edge source providing gradient and edge maps.
   const ESOURCE& edgeSource() const { return esource_; }
 
+  //! @brief Get access to the edge detector using edge patterns.
+  //! @return Reference to the pattern-based edge detector.
   Edge& edge() { return edge_; }
 
+  //! @brief Get const access to the edge detector using edge patterns.
+  //! @return Constant reference to the pattern-based edge detector.
   const Edge& edge() const { return edge_; }
 
+  //! @brief Get access to the line segment splitter for refining detections.
+  //! @return Reference to the split algorithm object.
   SPLIT& split() { return split_; }
 
+  //! @brief Get const access to the line segment splitter for refining detections.
+  //! @return Constant reference to the split algorithm object.
   const SPLIT& split() const { return split_; }
 
+  //! @brief Get access to the line fitting algorithm.
+  //! @return Reference to the line fitting object.
   FIT& fit() { return fit_; }
 
+  //! @brief Get const access to the line fitting algorithm.
+  //! @return Constant reference to the line fitting object.
   const FIT& fit() const { return fit_; }
 };
 

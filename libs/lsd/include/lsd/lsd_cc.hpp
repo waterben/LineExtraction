@@ -130,35 +130,56 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     bool reverse{};
 
     // number of supporting points
+    //! @brief Get the number of points in this line data.
+    //! @return The size of the point range (endpos - begpos).
     inline size_t size() const { return p_end - p_beg; }
 
+    //! @brief Get the starting position in the global point vector.
+    //! @return The index of the first point in this line data.
     inline size_t begpos() const { return p_beg; }
 
+    //! @brief Get the ending position in the global point vector.
+    //! @return The index past the last point in this line data.
     inline size_t endpos() const { return p_end; }
 
+    //! @brief Get iterator to the first point in this line data.
+    //! @return Constant iterator pointing to the beginning of the point range.
     inline typename PointVector::const_iterator begin() const {
       return points_->cbegin() + static_cast<std::ptrdiff_t>(p_beg);
     }
 
+    //! @brief Get iterator to the position past the last point in this line data.
+    //! @return Constant iterator pointing to the end of the point range.
     inline typename PointVector::const_iterator end() const {
       return points_->cbegin() + static_cast<std::ptrdiff_t>(p_end);
     }
 
+    //! @brief Get reverse iterator to the first point (from end) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse beginning of the point range.
     inline typename PointVector::const_reverse_iterator rbegin() const {
       return PointVector::const_reverse_iterator(end());
     }
 
+    //! @brief Get reverse iterator to the position past the last point (from start) in this line data.
+    //! @return Constant reverse iterator pointing to the reverse end of the point range.
     inline typename PointVector::const_reverse_iterator rend() const {
       return PointVector::const_reverse_iterator(begin());
     }
 
+    //! @brief Get the first point in this line data.
+    //! @return Constant reference to the first point.
     inline const PT& front() const { return (*points_)[begpos()]; }
 
+    //! @brief Get the last point in this line data.
+    //! @return Constant reference to the last point.
     inline const PT& back() const { return (*points_)[endpos() - 1]; }
 
-
+    //! @brief Get a copy of all points in this line data in original order.
+    //! @return A new PointVector containing all points from begin() to end().
     inline PointVector points() const { PointVector(begin(), end()); }
 
+    //! @brief Get a copy of all points in this line data, respecting the reverse flag.
+    //! @return A new PointVector with points in forward or reverse order based on the reverse flag.
     inline PointVector ordered_points() const {
       return reverse ? PointVector(rbegin(), rend()) : PointVector(begin(), end());
     }
@@ -224,52 +245,87 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     init();
   }
 
+  //! @brief Get or set the minimum number of supporting pixels for line segment detection.
+  //! @param mp The new minimum pixels value, or Value::NAV() to only query.
+  //! @return The current minimum pixels value.
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;
   }
 
+  //! @brief Get the minimum number of supporting pixels for line segment detection.
+  //! @return The current minimum pixels value. Typical range [5..20].
   int minPixels() const { return min_pix_; }
 
+  //! @brief Set the minimum number of supporting pixels for line segment detection.
+  //! @param mp The new minimum pixels value. Must be > 1. Typical range [5..20].
   void minPixels(int mp) { min_pix_ = mp; }
 
+  //! @brief Get or set the maximum gap search distance for connecting nearby pixels.
+  //! @param mg The new maximum gap value, or Value::NAV() to only query.
+  //! @return The current maximum gap value.
   Value valueMaxGap(const Value& mg = Value::NAV()) {
     if (mg.type()) maxGap(mg.getInt());
     return max_gap_;
   }
 
+  //! @brief Get the maximum gap search distance for connecting nearby pixels.
+  //! @return The current maximum gap value. Typical range [0..X].
   int maxGap() const { return max_gap_; }
 
+  //! @brief Set the maximum gap search distance for connecting nearby pixels.
+  //! @param mg The new maximum gap value. Must be >= 0. Typical range [0..X].
   void maxGap(int mg) { max_gap_ = mg; }
 
+  //! @brief Get or set the error distance threshold for segment splitting.
+  //! @param d The new distance value in pixels, or Value::NAV() to only query.
+  //! @return The current error distance value.
   Value valueDistance(const Value& d = Value::NAV()) {
     if (d.type()) distance(d.get<FT>());
     return err_dist_;
   }
 
+  //! @brief Get the error distance threshold for segment splitting.
+  //! @return The current error distance value. Distance in pixels. Typical range > 0.
   FT distance() const { return err_dist_; }
 
+  //! @brief Set the error distance threshold for segment splitting.
+  //! @param d The new error distance value in pixels. Must be > 0.
   void distance(FT d) { err_dist_ = d; }
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - CC_FIND_NEAR_COMPLEX: Use complex decision algorithm to determine near pixels
+  //! - CC_CORNER_RULE: Enable corner rule for detecting sharp edges
+  //! - CC_ADD_THICK_PIXELS: Add pixel neighbors for "thick" lines (may increase precision but also false splits)
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::detect;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::lines;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::lineSegments;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::endPoints;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::imageDataDescriptor;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::imageData;
+  //! @brief Access the gradient object for reading or modification.
+  //! @return Reference to the gradient object used internally for edge detection.
+  GRAD& grad() { return grad_; }
 
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::points;
-  using LsdCCBase<FT, LPT, PT, GRAD, FIT>::indexes;
+  //! @brief Access the gradient object for reading (const version).
+  //! @return Constant reference to the gradient object used internally for edge detection.
+  const GRAD& grad() const { return grad_; }
 
+  //! @brief Detect connected component line segments in the input image.
+  //! Processes the image through connected components analysis, splitting and merging segments,
+  //! then converts results to line data. Internally calls preprocess(), computeSeg(), splitSeg(),
+  //! and computeLines() in sequence.
+  //! @param image Input image for line detection (single-channel grayscale or color).
   virtual void detect(const cv::Mat& image) final {
     img_ = image;
     CV_Assert(!img_.empty());
@@ -291,9 +347,12 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     computeLines();
   }
 
-
+  //! @brief Get the line data segments detected in the image.
+  //! @return Constant reference to vector of LineData structures for detected line segments.
   const LineDataVector& lineDataSegments() const { return segments_; }
 
+  //! @brief Get edge segments that support each detected line segment.
+  //! @return Vector of EdgeSegment structures representing the supporting edge segments for line data.
   EdgeSegmentVector lineSupportSegments() const {
     EdgeSegmentVector ret;
     ret.resize(segments_.size());
@@ -303,6 +362,8 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     return ret;
   }
 
+  //! @brief Get edge segments for all detected line data.
+  //! @return Vector of EdgeSegment structures representing all line data as edge segments.
   EdgeSegmentVector segments() const {
     EdgeSegmentVector ret;
     ret.resize(lineData_.size());
@@ -310,10 +371,6 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       ret[i] = EdgeSegment(lineData_[i].begpos(), lineData_[i].endpos(), lineData_[i].reverse ? ES_REVERSE : ES_NONE);
     return ret;
   }
-
-  GRAD& grad() { return grad_; }
-
-  const GRAD& grad() const { return grad_; }
 
  private:
   // line segment vector

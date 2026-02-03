@@ -52,21 +52,38 @@ LS* DetectLinesByED(unsigned char* srcImg, int width, int height, int* pNoLS);
 
 namespace lsfm {
 
+/// @brief Wrapper for the original ED (Edge Drawing) algorithm.
+/// This class provides a simple wrapper around the classic Edge Drawing algorithm,
+/// which is the basis for the more advanced EDLines algorithm.
+/// This implementation calls the C-based ED detection library.
+///
+/// **Note:** Deprecated in favor of LsdEDLZ (EDLines) which provides better features.
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
 template <class FT, template <class> class LPT = Vec2>
 class LsdEDTA : public LsdBase<FT, LPT> {
  public:
-  typedef FT float_type;
-  typedef LPT<FT> line_point;
-  typedef typename LsdBase<FT, LPT>::Line Line;
-  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
+  typedef FT float_type;                                                   ///< Floating-point type
+  typedef LPT<FT> line_point;                                              ///< Line point type
+  typedef typename LsdBase<FT, LPT>::Line Line;                            ///< Line type
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;                ///< Vector of lines
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;              ///< Line segment type
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;                  ///< Image data type
 
+  /// @brief Create an ED (Edge Drawing) detector.
+  /// @deprecated Use LsdEDLZ (EDLines) instead, which provides better performance and features.
   LsdEDTA() {}
 
+  /// @brief Create an ED detector from initializer list.
+  /// @param options Initializer list with parameter name/value pairs
+  /// @deprecated Use LsdEDLZ (EDLines) instead
   LsdEDTA(ValueManager::InitializerList options) {}
 
+  /// @brief Create an ED detector from parameter vector.
+  /// @param options Vector with parameter name/value pairs
+  /// @deprecated Use LsdEDLZ (EDLines) instead
   LsdEDTA(const ValueManager::NameValueVector& options) {}
 
   using LsdBase<FT, LPT>::detect;
@@ -76,6 +93,8 @@ class LsdEDTA : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::imageDataDescriptor;
   using LsdBase<FT, LPT>::imageData;
 
+  /// @brief Detect line segments using the Edge Drawing algorithm.
+  /// @param image Input image (8-bit single-channel or will be converted)
   virtual void detect(const cv::Mat& image) final {
     cv::Mat img = image;
     CV_Assert(!img.empty());

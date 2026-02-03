@@ -107,18 +107,19 @@ class CameraCV : public CameraHom<FT> {
            const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
       : CameraHom<FT>(fov, imageSize, trans, rot),
         camM_(cv::Matx33<FT>(Camera<FT>::composeCameraMatrix(focal_, offset_).data())),
-        transCV_(cv::Vec3<FT>(Vec3<FT>(-rodrigues(rot_).transpose() * trans_).data())){}
+        transCV_(cv::Vec3<FT>(Vec3<FT>(-rodrigues(rot_).transpose() * trans_).data())) {}
 
-            /// @brief Construct from intrinsic/extrinsic vectors.
-            /// @param focal Focal lengths (fx, fy).
-            /// @param offset Principal point (cx, cy).
-            *
-            @param imageSize Image dimensions.*@param trans Translation vector.*@param rot Rodrigues rotation vector.*/
-            CameraCV(const Vec2<FT>& focal,
-                     const Vec2<FT>& offset,
-                     const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)),
-                     const Vec3<FT>& trans = Vec3<FT>(FT(0), FT(0), FT(0)),
-                     const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
+  /// @brief Construct from intrinsic/extrinsic vectors.
+  /// @param focal Focal lengths (fx, fy).
+  /// @param offset Principal point (cx, cy).
+  /// @param imageSize Image dimensions.
+  /// @param trans Translation vector.
+  /// @param rot Rodrigues rotation vector.
+  CameraCV(const Vec2<FT>& focal,
+           const Vec2<FT>& offset,
+           const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)),
+           const Vec3<FT>& trans = Vec3<FT>(FT(0), FT(0), FT(0)),
+           const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)))
       : CameraHom<FT>(focal, offset, imageSize, trans, rot) {
     camM_ = cv::Matx33<FT>(Camera<FT>::composeCameraMatrix(focal_, offset_).data());
     transCV_ = cv::Vec3<FT>(Vec3<FT>(-rodrigues(rot_).transpose() * trans_).data());

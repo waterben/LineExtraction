@@ -52,24 +52,53 @@
 
 namespace lsfm {
 
-//! Enable nfa validation
+/// @brief Flag to enable NFA-based validation in EL detector.
 static const int EL_USE_NFA = 1;
-//! Use precise direction map for sub pixel esitmation
+
+/// @brief Flag to use precise sub-pixel estimation with direction map.
 static const int EL_USE_PRECISE_SPE = 2;
 
+/// @brief Advanced line segment detector combining edge linking with NFA validation.
+/// This detector provides maximum flexibility through template parameters,
+/// allowing customization of edge detection, linking, validation, and fitting strategies.
+///
+/// **Key Features:**
+/// - Sophisticated edge linking algorithm
+/// - NFA-based statistical validation
+/// - Sub-pixel position estimation
+/// - Configurable line fitting strategies
+/// - Ramer-Douglas-Peucker line simplification
+///
+/// **Template Parameters:**
+/// - FT: Floating-point type (float, double)
+/// - LPT: Line point template
+/// - PT: Point type for internal calculations
+/// - ESOURCE: Edge source and NMS strategy
+/// - EDGE: Edge linking algorithm
+/// - NFA: NFA computation strategy
+/// - SPE: Sub-pixel estimation
+/// - SPLIT: Line splitting algorithm
+/// - FIT: Line fitting method
+///
+/// @tparam FT Floating-point type
+/// @tparam LPT Line point template
+/// @tparam PT Point type
+/// @tparam ESOURCE Edge source with NMS
+/// @tparam EDGE Edge linking algorithm
+/// @tparam NFA NFA validation
+/// @tparam SPE Sub-pixel estimator
+/// @tparam SPLIT Line splitting strategy
+/// @tparam FIT Line fitting method
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
           class ESOURCE = EdgeSourceGRAD<DerivativeGradient<uchar, short, int, FT, SobelDerivative, QuadraticMagnitude>,
                                          NonMaximaSuppression<short, int, FT>>,
-          class EDGE = EsdLinking<int, ESOURCE::NUM_DIR>,  // EsdLinking<int,true>,
+          class EDGE = EsdLinking<int, ESOURCE::NUM_DIR>,
           class NFA = NfaBinom<short, FT, index_type>,
           class SPE = PixelEstimator<FT, PT>,
-          class SPLIT =
-              RamerSplit<FT, PT>,  // RamerSplit<FT, PT>, ExtRamerSplit<SimpleMerge<ExtSplitCheck<FT,int,PT>>>,
-                                   // LeastSquareSplit<FT,PT>,
-          class FIT = FitLine<EigenFit<FT, PT>>  // MEstimatorFitLine<FT,PT>
-          >
+          class SPLIT = RamerSplit<FT, PT>,
+          class FIT = FitLine<EigenFit<FT, PT>>>
 class LsdEL : public LsdExt<FT, LPT, PT> {
   ESOURCE esource_{};
   EDGE edge_{};
@@ -116,6 +145,14 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
   typedef typename LsdBase<FT, LPT>::ImageData ImageData;
   typedef typename LsdExt<FT, LPT, PT>::PointVector PointVector;
 
+  /// @brief Create an EL (Edge Linking) detector with specified parameters.
+  /// @param th_low Lower gradient threshold (normalized, 0-1)
+  /// @param th_high Upper gradient threshold (normalized, 0-1)
+  /// @param min_pix Minimum supporting pixels
+  /// @param dist Line splitting distance threshold
+  /// @param min_len Minimum line segment length
+  /// @param log_eps NFA detection threshold (logarithmic)
+  /// @param flags Detection flags (EL_USE_NFA, EL_USE_PRECISE_SPE)
   LsdEL(FT th_low = static_cast<FT>(0.004),
         FT th_high = static_cast<FT>(0.012),
         int min_pix = 10,
@@ -131,23 +168,34 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
     init();
   }
 
+  /// @brief Create detector from initializer list.
+  /// @param options Initializer list with parameter name/value pairs
   LsdEL(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from parameter vector.
+  /// @param options Vector with parameter name/value pairs
   LsdEL(ValueManager::NameValueVector options) {
     init();
     this->value(options);
   }
 
+  /// @brief Get/set flags via ValueManager interface.
+  /// @param f New flags value (optional)
+  /// @return Current or updated flags
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  /// @brief Get current detection flags.
+  /// @return Flags bitmask (EL_USE_NFA, EL_USE_PRECISE_SPE)
   int flags() const { return flags_; }
 
+  /// @brief Set detection flags.
+  /// @param f Flags bitmask (0 = none, EL_USE_NFA = enable NFA, EL_USE_PRECISE_SPE = use precise SPE)
   void flags(int f) { flags_ = f; }
 
   using LsdBase<FT, LPT>::detect;
@@ -157,6 +205,8 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
   using LsdBase<FT, LPT>::imageDataDescriptor;
   using LsdBase<FT, LPT>::imageData;
 
+  /// @brief Detect line segments using edge linking algorithm.
+  /// @param image Input image (8-bit single-channel or will be converted)
   virtual void detect(const cv::Mat& image) final {
     clearData();
 
@@ -183,7 +233,6 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
       Line l;
       fit_.apply(this->points_.data() + seg.begin(), this->points_.data() + seg.end(), l);
 
-      // std::cout << "reverse: " << (seg.reverse() ? "true" : "false") << std::endl;
       const PT& first = this->points_[seg.first()];
       const PT& last = this->points_[seg.last()];
 
@@ -223,31 +272,60 @@ class LsdEL : public LsdExt<FT, LPT, PT> {
     return imageData_;
   }
 
+  /// @brief Get edge segments from edge linking.
+  /// @return Const reference to edge segment vector
   const EdgeSegmentVector& segments() const { return edge_.segments(); }
 
+  /// @brief Get line support segments (edge segment list).
+  /// @return Const reference to line support edge segments
   virtual const EdgeSegmentVector& lineSupportSegments() const final { return segments_; }
 
+  /// @brief Get all support points used in line detection.
+  /// @return Const reference to support point vector
   virtual const PointVector& points() const final { return points_; }
 
+  /// @brief Get point indices for edge segments.
+  /// @return Const reference to index vector
   virtual const IndexVector& indexes() const final { return edge_.points(); }
 
+  /// @brief Get mutable reference to edge source (gradient computation).
+  /// @return Mutable reference to edge source object
   ESOURCE& edgeSource() { return esource_; }
 
+  /// @brief Get const reference to edge source.
+  /// @return Const reference to edge source object
   const ESOURCE& edgeSource() const { return esource_; }
 
+  /// @brief Get mutable reference to edge linking algorithm.
+  /// @return Mutable reference to edge linking object
   EDGE& edge() { return edge_; }
 
+  /// @brief Get const reference to edge linking algorithm.
+  /// @return Const reference to edge linking object
   const EDGE& edge() const { return edge_; }
 
+  /// @brief Get mutable reference to line splitting algorithm.
+  /// @return Mutable reference to split object
   SPLIT& split() { return split_; }
 
+  /// @brief Get const reference to line splitting algorithm.
+  /// @return Const reference to split object
   const SPLIT& split() const { return split_; }
 
+  /// @brief Get mutable reference to line fitting algorithm.
+  /// @return Mutable reference to fit object
   FIT& fit() { return fit_; }
 
+  /// @brief Get const reference to line fitting algorithm.
+  /// @return Const reference to fit object
   const FIT& fit() const { return fit_; }
 
+  /// @brief Get mutable reference to NFA validation algorithm.
+  /// @return Mutable reference to NFA object
   NFA& nfa() { return nfa_; }
+
+  /// @brief Get const reference to NFA validation algorithm.
+  /// @return Const reference to NFA object
   const NFA& nfa() const { return nfa_; }
 };
 

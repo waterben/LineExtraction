@@ -77,15 +77,22 @@ class LsdCCBase : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::lineSegments;
   using LsdBase<FT, LPT>::endPoints;
 
-  // access line points (groups are references by segments)
+  //! @brief Get the points vector containing all detected line points.
+  //! Individual line segments reference ranges in this vector.
+  //! @return Constant reference to vector of point coordinates.
   const PointVector& points() const { return points_; }
 
+  //! @brief Convert point vector to linear indexes for image dimensions.
+  //! @return Vector of linear indexes computed from point coordinates.
   IndexVector indexes() const {
     IndexVector ret;
     if (!points_.empty()) IndexConvert<PT>::toIndexV(points_, ret, grad_.gx().cols);
     return ret;
   }
 
+  //! @brief Get descriptor for available internal image data layers.
+  //! Describes the gradient components, magnitude, edge map, and segment map.
+  //! @return Constant reference to DataDescriptor listing all available data layers.
   virtual const DataDescriptor& imageDataDescriptor() const final {
     static DataDescriptor dsc;
     if (dsc.empty()) {
@@ -100,6 +107,9 @@ class LsdCCBase : public LsdBase<FT, LPT> {
     return dsc;
   }
 
+  //! @brief Get the internal image data layers (gradient, magnitude, edge maps).
+  //! Lazily constructs the data if not yet created.
+  //! @return Constant reference to vector of internal image data matrices.
   virtual const ImageData& imageData() const final {
     if (imageData_.empty()) {
       imageData_.push_back(grad_.gx());
@@ -138,24 +148,41 @@ class LsdCCBase : public LsdBase<FT, LPT> {
               "Upper threshold.");
   }
 
+  //! @brief Get or set the lower threshold for Non-Maxima Suppression.
+  //! @param t The new threshold value, or Value::NAV() to only query.
+  //! @return The current lower threshold value.
   Value valueThresholdLow(const Value& t = Value::NAV()) {
     if (t.type()) thresholdLow(t.get<FT>());
     return th_low_;
   }
 
+  //! @brief Get the lower threshold for Non-Maxima Suppression.
+  //! @return The current lower threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   FT thresholdLow() const { return th_low_; }
 
+  //! @brief Set the lower threshold for Non-Maxima Suppression.
+  //! @param t The new lower threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   void thresholdLow(FT t) { th_low_ = t; }
 
+  //! @brief Get or set the upper threshold for Non-Maxima Suppression.
+  //! @param t The new threshold value, or Value::NAV() to only query.
+  //! @return The current upper threshold value.
   Value valueThresholdHigh(const Value& t = Value::NAV()) {
     if (t.type()) thresholdHigh(t.get<FT>());
     return th_high_;
   }
 
+  //! @brief Get the upper threshold for Non-Maxima Suppression.
+  //! @return The current upper threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   FT thresholdHigh() const { return th_high_; }
 
+  //! @brief Set the upper threshold for Non-Maxima Suppression.
+  //! @param t The new upper threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   void thresholdHigh(FT t) { th_high_ = t; }
 
+  //! @brief Set both lower and upper thresholds for Non-Maxima Suppression.
+  //! @param low The new lower threshold value.
+  //! @param high The new upper threshold value.
   void threshold(FT low, FT high) {
     th_low_ = low;
     th_high_ = high;

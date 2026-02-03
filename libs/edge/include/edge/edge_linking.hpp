@@ -549,23 +549,21 @@ class EsdLinking : public EsdBase<MT, index_type> {
     // do fw
     pdmap = fwdmap;
     extractSegment(idx);
-    /// @brief Extract segment starting at pixel with specified direction using corner rule.
-    /// Overloaded convenience method that reads direction from pdir_[idx].
-    /// @param idx Seed pixel index for segment extraction
-    inline void extractSegmentC(index_type idx) { extractSegmentC(idx, pdir_[idx]); }
-
-    /// @brief Extract segment with corner-detection rule enabled.
-    /// Corner rule: processes pixels where gradient direction changes abruptly,
-    /// allowing continuity across corners. Uses DataPair struct to track multiple
-    /// candidate directions and validates consistency.
-    /// @param idx Starting pixel index
-    /// @param ndir Initial neighbor direction to explore    if (seg_end - seg_beg > static_cast<size_t>(minPixels_))
-    /// segments_.push_back(EdgeSegment(seg_beg, seg_end));
+    seg_end = this->points_.size();
+    if (seg_end - seg_beg > static_cast<size_t>(minPixels_)) segments_.push_back(EdgeSegment(seg_beg, seg_end));
   }
 
-
+  /// @brief Extract segment starting at pixel with specified direction using corner rule.
+  /// Overloaded convenience method that reads direction from pdir_[idx].
+  /// @param idx Seed pixel index for segment extraction
   inline void extractSegmentC(index_type idx) { extractSegmentC(idx, pdir_[idx]); }
 
+  /// @brief Extract segment with corner-detection rule enabled.
+  /// Corner rule: processes pixels where gradient direction changes abruptly,
+  /// allowing continuity across corners. Uses DataPair struct to track multiple
+  /// candidate directions and validates consistency.
+  /// @param idx Starting pixel index
+  /// @param ndir Initial neighbor direction to explore
   void extractSegmentC(index_type idx, char ndir) {
     struct DataPair {
       char dir, ndir;
