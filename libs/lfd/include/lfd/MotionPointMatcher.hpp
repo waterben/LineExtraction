@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file MotionPointMatcher.hpp
+/// @brief Motion-based matcher for temporal point correspondence.
+/// Combines point filtering and matching for motion estimation.
+
 #pragma once
 
 #include <lfd/FeatureMatcher.hpp>

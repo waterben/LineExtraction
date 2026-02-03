@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file LRDescriptor.hpp
+/// @brief Left-Right feature descriptor for stereo matching.
+/// Provides descriptor types and creators for left-right descriptor pairs.
+
 // C by Benjamin Wassermann
 //
 

@@ -1,3 +1,7 @@
+/// @file lineMatching.hpp
+/// @brief Free functions for line matching and filtering operations.
+/// Provides standalone utilities for processing line matches and features.
+
 #pragma once
 
 

@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file GlobalRotationFilter.hpp
+/// @brief Global rotation-based feature filtering.
+/// Provides filtering based on global rotation constraints between feature sets.
+
 #pragma once
 
 #include <geometry/line.hpp>

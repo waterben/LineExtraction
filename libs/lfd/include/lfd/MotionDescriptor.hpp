@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file MotionDescriptor.hpp
+/// @brief Motion-based feature descriptor for temporal matching.
+/// Provides descriptor type and creator based on feature midpoint for motion estimation.
+
 
 #pragma once
 
@@ -46,25 +50,34 @@
 
 namespace lsfm {
 
-// Left Right Feature Descriptor
+/// @brief Motion-based feature descriptor using midpoint position.
+/// Measures distance between feature midpoints for motion matching.
+/// @tparam FT Float type
 template <class FT>
 struct MotionDescritpor {
   MotionDescritpor() {}
 
-  lsfm::Vec2<FT> midPoint;
+  lsfm::Vec2<FT> midPoint;  ///< Feature midpoint position
 
-  inline FT distance(const MotionDescritpor<FT>& rhs) const {
-    // return cv::norm(midPoint - rhs.midPoint);
-    return (midPoint - rhs.midPoint).squaredNorm();
-  }
+  /// @brief Compute squared distance to another descriptor.
+  /// @param rhs The other descriptor
+  /// @return Squared Euclidean distance between midpoints
+  inline FT distance(const MotionDescritpor<FT>& rhs) const { return (midPoint - rhs.midPoint).squaredNorm(); }
 
-  //! compute distance between two descriptors (static version)
+  /// @brief Compute distance between two descriptors (static version).
+  /// @param lhs First descriptor
+  /// @param rhs Second descriptor
+  /// @return Euclidean distance between midpoints
   static inline FT distance(const MotionDescritpor<FT>& lhs, const MotionDescritpor<FT>& rhs) {
     return cv::norm(lhs.midPoint - rhs.midPoint);
   }
 
+  /// @brief Get descriptor size in bytes.
+  /// @return Size of cv::Point2D
   static inline int size() { return sizeof(cv::Point_<FT>); }
 
+  /// @brief Get descriptor type name.
+  /// @return String "Motion"
   std::string name() const { return "Motion"; }
 };
 

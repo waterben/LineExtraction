@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file FeatureTools.hpp
+/// @brief Feature utility functions for matching and filtering operations.
+/// Provides helpers for keypoint binning, candidate filtering, and feature organization.
+
 
 #pragma once
 
@@ -51,8 +55,19 @@
 namespace lsfm {
 
 
-//! get the "best" keypoints of each bin, returns a vector of vectors, number of bins, width first
-template <class FT, class GT>  // const V<GT,V1Args...>
+/// @brief Get best keypoints from spatial bins.
+/// Distributes keypoints into a grid of bins and returns the highest-response keypoints from each bin.
+/// @tparam FT Float type
+/// @tparam GT Geometric type (e.g., cv::KeyPoint)
+/// @param kpBins Output vector of vectors containing binned keypoints
+/// @param keypoints Input keypoints to distribute into bins
+/// @param width Image width
+/// @param height Image height
+/// @param wBins Number of horizontal bins
+/// @param hBins Number of vertical bins
+/// @param ptsPerBin Maximum keypoints per bin
+/// @param sorted Whether input keypoints are pre-sorted by response (default: true)
+template <class FT, class GT>
 void getBestKeypointsInBins(std::vector<std::vector<GT>>& kpBins,
                             std::vector<GT>& keypoints,
                             const int& width,
@@ -63,10 +78,8 @@ void getBestKeypointsInBins(std::vector<std::vector<GT>>& kpBins,
                             const bool sorted = true) {
   if (!sorted) std::sort(keypoints.begin(), keypoints.end(), [](GT a, GT b) { return b.response < a.response; });
 
-  // std::vector<std::vector<GT>> kpBins;
   kpBins.assign(wBins * hBins, std::vector<GT>());
 
-  // sort into bins
   for_each(keypoints.begin(), keypoints.end(), [&](GT& kp) {
     int wB, hB;
     wB = static_cast<int>(static_cast<FT>(kp.pt.x) / (static_cast<FT>(width) / static_cast<FT>(wBins)));
@@ -79,7 +92,6 @@ void getBestKeypointsInBins(std::vector<std::vector<GT>>& kpBins,
     kpBins[(wB + (hB * wBins))].push_back(kp);
   });
 
-  // As the vector was sorted, the binned vectors are also sorted
   for_each(kpBins.begin(), kpBins.end(), [&ptsPerBin](std::vector<GT>& bin) {
     if (bin.size() > ptsPerBin) bin.resize(ptsPerBin);
   });

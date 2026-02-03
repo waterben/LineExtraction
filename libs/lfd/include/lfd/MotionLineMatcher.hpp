@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file MotionLineMatcher.hpp
+/// @brief Motion-based matcher for temporal line correspondence.
+/// Combines line filtering and matching for motion estimation between frames.
+
 #pragma once
 
 #include <lfd/FeatureMatcher.hpp>

@@ -55,21 +55,33 @@
 
 namespace lsfm {
 
-// Feature Descriptor LBD by Lilian Zhang
+/// @brief LBD (Line Band Descriptor) structure.
+/// Stores descriptor data as a cv::Mat with L2 distance computation.
+/// @tparam FT Float type for descriptor elements
 template <class FT>
 struct FdLBD {
   FdLBD() {}
+  /// @brief Construct from descriptor matrix.
+  /// @param d The descriptor matrix
   FdLBD(const cv::Mat& d) : data(d) {}
 
-  cv::Mat data;
+  cv::Mat data;  ///< Descriptor data matrix
 
+  /// @brief Compute L2 distance to another descriptor.
+  /// @param rhs The other descriptor
+  /// @return L2 norm distance
   inline FT distance(const FdLBD<FT>& rhs) const { return static_cast<FT>(cv::norm(data, rhs.data, cv::NORM_L2)); }
 
-  //! compute distance between two descriptors (static version)
+  /// @brief Compute L2 distance between two descriptors (static version).
+  /// @param lhs First descriptor
+  /// @param rhs Second descriptor
+  /// @return L2 norm distance
   static inline FT distance(const FdLBD<FT>& lhs, const FdLBD<FT>& rhs) {
     return static_cast<FT>(cv::norm(lhs.data, rhs.data, cv::NORM_L2));
   }
 
+  /// @brief Get descriptor type name.
+  /// @return String "LBD"
   std::string name() const { return "LBD"; }
 };
 

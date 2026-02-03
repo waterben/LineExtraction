@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file MotionLineFilter.hpp
+/// @brief Motion-based line filtering for temporal correspondence.
+/// Filters line matches based on pixel distance and angle constraints with binning optimization.
+
 
 #pragma once
 
@@ -53,7 +57,13 @@
 
 namespace lsfm {
 
-//! Walk along a line and get every pixel that is touched, with floatingpoint accuracy
+/// @brief Walk along a line and get pixels that are touched with floating-point accuracy.
+/// @tparam FT Float type
+/// @param x1 Start x coordinate
+/// @param y1 Start y coordinate
+/// @param x2 End x coordinate
+/// @param y2 End y coordinate
+/// @param pixel Output vector of (x, y) pixel coordinates touched by the line
 template <class FT>
 void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& pixel) {
   if (x1 > x2) {

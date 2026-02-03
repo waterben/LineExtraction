@@ -39,6 +39,9 @@
 //
 //M*/
 
+/// @file FeatureFilter.hpp
+/// @brief Feature matching and filtering classes and structures.
+/// Provides basic feature match structures and filtering infrastructure for matching pairs.
 
 #pragma once
 
@@ -49,56 +52,97 @@
 namespace lsfm {
 // #define TRIM_2D_MATCHES
 
-enum { FS_NONE = 0, FS_MASKED };
+/// @brief Filter state enumeration for feature matches
+enum {
+  FS_NONE = 0,  ///< No filter applied
+  FS_MASKED
+};  ///< Match has been filtered out (masked)
 
+/// @brief Basic feature match structure template.
+/// @tparam FT Float type for distance calculations
 template <class FT>
 struct FeatureMatch {
+  /// @brief Construct a feature match.
+  /// @param qi Query descriptor index (default: -1)
+  /// @param mi Matched descriptor index (default: -1)
+  /// @param fs Filter state enumeration (default: FS_NONE)
   FeatureMatch(int qi = -1, int mi = -1, int fs = FS_NONE) : queryIdx(qi), matchIdx(mi), filterState(fs) {}
 
-  int queryIdx;  // query descriptor index
-  int matchIdx;  // match descriptor index
-
-  int filterState;  // indicate filter state
+  int queryIdx;     ///< Query descriptor index
+  int matchIdx;     ///< Matched descriptor index
+  int filterState;  ///< Filter state (FS_NONE or FS_MASKED)
 };
 
+/// @brief Descriptor match structure with distance metric.
+/// @tparam FT Float type for distance calculations
 template <class FT>
 struct DescriptorMatch : public FeatureMatch<FT> {
+  /// @brief Construct a descriptor match with distance.
+  /// @param qi Query descriptor index (default: -1)
+  /// @param mi Matched descriptor index (default: -1)
+  /// @param fs Filter state enumeration (default: FS_NONE)
+  /// @param dst Distance between descriptors (default: max value)
   DescriptorMatch(int qi = -1, int mi = -1, int fs = FS_NONE, FT dst = std::numeric_limits<FT>::max())
       : FeatureMatch<FT>(qi, mi, fs), distance(dst) {}
+
+  /// @brief Construct a descriptor match with indices and distance.
+  /// @param qi Query descriptor index
+  /// @param mi Matched descriptor index
+  /// @param dst Distance between descriptors
   DescriptorMatch(int qi, int mi, FT dst) : FeatureMatch<FT>(qi, mi, FS_NONE), distance(dst) {}
 
-  FT distance;  // distance between query descriptor and matched descriptor
+  FT distance;  ///< Distance between query descriptor and matched descriptor
 
-  // less is better
+  /// @brief Compare two descriptor matches by distance (ascending order).
+  /// @param m The other descriptor match
+  /// @return True if this match's distance is less than m's distance
   inline bool operator<(const DescriptorMatch<FT>& m) const { return distance < m.distance; }
 
+  /// @brief Compare descriptor match distance with a threshold.
+  /// @param f The distance threshold
+  /// @return True if this match's distance is less than the threshold
   inline bool operator<(const FT& f) const { return distance < f; }
 };
 
 
-//! feature filter base class to enable filtering on matches
-//! can also be applied to matcher, to filter out matches while creating the vectors
+/// @brief Base class for feature match filtering.
+/// Provides interface for filtering matches and support for mask-based operations.
+/// Can be applied during matching to filter candidates while building match vectors.
+/// @tparam FT Float type for distance calculations
 template <class FT>
 class FeatureFilter {
  public:
-  typedef FT float_type;
+  typedef FT float_type;  ///< Float type alias
+
   virtual ~FeatureFilter() {}
 
-  //! check if feature match has to be filtered
+  /// @brief Check if a feature match should be filtered out.
+  /// @param lfIdx Left feature index
+  /// @param rfIdx Right feature index
+  /// @return True if the match should be filtered out, false otherwise
   virtual bool filter(int lfIdx, int rfIdx) const = 0;
 
-  //! check if feature match has to be filtered (sets filter state to FS_MASKED)
+  /// @brief Apply filter to a single match and update its filter state.
+  /// Sets filter state to FS_MASKED if the match should be filtered.
+  /// @param fm Reference to the feature match to filter
   inline void filter(FeatureMatch<FT>& fm) const {
     if (fm.filterState == FS_MASKED || this->filter(fm.queryIdx, fm.matchIdx)) fm.filterState = FS_MASKED;
   }
 
-  //! apply filter to vector or list of matches
+  /// @brief Apply filter to a vector or list of matches.
+  /// Updates filter state for all matches in the container.
+  /// @tparam FMV Feature match vector type
+  /// @param matches Reference to the matches container
   template <class FMV>
   void filterList(FMV& matches) const {
     for_each(matches.begin(), matches.end(), [this](FeatureMatch<FT>& fm) { this->filter(fm); });
   }
 
-  //! apply filter to vector or list of matches
+  /// @brief Filter matches and store unfiltered results in output container.
+  /// Preserves ordering and skips filtered (masked) matches.
+  /// @tparam FMV Feature match vector type
+  /// @param matches Input matches vector
+  /// @param out Output container for unfiltered matches
   template <class FMV>
   void filterList(FMV& matches, FMV& out) const {
     out.clear();
@@ -108,15 +152,29 @@ class FeatureFilter {
     });
   }
 
-  //! create match set by filter
+  /// @brief Create a match set by applying filter.
+  /// Generates all pairs (lIdx, rIdx) for 0 <= lIdx < lSize, 0 <= rIdx < rSize
+  /// where filter(lIdx, rIdx) returns false.
+  /// @tparam FMV Feature match vector type
+  /// @param lSize Size of left feature set
+  /// @param rSize Size of right feature set
+  /// @param matches Output container for generated matches
   template <class FMV>
   void create(size_t lSize, size_t rSize, FMV& matches) const {
     createDetail(lSize, rSize, matches,
                  static_cast<typename std::iterator_traits<typename FMV::iterator>::iterator_category*>(0));
   }
 
-  //! create match set by filter and mask vectors (inverted masks, != 0 is not masked, == 0 is masked, count the number
-  //! of non filtered)
+  /// @brief Create match set with mask vectors.
+  /// Generates matches and inverted mask vectors (!=0 means not masked, ==0 means masked).
+  /// Counts number of non-filtered matches for each feature.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Mask vector type
+  /// @param lSize Size of left feature set
+  /// @param rSize Size of right feature set
+  /// @param matches Output container for generated matches
+  /// @param lm Output left mask vector (1 per valid match for this left feature, 0 otherwise)
+  /// @param rm Output right mask vector (1 per valid match for this right feature, 0 otherwise)
   template <class FMV, class MV>
   void create(size_t lSize, size_t rSize, FMV& matches, MV& lm, MV& rm) const {
     createDetail(lSize, rSize, matches, lm, rm,
@@ -124,7 +182,14 @@ class FeatureFilter {
   }
 
 
-  //! create mask vectors (inverted masks, != 0 is not masked, == 0 is masked, count the number of non filtered)
+  /// @brief Generate mask vectors indicating valid matches.
+  /// Creates inverted masks (!=0 means not masked, ==0 means masked).
+  /// Counts number of non-filtered matches for each feature.
+  /// @tparam MV Mask vector type
+  /// @param lSize Size of left feature set
+  /// @param rSize Size of right feature set
+  /// @param lm Output left mask vector
+  /// @param rm Output right mask vector
   template <class MV>
   inline void mask(size_t lSize, size_t rSize, MV& lm, MV& rm) const {
     lm.resize(lSize, 0);
@@ -142,6 +207,8 @@ class FeatureFilter {
   }
 
  private:
+  /// @brief Helper for creating match set with forward iterators.
+  /// @tparam FMV Feature match vector type
   template <class FMV>
   inline void createDetail(size_t lSize, size_t rSize, FMV& matches, std::forward_iterator_tag*) const {
     matches.clear();
@@ -152,6 +219,9 @@ class FeatureFilter {
     }
   }
 
+  /// @brief Helper for creating match set with random access iterators.
+  /// Reserves space to improve performance.
+  /// @tparam FMV Feature match vector type
   template <class FMV>
   inline void createDetail(size_t lSize, size_t rSize, FMV& matches, std::random_access_iterator_tag*) const {
     matches.clear();
@@ -164,6 +234,9 @@ class FeatureFilter {
     }
   }
 
+  /// @brief Helper for creating match set with masks and forward iterators.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Mask vector type
   template <class FMV, class MV>
   inline void createDetail(size_t lSize, size_t rSize, FMV& matches, MV& lm, MV& rm, std::forward_iterator_tag*) const {
     lm.resize(lSize, 0);
@@ -182,6 +255,10 @@ class FeatureFilter {
     }
   }
 
+  /// @brief Helper for creating match set with masks and random access iterators.
+  /// Reserves space to improve performance.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Mask vector type
   template <class FMV, class MV>
   inline void createDetail(
       size_t lSize, size_t rSize, FMV& matches, MV& lm, MV& rm, std::random_access_iterator_tag*) const {

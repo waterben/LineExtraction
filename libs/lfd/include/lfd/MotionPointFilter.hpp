@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file MotionPointFilter.hpp
+/// @brief Motion-based filtering for point feature correspondence.
+/// Provides filtering for temporal point feature matching.
+
 #pragma once
 
 #include <geometry/point.hpp>
