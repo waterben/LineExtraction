@@ -5,42 +5,49 @@ load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
+# Common dependencies for imgproc examples
+_IMGPROC_DEPS = [
+    "//libs/utility:lib_utility",
+    "//libs/edge:lib_edge",
+    "//libs/imgproc:lib_imgproc",
+    "@opencv",
+]
+
+# Common data dependencies for test images
+_TEST_DATA = [
+    "//resources:windmill",
+    "//resources/datasets:noise",
+]
+
 cc_binary(
     name = "test_imgproc_steer",
     srcs = ["steer_test.cpp"],
     copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _IMGPROC_DEPS,
 )
 
 cc_binary(
     name = "test_imgproc_grad_ops",
     srcs = ["grad_test.cpp"],
     copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _IMGPROC_DEPS,
 )
 
 cc_binary(
     name = "test_imgproc_step_line",
     srcs = ["step_line_test.cpp"],
     copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _IMGPROC_DEPS,
 )
 
 cc_binary(
     name = "test_imgproc_fft",
     srcs = ["fft_test.cpp"],
     copts = LE_COPTS_COMPAT,
+    data = _TEST_DATA,
     deps = [
         "//libs/utility:lib_utility",
         "@opencv",
@@ -51,19 +58,18 @@ cc_binary(
     name = "test_imgproc_pyramid",
     srcs = ["pyramid_test.cpp"],
     copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/edge:lib_edge",
-        "//libs/imgproc:lib_imgproc",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _IMGPROC_DEPS,
 )
 
 cc_binary(
     name = "test_imgproc_noise",
     srcs = ["noise_test.cpp"],
     copts = LE_COPTS_COMPAT,
+    data = _TEST_DATA,
     deps = [
         "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
         "@opencv",
     ],
 )

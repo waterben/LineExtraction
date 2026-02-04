@@ -13,6 +13,14 @@ cc_binary(
         ],
         allow_empty = True,
     ),
+    data = [
+        # BSDS500 from external GitHub repository (auto-downloaded)
+        "@bsds500//:all",
+        # MDB from local resources (requires ./tools/scripts/setup_mdb_dataset.sh)
+        "//resources/datasets:mdb_f",
+        "//resources/datasets:mdb_h",
+        "//resources/datasets:mdb_q",
+    ],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/eval:lib_eval",

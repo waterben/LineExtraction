@@ -5,6 +5,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>
@@ -39,10 +40,8 @@ void showZC(const std::string& name, ZC& zc) {
 }
 
 int main(int argc, char** argv) {
-  const char* filename = argc >= 2 ? argv[1] : "../../images/circle2.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, IMREAD_GRAYSCALE);
   if (src.empty()) {

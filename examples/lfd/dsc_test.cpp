@@ -6,6 +6,7 @@
 #include <lsd/lsd_cc.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>
@@ -19,8 +20,10 @@ using namespace lsfm;
 using namespace cv;
 
 int main(int argc, char** argv) {
-  std::string filename1 = "../images/im2.png";
-  std::string filename2 = "../images/im6.png";
+  TestImages::init(argv[0]);
+
+  // Get stereo pair - defaults to Adirondack scene from MDB dataset
+  auto [filename1, filename2] = TestImages::stereoPair("Adirondack", "H");
 
   if (argc > 2) {
     filename1 = argv[1];

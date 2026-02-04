@@ -5,12 +5,19 @@ load("//tools/bazel:copts.bzl", "ARPACKPP_COPTS", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
+# Common data dependencies for test images
+_TEST_DATA = [
+    "//resources:windmill",
+]
+
 cc_binary(
     name = "test_other_houghlines",
     srcs = ["houghlines.cpp"],
     copts = LE_COPTS_COMPAT,
+    data = _TEST_DATA,
     deps = [
         "//libs/geometry:lib_geometry",
+        "//libs/utility:lib_utility",
         "@opencv",
     ],
 )

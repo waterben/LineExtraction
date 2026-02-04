@@ -1,5 +1,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <utility/test_images.hpp>
 
 #include <iostream>
 
@@ -9,12 +10,13 @@ using namespace std;
 static void help() {
   cout << "\nThis program demonstrates line finding with the Hough transform.\n"
           "Usage:\n"
-          "./houghlines <image_name>, Default is chairs.pgm\n"
+          "./houghlines <image_name>, Default is windmill.jpg\n"
        << endl;
 }
 
 int main(int argc, char** argv) {
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = imread(filename, 0);
   if (src.empty()) {

@@ -69,6 +69,36 @@ new_local_repository(
     path = "/usr",
 )
 
+# GTK3 - for OpenCV highgui support (optional, Linux only)
+# Install: sudo apt install libgtk-3-dev
+new_local_repository(
+    name = "ubuntu_gtk_deps",
+    build_file = "@opencv//:test/ubuntu-gtk-deps.BUILD.bazel",
+    path = "/",
+)
+
+# =============================================================================
+# Datasets for evaluation and testing
+# =============================================================================
+
+# BSDS500 - Berkeley Segmentation Dataset 500
+# Source: https://github.com/BIDS/BSDS500
+# Contains 500 images with ground truth boundaries for edge/line detection evaluation
+# Note: Using master branch archive - checksum may change if repo is updated
+http_archive(
+    name = "bsds500",
+    build_file = "//tools/bazel/third_party:bsds500.BUILD",
+    sha256 = "193bcb2d8993af8c6c799f73faead6f709f98f0011476ba3e2381ce30e1407d7",
+    strip_prefix = "BSDS500-master",
+    urls = [
+        "https://github.com/BIDS/BSDS500/archive/refs/heads/master.zip",
+    ],
+)
+
+# MDB (Middlebury Stereo Dataset) - NOT included as http_archive due to size
+# Run: ./tools/scripts/setup_mdb_dataset.sh to download and prepare locally
+# The script creates resources/datasets/MDB/ with MiddEval3-Q/H/F subdirectories
+
 # Note: dlib, opencv, and qt5 are now provided via local registry
 # See tools/bazel/registry/modules/ for module definitions
 # GCC and Clang selection is done via .bazelrc --config flags

@@ -5,6 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
+#include <utility/test_images.hpp>
 
 #include <iostream>
 
@@ -113,7 +114,8 @@ static void help() {
 }
 
 int main(int argc, char** argv) {
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, 0);
   if (src.empty()) {

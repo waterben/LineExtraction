@@ -4,49 +4,52 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 package(default_visibility = ["//visibility:public"])
 
+# Common dependencies for all LSD examples
+_LSD_DEPS = [
+    "//libs/utility:lib_utility",
+    "//libs/lsd:lib_lsd",
+    "@opencv",
+]
+
+# Common data dependencies for test images
+_TEST_DATA = [
+    "//resources:windmill",
+    "//resources/datasets:noise",
+]
+
 cc_binary(
     name = "lsd",
     srcs = ["lsd.cpp"],
-    deps = [
-        "//libs/lsd:lib_lsd",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_cc_test",
     srcs = ["lsd_cc_test.cpp"],
-    deps = [
-        "//libs/lsd:lib_lsd",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_edge",
     srcs = ["lsd_edge.cpp"],
-    deps = [
-        "//libs/lsd:lib_lsd",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_graph",
     srcs = ["lsd_graph.cpp"],
-    deps = [
-        "//libs/lsd:lib_lsd",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_nfa",
     srcs = ["lsd_nfa.cpp"],
-    deps = [
-        "//libs/lsd:lib_lsd",
-        "@opencv",
-    ],
+    data = _TEST_DATA,
+    deps = _LSD_DEPS,
 )
 
 cc_binary(

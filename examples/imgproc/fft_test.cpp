@@ -1,6 +1,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <utility/matlab_helpers.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>
@@ -23,11 +24,8 @@ void showFFT(const std::string& name, const cv::Mat& fft) {
 
 
 int main(int argc, char** argv) {
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/circle.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/ssmall.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/hall2_low.JPG";
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.JPG";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low_quad.png";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat im = cv::imread(filename, IMREAD_GRAYSCALE);
   if (im.empty()) {

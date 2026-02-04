@@ -5,6 +5,7 @@
 #include <lsd/lsd_cp.hpp>
 #include <lsd/lsd_el.hpp>
 #include <opencv2/opencv.hpp>
+#include <utility/test_images.hpp>
 
 #include <ctime>
 #include <fstream>
@@ -22,11 +23,8 @@ static void help() {
 }
 
 int main(int argc, char** argv) {
-  // const char* filename = argc >= 2 ? argv[1] : "../../MiddEval3/trainingH/Adirondack/im0.png";
-  const char* filename = argc >= 2 ? argv[1] : "../../images/office1_low.jpg";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/v1.png";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/lines.jpg";
-  // const char* filename = argc >= 2 ? argv[1] : "../../images/a1.jpg";
+  lsfm::TestImages::init(argv[0]);
+  std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 
   cv::Mat src = cv::imread(filename, 0);
   if (src.empty()) {
