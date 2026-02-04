@@ -50,6 +50,7 @@ cc_binary(
     data = _TEST_DATA,
     deps = [
         "//libs/utility:lib_utility",
+        "//libs/utility:lib_utility_gui",  # For showMat()
         "@opencv",
     ],
 )

@@ -21,8 +21,21 @@ cc_library(
     includes = ["include"],
     deps = [
         "@eigen",
-        "@opencv",
-        "@opencv//:highgui",  # For cv::imshow in matlab_helpers.hpp
+        "@opencv//:calib3d",  # Camera calibration (used by camera_utilities.hpp)
+        "@opencv//:core",  # Core module - no GUI
+        "@opencv//:imgproc",  # Image processing utilities
+    ],
+)
+
+# GUI utilities - separate library to avoid linking highgui in headless builds
+cc_library(
+    name = "lib_utility_gui",
+    hdrs = ["include/utility/matlab_helpers_gui.hpp"],
+    copts = LE_COPTS,
+    includes = ["include"],
+    deps = [
+        ":lib_utility",
+        "@opencv//:highgui",  # GUI module for cv::imshow
     ],
 )
 
