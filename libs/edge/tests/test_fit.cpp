@@ -5,6 +5,8 @@
 #include <opencv2/core.hpp>
 
 #include <gtest/gtest.h>
+#include <vector>
+#include <cmath>
 
 namespace {
 
