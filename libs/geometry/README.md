@@ -44,3 +44,11 @@ Use Bazel (primary build system):
 
 - OpenGL/ROS helpers are optional and depend on system availability.
 - See headers for full API documentation and examples.
+
+## Related Libraries and Resources
+
+- [lsd](../lsd/README.md) - Line Segment Detection algorithms
+- [lfd](../lfd/README.md) - Line Feature Descriptors
+- [edge](../edge/README.md) - Edge detection algorithms
+- [Geometry Examples](../../examples/geometry/README.md) - Demonstration programs
+- [Main README](../../README.md) - Project overview

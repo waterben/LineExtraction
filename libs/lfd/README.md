@@ -12,7 +12,14 @@ The `lfd` library provides a unified framework for:
 - **Motion estimation**: Feature matching for motion/optical flow
 - **Filtering**: Geometric and optical flow constraints for feature validation
 
-All code resides in the `lsfm` namespace.
+## Related Libraries and Resources
+
+- [lsd](../lsd/README.md) - Line Segment Detection algorithms
+- [geometry](../geometry/README.md) - Geometric primitives and transformations
+- [imgproc](../imgproc/README.md) - Image processing and feature extraction
+- [eval](../eval/README.md) - Evaluation framework
+- [LFD Examples](../../examples/lfd/README.md) - Demonstration programs
+- [Main README](../../README.md) - Project overview
 
 ## Key Components
 
@@ -289,3 +296,7 @@ filter.valueEpipolarThreshold(Value(1.0));  // Epipolar constraint tolerance
 - [Edge Detection Library](../edge/README.md) - For line feature extraction
 - [LSD Library](../lsd/README.md) - For line segment detection
 - [Geometry Library](../geometry/README.md) - For geometric primitives
+- [Image Processing Library](../imgproc/README.md) - Image processing and gradient operators
+- [Evaluation Library](../eval/README.md) - Performance measurement
+- [LFD Examples](../../examples/lfd/README.md) - Demonstration programs
+- [Main README](../../README.md) - Project overview

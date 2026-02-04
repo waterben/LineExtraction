@@ -367,3 +367,6 @@ The library is designed for extension:
 - [Edge Detection Library](../edge/README.md) - Edge detection algorithms
 - [LSD Library](../lsd/README.md) - Line segment detection methods
 - [LFD Library](../lfd/README.md) - Feature matching and descriptors
+- [Utility Library](../utility/README.md) - TestImages and core utilities
+- [Evaluation Examples](../../evaluation/README.md) - Performance benchmarks
+- [Main README](../../README.md) - Project overview

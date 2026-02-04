@@ -5,22 +5,22 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 ## Project Structure
 
 - **`libs/`** - Core library components:
-  - `edge/` - Edge detection algorithms (NMS, gradient computation, edge drawing)
-  - `geometry/` - Geometric primitives, transformations, and OpenGL rendering
-  - `imgproc/` - Image processing utilities and filters
-  - `lfd/` - Line Feature Detector implementation
-  - `lsd/` - Line Segment Detector implementation
-  - `utility/` - Common utilities (option managers, data structures)
-  - `eval/` - Evaluation framework with test image support
+  - [`edge/`](libs/edge/README.md) - Edge detection algorithms (NMS, gradient computation, edge drawing)
+  - [`geometry/`](libs/geometry/README.md) - Geometric primitives, transformations, and OpenGL rendering
+  - [`imgproc/`](libs/imgproc/README.md) - Image processing utilities and filters
+  - [`lfd/`](libs/lfd/README.md) - Line Feature Detector implementation
+  - [`lsd/`](libs/lsd/README.md) - Line Segment Detector implementation
+  - [`utility/`](libs/utility/README.md) - Common utilities (option managers, data structures)
+  - [`eval/`](libs/eval/README.md) - Evaluation framework with test image support
 
 - **`resources/`** - Data resources:
   - `datasets/` - Image datasets (BSDS500 auto-download, MDB manual setup)
 
-- **`apps/`** - Applications:
-  - `line_analyzer/` - Qt-based interactive GUI for line analysis
+- **`apps/`** - [Applications](apps/README.md):
+  - [`line_analyzer/`](apps/line_analyzer/README.md) - Qt-based interactive GUI for line analysis
 
-- **`examples/`** - Usage examples demonstrating library functionality
-- **`evaluation/`** - Performance evaluation and thesis benchmarks
+- **`examples/`** - [Usage examples](examples/README.md) demonstrating library functionality
+- **`evaluation/`** - [Performance evaluation](evaluation/README.md) and thesis benchmarks
 - **`tools/`** - Build tools and utilities
 
 ## Quick Start
@@ -89,6 +89,25 @@ ctest
 ```
 
 CMake is maintained for compatibility but Bazel is recommended for new development.
+
+## Applications
+
+The project includes an interactive GUI application for line detection analysis:
+
+**Line Analyzer** ([`apps/line_analyzer/`](apps/line_analyzer/README.md)):
+
+- Qt-based interactive GUI for comprehensive line analysis
+- Real-time parameter tuning and algorithm comparison
+- Profile analysis and precision optimization
+- Support for multiple detection algorithms (LSD variants, Phase Congruency, SUSAN, etc.)
+- Edge detection visualization and gradient analysis
+
+```bash
+# Bazel (after running ./tools/scripts/detect_bazel_features.sh)
+bazel run //apps/line_analyzer:app_line_analyzer
+```
+
+See the [apps documentation](apps/README.md) for details.
 
 ## Dependencies
 

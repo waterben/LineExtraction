@@ -493,6 +493,10 @@ Complete examples are available in:
 
 ## See Also
 
+- [Edge Library](../edge/README.md) - Edge detection and NMS algorithms
 - [Geometry Library](../geometry/README.md) - Line representation and transformations
-- [Edge Library](../edge/README.md) - Edge detection primitives
 - [Image Processing Library](../imgproc/README.md) - Low-level image operations
+- [Eval Library](../eval/README.md) - Performance measurement framework
+- [LSD Examples](../../examples/lsd/README.md) - Demonstration programs
+- [Line Analyzer App](../../apps/line_analyzer/README.md) - Interactive analysis tool
+- [Main README](../../README.md) - Project overview

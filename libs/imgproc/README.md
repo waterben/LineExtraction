@@ -330,6 +330,9 @@ cmake --build build --target lib_imgproc
 
 ## See Also
 
-- [libs/edge/](../edge/) - Edge detection using gradient operators
-- [libs/lsd/](../lsd/) - Line segment detection
-- [examples/imgproc/](../../examples/imgproc/) - Usage examples
+- [edge](../edge/README.md) - Edge detection using gradient operators
+- [lsd](../lsd/README.md) - Line segment detection
+- [geometry](../geometry/README.md) - Geometric primitives
+- [utility](../utility/README.md) - Core utilities
+- [Image Processing Examples](../../examples/imgproc/README.md) - Usage examples
+- [Main README](../../README.md) - Project overview

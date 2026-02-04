@@ -323,9 +323,18 @@ void processEdges(const cv::Mat& dir, const cv::Mat& mag, Detector& detector) {
 
 ## Additional Resources
 
-- Examples in `examples/edge/` directory
+- [Edge detection examples](../../examples/edge/README.md) - Demonstration programs
+- [Line Analyzer app](../../apps/line_analyzer/README.md) - Interactive GUI tool
+- [Main README](../../README.md) - Project overview
 - Test cases in `tests/` directory
 - Full API documentation in header files
+
+## Related Libraries
+
+- [imgproc](../imgproc/README.md) - Image processing and gradient computation
+- [geometry](../geometry/README.md) - Geometric primitives and line representation
+- [lsd](../lsd/README.md) - Line Segment Detection algorithms
+- [eval](../eval/README.md) - Evaluation and benchmarking framework
 
 ## Author & License
 

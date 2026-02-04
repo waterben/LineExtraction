@@ -129,5 +129,6 @@ cmake --build build --target lib_utility
 
 ## See Also
 
-- [examples/](../../examples/) - Usage examples
-- [libs/eval/](../eval/) - Uses TestImages for evaluation
+- [Examples](../../examples/README.md) - Usage examples
+- [eval](../eval/README.md) - Uses TestImages for evaluation
+- [Main README](../../README.md) - Project overview
