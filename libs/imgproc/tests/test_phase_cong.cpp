@@ -1,4 +1,4 @@
-#include <imgproc/impl/PhaseCong.hpp>
+#include "PhaseCong.hpp"
 #include <opencv2/opencv.hpp>
 
 #include <gtest/gtest.h>

@@ -94,7 +94,7 @@
  */
 /*----------------------------------------------------------------------------*/
 
-#include <lsd/impl/lsd_fgioi.hpp>
+#include "lsd_fgioi.hpp"
 
 #include <cassert>
 #include <cstdio>

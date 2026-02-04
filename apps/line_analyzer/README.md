@@ -63,9 +63,14 @@ The application supports multiple Line Segment Detector (LSD) variants:
 
 ### Prerequisites
 
-- Qt5 development libraries (`libqt5-dev`)
-- OpenCV with GUI support
-- LineExtraction core libraries
+- **Qt5** development libraries (`libqt5-dev`)
+  - Qt5 Core, Widgets, GUI modules
+  - Version 5.15+ recommended
+- **OpenCV** with GUI support
+- **LineExtraction** core libraries
+- **QCustomPlot** (included in `third-party/qplot/`)
+
+**Note:** Qt5 and QCustomPlot are optional dependencies. The application will only be built if Qt5 is detected by the build system.
 
 ### Bazel (Recommended)
 
@@ -190,15 +195,56 @@ apps/line_analyzer/
 
 ## Related Documentation
 
-- [Main README](../../README.md) - Project overview
+- [Main README](../../README.md) - Project overview and licensing
 - [libs/lsd](../../libs/lsd/README.md) - LSD algorithms
 - [libs/edge](../../libs/edge/README.md) - Edge detection
 - [libs/imgproc](../../libs/imgproc/README.md) - Image processing
 - [examples/lsd](../../examples/lsd/README.md) - LSD examples
 - [docs/BAZEL.md](../../docs/BAZEL.md) - Build documentation
 
+## License
+
+⚠️ **Important:** This application is licensed under **GPL v3**, not MIT.
+
+**Why GPL v3?**
+
+The Line Analyzer GUI uses:
+
+- **QCustomPlot** (GPL v3) - plotting library in `third-party/qplot/`
+- **Qt5** (LGPL v3 / GPL v2/v3 / Commercial)
+
+Since QCustomPlot is GPL v3, any application using it must also be GPL v3 (copyleft requirement).
+
+### Implications
+
+- **Source Code:** Must be provided to users
+- **Modifications:** Users can modify and redistribute
+- **Derivative Works:** Must be GPL v3 compatible
+- **Commercial Use:** Requires QCustomPlot commercial license or GPL compliance
+
+### For Commercial Use
+
+If you need a proprietary/closed-source application:
+
+1. **Purchase QCustomPlot commercial license** from <http://www.qcustomplot.com/>
+2. **Purchase Qt commercial license** from <https://www.qt.io/licensing/>
+3. **Replace QCustomPlot** with a commercial-friendly alternative (e.g., QtCharts with commercial Qt license)
+
+### Alternative
+
+The **core LineExtraction libraries** (`libs/`) remain **MIT licensed** and can be used in commercial applications without restrictions (except for components in `third-party/contrib/` - see main README).
+
+You can build your own custom GUI using MIT-compatible visualization libraries.
+
+**See Also:**
+
+- [QCustomPlot License](../../third-party/qplot/README.md)
+- [Main Project License](../../README.md#license)
+- [Qt Licensing](https://www.qt.io/licensing/)
+
 ## Notes
 
 - Some tools (ContinuityOptimizer, ConnectionOptimizer, LineAnalyser2D) are work-in-progress and commented out in [main.cpp](main.cpp)
 - The application requires OpenCV with GUI support (highgui module)
 - For headless environments, use command-line examples instead
+- This application is **optional** - build system detects Qt5 availability

@@ -10,6 +10,7 @@ le_add_library(lib_lsd
         lib_geometry
         lib_utility
         le::opencv
+        contrib_lsd_external  # External LSD implementations
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     TEST_DEPS

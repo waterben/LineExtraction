@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <imgproc/impl/PhaseCong.hpp>
+#include "PhaseCong.hpp"
 #include <imgproc/phase_congruency.hpp>
 
 namespace lsfm {

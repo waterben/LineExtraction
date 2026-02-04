@@ -1,0 +1,25 @@
+"""third-party/contrib - External contributions and third-party code
+
+This package contains third-party implementations and auto-generated code
+that is not part of the main MIT-licensed codebase. Each subdirectory contains
+its own build configuration and README with licensing information.
+
+See individual subdirectory READMEs for details:
+- matlab_coder/README.md - MATLAB Coder generated code (Academic License)
+- lsd_external/README.md - External LSD implementations (AGPL and other licenses)
+"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Re-export libraries from subdirectories
+alias(
+    name = "matlab_coder",
+    actual = "//third-party/contrib/matlab_coder",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "lsd_external",
+    actual = "//third-party/contrib/lsd_external",
+    visibility = ["//visibility:public"],
+)

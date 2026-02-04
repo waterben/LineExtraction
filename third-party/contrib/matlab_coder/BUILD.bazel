@@ -1,0 +1,33 @@
+"""MATLAB Coder generated library - Academic License"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "matlab_coder",
+    srcs = glob(
+        ["src/*.cpp"],
+        allow_empty = True,
+    ),
+    hdrs = glob(
+        [
+            "include/*.h",
+            "include/*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    copts = [
+        "-Wno-old-style-cast",
+        "-Wno-conversion",
+        "-Wno-sign-conversion",
+        "-Wno-effc++",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@opencv",
+    ],
+)

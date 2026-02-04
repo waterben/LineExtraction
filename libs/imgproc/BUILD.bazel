@@ -31,6 +31,7 @@ cc_library(
     deps = [
         "//libs/geometry:lib_geometry",
         "//libs/utility:lib_utility",
+        "//third-party/contrib:matlab_coder",
         "@opencv",
         "@opencv//:photo",
     ],
@@ -45,6 +46,7 @@ cc_library(
         copts = LE_COPTS,
         deps = [
             ":lib_imgproc",
+            "//third-party/contrib:matlab_coder",
             "@googletest//:gtest",
             "@googletest//:gtest_main",
         ],

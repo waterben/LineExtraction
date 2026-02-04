@@ -7,8 +7,10 @@ le_add_library(lib_imgproc
         lib_utility
         lib_geometry
         le::opencv
+        contrib_matlab_coder  # MATLAB Coder generated code
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     TEST_DEPS
         ${CMAKE_THREAD_LIBS_INIT}
+        contrib_matlab_coder  # Tests need direct access to PhaseCong.hpp
 )
