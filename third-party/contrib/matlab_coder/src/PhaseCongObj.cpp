@@ -1,3 +1,4 @@
+#include "PhaseCong.hpp"
 #include "logGaborFilter.h"
 #include "logGaborFilter_emxAPI.h"
 #include "logGaborFilter_emxutil.h"
@@ -7,7 +8,6 @@
 #include "phasecong.h"
 #include "rt_nonfinite.h"
 #include "rtwtypes.h"
-#include <imgproc/impl/PhaseCong.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <math.h>

@@ -13,6 +13,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <utility/matlab_helpers.hpp>
+#include <utility/matlab_helpers_gui.hpp>  // For showMat()
 #include <utility/test_images.hpp>
 
 #include <ctime>

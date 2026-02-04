@@ -64,7 +64,7 @@ cc_binary(
     name = "zc_test",
     srcs = ["zc_test.cpp"],
     data = _TEST_DATA,
-    deps = _EDGE_DEPS,
+    deps = _EDGE_DEPS + ["//libs/utility:lib_utility_gui"],  # For showMat()
 )
 
 cc_binary(

@@ -110,12 +110,83 @@ std::cout << table;  // Pretty print
 | `console_app.hpp` | Console application base class |
 | `camera_utilities.hpp` | Stereo calibration utilities |
 | `matlab_helpers.hpp` | MATLAB-like matrix functions |
+| `matlab_helpers_gui.hpp` | GUI utilities (requires highgui) |
+
+## GUI Components
+
+The utility library provides optional GUI components in a separate library to avoid forcing GUI dependencies on headless builds.
+
+### lib_utility vs lib_utility_gui
+
+**`lib_utility`** (core, no GUI dependencies):
+
+- All utilities except `showMat()`
+- Safe for headless/CI builds
+- Dependencies: OpenCV (core, imgproc, calib3d), Eigen
+
+**`lib_utility_gui`** (GUI utilities):
+
+- Contains `showMat()` for displaying matrices in windows
+- Dependencies: `lib_utility`, OpenCV highgui
+- Used only by GUI applications/examples
+
+### Usage in GUI Applications
+
+```cpp
+#include <utility/matlab_helpers.hpp>      // Core utilities (no GUI)
+#include <utility/matlab_helpers_gui.hpp>  // GUI utilities (requires highgui)
+
+using namespace lsfm;
+
+cv::Mat image = cv::imread("test.png", cv::IMREAD_GRAYSCALE);
+showMat("Image", image, IMG_NORM_AUTO);  // Display in window
+```
+
+**Bazel:**
+
+```python
+cc_binary(
+    name = "my_gui_app",
+    srcs = ["app.cpp"],
+    deps = [
+        "//libs/utility:lib_utility",      # Core utilities
+        "//libs/utility:lib_utility_gui",  # GUI utilities
+    ],
+)
+```
+
+**CMake:**
+
+```cmake
+target_link_libraries(my_gui_app
+    lib_utility
+    le::opencv  # Includes highgui
+)
+```
+
+### Design Rationale
+
+Separating GUI code prevents forcing all downstream libraries to link against:
+
+- OpenCV highgui
+- GUI backends (GTK, X11, etc.)
+- Display system libraries
+
+This ensures:
+
+- ✅ Headless/CI builds work without X11
+- ✅ Minimal dependencies for core libraries
+- ✅ Docker containers don't need GUI libraries
+- ✅ Explicit intent when GUI is needed
+
+**Migration:** If you use `showMat()` in examples/applications, include `matlab_helpers_gui.hpp` and add `lib_utility_gui` dependency.
 
 ## Build
 
 ```bash
 # Bazel
-bazel build //libs/utility:lib_utility
+bazel build //libs/utility:lib_utility        # Core library
+bazel build //libs/utility:lib_utility_gui    # GUI utilities
 bazel test //libs/utility:test_utility
 
 # CMake
@@ -124,7 +195,9 @@ cmake --build build --target lib_utility
 
 ## Dependencies
 
-- OpenCV (core, imgproc)
+- OpenCV (core, imgproc, calib3d)
+- OpenCV highgui (only for lib_utility_gui)
+- Eigen3
 - C++17 standard library
 
 ## See Also

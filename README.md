@@ -155,4 +155,81 @@ Output: `build/doc/html/index.html`
 
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
-- **[MIT license](http://opensource.org/licenses/mit-license.php)**
+**[MIT license](http://opensource.org/licenses/mit-license.php)** - Main codebase
+
+⚠️ **Important License Notice:**
+
+The core LineExtraction library and tools are licensed under MIT. However, the project includes third-party code and GUI components under **different licenses**:
+
+### Third-Party Algorithm Implementations
+
+- **`third-party/contrib/matlab_coder/`** - MATLAB Coder generated code ([Academic License](third-party/contrib/matlab_coder/README.md))
+  - Auto-generated from MATLAB implementations
+  - Subject to MATLAB Coder license restrictions
+  - Academic use only
+
+- **`third-party/contrib/lsd_external/`** - External LSD implementations ([Mixed Licenses](third-party/contrib/lsd_external/README.md))
+  - LSD by Grompone von Gioi: **AGPL v3.0** (strong copyleft, requires source disclosure)
+  - EDLines Zero: BSD-style with citation requirement
+  - KHT: Academic license with citation requirement
+
+### GUI Components (Qt-based)
+
+- **`third-party/qplot/`** - QCustomPlot plotting library ([GPL v3](third-party/qplot/README.md))
+  - Interactive plotting widget
+  - **GPL v3** requires derivative works to be GPL-licensed
+  - Commercial licensing available from QCustomPlot author
+
+- **`third-party/qplot3d/`** - QCustomPlot3D extension ([GPL v3](third-party/qplot3d/README.md))
+  - 3D visualization extension
+  - Same GPL v3 restrictions as QCustomPlot
+
+- **`apps/line_analyzer/`** - Line Analyzer GUI application
+  - Uses **Qt5** framework (LGPL v3 / GPL v2/v3 / Commercial)
+  - Uses QCustomPlot (GPL v3) → **entire app is GPL v3**
+  - See [Line Analyzer README](apps/line_analyzer/README.md) for details
+
+### Qt5 Framework Licensing
+
+The Line Analyzer application uses Qt5, which offers multiple licensing options:
+
+- **LGPL v3**: Allows dynamic linking in proprietary apps (most common for open-source)
+- **GPL v2/v3**: For applications distributed under GPL
+- **Commercial Qt License**: For proprietary closed-source applications
+
+**Note:** Since Line Analyzer uses QCustomPlot (GPL v3), the entire application is effectively **GPL v3**, regardless of Qt licensing choice.
+
+### Summary Table
+
+| Component | License | Commercial Use | Source Disclosure | Notes |
+|-----------|---------|----------------|-------------------|-------|
+| Core Libraries (`libs/`) | **MIT** | ✅ Yes | ❌ No | Main codebase |
+| `contrib/matlab_coder` | Academic | ❌ No | - | MATLAB restrictions |
+| `contrib/lsd_external/lsd_fgioi` | **AGPL v3** | ⚠️ Complex | ✅ Yes | Strong copyleft |
+| `contrib/lsd_external/edlines` | BSD-style | ✅ Yes | ❌ No | Citation required |
+| `contrib/lsd_external/kht` | Academic | ⚠️ Check terms | ❌ No | Citation required |
+| `qplot` / `qplot3d` | **GPL v3** | ⚠️ No* | ✅ Yes | *Unless commercial license |
+| `apps/line_analyzer` | **GPL v3** | ⚠️ No* | ✅ Yes | Due to QCustomPlot |
+| Qt5 Framework | LGPL v3 / GPL / Commercial | ✅ Yes* | ⚠️ LGPL: Dynamic only | *Depends on license chosen |
+
+### For Commercial Use
+
+If you need to use this project in proprietary/commercial software:
+
+1. **Option 1: Use MIT components only**
+   - Use core libraries (`libs/edge`, `libs/geometry`, `libs/imgproc`, etc.)
+   - Avoid `third-party/contrib/` components with restrictive licenses
+   - Build custom visualization (avoid QCustomPlot/Line Analyzer)
+
+2. **Option 2: Obtain commercial licenses**
+   - Purchase QCustomPlot commercial license
+   - Purchase Qt commercial license
+   - Contact MATLAB Coder authors for commercial terms
+   - Contact LSD AGPL authors for alternative licensing
+
+3. **Option 3: Comply with GPL**
+   - Release your application under GPL v3
+   - Provide source code to users
+   - Accept GPL restrictions
+
+**See individual README files in [`third-party/`](third-party/) for detailed licensing information and usage restrictions.**

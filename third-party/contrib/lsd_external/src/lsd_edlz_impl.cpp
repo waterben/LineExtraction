@@ -38,7 +38,7 @@ the use of this software, even if advised of the possibility of such damage.
 */
 
 
-#include <lsd/impl/lsd_edlz.hpp>
+#include "lsd_edlz.hpp"
 
 #include <algorithm>
 #include <cmath>

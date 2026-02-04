@@ -86,24 +86,9 @@ inline cv::Mat normalizeMat(const cv::Mat& in) {
   return cpy;
 }
 
-/// @brief Display a matrix in a window with optional normalization.
-/// @param name Window name.
-/// @param out Matrix to display.
-/// @param normalize Normalization mode (IMG_NORM_FALSE/TRUE/AUTO).
-/// @param refresh Whether to call waitKey to refresh display.
-inline void showMat(const std::string& name, const cv::Mat& out, int normalize = IMG_NORM_AUTO, bool refresh = true) {
-  if (normalize == IMG_NORM_AUTO)
-    normalize = (out.type() == CV_8U || out.channels() > 1) ? IMG_NORM_FALSE : IMG_NORM_TRUE;
-
-  cv::Mat cpy;
-  if (normalize == IMG_NORM_TRUE) {
-    cpy = normalizeMat(out);
-  } else
-    cpy = out;
-
-  cv::imshow(name, cpy);
-  if (refresh) cv::waitKey(1);
-}
+// Note: showMat() has been moved to matlab_helpers_gui.hpp to avoid
+// forcing highgui dependency on headless builds. Include that header
+// separately in GUI applications.
 
 /// @brief Create 2D coordinate matrices from vectors (MATLAB meshgrid).
 /// @param xgv X grid vector.

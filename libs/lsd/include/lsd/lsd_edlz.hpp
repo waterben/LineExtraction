@@ -41,9 +41,10 @@
 
 #pragma once
 
-#include <lsd/impl/lsd_edlz.hpp>
-#include <lsd/lsd_base.hpp>
+#include <lsd_edlz.hpp>
 
+// External implementation header (third-party code)
+#include <lsd/lsd_base.hpp>
 class EDLineDetector;
 
 namespace lsfm {

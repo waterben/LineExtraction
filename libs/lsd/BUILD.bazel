@@ -29,6 +29,7 @@ cc_library(
         "//libs/geometry:lib_geometry",
         "//libs/imgproc:lib_imgproc",
         "//libs/utility:lib_utility",
+        "//third-party/contrib:lsd_external",
         "@opencv",
     ],
 )

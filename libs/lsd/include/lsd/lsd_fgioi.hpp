@@ -41,10 +41,12 @@
 
 #pragma once
 
-#include <lsd/impl/lsd_fgioi.hpp>
+// External implementation header (third-party code - AGPL)
 #include <lsd/lsd_base.hpp>
 
 #include <cstdlib>
+#include <lsd_fgioi.hpp>
+
 
 namespace lsfm {
 
