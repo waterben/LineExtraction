@@ -15,6 +15,7 @@
 #include <lsd/lsd_fbw.hpp>
 #include <lsd/lsd_fgioi.hpp>
 #include <opencv2/opencv.hpp>
+#include <cmath>
 
 #include <gtest/gtest.h>
 
@@ -191,7 +192,7 @@ TEST_F(LSDEdgeCasesTest, LsdEP_TouchingLines) {
   EXPECT_GT(segments.size(), size_t{0});
 
   // Should detect at least 2 segments (the two parts of the L)
-  EXPECT_GE(segments.size(), size_t{1});
+  EXPECT_GE(segments.size(), size_t{2});
 }
 
 /**

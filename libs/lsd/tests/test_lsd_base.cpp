@@ -11,6 +11,7 @@
 
 #include <lsd/lsd_cc.hpp>
 #include <opencv2/opencv.hpp>
+#include <cmath>
 
 #include <gtest/gtest.h>
 

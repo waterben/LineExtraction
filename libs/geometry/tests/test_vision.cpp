@@ -3,6 +3,7 @@
 
 #include <geometry/vision.hpp>
 
+#include <cmath>
 #include <gtest/gtest.h>
 
 namespace {

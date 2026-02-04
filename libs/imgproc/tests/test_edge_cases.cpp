@@ -10,6 +10,7 @@
 #include <imgproc/image_operator.hpp>
 #include <opencv2/opencv.hpp>
 
+#include <cmath>
 #include <gtest/gtest.h>
 
 using namespace lsfm;
