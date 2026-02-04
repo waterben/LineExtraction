@@ -32,12 +32,12 @@ TEST(SpeTest, LinearEstimateLeftShift) {
   EXPECT_NEAR(offset, -4.0f / 14.0f, 1e-6f);
 }
 
-/// @brief Test LinearEstimate with integer types.
+/// @brief Test LinearEstimate with floating-point magnitudes.
 TEST(SpeTest, LinearEstimateInteger) {
-  // Using uchar magnitude, double output
-  // Note: uchar arithmetic is integer, so (150 - 100) = 50, (200 - 100) = 100
-  // Result: 50 / (2 * 100) = 50 / 200 (int division) = 0 (truncated)
-  // For proper result, use values that work with integer arithmetic or test with floats
+  // Using float magnitudes with double output to avoid integer truncation.
+  // Formula: (p_p - p_m) / (2 * (p - min(p_m, p_p)))
+  // Here: p = 200, p_m = 100, p_p = 150 -> (150 - 100) / (2 * (200 - 100))
+  //      = 50 / 200 = 0.25 (computed in floating point, no truncation).
   double offset = lsfm::LinearEstimate<double, float>::estimate(200.0f, 100.0f, 150.0f);
   // (150 - 100) / (2 * (200 - 100)) = 50 / 200 = 0.25
   EXPECT_NEAR(offset, 0.25, 1e-6);
