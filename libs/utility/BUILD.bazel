@@ -22,6 +22,7 @@ cc_library(
     deps = [
         "@eigen",
         "@opencv",
+        "@opencv//:highgui",  # For cv::imshow in matlab_helpers.hpp
     ],
 )
 
