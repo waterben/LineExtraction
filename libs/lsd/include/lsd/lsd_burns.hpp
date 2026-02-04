@@ -74,7 +74,9 @@ static const int BURNS_NMS = 1;
 /// @tparam GRAD Gradient computation class
 /// @tparam FIT Line fitting class
 ///
-/// @example
+/// **Example:**
+/// @example examples/lsd/lsd.cpp
+///
 /// @code{cpp}
 /// #include <lsd/lsd_burns.hpp>
 /// #include <opencv2/imgcodecs.hpp>
@@ -174,7 +176,6 @@ class LsdBurns : public LsdBase<FT, LPT> {
   /// @param min_pix Minimum number of pixels to form a valid line segment (typically 5-20)
   /// @param part_num Number of directional partitions (4-255, typically 12-16)
   /// @param flags Detection flags: 0 = standard, BURNS_NMS = enable Non-Maxima Suppression
-  /// @example
   /// @code{cpp}
   /// // Standard Burns detector
   /// lsfm::LsdBurns<float> detector(0.004f, 0.012f, 5, 12, 0);

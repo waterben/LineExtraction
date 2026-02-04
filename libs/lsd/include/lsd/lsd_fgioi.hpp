@@ -62,7 +62,9 @@ namespace lsfm {
 /// @tparam FT Floating-point type for line coordinates (float, double)
 /// @tparam LPT Line point template class (default Vec2)
 ///
-/// @example
+/// **Example:**
+/// @example examples/lsd/lsd.cpp
+///
 /// @code{cpp}
 /// #include <lsd/lsd_fgioi.hpp>
 /// #include <opencv2/imgcodecs.hpp>
@@ -135,7 +137,6 @@ class LsdFGioi : public LsdBase<FT, LPT> {
   /// @param log_eps NFA detection threshold: -log10(NFA) > log_eps (typically 0-5)
   /// @param density_th Minimum density of aligned points in line rectangle (0-1, typically 0.5-0.9)
   /// @param n_bins Number of gradient magnitude histogram bins (typically 1024-4096)
-  /// @example
   /// @code{cpp}
   /// // Sensitive to weak structures
   /// lsfm::LsdFGioi<float> sensitive(0.5f, 45.0f, 0.0f, 0.5f, 1024);

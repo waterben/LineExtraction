@@ -61,7 +61,9 @@ namespace lsfm {
 /// @tparam FT Floating-point type for line coordinates (float, double)
 /// @tparam LPT Line point template class (default Vec2)
 ///
-/// @example
+/// **Example:**
+/// @example examples/lsd/lsd.cpp
+///
 /// @code{cpp}
 /// #include <lsd/lsd_edlz.hpp>
 /// #include <opencv2/imgcodecs.hpp>
@@ -130,7 +132,6 @@ class LsdEDLZ : public LsdBase<FT, LPT> {
   /// @param minLineLen Minimum line length in pixels (typically 10-30).
   /// @param lineFitErrThreshold Maximum line-to-segment fit error in pixels (typically 1-3).
   /// @param validate Whether to validate lines using NFA (Number of False Alarms) criterion.
-  /// @example
   /// @code{cpp}
   /// // Sensitive detector for weak edges
   /// lsfm::LsdEDLZ<float> sensitive(5.0f, 1.0f, 1, 10, 1.0f, true);
@@ -157,7 +158,6 @@ class LsdEDLZ : public LsdBase<FT, LPT> {
 
   /// @brief Create detector from an initializer list of parameter names and values.
   /// @param options Initializer list with parameter name/value pairs
-  /// @example
   /// @code{cpp}
   /// lsfm::LsdEDLZ<float> detector({{"grad_th", 15}, {"min_len", 20}});
   /// @endcode

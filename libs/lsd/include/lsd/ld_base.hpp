@@ -127,7 +127,6 @@ class LdBase : public ValueManager {
   /// that were computed during detection. Use imageDataDescriptor() to understand the
   /// content and order of layers.
   /// @return Vector of cv::Mat, one for each data layer. Empty if no auxiliary data is provided.
-  /// @example
   /// @code{cpp}
   /// detector->detect(image);
   /// const auto& data = detector->imageData();

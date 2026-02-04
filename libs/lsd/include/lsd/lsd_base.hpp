@@ -128,7 +128,6 @@ class LsdBase : public LdBase<FT, LPT> {
   /// Each element is (x1, y1, x2, y2) where (x1,y1) and (x2,y2) are the line endpoints.
   /// The orientation is determined by gradient direction.
   /// @return Const reference to vector of endpoint vectors
-  /// @example
   /// @code{cpp}
   /// detector->detect(image);
   /// const auto& endpoints = detector->endPoints();
