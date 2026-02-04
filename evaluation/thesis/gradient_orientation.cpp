@@ -1,7 +1,8 @@
 /// @file gradient_orientation.cpp
 /// @brief Thesis evaluation: Gradient orientation estimation accuracy
-/// @param Evaluates accuracy of gradient orientation for various gradient operators
-/// @param Compares orientation histograms and phase information across different filters
+///
+/// Evaluates accuracy of gradient orientation for various gradient operators.
+/// Compares orientation histograms and phase information across different filters.
 
 #include <geometry/draw.hpp>
 #include <imgproc/derivative_gradient.hpp>

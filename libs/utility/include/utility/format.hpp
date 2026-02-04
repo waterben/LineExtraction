@@ -126,8 +126,8 @@ inline void format_impl(
 }  // namespace detail
 
 /// @brief Format a string using a small printf-like subset.
-/// @param fmt Format string with % directives.
 /// @tparam Args Variadic argument types.
+/// @param fmt Format string with % directives.
 /// @param args Arguments referenced by the format string in their given order.
 /// @return The formatted string.
 template <typename... Args>

@@ -1,7 +1,8 @@
 /// @file even_parameter_test.cpp
 /// @brief Thesis evaluation: Even-order derivative parameter optimization
-/// @param Tests parameter optimization for even-order derivative filters
-/// @param Evaluates gradient quality with different filter parameters using dlib optimization
+///
+/// Tests parameter optimization for even-order derivative filters.
+/// Evaluates gradient quality with different filter parameters using dlib optimization.
 
 #include <imgproc/derivative_gradient.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

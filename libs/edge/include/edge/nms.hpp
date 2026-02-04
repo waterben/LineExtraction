@@ -174,11 +174,11 @@ struct EMap4 {
 };
 
 /// @brief Set border region of a cv::Mat to a given value.
+/// @tparam MT Matrix element data type
 /// @param mat The input/output matrix to modify
 /// @param borderStart Number of rows to set at the top
 /// @param borderEnd Number of rows to set at the bottom
 /// @param val The value to set in border regions
-/// @tparam MT Matrix element data type
 template <class MT>
 inline void setBorder(cv::Mat& mat, int borderStart, int borderEnd, MT val) {
   mat.rowRange(0, borderStart).setTo(val);
@@ -188,10 +188,10 @@ inline void setBorder(cv::Mat& mat, int borderStart, int borderEnd, MT val) {
 }
 
 /// @brief Set border region of a cv::Mat to a given value using uniform border width.
+/// @tparam MT Matrix element data type
 /// @param mat The input/output matrix to modify
 /// @param border Number of pixels to set on all borders
 /// @param val The value to set in border regions
-/// @tparam MT Matrix element data type
 template <class MT>
 inline void setBorder(cv::Mat& mat, int border, MT val) {
   mat.rowRange(0, border).setTo(val);

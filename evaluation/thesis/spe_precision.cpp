@@ -1,7 +1,8 @@
 /// @file spe_precision.cpp
 /// @brief Thesis evaluation: Sub-Pixel Estimation precision and accuracy
-/// @param Comprehensive evaluation of sub-pixel localization methods
-/// @param Measures subpixel edge localization accuracy, error statistics, and method comparison
+///
+/// Comprehensive evaluation of sub-pixel localization methods.
+/// Measures subpixel edge localization accuracy, error statistics, and method comparison.
 
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>
