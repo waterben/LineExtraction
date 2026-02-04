@@ -1,3 +1,7 @@
+/// @file cv_measure.hpp
+/// @brief OpenCV-related measurement structures for evaluation.
+/// Provides measurement types for computer vision evaluation metrics.
+
 #pragma once
 
 #include <eval/performance_measure.hpp>

@@ -64,6 +64,12 @@ LE_THIRD_PARTY_C_COPTS = [
     "-Wno-implicit-fallthrough",
 ]
 
+# Warning flags for benchmarks (Google Benchmark uses deprecated patterns)
+LE_BENCHMARK_COPTS = LE_COPTS_BASE + [
+    "-Werror",
+    "-Wno-deprecated-declarations",  # benchmark::DoNotOptimize deprecation
+]
+
 # Warning suppressions for arpack++ headers (legacy C++98 code)
 # arpack++ is not a system include, so we need to suppress warnings manually
 ARPACKPP_COPTS = [

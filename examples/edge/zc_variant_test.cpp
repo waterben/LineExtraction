@@ -1,3 +1,16 @@
+/// @file zc_variant_test.cpp
+/// @brief Comparison of zero-crossing detection variants.
+///
+/// Compares different zero-crossing detection implementations:
+/// - Gradient-based direction encoding
+/// - Laplacian sign-based encoding
+/// - Various threshold strategies
+///
+/// Visualizes edge maps with color-coded direction information.
+///
+/// @usage ./zc_variant_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/zc.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>

@@ -1,3 +1,14 @@
+/// @file noise_test.cpp
+/// @brief Noise addition and estimation utilities.
+///
+/// Demonstrates image noise operations:
+/// - Gaussian noise addition with specified sigma
+/// - Noise estimation from image patches
+/// - PSNR (Peak Signal-to-Noise Ratio) calculation
+///
+/// @usage ./noise_test [image_path]
+/// @param image_path Optional path to input image (default: circle.png from noise dataset)
+
 #include <imgproc/image_operator.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>

@@ -1,3 +1,9 @@
+/// @file lsd_precision.cpp
+/// @brief Thesis evaluation: Line Segment Detector precision with different gradients
+///
+/// Evaluates LSD precision using various gradient operators.
+/// Measures detection quality and sensitivity to gradient computation method.
+
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>
 #include <imgproc/laplace.hpp>

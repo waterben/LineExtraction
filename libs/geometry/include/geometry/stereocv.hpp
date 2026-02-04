@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file stereocv.hpp
+/// @brief OpenCV-based stereo triangulation implementation.
+///
+/// Provides StereoCV class that uses OpenCV's cv::triangulatePoints()
+/// for point and line triangulation from stereo correspondences.
 
 #pragma once
 
@@ -49,20 +54,37 @@
 
 namespace lsfm {
 
-//! traingulation methods implemented with opencv functions (based on point triangulation only)
+/// @brief Stereo triangulation using OpenCV functions.
+///
+/// Uses cv::triangulatePoints() for point triangulation. Lines are
+/// triangulated by triangulating two points on each line.
+/// @tparam FT Floating-point type.
+/// @note Requires rectified stereo setup for line triangulation.
 template <class FT>
 class StereoCV {
  protected:
-  cv::Matx34<FT> projL_, projR_;
+  cv::Matx34<FT> projL_, projR_;  ///< OpenCV projection matrices.
 
  public:
   typedef FT float_type;
 
+  /// @brief Construct from projection matrices.
+  /// @param projL Left camera projection matrix (3x4).
+  /// @param projR Right camera projection matrix (3x4).
   StereoCV(const Matx34<FT>& projL, const Matx34<FT>& projR) : projL_(projL.data()), projR_(projR.data()) {}
 
+  /// @brief Construct from Camera objects.
+  /// @param camL Left camera.
+  /// @param camR Right camera.
   StereoCV(const Camera<FT>& camL, const Camera<FT>& camR) : projL_(camL.projM().data()), projR_(camR.projM().data()) {}
 
-  //! compute 3d point from two rays from camera origin through corresponding stereo pixels
+  /// @name Point Triangulation
+  /// @{
+
+  /// @brief Triangulate single 3D point using OpenCV.
+  /// @param pointL Left image pixel.
+  /// @param pointR Right image pixel.
+  /// @return Triangulated 3D point.
   inline Vec3<FT> triangulate(const Vec2<FT>& pointL, const Vec2<FT>& pointR) const {
     cv::Mat_<FT> v;
     std::vector<Vec2<FT>> camLpnts, camRpnts;
@@ -79,7 +101,13 @@ class StereoCV {
     return Vec3<FT>(v(0), v(1), v(2));
   }
 
-  //! compute 3d points from point vector
+  /// @brief Triangulate vector of point correspondences using OpenCV.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param pointL Left image pixels.
+  /// @param pointR Right image pixels.
+  /// @param[out] ret Triangulated 3D points.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<Vec2<FT>, V1Args...>& pointL,
                           const V<Vec2<FT>, V1Args...>& pointR,
@@ -93,17 +121,19 @@ class StereoCV {
     cv::fromHomogeneous<FT>(v, tmp, true);
   }
 
-  //! compute 3d points from mat
-  /*inline cv::Mat triangulate(const cv::Mat &pointL, const cv::Mat &pointR) {
-      CV_Assert(pointL.rows == pointR.rows && pointL.type() == pointR.type());
-      cv::Mat_<FT> v, ret;
-      triangulatePoints(projL_, projR_, pointL, pointR, v);
+  /// @}
 
-      fromHomogeneous<FT>(v,ret,true);
-      return ret;
-  }*/
+  /// @name Line Triangulation
+  /// @{
 
-  //! compute 3d line from two planes from camera origin through corresponding stereo lines
+  /// @brief Triangulate 3D line using OpenCV point triangulation.
+  ///
+  /// Triangulates two points at y=0 and y=100 on each line,
+  /// then constructs a 3D line through them.
+  /// @param lineL Left image line.
+  /// @param lineR Right image line.
+  /// @return Triangulated 3D line (empty if degenerate).
+  /// @note Requires rectified setup.
   inline Line3<FT> triangulate(const Line<FT>& lineL, const Line<FT>& lineR) const {
     if (detail::abs(lineL.normalX()) < LIMITS<FT>::tau() || detail::abs(lineR.normalX()) < LIMITS<FT>::tau())
       return Line3<FT>();
@@ -128,7 +158,13 @@ class StereoCV {
     return Line3<FT>(Vec3<FT>(v1(0), v1(1), v1(2)), Vec3<FT>(v2(0) - v1(0), v2(1) - v1(1), v2(2) - v1(2)));
   }
 
-  //! compute 2d line pairs to 3d line vector
+  /// @brief Triangulate vector of line correspondences using OpenCV.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param linesL Left image lines.
+  /// @param linesR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<Line<FT>, V1Args...>& linesL,
                           const V<Line<FT>, V1Args...>& linesR,
@@ -168,8 +204,11 @@ class StereoCV {
     }
   }
 
-
-  //! compute 2d line (subclass) pairs to 3d line vector
+  /// @brief Triangulate generic line vector correspondences using OpenCV.
+  /// @tparam LV Container type (must contain Line-compatible objects).
+  /// @param linesL Left image lines.
+  /// @param linesR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <class LV>
   inline void triangulateV(const LV& linesL, const LV& linesR, std::vector<Line3<FT>>& ret) const {
     CV_Assert(linesL.size() == linesR.size());
@@ -207,8 +246,19 @@ class StereoCV {
     }
   }
 
+  /// @}
 
-  //! compute 3d line segment from two planes from camera origin through corresponding stereo line segments
+  /// @name Line Segment Triangulation
+  /// @{
+
+  /// @brief Triangulate 3D line segment using OpenCV.
+  ///
+  /// Computes segment endpoints by triangulating at the union
+  /// of y-extents from both image segments.
+  /// @param lineL Left image line segment.
+  /// @param lineR Right image line segment.
+  /// @return Triangulated 3D line segment (empty if degenerate).
+  /// @note Requires rectified setup.
   inline LineSegment3<FT> triangulate(const LineSegment<FT>& lineL, const LineSegment<FT>& lineR) const {
     if (detail::abs(lineL.normalX()) < LIMITS<FT>::tau() || detail::abs(lineR.normalX()) < LIMITS<FT>::tau())
       return LineSegment3<FT>();
@@ -241,8 +291,13 @@ class StereoCV {
     return LineSegment3<FT>(Vec3<FT>(v1(0), v1(1), v1(2)), Vec3<FT>(v2(0) - v1(0), v2(1) - v1(1), v2(2) - v1(2)));
   }
 
-
-  //! compute 2d line segment pairs to 3d line segment vector
+  /// @brief Triangulate vector of line segment correspondences using OpenCV.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param linesL Left image line segments.
+  /// @param linesR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<LineSegment<FT>, V1Args...>& linesL,
                           const V<LineSegment<FT>, V1Args...>& linesR,
@@ -290,8 +345,11 @@ class StereoCV {
     }
   }
 
-
-  //! compute 2d line segment (subclass) pairs to 3d line segment vector
+  /// @brief Triangulate generic line segment vector correspondences using OpenCV.
+  /// @tparam LV Container type (must contain LineSegment-compatible objects).
+  /// @param linesL Left image line segments.
+  /// @param linesR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <class LV>
   inline void triangulateV(const LV& linesL, const LV& linesR, std::vector<LineSegment3<FT>>& ret) const {
     CV_Assert(linesL.size() == linesR.size());
@@ -336,9 +394,14 @@ class StereoCV {
       ret.push_back(LineSegment<FT>(vp3[i], vp3[i + 1]));
     }
   }
+
+  /// @}
 };
 
+/// @brief Single-precision OpenCV stereo triangulation.
 typedef StereoCV<float> StereoCVf;
+
+/// @brief Double-precision OpenCV stereo triangulation.
 typedef StereoCV<double> StereoCVd;
 
 }  // namespace lsfm

@@ -1,7 +1,7 @@
 """lib_lsd - Line Segment Detector library"""
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
-load("//tools/bazel:copts.bzl", "LE_COPTS")
+load("//tools/bazel:copts.bzl", "LE_BENCHMARK_COPTS", "LE_COPTS")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -48,3 +48,17 @@ cc_library(
     )
     for test_file in glob(["tests/test_*.cpp"])
 ]
+
+# =============================================================================
+# Benchmarks (Google Benchmark)
+# =============================================================================
+
+cc_binary(
+    name = "bench_lsd",
+    srcs = ["benchmarks/bench_lsd.cpp"],
+    copts = LE_BENCHMARK_COPTS,
+    deps = [
+        ":lib_lsd",
+        "@google_benchmark//:benchmark_main",
+    ],
+)

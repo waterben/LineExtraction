@@ -1,3 +1,10 @@
+/// @file render_gl.hpp
+/// @brief OpenGL rendering utilities for 3D geometry.
+///
+/// Provides functions for rendering 3D objects, poses, and line segments
+/// using OpenGL. Includes utilities for converting between OpenGL and
+/// OpenCV coordinate systems and reading rendered images.
+
 #pragma once
 
 #include <geometry/cameracv.hpp>
@@ -24,9 +31,17 @@ namespace lsfm {
     cv::Mat render(const Cameraf &cam, std::function<void()> &func);
     cv::Mat render(const Cameraf &cam, const Object3DList<float> &objs);
 */
+
+/// @brief Test rendering function.
 void testRenderingTR();
 
-// Transforms from OpenGL to OpenCV Coordinatesystem (rotates 180° around the ?z-axis? -> isn't it the x-axis!?
+/// @brief Convert OpenGL pose to OpenCV coordinate system.
+///
+/// Transforms a pose from OpenGL conventions to OpenCV conventions
+/// by rotating 180° around the X-axis.
+/// @tparam FT Floating-point type.
+/// @param glPose Pose in OpenGL coordinates.
+/// @return Pose in OpenCV coordinates.
 template <class FT>
 lsfm::Pose<FT> gl2cvPose(lsfm::Pose<FT> glPose) {
   lsfm::Pose<FT> tmpPose(glPose);
@@ -40,11 +55,20 @@ lsfm::Pose<FT> gl2cvPose(lsfm::Pose<FT> glPose) {
   return tmpPose;
 }
 
+/// @brief Render multiple poses as 3D spheres with axes.
+/// @tparam FT Floating-point type.
+/// @param keyFramePoses Vector of poses to render.
 template <class FT>
 void renderPoses3d(std::vector<lsfm::Pose<FT>> keyFramePoses) {
   for_each(keyFramePoses.begin(), keyFramePoses.end(), [&](const lsfm::Pose<FT>& obj) { renderPose3d(obj); });
 }
 
+/// @brief Render single pose as 3D sphere with coordinate axes.
+///
+/// Draws a solid sphere at the pose origin with X, Y, Z axis lines
+/// showing the orientation.
+/// @tparam FT Floating-point type.
+/// @param obj Pose to render.
 template <class FT>
 void renderPose3d(const lsfm::Pose<FT>& obj) {
   glDisable(GL_LIGHTING);
@@ -78,11 +102,19 @@ void renderPose3d(const lsfm::Pose<FT>& obj) {
 }
 
 
+/// @brief Render multiple 3D objects as filled meshes.
+/// @tparam FT Floating-point type.
+/// @param objs List of objects to render.
 template <class FT>
 void renderObjects3d(const Object3DList<FT> objs) {
   for_each(objs.begin(), objs.end(), [&](const Object3D<FT>& obj) { renderObject3d(obj); });
 }
 
+/// @brief Render single 3D object as filled mesh with lighting.
+///
+/// Draws triangles with normals and optional texture coordinates.
+/// @tparam FT Floating-point type.
+/// @param obj Object to render.
 template <class FT>
 void renderObject3d(const Object3D<FT>& obj) {
   glEnable(GL_LIGHTING);
@@ -113,18 +145,32 @@ void renderObject3d(const Object3D<FT>& obj) {
 }
 
 
+/// @brief Render multiple objects as wireframes with unique line IDs.
+/// @tparam FT Floating-point type.
+/// @param objs List of objects to render.
 template <class FT>
 void renderWireIdObjects3d(const Object3DList<FT> objs) {
   std::vector<std::pair<lsfm::Vec2<FT>, lsfm::Vec2<FT>>> endPoints;
   for_each(objs.begin(), objs.end(), [&](const Object3D<FT>& obj) { renderWireIdObject3d(obj, endPoints); });
 }
 
+/// @brief Render multiple objects as wireframes, outputting edge endpoints.
+/// @tparam FT Floating-point type.
+/// @param objs List of objects to render.
+/// @param endPoints Output vector of edge start/end point pairs.
 template <class FT>
 void renderWireIdObjects3d(const Object3DList<FT> objs,
                            std::vector<std::pair<lsfm::Vec3<FT>, lsfm::Vec3<FT>>>& endPoints) {
   for_each(objs.begin(), objs.end(), [&](const Object3D<FT>& obj) { renderWireIdObject3d(obj, endPoints); });
 }
 
+/// @brief Render single object as wireframe with unique line IDs.
+///
+/// Renders edges with unique colors for line identification. Removes
+/// near-duplicate edges based on distance and angle thresholds.
+/// @tparam FT Floating-point type.
+/// @param obj Object to render.
+/// @param endPoints Output vector of edge start/end point pairs.
 template <class FT>
 void renderWireIdObject3d(const Object3D<FT>& obj, std::vector<std::pair<lsfm::Vec3<FT>, lsfm::Vec3<FT>>>& endPoints) {
   glDisable(GL_LIGHTING);
@@ -205,6 +251,14 @@ void renderWireIdObject3d(const Object3D<FT>& obj, std::vector<std::pair<lsfm::V
 }
 
 
+/// @brief Render 3D objects projected to 2D using OpenCV.
+///
+/// Projects 3D edges to 2D using camera parameters and draws them
+/// on an OpenCV image.
+/// @tparam FT Floating-point type.
+/// @param objs List of objects to render.
+/// @param cam Camera for projection.
+/// @param img Output image to draw on.
 template <class FT>
 void renderObjects3dCV(const Object3DList<FT> objs, const Camera<FT>& cam, cv::Mat& img) {
   typename lsfm::Object3D<FT>::EdgeList lineSegments3;
@@ -229,7 +283,14 @@ void renderObjects3dCV(const Object3DList<FT> objs, const Camera<FT>& cam, cv::M
 }
 
 
-//! reads current OpenGL image into cv Mat
+/// @brief Read current OpenGL framebuffer into OpenCV Mat.
+///
+/// Captures the current OpenGL rendering to an existing OpenCV image,
+/// converting from RGB to BGR and flipping vertically.
+/// @tparam MatType OpenCV Mat type (default cv::Mat).
+/// @param width Image width in pixels.
+/// @param height Image height in pixels.
+/// @param img Output image (must be pre-allocated).
 template <class MatType = cv::Mat>
 void getGlImageAsOpenCvMat(int width, int height, MatType& img) {
   // Initialise a Mat to contain the image
@@ -244,7 +305,15 @@ void getGlImageAsOpenCvMat(int width, int height, MatType& img) {
   cv::flip(tempImage, img, 0);
 }
 
-//! reads current OpenGL image into cv Mat
+/// @brief Read OpenGL buffer to OpenCV Mat with format control.
+///
+/// Reads from the OpenGL framebuffer with specified format and data type,
+/// creating a new OpenCV Mat. Supports various pixel formats and depths.
+/// @tparam MT OpenCV data type (e.g., CV_8UC3, CV_32FC1).
+/// @param width Image width in pixels.
+/// @param height Image height in pixels.
+/// @param format OpenGL pixel format (GL_RGB, GL_DEPTH_COMPONENT, etc.).
+/// @return OpenCV Mat containing the framebuffer contents.
 template <class MT>
 cv::Mat getGlBufferAsOpenCvMat(int width, int height, GLenum format = GL_RGB) {
   // GL_STENCIL_INDEX, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL, GL_RED, GL_GREEN, GL_BLUE, GL_RGB, GL_BGR, GL_RGBA, and
@@ -323,6 +392,12 @@ cv::Mat getGlBufferAsOpenCvMat(int width, int height, GLenum format = GL_RGB) {
   return temp;
 }
 
+/// @brief Render 3D line segments in OpenGL.
+///
+/// Draws white line segments using OpenGL immediate mode.
+/// @tparam FT Floating-point type.
+/// @tparam LineType Container type for line segments.
+/// @param lineSegments3 Line segments to render.
 template <class FT, class LineType>
 void renderLines3d(LineType lineSegments3) {
   // std::vector<lsfm::LineSegment3<FT>> lineSegments3;

@@ -43,6 +43,10 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_drawing.hpp
+/// @brief Edge segment detector using drawing-based approach.
+/// Implements edge detection by simulating edge drawing/tracing along gradient directions.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>

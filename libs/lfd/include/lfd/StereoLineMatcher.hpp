@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file StereoLineMatcher.hpp
+/// @brief Stereo line matcher with geometric filtering.
+/// Combines stereo filtering and matching for stereo reconstruction.
+
 #pragma once
 
 #include <lfd/FeatureMatcher.hpp>

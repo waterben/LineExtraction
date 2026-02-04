@@ -48,54 +48,67 @@
 
 namespace lsfm {
 
-//! Laplace base class
-//! Use IT to define Image type (8Bit, 16Bit, 32Bit, or floating type float or double)
-//! Use LT to define Laplace type (int, float or double)
-//! For 8 Bit images use GT = short, for 16 Bit images float.
-//! For images with floating values, use IT and GT = image floating type (float or double)
+/// @brief Abstract interface for Laplacian filters.
+///
+/// Provides interface for computing second-order derivatives (Laplacian)
+/// used for blob detection and edge enhancement.
+/// @tparam IT Input image pixel type (uchar, short, float, double)
+/// @tparam LT Laplacian output type (int, float, or double)
 template <class IT, class LT>
 class LaplaceI : public FilterI<IT> {
   LaplaceI(const LaplaceI&);
 
  public:
-  typedef IT img_type;
-  typedef Range<IT> IntensityRange;
-  typedef LT laplace_type;
-  typedef Range<LT> LaplaceRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef LT laplace_type;           ///< Laplacian output type
+  typedef Range<LT> LaplaceRange;    ///< Range type for Laplacian values
 
   LaplaceI() {}
   virtual ~LaplaceI() {}
 
-  //! get magnitude
+  /// @brief Get the Laplacian response image.
+  /// @return Matrix containing Laplacian values at each pixel
   virtual cv::Mat laplace() const = 0;
 
-  //! get magnitude range for intensity range
+  /// @brief Get the expected Laplacian value range.
+  /// @return Range of possible Laplacian values
   virtual LaplaceRange laplaceRange() const = 0;
 
-  //! convert threshold between 0-1 to magnitude threshold
+  /// @brief Convert normalized threshold [0,1] to Laplacian threshold.
+  /// @param val Normalized threshold value in range [0,1]
+  /// @return Corresponding Laplacian threshold value
   virtual LT laplaceThreshold(double val) const { return static_cast<LT>(laplaceRange().size() * val); }
 };
 
-//! Laplace base class helper
+/// @brief Base implementation class for Laplacian filters.
+///
+/// Provides common functionality including intensity range management.
+/// @tparam IT Input image pixel type
+/// @tparam LT Laplacian output type
 template <class IT, class LT>
 class Laplace : public LaplaceI<IT, LT> {
  protected:
-  Range<IT> intRange_;
+  Range<IT> intRange_;  ///< Input intensity range
 
  public:
-  typedef IT img_type;
-  typedef Range<IT> IntensityRange;
-  typedef LT laplace_type;
-  typedef Range<LT> LaplaceRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef LT laplace_type;           ///< Laplacian output type
+  typedef Range<LT> LaplaceRange;    ///< Range type for Laplacian values
 
+  /// @brief Construct with intensity range.
+  /// @param int_lower Lower bound of input intensity (default: type minimum)
+  /// @param int_upper Upper bound of input intensity (default: type maximum)
   Laplace(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max())
       : intRange_(int_lower, int_upper) {}
 
-
-  //! get image intensity range (for single channel)
+  /// @brief Get the expected input image intensity range.
+  /// @return The intensity range for single-channel input images
   IntensityRange intensityRange() const { return intRange_; }
 
-  //! generic interface to get processed data
+  /// @brief Get all filter outputs as named results.
+  /// @return Map containing "laplace" output with range
   virtual FilterResults results() const {
     FilterResults ret;
     ret["laplace"] = FilterData(this->laplace(), this->laplaceRange());
@@ -103,41 +116,53 @@ class Laplace : public LaplaceI<IT, LT> {
   }
 };
 
+/// @brief Simple 3x3 Laplacian filter.
+///
+/// Uses standard 3x3 kernel with all neighbors weighted 1 and center -8.
+/// Fast but sensitive to noise.
+/// @tparam IT Input image pixel type
+/// @tparam LT Laplacian output type
 template <class IT, class LT>
 class LaplaceSimple : public Laplace<IT, LT> {
  protected:
-  cv::Mat laplace_;
-  cv::Mat_<LT> k_;
-  cv::Point anchor;
+  cv::Mat laplace_;  ///< Cached Laplacian result
+  cv::Mat_<LT> k_;   ///< Convolution kernel
+  cv::Point anchor;  ///< Kernel anchor point
   using Laplace<IT, LT>::intRange_;
 
  public:
-  typedef IT img_type;
-  typedef Range<IT> IntensityRange;
-  typedef LT laplace_type;
-  typedef Range<LT> LaplaceRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef LT laplace_type;           ///< Laplacian output type
+  typedef Range<LT> LaplaceRange;    ///< Range type for Laplacian values
 
+  /// @brief Construct simple Laplacian filter.
+  /// @param int_lower Lower bound of input intensity (default: type minimum)
+  /// @param int_upper Upper bound of input intensity (default: type maximum)
   LaplaceSimple(IT int_lower = std::numeric_limits<IT>::lowest(), IT int_upper = std::numeric_limits<IT>::max())
       : Laplace<IT, LT>(int_lower, int_upper), laplace_(), k_(cv::Mat_<LT>::ones(3, 3)), anchor(-1, -1) {
     k_(1, 1) = -8;
   }
 
-
-  //! process laplacian
+  /// @brief Process image through Laplacian filter.
+  /// @param img Input grayscale image
   void process(const cv::Mat& img) {
     cv::filter2D(img, laplace_, cv::DataType<LT>::type, k_, anchor, 0, cv::BORDER_REFLECT_101);
   }
 
-  //! get magnitude
+  /// @brief Get the Laplacian response image.
+  /// @return Cached Laplacian result
   cv::Mat laplace() const { return laplace_; }
 
-  //! get magnitude range for intensity range
+  /// @brief Get the Laplacian value range.
+  /// @return Range based on intensity range * 8
   virtual LaplaceRange laplaceRange() const {
     LT val = intRange_.upper * 8;
     return LaplaceRange(-val, val);
   }
 
-  //! get name of gradient operator
+  /// @brief Get filter name.
+  /// @return "laplace"
   std::string name() const { return "laplace"; }
 
   using ValueManager::value;
@@ -147,6 +172,12 @@ class LaplaceSimple : public Laplace<IT, LT> {
   using Laplace<IT, LT>::results;
 };
 
+/// @brief Laplacian of Gaussian (LoG) filter.
+///
+/// Combines Gaussian smoothing with Laplacian for noise-robust blob detection.
+/// Also known as "Mexican hat" filter due to its 2D shape.
+/// @tparam IT Input image pixel type
+/// @tparam LT Laplacian output type
 template <class IT, class LT>
 class LoG : public LaplaceSimple<IT, LT> {
   int ksize_;
@@ -155,11 +186,21 @@ class LoG : public LaplaceSimple<IT, LT> {
   Range<LT> laplaceRange_;
 
  public:
+  /// @brief Compute LoG kernel value at position (x, y).
+  /// @param x X coordinate relative to center
+  /// @param y Y coordinate relative to center
+  /// @param s Scale factor
+  /// @return LoG value at (x, y)
   static inline double exp_d2(double x, double y, double s) {
     double xy2 = x * x + y * y;
     return s * (xy2 - 1) * std::exp(-xy2);
   }
 
+  /// @brief Create LoG filter kernel.
+  /// @param width Kernel width (will be expanded to full size)
+  /// @param spacing Spacing between sample points
+  /// @param scale Scale factor for kernel values
+  /// @return NxN LoG kernel matrix
   static inline cv::Mat_<LT> createFilter(int width, double spacing, double scale) {
     width = width / 2;
     cv::Mat_<LT> kernel(width * 2 + 1, width * 2 + 1);
@@ -189,11 +230,17 @@ class LoG : public LaplaceSimple<IT, LT> {
 
 
  public:
-  typedef IT img_type;
-  typedef Range<IT> IntensityRange;
-  typedef LT laplace_type;
-  typedef Range<LT> LaplaceRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef LT laplace_type;           ///< Laplacian output type
+  typedef Range<LT> LaplaceRange;    ///< Range type for Laplacian values
 
+  /// @brief Construct Laplacian of Gaussian filter.
+  /// @param kernel_size Kernel size (default: 5)
+  /// @param kernel_spacing Spacing between samples (default: 1.008)
+  /// @param kernel_scale Scale factor for kernel values (default: 1)
+  /// @param int_lower Lower bound of input intensity (default: type minimum)
+  /// @param int_upper Upper bound of input intensity (default: type maximum)
   LoG(int kernel_size = 5,
       double kernel_spacing = 1.008,
       double kernel_scale = 1,
@@ -214,16 +261,23 @@ class LoG : public LaplaceSimple<IT, LT> {
     create_kernel();
   }
 
+  /// @brief Value accessor for kernel size option.
+  /// @param ks New kernel size value (optional)
+  /// @return Current kernel size
   Value valueKernelSize(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSize(ks);
     return ksize_;
   }
 
-  //! get kernel size
+  /// @brief Get kernel size.
+  /// @return Current kernel size
   int kernelSize() const { return ksize_; }
 
-  //! set kernel size (range 2-99, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like int or long long int
+  /// @brief Set kernel size.
+  ///
+  /// Range 3-99, must be odd (even values corrected to ksize+1).
+  /// @note Large kernels need larger GT type like int or long long int
+  /// @param ks New kernel size
   void kernelSize(int ks) {
     if (ks == ksize_) return;
 
@@ -234,34 +288,52 @@ class LoG : public LaplaceSimple<IT, LT> {
     create_kernel();
   }
 
+  /// @brief Value accessor for kernel spacing option.
+  /// @param ks New kernel spacing value (optional)
+  /// @return Current kernel spacing
   Value valueKernelSpacing(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSpacing(ks);
     return kspace_;
   }
 
+  /// @brief Get kernel spacing.
+  /// @return Current kernel spacing between sample points
   double kernelSpacing() const { return kspace_; }
 
+  /// @brief Set kernel spacing between sample points.
+  /// @param ks New kernel spacing (must be > 0)
   void kernelSpacing(double ks) {
     if (ks == kspace_ || ks <= 0) return;
     kspace_ = ks;
     create_kernel();
   }
 
+  /// @brief Value accessor for kernel scale option.
+  /// @param ks New kernel scale value (optional)
+  /// @return Current kernel scale
   Value valueKernelScale(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelScale(ks);
     return kscale_;
   }
 
+  /// @brief Get kernel scale factor.
+  /// @return Current kernel scale
   double kernelScale() const { return kscale_; }
 
+  /// @brief Set kernel scale factor.
+  /// @param ks New kernel scale (must be > 0)
   void kernelScale(double ks) {
     if (ks == kscale_ || ks <= 0) return;
     kscale_ = ks;
     create_kernel();
   }
 
+  /// @brief Get the LoG convolution kernel.
+  /// @return The current kernel matrix
   cv::Mat kernel() const { return this->k_; }
 
+  /// @brief Get even filter response (alias for laplace).
+  /// @return Laplacian response image
   cv::Mat even() const { return this->laplace(); }
 
   using ValueManager::value;
@@ -272,19 +344,27 @@ class LoG : public LaplaceSimple<IT, LT> {
   using LaplaceSimple<IT, LT>::intensityRange;
   using LaplaceSimple<IT, LT>::results;
 
-  //! get magnitude range for intensity range
+  /// @brief Get the Laplacian value range.
+  /// @return Computed range based on kernel and intensity
   virtual LaplaceRange laplaceRange() const { return laplaceRange_; }
 
-  //! get name of gradient operator
+  /// @brief Get filter name.
+  /// @return "LoG"
   std::string name() const { return "LoG"; }
 };
 
+/// @brief OpenCV Laplacian filter wrapper.
+///
+/// Uses cv::Laplacian internally with configurable kernel size.
+/// @tparam IT Input image pixel type
+/// @tparam LT Laplacian output type
 template <class IT, class LT>
 class LaplaceCV : public Laplace<IT, LT> {
-  Range<LT> laplaceRange_;
-  cv::Mat laplace_;
-  int ksize_;
+  Range<LT> laplaceRange_;  ///< Computed Laplacian range
+  cv::Mat laplace_;         ///< Cached Laplacian result
+  int ksize_;               ///< Kernel size
 
+  /// @brief Recalculate Laplacian range based on kernel size.
   void calc_range() {
     // TODO
     laplaceRange_.lower = static_cast<LT>(-this->intRange_.upper * 2 * ksize_);
@@ -292,11 +372,15 @@ class LaplaceCV : public Laplace<IT, LT> {
   }
 
  public:
-  typedef IT img_type;
-  typedef Range<IT> IntensityRange;
-  typedef LT laplace_type;
-  typedef Range<LT> LaplaceRange;
+  typedef IT img_type;               ///< Input image pixel type
+  typedef Range<IT> IntensityRange;  ///< Range type for intensity values
+  typedef LT laplace_type;           ///< Laplacian output type
+  typedef Range<LT> LaplaceRange;    ///< Range type for Laplacian values
 
+  /// @brief Construct OpenCV Laplacian filter.
+  /// @param ksize Kernel size (default: 5)
+  /// @param int_lower Lower bound of input intensity (default: type minimum)
+  /// @param int_upper Upper bound of input intensity (default: type maximum)
   LaplaceCV(int ksize = 5,
             IT int_lower = std::numeric_limits<IT>::lowest(),
             IT int_upper = std::numeric_limits<IT>::max())
@@ -306,17 +390,23 @@ class LaplaceCV : public Laplace<IT, LT> {
     calc_range();
   }
 
+  /// @brief Value accessor for kernel size option.
+  /// @param ks New kernel size value (optional)
+  /// @return Current kernel size
   Value valueKernelSize(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSize(ks.getInt());
     return ksize_;
   }
 
-  //! Get kernel size
+  /// @brief Get kernel size.
+  /// @return Current kernel size
   int kernelSize() const { return ksize_; }
 
-
-  //! Set kernel size (range 1-31, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like float or double
+  /// @brief Set kernel size.
+  ///
+  /// Range 1-31, must be odd (even values corrected to ksize+1).
+  /// @note Large kernels need larger GT type like float or double
+  /// @param ks New kernel size
   void kernelSize(int ks) {
     if (ksize_ == ks) return;
     if (ks < 1) ks = 1;
@@ -326,19 +416,22 @@ class LaplaceCV : public Laplace<IT, LT> {
     calc_range();
   }
 
-
-  //! process laplacian
+  /// @brief Process image through Laplacian filter.
+  /// @param img Input grayscale image
   void process(const cv::Mat& img) {
     cv::Laplacian(img, laplace_, cv::DataType<LT>::type, ksize_, 1, 0, cv::BORDER_REFLECT_101);
   }
 
-  //! get magnitude
+  /// @brief Get the Laplacian response image.
+  /// @return Cached Laplacian result
   cv::Mat laplace() const { return laplace_; }
 
-  //! get magnitude range for intensity range
+  /// @brief Get the Laplacian value range.
+  /// @return Computed range based on kernel size and intensity
   LaplaceRange laplaceRange() const { return laplaceRange_; }
 
-  //! get name of gradient operator
+  /// @brief Get filter name.
+  /// @return "laplaceCV"
   std::string name() const { return "laplaceCV"; }
 
   using ValueManager::value;

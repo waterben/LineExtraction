@@ -1,3 +1,9 @@
+/// @file phase_dc.cpp
+/// @brief Thesis evaluation: Phase and DC component analysis in gradient filters
+///
+/// Analyzes phase response and DC component of various gradient filters.
+/// Compares filter characteristics in frequency domain.
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 

@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file StereoPointMatcher.hpp
+/// @brief Stereo point matcher with geometric constraints.
+/// Combines point filtering and matching for stereo reconstruction.
+
 #pragma once
 
 #include <lfd/FeatureMatcher.hpp>

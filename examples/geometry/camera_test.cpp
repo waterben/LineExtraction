@@ -1,3 +1,14 @@
+/// @file camera_test.cpp
+/// @brief Camera projection and intrinsic/extrinsic parameter handling.
+///
+/// Demonstrates camera model operations including:
+/// - Intrinsic/extrinsic parameter configuration
+/// - 3D to 2D projection
+/// - Camera coordinate transformations
+/// - Visualization of projected geometry
+///
+/// @usage ./camera_test
+
 #include <geometry/camera.hpp>
 #include <geometry/cameracv.hpp>
 #include <geometry/draw.hpp>

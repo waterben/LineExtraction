@@ -1,3 +1,13 @@
+/// @file obj_test.cpp
+/// @brief OBJ file loading and 3D object handling.
+///
+/// Demonstrates loading 3D objects from Wavefront OBJ files:
+/// - Vertex and edge extraction
+/// - Object3D data structure usage
+/// - Eigen matrix interoperability
+///
+/// @usage ./obj_test
+
 #include <geometry/object3d.hpp>
 
 #include <Eigen/Dense>

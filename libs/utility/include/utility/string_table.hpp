@@ -1,3 +1,6 @@
+/// @file string_table.hpp
+/// @brief 2D string table with CSV export support.
+
 #pragma once
 
 #include <iostream>
@@ -6,7 +9,7 @@
 
 namespace lsfm {
 
-/// @brief A 2D table of strings with CSV export capabilities
+/// @brief A 2D table of strings with CSV export capabilities.
 class StringTable {
   size_t rows_{0};
   size_t cols_{0};

@@ -40,6 +40,12 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file nms.hpp
+/// @brief Non-Maximum Suppression (NMS) edge detection algorithms.
+/// This header provides multiple implementations of non-maximum suppression for edge
+/// detection, including precise and fast variants with 4-directional and 8-directional
+/// gradient checking. Supports both scalar and vector thresholds.
+
 #pragma once
 
 #include <edge/hysteresis.hpp>
@@ -53,6 +59,10 @@
 
 namespace lsfm {
 
+/// @brief Add a seed index to the seed vector.
+/// Safely casts and pushes an integer index onto the seed vector.
+/// @param seeds Output vector of seed indices
+/// @param idx Seed index to add
 inline void addSeed(IndexVector& seeds, int idx) { seeds.push_back(static_cast<IndexVector::value_type>(idx)); }
 
 // expected gradient direction are:
@@ -102,9 +112,18 @@ inline void addSeed(IndexVector& seeds, int idx) { seeds.push_back(static_cast<I
 //     -pi/8 to -3pi/8 = 1 up right
 
 
+/// @brief Maps gradient direction to 8-direction quantized indices.
+/// Quantizes continuous gradient directions into 8 discrete directions (0-7)
+/// used for non-maximum suppression. Direction ranges from -pi to pi.
+/// @tparam DT Floating-point data type (float, double)
 template <class DT>
 struct EMap8 {
   static constexpr int NUM_DIR = 4;
+
+  /// @brief Map normalized gradient components to direction index.
+  /// @param dmap Output direction map value (0-7)
+  /// @param xs Normalized X gradient component (between -1 and 1)
+  /// @param ys Normalized Y gradient component (between -1 and 1)
   static inline void map(char& dmap, DT xs, DT ys) {
     // we are within +-pi/8 at x
     if (std::abs(xs) > static_cast<DT>(0.923879533)) {
@@ -120,12 +139,23 @@ struct EMap8 {
     }
   }
 
-  static inline char type() { return '8'; }
+  /// @brief Get the type identifier for 8-direction encoding.
+  /// @return Character '8' identifying this direction encoder
+  static inline char type() { return '8'; };
 };
 
+/// @brief Maps gradient direction to 4-direction quantized indices.
+/// Quantizes continuous gradient directions into 4 discrete directions (0-3)
+/// used for simplified non-maximum suppression on cardinal directions only.
+/// @tparam DT Floating-point data type (float, double)
 template <class DT>
 struct EMap4 {
   static constexpr int NUM_DIR = 4;
+
+  /// @brief Map normalized gradient components to 4-direction index.
+  /// @param dmap Output direction map value (0-3, cardinal directions)
+  /// @param xs Normalized X gradient component (between -1 and 1)
+  /// @param ys Normalized Y gradient component (between -1 and 1)
   static inline void map(char& dmap, DT xs, DT ys) {
     // we are within +-pi/8 at x
     if (std::abs(xs) > static_cast<DT>(0.923879533)) {
@@ -138,9 +168,17 @@ struct EMap4 {
     }
   }
 
-  static inline char type() { return '4'; }
+  /// @brief Get the type identifier for 4-direction encoding.
+  /// @return Character '4' identifying this direction encoder
+  static inline char type() { return '4'; };
 };
 
+/// @brief Set border region of a cv::Mat to a given value.
+/// @tparam MT Matrix element data type
+/// @param mat The input/output matrix to modify
+/// @param borderStart Number of rows to set at the top
+/// @param borderEnd Number of rows to set at the bottom
+/// @param val The value to set in border regions
 template <class MT>
 inline void setBorder(cv::Mat& mat, int borderStart, int borderEnd, MT val) {
   mat.rowRange(0, borderStart).setTo(val);
@@ -149,6 +187,11 @@ inline void setBorder(cv::Mat& mat, int borderStart, int borderEnd, MT val) {
   mat.colRange(mat.cols - borderEnd, mat.cols).setTo(val);
 }
 
+/// @brief Set border region of a cv::Mat to a given value using uniform border width.
+/// @tparam MT Matrix element data type
+/// @param mat The input/output matrix to modify
+/// @param border Number of pixels to set on all borders
+/// @param val The value to set in border regions
 template <class MT>
 inline void setBorder(cv::Mat& mat, int border, MT val) {
   mat.rowRange(0, border).setTo(val);
@@ -157,6 +200,16 @@ inline void setBorder(cv::Mat& mat, int border, MT val) {
   mat.colRange(mat.cols - border, mat.cols).setTo(val);
 }
 
+/// @brief Precise Non-Maximum Suppression (NMS) template.
+/// Implements high-precision non-maximum suppression using interpolation for sub-pixel
+/// accuracy. Supports multiple direction mapping schemes and interpolation methods.
+/// @tparam GT Gradient data type (float, double)
+/// @tparam MT Magnitude data type (float, double, uchar, etc.)
+/// @tparam SQR Whether magnitude is squared (if true, magnitude will be square-rooted)
+/// @tparam DT Floating-point calculation type (default: float)
+/// @tparam EM Direction encoder (EMap8 or EMap4)
+/// @tparam Interpolate Interpolation method (LinearInterpolator, etc.)
+/// @tparam P Polar/Cartesian converter
 template <class GT,
           class MT,
           bool SQR,
@@ -167,7 +220,16 @@ template <class GT,
 struct PreciseNMS {
   static constexpr int NUM_DIR = EM<DT>::NUM_DIR;
 
-  // compute non maxima supression by given derivative maps and magnitude map
+  /// @brief Apply NMS using gradient component maps and magnitude.
+  /// @param gx Gradient in x direction
+  /// @param gy Gradient in y direction
+  /// @param mag Edge magnitude map
+  /// @param low Lower threshold value
+  /// @param high Upper threshold value
+  /// @param seeds Output vector of edgel indices passing the threshold
+  /// @param dmap Output direction map (CV_8S)
+  /// @param border Border width to exclude from processing
+  /// @return Maximum magnitude value found
   static MT process(const cv::Mat& gx,
                     const cv::Mat& gy,
                     const cv::Mat& mag,
@@ -201,7 +263,17 @@ struct PreciseNMS {
     return processf(gxf, gyf, mag, low, high, seeds, dmap, border);
   }
 
-  // compute non maxima supression by given derivative maps and magnitude map
+  /// @brief Apply NMS using gradient components and per-pixel magnitude thresholds.
+  /// Performs NMS with spatially-varying thresholds for adaptive edge detection.
+  /// @param gx Gradient in x direction
+  /// @param gy Gradient in y direction
+  /// @param mag Edge magnitude map
+  /// @param low Per-pixel lower threshold map
+  /// @param high Per-pixel upper threshold map
+  /// @param seeds Output vector of edgel indices passing the threshold
+  /// @param dmap Output direction map (CV_8S)
+  /// @param border Border width to exclude from processing
+  /// @return Maximum magnitude value found
   static MT process(const cv::Mat& gx,
                     const cv::Mat& gy,
                     const cv::Mat& mag,
@@ -235,7 +307,18 @@ struct PreciseNMS {
     return processf(gxf, gyf, mag, low, high, seeds, dmap, border);
   }
 
-  // compute non maxima supression by given direction map and magnitude map
+  /// @brief Apply NMS using a direction map and magnitude.
+  /// Uses pre-computed direction map instead of computing from gradients.
+  /// @param dir Pre-computed direction map
+  /// @param mag Edge magnitude map
+  /// @param low Lower threshold value
+  /// @param high Upper threshold value
+  /// @param r_low Range minimum for direction values
+  /// @param r_high Range maximum for direction values
+  /// @param seeds Output vector of edgel indices passing the threshold
+  /// @param dmap Output direction map (CV_8S)
+  /// @param border Border width to exclude from processing
+  /// @return Maximum magnitude value found
   static MT process(const cv::Mat& dir,
                     const cv::Mat& mag,
                     MT low,
@@ -277,8 +360,21 @@ struct PreciseNMS {
     return processf(gxf, gyf, mag, low, high, seeds, dmap, border);
   }
 
+  /// @brief Get the name identifier for this NMS method.
+  /// @return String composed of "PreciseNMS" + direction encoder type (e.g., "PreciseNMS8")
   static inline std::string name() { return std::string("PreciseNMS") + EM<DT>::type(); }
 
+  /// @brief Internal processing function using normalized gradients.
+  /// Performs the actual NMS logic after gradient normalization and conversion.
+  /// @param gx Normalized gradient in x direction
+  /// @param gy Normalized gradient in y direction
+  /// @param mag Edge magnitude map
+  /// @param low Lower threshold value
+  /// @param high Upper threshold value
+  /// @param seeds Output vector of edgel indices passing the threshold
+  /// @param dmap Output direction map (CV_8S)
+  /// @param border Border width to exclude from processing
+  /// @return Maximum magnitude value found
   static MT processf(const cv::Mat& gx,
                      const cv::Mat& gy,
                      const cv::Mat& mag,
@@ -590,6 +686,18 @@ struct FastNMS8 {
   static inline const char* name() { return "FastNMS8"; }
 
  private:
+  /// @brief Process NMS with direction angles in full range [r_low, r_high].
+  /// Quantizes direction angles into 8 discrete directions and performs fast NMS
+  /// using discrete comparison operations instead of interpolation.
+  /// @param dir Direction angle map
+  /// @param mag Magnitude map
+  /// @param low Lower magnitude threshold
+  /// @param high Upper magnitude threshold
+  /// @param r_size Size of the direction range
+  /// @param pdmap Output direction map pointer
+  /// @param seeds Output seed vector
+  /// @param border Border width to exclude
+  /// @return Maximum magnitude found in processed region
   static MT processRotFull(
       const cv::Mat& dir, const cv::Mat& mag, MT low, MT high, DT r_size, char* pdmap, IndexVector& seeds, int border) {
     const DT step = r_size / 8;

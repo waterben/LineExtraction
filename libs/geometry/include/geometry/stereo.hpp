@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file stereo.hpp
+/// @brief Stereo vision triangulation utilities.
+///
+/// Provides classes and functions for stereo triangulation of points
+/// and lines from corresponding 2D observations in rectified stereo pairs.
 
 #pragma once
 
@@ -48,33 +53,62 @@
 
 
 namespace lsfm {
-// some basic helpers
 
-//! convert pixel to 3d point on camera plane
+/// @name Coordinate Conversion Helpers
+/// @{
+
+/// @brief Convert pixel to 3D point on camera image plane.
+/// @tparam FT Floating-point type.
+/// @param focal Focal lengths (fx, fy).
+/// @param offset Principal point (cx, cy).
+/// @param p 2D pixel coordinates.
+/// @return 3D point on camera plane at z = focal.x().
 template <class FT>
 inline Vec3<FT> pixel2Cam3dPoint(const Vec2<FT>& focal, const Vec2<FT>& offset, const Vec2<FT>& p) {
   return Vec3<FT>(p.x() - offset.x(), p.y() - offset.y(), focal.x());
 }
 
-//! convert pixel to 3d point on camera plane
+/// @brief Convert pixel to 3D point on camera image plane (isotropic focal).
+/// @tparam FT Floating-point type.
+/// @param focal Isotropic focal length.
+/// @param offset Principal point (cx, cy).
+/// @param p 2D pixel coordinates.
+/// @return 3D point on camera plane at z = focal.
 template <class FT>
 inline Vec3<FT> pixel2Cam3dPoint(FT focal, const Vec2<FT>& offset, const Vec2<FT>& p) {
   return Vec3<FT>(p.x() - offset.x(), p.y() - offset.y(), focal);
 }
 
-//! convert 2d line to 3d line on camera plane
+/// @brief Convert 2D line to 3D line on camera image plane.
+/// @tparam FT Floating-point type.
+/// @param focal Focal lengths (fx, fy).
+/// @param offset Principal point (cx, cy).
+/// @param l 2D line.
+/// @return 3D line on camera plane (z-direction = 0).
 template <class FT>
 inline Line3<FT> line2Cam3dLine(const Vec2<FT>& focal, const Vec2<FT>& offset, const Line<FT>& l) {
   return Line3<FT>(pixel2Cam3dPoint(focal, offset, l.origin()), Vec3<FT>(l.directionX(), l.directionY(), 0), true);
 }
 
-//! convert 2d line to 3d line on camera plane
+/// @brief Convert 2D line to 3D line on camera image plane (isotropic focal).
+/// @tparam FT Floating-point type.
+/// @param focal Isotropic focal length.
+/// @param offset Principal point (cx, cy).
+/// @param l 2D line.
+/// @return 3D line on camera plane (z-direction = 0).
 template <class FT>
 inline Line3<FT> line2Cam3dLine(FT focal, const Vec2<FT>& offset, const Line<FT>& l) {
   return Line3<FT>(pixel2Cam3dPoint(focal, offset, l.origin()), Vec3<FT>(l.directionX(), l.directionY(), 0), true);
 }
 
-//! convert point on image plane to 3d point in world coords
+/// @brief Convert image pixel to 3D point in world coordinates.
+/// @tparam FT Floating-point type.
+/// @param focal Focal lengths (fx, fy).
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Translation vector (camera origin).
+/// @param p 2D pixel coordinates.
+/// @return 3D point in world coordinates.
 template <class FT>
 inline Vec3<FT> pointFromPixel(const Vec2<FT>& focal,
                                const Vec2<FT>& offset,
@@ -84,14 +118,28 @@ inline Vec3<FT> pointFromPixel(const Vec2<FT>& focal,
   return trans + rot * pixel2Cam3dPoint(focal, offset, p);
 }
 
-//! convert point on image plane to 3d point in world coords
+/// @brief Convert image pixel to 3D point in world coordinates (isotropic focal).
+/// @tparam FT Floating-point type.
+/// @param focal Isotropic focal length.
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Translation vector (camera origin).
+/// @param p 2D pixel coordinates.
+/// @return 3D point in world coordinates.
 template <class FT>
 inline Vec3<FT> pointFromPixel(
     FT focal, const Vec2<FT>& offset, const Matx<FT, 3, 3>& rot, const Vec3<FT>& trans, const Vec2<FT>& p) {
   return trans + rot * pixel2Cam3dPoint(focal, offset, p);
 }
 
-//! convert ray through camera origin and 3d point on image plane (given by image pixel)
+/// @brief Construct ray from camera origin through pixel.
+/// @tparam FT Floating-point type.
+/// @param focal Focal lengths (fx, fy).
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Camera origin in world coordinates.
+/// @param p 2D pixel coordinates.
+/// @return Ray from camera origin through the pixel.
 template <class FT>
 inline Line3<FT> lineFromPixel(const Vec2<FT>& focal,
                                const Vec2<FT>& offset,
@@ -101,14 +149,28 @@ inline Line3<FT> lineFromPixel(const Vec2<FT>& focal,
   return Line3<FT>(trans, rot * pixel2Cam3dPoint(focal, offset, p));
 }
 
-//! convert ray through camera origin and 3d point on image plane (given by image pixel)
+/// @brief Construct ray from camera origin through pixel (isotropic focal).
+/// @tparam FT Floating-point type.
+/// @param focal Isotropic focal length.
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Camera origin in world coordinates.
+/// @param p 2D pixel coordinates.
+/// @return Ray from camera origin through the pixel.
 template <class FT>
 inline Line3<FT> lineFromPixel(
     FT focal, const Vec2<FT>& offset, const Matx<FT, 3, 3>& rot, const Vec3<FT>& trans, const Vec2<FT>& p) {
   return Line3<FT>(trans, rot * pixel2Cam3dPoint(focal, offset, p));
 }
 
-//! convert plane through camera origin and 3d line on image plane (given by image 2d line)
+/// @brief Construct plane from camera origin containing 2D line.
+/// @tparam FT Floating-point type.
+/// @param focal Focal lengths (fx, fy).
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Camera origin in world coordinates.
+/// @param l 2D line in image.
+/// @return Plane through camera origin containing the line.
 template <class FT>
 inline Plane<FT> planeFromLine(const Vec2<FT>& focal,
                                const Vec2<FT>& offset,
@@ -118,32 +180,64 @@ inline Plane<FT> planeFromLine(const Vec2<FT>& focal,
   return Plane<FT>(trans, line2Cam3dLine(focal, offset, l).rotate(rot).translate(trans));
 }
 
-//! convert plane through camera origin and 3d line on image plane (given by image 2d line)
+/// @brief Construct plane from camera origin containing 2D line (isotropic focal).
+/// @tparam FT Floating-point type.
+/// @param focal Isotropic focal length.
+/// @param offset Principal point (cx, cy).
+/// @param rot Rotation matrix (camera to world).
+/// @param trans Camera origin in world coordinates.
+/// @param l 2D line in image.
+/// @return Plane through camera origin containing the line.
 template <class FT>
 inline Plane<FT> planeFromLine(
     FT focal, const Vec2<FT>& offset, const Matx<FT, 3, 3>& rot, const Vec3<FT>& trans, const Line<FT>& l) {
   return Plane<FT>(trans, line2Cam3dLine(focal, offset, l).rotate(rot).translate(trans));
 }
 
-//! Stereo class for traingulation (uses only points, rectified setup required)
+/// @}
+
+/// @brief Stereo triangulation class using ray intersection.
+///
+/// Triangulates points and lines from corresponding observations
+/// in a rectified stereo pair. Points are triangulated by finding
+/// the midpoint of the closest approach between rays. Lines are
+/// triangulated by triangulating two points on the line.
+/// @tparam FT Floating-point type.
+/// @note Requires rectified stereo setup for line triangulation.
 template <class FT>
 class Stereo {
  protected:
-  Camera<FT> camL_, camR_;
-  Matx33<FT> rotL_, rotR_;
+  Camera<FT> camL_, camR_;  ///< Left and right cameras.
+  Matx33<FT> rotL_, rotR_;  ///< Cached rotation matrices.
 
  public:
   typedef FT float_type;
 
+  /// @brief Construct from projection matrices.
+  /// @param projL Left camera projection matrix (3x4).
+  /// @param projR Right camera projection matrix (3x4).
   Stereo(const Matx34<FT>& projL, const Matx34<FT>& projR) : camL_(projL), camR_(projR) {
     rotL_ = camL_.rotM();
     rotR_ = camR_.rotM();
   }
 
+  /// @brief Construct from Camera objects.
+  /// @param camL Left camera.
+  /// @param camR Right camera.
   Stereo(const Camera<FT>& camL, const Camera<FT>& camR)
       : camL_(camL), camR_(camR), rotL_(camL_.rotM()), rotR_(camR_.rotM()) {}
 
-  //! compute 3d point from two rays from camera origin through corresponding stereo pixels
+  /// @name Point Triangulation
+  /// @{
+
+  /// @brief Triangulate 3D point from stereo correspondences.
+  ///
+  /// Computes 3D point by finding the midpoint of closest approach
+  /// between rays from left and right camera origins through the
+  /// corresponding pixels.
+  /// @param pointL Left image pixel.
+  /// @param pointR Right image pixel.
+  /// @return Triangulated 3D point.
   inline Vec3<FT> triangulate(const Vec2<FT>& pointL, const Vec2<FT>& pointR) const {
     Line3<FT> ray = lineFromPixel(camL_.focal(), camL_.offset(), rotL_, camL_.origin(), pointL);
 #ifdef STEREO_FAST
@@ -155,7 +249,13 @@ class Stereo {
 #endif
   }
 
-  //! compute 3d points from point vector
+  /// @brief Triangulate vector of point correspondences.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param pointL Left image pixels.
+  /// @param pointR Right image pixels.
+  /// @param[out] ret Triangulated 3D points.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<Vec2<FT>, V1Args...>& pointL,
                           const V<Vec2<FT>, V1Args...>& pointR,
@@ -170,19 +270,19 @@ class Stereo {
     }
   }
 
-  //! compute 3d points from cv::Mat (input: points as rows, output: points as rows)
-  /*inline cv::Mat triangulate(const cv::Mat &pointL, const cv::Mat &pointR) const {
-      CV_Assert(pointL.rows == pointR.rows && pointL.type() == pointR.type());
+  /// @}
 
-      cv::Mat_<FT> ret(pointL.rows,2);
-      for (int i = 0; i != pointL.rows; ++i) {
-          (*reinterpret_cast<Vec2<FT>*>(&ret(i))) = triangulate(*reinterpret_cast<const
-  Vec3<FT>*>(&pointL.at<FT>(i)),*reinterpret_cast<const Vec3<FT>*>(&pointR.at<FT>(i)));
-      }
-      return ret;
-  }*/
+  /// @name Line Triangulation
+  /// @{
 
-  //! compute 3d line from two planes from camera origin through corresponding stereo lines
+  /// @brief Triangulate 3D line from stereo line correspondences.
+  ///
+  /// Triangulates by computing 3D points at two y-coordinates
+  /// on the line and constructing a line through them.
+  /// @param lineL Left image line.
+  /// @param lineR Right image line.
+  /// @return Triangulated 3D line (empty if degenerate).
+  /// @note Requires rectified setup (epipolar lines horizontal).
   inline Line3<FT> triangulate(const Line<FT>& lineL, const Line<FT>& lineR) const {
     // prevent div by zero from normal x in .x()() call
     if (detail::abs(lineL.normalX()) < LIMITS<FT>::tau() || detail::abs(lineR.normalX()) < LIMITS<FT>::tau())
@@ -191,7 +291,13 @@ class Stereo {
                                triangulate(Vec2<FT>(lineL.x(100), 100), Vec2<FT>(lineR.x(100), 100)));
   }
 
-  //! compute 2d line pairs to 3d line vector
+  /// @brief Triangulate vector of line correspondences.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param lineL Left image lines.
+  /// @param lineR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<Line<FT>, V1Args...>& lineL,
                           const V<Line<FT>, V1Args...>& lineR,
@@ -204,8 +310,11 @@ class Stereo {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
-
-  //! compute 2d line (subclass) pairs to 3d line vector
+  /// @brief Triangulate generic line vector correspondences.
+  /// @tparam LV Container type (must contain Line-compatible objects).
+  /// @param lineL Left image lines.
+  /// @param lineR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <class LV>
   inline void triangulateV(const LV& lineL, const LV& lineR, std::vector<Line3<FT>>& ret) const {
     CV_Assert(lineL.size() == lineR.size());
@@ -216,8 +325,19 @@ class Stereo {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
+  /// @}
 
-  //! compute 3d line segment from two planes from camera origin through corresponding stereo line segments
+  /// @name Line Segment Triangulation
+  /// @{
+
+  /// @brief Triangulate 3D line segment from stereo correspondences.
+  ///
+  /// Computes endpoints by triangulating at the union of y-extents
+  /// from both image segments.
+  /// @param lineL Left image line segment.
+  /// @param lineR Right image line segment.
+  /// @return Triangulated 3D line segment (empty if degenerate).
+  /// @note Requires rectified setup.
   inline LineSegment3<FT> triangulate(const LineSegment<FT>& lineL, const LineSegment<FT>& lineR) const {
     // prevent div by zero from normal x in .x()() call
     if (detail::abs(lineL.normalX()) < LIMITS<FT>::tau() || detail::abs(lineR.normalX()) < LIMITS<FT>::tau())
@@ -234,8 +354,13 @@ class Stereo {
                             triangulate(Vec2<FT>(lineL.x(endy), endy), Vec2<FT>(lineR.x(endy), endy)));
   }
 
-
-  //! compute 2d line segment pairs to 3d line segment vector
+  /// @brief Triangulate vector of line segment correspondences.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param lineL Left image line segments.
+  /// @param lineR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<LineSegment<FT>, V1Args...>& lineL,
                           const V<LineSegment<FT>, V1Args...>& lineR,
@@ -248,8 +373,11 @@ class Stereo {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
-
-  //! compute 2d line segment (subclass) pairs to 3d line segment vector
+  /// @brief Triangulate generic line segment vector correspondences.
+  /// @tparam LV Container type (must contain LineSegment-compatible objects).
+  /// @param lineL Left image line segments.
+  /// @param lineR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <class LV>
   inline void triangulateV(const LV& lineL, const LV& lineR, std::vector<LineSegment3<FT>>& ret) const {
     CV_Assert(lineL.size() == lineR.size());
@@ -259,13 +387,21 @@ class Stereo {
     ret.reserve(size);
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
+
+  /// @}
 };
 
+/// @brief Single-precision stereo triangulation.
 typedef Stereo<float> Stereof;
+
+/// @brief Double-precision stereo triangulation.
 typedef Stereo<double> Stereod;
 
-//! Stereo class for traingulation (uses planes for lines)
-//! line and line segments can also be triangulated for non rectified camera pairs
+/// @brief Stereo triangulation using plane intersection for lines.
+///
+/// Triangulates lines by intersecting the interpretation planes
+/// from each camera. Works for non-rectified stereo pairs.
+/// @tparam FT Floating-point type.
 template <class FT>
 class StereoPlane : public Stereo<FT> {
  protected:
@@ -277,13 +413,28 @@ class StereoPlane : public Stereo<FT> {
  public:
   typedef FT float_type;
 
+  /// @brief Construct from projection matrices.
+  /// @param projL Left camera projection matrix (3x4).
+  /// @param projR Right camera projection matrix (3x4).
   StereoPlane(const Matx34<FT>& projL, const Matx34<FT>& projR) : Stereo<FT>(projL, projR) {}
 
+  /// @brief Construct from Camera objects.
+  /// @param camL Left camera.
+  /// @param camR Right camera.
   StereoPlane(const Camera<FT>& camL, const Camera<FT>& camR) : Stereo<FT>(camL, camR) {}
 
   using Stereo<FT>::triangulate;
 
-  //! compute 3d line from two planes from camera origin through corresponding stereo lines
+  /// @name Line Triangulation
+  /// @{
+
+  /// @brief Triangulate 3D line via plane intersection.
+  ///
+  /// Constructs interpretation planes from each camera through
+  /// the 2D lines and finds their intersection line.
+  /// @param lineL Left image line.
+  /// @param lineR Right image line.
+  /// @return Triangulated 3D line (empty if planes parallel).
   inline Line3<FT> triangulate(const Line<FT>& lineL, const Line<FT>& lineR) const {
     Line3<FT> ret;
     planeFromLine(camL_.focal(), camL_.offset(), rotL_, camL_.origin(), lineL)
@@ -292,7 +443,13 @@ class StereoPlane : public Stereo<FT> {
     return ret;
   }
 
-  //! compute 2d line pairs to 3d line vector
+  /// @brief Triangulate vector of line correspondences.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param lineL Left image lines.
+  /// @param lineR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<Line<FT>, V1Args...>& lineL,
                           const V<Line<FT>, V1Args...>& lineR,
@@ -305,8 +462,11 @@ class StereoPlane : public Stereo<FT> {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
-
-  //! compute 2d line (subclass) pairs to 3d line vector
+  /// @brief Triangulate generic line vector correspondences.
+  /// @tparam LV Container type (must contain Line-compatible objects).
+  /// @param lineL Left image lines.
+  /// @param lineR Right image lines.
+  /// @param[out] ret Triangulated 3D lines.
   template <class LV>
   inline void triangulateV(const LV& lineL, const LV& lineR, std::vector<Line3<FT>>& ret) const {
     CV_Assert(lineL.size() == lineR.size());
@@ -317,8 +477,19 @@ class StereoPlane : public Stereo<FT> {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
+  /// @}
 
-  //! compute 3d line segment from two planes from camera origin through corresponding stereo line segments
+  /// @name Line Segment Triangulation
+  /// @{
+
+  /// @brief Triangulate 3D line segment via plane intersection.
+  ///
+  /// Triangulates the supporting line via plane intersection,
+  /// then computes segment endpoints by projecting the 2D
+  /// endpoints onto the 3D line.
+  /// @param lineL Left image line segment.
+  /// @param lineR Right image line segment.
+  /// @return Triangulated 3D line segment (empty if degenerate).
   inline LineSegment3<FT> triangulate(const LineSegment<FT>& lineL, const LineSegment<FT>& lineR) const {
     Line3<FT> l = triangulate(static_cast<const Line<FT>>(lineL), static_cast<const Line<FT>>(lineR));
 
@@ -336,14 +507,15 @@ class StereoPlane : public Stereo<FT> {
       return LineSegment3<FT>(l, tmp.minCoeff(), tmp.maxCoeff());
     else
       return LineSegment3<FT>(l, tmp.maxCoeff(), tmp.minCoeff());
-
-    /*return
-       LineSegment3<FT>(l,l.normalDistance(lineFromPixel(camL_.focal(),camL_.offset(),rotL_,camL_.origin(),lineL.startPoint())),
-                              l.normalDistance(lineFromPixel(camL_.focal(),camL_.offset(),rotL_,camL_.origin(),lineL.endPoint())));*/
   }
 
-
-  //! compute 2d line segment pairs to 3d line segment vector
+  /// @brief Triangulate vector of line segment correspondences.
+  /// @tparam V Container type.
+  /// @tparam V1Args Template args for input container.
+  /// @tparam V2Args Template args for output container.
+  /// @param lineL Left image line segments.
+  /// @param lineR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <template <class, class...> class V, class... V1Args, class... V2Args>
   inline void triangulate(const V<LineSegment<FT>, V1Args...>& lineL,
                           const V<LineSegment<FT>, V1Args...>& lineR,
@@ -356,8 +528,11 @@ class StereoPlane : public Stereo<FT> {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
-
-  //! compute 2d line segment (subclass) pairs to 3d line segment vector
+  /// @brief Triangulate generic line segment vector correspondences.
+  /// @tparam LV Container type (must contain LineSegment-compatible objects).
+  /// @param lineL Left image line segments.
+  /// @param lineR Right image line segments.
+  /// @param[out] ret Triangulated 3D line segments.
   template <class LV>
   inline void triangulateV(const LV& lineL, const LV& lineR, std::vector<LineSegment3<FT>>& ret) const {
     CV_Assert(lineL.size() == lineR.size());
@@ -368,10 +543,13 @@ class StereoPlane : public Stereo<FT> {
     for (size_t i = 0; i != size; ++i) ret.push_back(triangulate(lineL[i], lineR[i]));
   }
 
-  ///////////////////////////////// static helpers
+  /// @}
 };
 
+/// @brief Single-precision plane-intersection stereo.
 typedef StereoPlane<float> Stereo2Planef;
+
+/// @brief Double-precision plane-intersection stereo.
 typedef StereoPlane<double> Stereo2Planed;
 
 }  // namespace lsfm

@@ -5,7 +5,6 @@
 /// declared as Bazel data dependencies. It supports both Bazel builds (using
 /// the runfiles library) and non-Bazel builds (using relative paths as fallback).
 ///
-/// @example
 /// @code
 /// // In your test or binary:
 /// auto runfiles = lsfm::Runfiles::Create(argv[0]);

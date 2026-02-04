@@ -43,6 +43,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_source.hpp
+/// @brief Abstract interface and implementations for edge response computation.
+/// Provides a flexible framework for combining different edge response filters
+/// (Sobel, Laplace, Quadrature) with edge pixel extraction methods (NMS, Zero-Crossing).
+
 #pragma once
 
 #include <edge/zc.hpp>

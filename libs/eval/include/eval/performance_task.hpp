@@ -49,6 +49,10 @@ class PerformanceTask : public MeasureTask<InputDataT, CVPerformanceMeasure> {
 };
 
 /// @brief Full performance test runner based on performance tasks and data providers
+/// @file performance_task.hpp
+/// @brief Performance measurement task interface and implementations.
+/// Base class for tasks that measure algorithmic performance.
+
 template <typename PerformanceTaskT>
 class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
  public:

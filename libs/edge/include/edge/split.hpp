@@ -45,6 +45,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file split.hpp
+/// @brief Line segment splitting and breaking algorithms.
+/// Provides methods to subdivide and break edge segments at high-curvature points
+/// to improve geometric accuracy and line fitting quality.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>

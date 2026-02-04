@@ -1,3 +1,15 @@
+/// @file lsd_edge.cpp
+/// @brief Edge-based LSD with pattern detection.
+///
+/// Demonstrates edge-based line segment detection:
+/// - LsdEL: Line detection from edge linking
+/// - LsdEP: Line detection from edge patterns
+/// - Comparison of edge-based approaches
+/// - Visualization with colored line segments
+///
+/// @usage ./lsd_edge [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <geometry/draw.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

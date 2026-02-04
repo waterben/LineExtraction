@@ -40,6 +40,11 @@
  // C by Benjamin Wassermann
  //M*/
 
+/// @file fit.hpp
+/// @brief Curve fitting algorithms for edge segments.
+/// Provides methods to fit various curve models (lines, conic sections, splines)
+/// to detected edge segments using least squares and robust estimation techniques.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
@@ -54,6 +59,17 @@
 
 namespace lsfm {
 
+/// @brief Compute covariance matrix and centroid from point sequence.
+/// Calculates second-moment statistics (covariance) and center of mass for a set of points.
+/// @tparam FT Floating-point type for calculations
+/// @tparam PT Point type with getX() and getY() accessors
+/// @param beg Beginning iterator of points
+/// @param end Ending iterator of points
+/// @param sx Output X variance (Sxx)
+/// @param sy Output Y variance (Syy)
+/// @param sxy Output covariance (Sxy)
+/// @param cx Output X centroid coordinate
+/// @param cy Output Y centroid coordinate
 template <class FT, class PT>
 inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT& cx, FT& cy) {
   int count = 0;
@@ -81,6 +97,19 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
   });
 }
 
+/// @brief Compute weighted covariance matrix and centroid from point sequence.
+/// Calculates weighted second-moment statistics using point magnitudes as weights.
+/// @tparam FT Floating-point type for calculations
+/// @tparam PT Point type with getX() and getY() accessors
+/// @tparam DT Data element type in weight matrix
+/// @param beg Beginning iterator of points
+/// @param end Ending iterator of points
+/// @param sx Output X variance (weighted Sxx)
+/// @param sy Output Y variance (weighted Syy)
+/// @param sxy Output covariance (weighted Sxy)
+/// @param cx Output X centroid coordinate (weighted)
+/// @param cy Output Y centroid coordinate (weighted)
+/// @param data Optional weight map; if empty, unweighted statistics computed
 template <class FT, class PT, class DT = FT>
 inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT& cx, FT& cy, const cv::Mat& data) {
   FT count = 0;
@@ -131,17 +160,37 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
   }
 }
 
-
-//! fit line implementation using regression
+/// @brief Line fitting using regression method.
+/// Fits a line to points using least-squares regression on covariance matrix.
+/// @tparam FT Floating-point type for calculations
+/// @tparam PT Point type
+/// @tparam DT Data element type for weighting (default: FT)
 template <class FT, class PT, class DT = FT>
 class RegressionFit {
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type used in calculations
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
+
+  /// @typedef data_type
+  /// @brief Data/weight element type
   typedef DT data_type;
 
+  /// @brief Get the name of this fit method.
+  /// @return String "Regression"
   static const std::string name() { return "Regression"; }
 
+  /// @brief Fit normalized line normal vector from covariance components.
+  /// Solves the eigenvalue problem to get the dominant direction.
+  /// @param sx X variance (Sxx)
+  /// @param sy Y variance (Syy)
+  /// @param sxy Covariance (Sxy)
+  /// @param nx Output X component of unit normal vector
+  /// @param ny Output Y component of unit normal vector
   static inline void fit_unorm(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     if (sx > sy) {
       nx = sxy;

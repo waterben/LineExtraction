@@ -43,6 +43,11 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file segment_sampler.hpp
+/// @brief Edge segment sampling and interpolation utilities.
+/// Provides methods to sample points along edge segments and interpolate values
+/// from magnitude maps for analysis and validation.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>

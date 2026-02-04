@@ -2,6 +2,16 @@
 
 This BUILD file defines a target to generate Doxygen documentation.
 Run with: bazel run //:doxygen
+
+The generated documentation includes:
+- All library source code (libs/)
+- Applications (apps/)
+- Examples (examples/)
+- Evaluation code (evaluation/)
+- All README.md files throughout the project
+- Documentation in docs/
+
+Documentation output: docs/generated/html/index.html
 """
 
 # Doxygen documentation generation
@@ -18,9 +28,18 @@ sh_binary(
             "libs/**/include/**/*.hpp",
             "libs/**/include/**/*.h",
             "libs/**/src/**/*.cpp",
+            "libs/**/README.md",
             "apps/**/*.hpp",
             "apps/**/*.cpp",
             "apps/**/*.h",
+            "apps/**/README.md",
+            "examples/**/*.cpp",
+            "examples/**/*.hpp",
+            "examples/**/README.md",
+            "evaluation/**/*.cpp",
+            "evaluation/**/*.hpp",
+            "evaluation/**/README.md",
+            "docs/**/*.md",
         ],
         allow_empty = True,
     ),

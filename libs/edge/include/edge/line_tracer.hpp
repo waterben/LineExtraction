@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file line_tracer.hpp
+/// @brief Line-oriented edge segment tracing and extraction.
+/// Provides methods to trace edges with a preference for line-like structures,
+/// breaking curves and emphasizing straight-line segments.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>

@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file StereoPointFilter.hpp
+/// @brief Stereo point filtering with epipolar constraints.
+/// Provides filtering for stereo point correspondence matching.
+
 #pragma once
 
 #include <geometry/line.hpp>

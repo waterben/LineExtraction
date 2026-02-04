@@ -1,3 +1,16 @@
+/// @file lsd_nfa.cpp
+/// @brief NFA-validated line segment detection.
+///
+/// Demonstrates the Number of False Alarms (NFA) validation for
+/// detected line segments:
+/// - a contrario statistical validation
+/// - False positive rejection based on Helmholtz principle
+/// - NFA score computation and thresholding
+/// - Comparison of validated vs unvalidated segments
+///
+/// @usage ./lsd_nfa [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nfa.hpp>
 #include <geometry/draw.hpp>
 #include <lsd/lsd_cc.hpp>

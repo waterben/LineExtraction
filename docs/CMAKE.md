@@ -273,6 +273,51 @@ le_add_executable(app_line_analyzer
 
 **Note:** Qt is optional. Set `ENABLE_QT=OFF` to skip Qt applications.
 
+## Data Dependencies (Datasets)
+
+For CMake builds, datasets are expected under `resources/datasets/`:
+
+```
+LineExtraction/
+├── resources/
+│   └── datasets/
+│       ├── BSDS500/          # Berkeley Segmentation Dataset
+│       │   ├── 100007.jpg
+│       │   └── ...
+│       └── MDB/              # Middlebury Stereo Dataset
+│           ├── MiddEval3-Q/  # Quarter resolution
+│           ├── MiddEval3-H/  # Half resolution
+│           └── MiddEval3-F/  # Full resolution
+```
+
+### Setup Scripts
+
+```bash
+# Download and setup MDB dataset
+./tools/scripts/setup_mdb_dataset.sh --resolution all
+
+# For BSDS500, use Bazel (auto-download) or manual setup
+```
+
+### Usage in C++ Code
+
+The `Runfiles` helper automatically detects Bazel vs CMake environment:
+
+```cpp
+#include <eval/runfiles.hpp>
+
+int main(int argc, char** argv) {
+    auto runfiles = lsfm::Runfiles::Create(argv[0]);
+
+    // Works for both Bazel and CMake builds
+    std::string path = runfiles->Rlocation("line_extraction/resources/datasets/MDB/MiddEval3-Q");
+}
+```
+
+For CMake, the code searches relative to the working directory:
+- `resources/datasets/` (from workspace root)
+- `../resources/datasets/` (from build/bin directory)
+
 ## Documentation Generation
 
 Generate Doxygen documentation:

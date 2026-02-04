@@ -17,6 +17,18 @@
  *																		   *
  ***************************************************************************/
 
+/**
+ * @file rcmg.hpp
+ * @brief Robust Colour Morphological Gradient edge detector.
+ *
+ * Implementation of the RCMG algorithm for edge detection in multichannel
+ * (color) images. The algorithm finds edges by computing the morphological
+ * gradient with vector rejection for noise robustness.
+ *
+ * @see A.N. Evans and X.U. Liu, "A Morphological Gradient Approach to Color
+ *      Edge Detection", IEEE Trans. Image Processing, 15(6), pp. 1454-1463, 2006.
+ */
+
 #pragma once
 
 #include <imgproc/gradient.hpp>
@@ -27,6 +39,20 @@
 
 namespace lsfm {
 
+/// @brief Robust Colour Morphological Gradient (RCMG) edge detector.
+///
+/// Computes edges in multi-channel images using the morphological gradient
+/// approach. The algorithm finds the median-centered difference within a
+/// sliding window, rejecting s pairs of pixels that are furthest apart in
+/// color space to achieve noise robustness.
+/// The gradient direction is derived from the spatial positions of the
+/// maximum-distance pixel pair within the window.
+/// @tparam IT Input image type (e.g., uchar).
+/// @tparam channels Number of color channels (default: 3 for RGB/BGR).
+/// @tparam GT Gradient component type (default: short).
+/// @tparam MT Magnitude type (default: int for storing squared norms).
+/// @tparam DT Direction type (default: float).
+/// @tparam DO Direction operator type (default: Direction<GT, DT>).
 template <class IT = uchar,
           int channels = 3,
           class GT = short,
@@ -34,34 +60,43 @@ template <class IT = uchar,
           class DT = float,
           class DO = Direction<GT, DT>>
 class RCMGradient : public Gradient<IT, GT, MT, DT> {
-  int mask_, s_, m2_, norm_;
+  int mask_;  ///< Window size (e.g., 3 for 3x3).
+  int s_;     ///< Number of vector pairs to reject.
+  int m2_;    ///< Squared mask size.
+  int norm_;  ///< Norm type (cv::NORM_L1, cv::NORM_L2, cv::NORM_L2SQR).
 
-  cv::Mat_<MT> mag_;
-  cv::Mat_<GT> gx_, gy_;
+  cv::Mat_<MT> mag_;  ///< Computed magnitude image.
+  cv::Mat_<GT> gx_;   ///< Computed X-gradient image.
+  cv::Mat_<GT> gy_;   ///< Computed Y-gradient image.
 
-  mutable cv::Mat_<DT> dir_;
-  mutable bool dir_done_;
+  mutable cv::Mat_<DT> dir_;  ///< Computed direction image (lazy).
+  mutable bool dir_done_;     ///< Direction computation flag.
 
 
   // vectors
-  std::vector<int> locations;
-  std::vector<char> not_removed;
-  std::vector<cv::Vec<IT, channels>> window;
-  MT max_dist, max_dist2;
-  std::vector<MT> max_dists, copyof_max_dists;
-  cv::Mat_<MT> dists;
+  std::vector<int> locations;                   ///< Location indices for max distances.
+  std::vector<char> not_removed;                ///< Rejection status flags.
+  std::vector<cv::Vec<IT, channels>> window;    ///< Current window pixel values.
+  MT max_dist, max_dist2;                       ///< Maximum distance values.
+  std::vector<MT> max_dists, copyof_max_dists;  ///< Per-pixel max distances.
+  cv::Mat_<MT> dists;                           ///< Pairwise distance matrix.
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
-  typedef MT mag_type;
-  typedef DT dir_type;
+  typedef IT img_type;   ///< Input image pixel type.
+  typedef GT grad_type;  ///< Gradient component type.
+  typedef MT mag_type;   ///< Magnitude type.
+  typedef DT dir_type;   ///< Direction type.
 
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<DT> DirectionRange;
+  typedef Range<GT> GradientRange;   ///< Range type for gradient values.
+  typedef Range<MT> MagnitudeRange;  ///< Range type for magnitude values.
+  typedef Range<DT> DirectionRange;  ///< Range type for direction values.
 
-  //! mask for window size and s for vector rejection (noise reduction)
+  /// @brief Construct an RCMG gradient operator.
+  /// @param mask Window size for computing differences (default: 3, meaning 3x3).
+  /// @param s Number of vector pairs to reject for noise reduction (default: 0).
+  /// @param cn Norm type: cv::NORM_L1, cv::NORM_L2, cv::NORM_L2SQR (default: L2SQR).
+  /// @param int_lower Lower bound of input intensity range.
+  /// @param int_upper Upper bound of input intensity range.
   RCMGradient(int mask = 3,
               int s = 0,
               int cn = cv::NORM_L2SQR,
@@ -113,20 +148,33 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
   }
 
 
-  //! process gradient
+  /// @brief Process an image to compute RCMG edge gradients.
+  ///
+  /// Computes gradient magnitude and components using the morphological
+  /// gradient algorithm. Results can be retrieved using magnitude(), gx(), gy().
+  /// @param img Input multi-channel image.
   void process(const cv::Mat& img) {
     dir_done_ = false;
     do_process(img);
   }
 
-  //! process gradient and get results
+  /// @brief Process image and retrieve gradient components and magnitude.
+  /// @param img Input multi-channel image.
+  /// @param gx Output X-gradient image.
+  /// @param gy Output Y-gradient image.
+  /// @param mag Output magnitude image.
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
     process(img);
     directionals(gx, gy);
     mag = magnitude();
   }
 
-  //! process gradient and get results
+  /// @brief Process image and retrieve all gradient outputs.
+  /// @param img Input multi-channel image.
+  /// @param gx Output X-gradient image.
+  /// @param gy Output Y-gradient image.
+  /// @param mag Output magnitude image.
+  /// @param dir Output direction image.
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
     process(img);
     directionals(gx, gy);
@@ -134,27 +182,38 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
     dir = direction();
   }
 
-  //! get x,y derivatives
+  /// @brief Get both gradient components.
+  /// @param gx X-gradient image reference.
+  /// @param gy Y-gradient image reference.
   void directionals(cv::Mat& gx, cv::Mat& gy) const {
     gx = gx_;
     gy = gy_;
   }
 
-  //! get x derivative
+  /// @brief Get X-gradient image.
+  /// @return X-gradient component image.
   cv::Mat gx() const { return gx_; }
 
-  //! get y derivative
+  /// @brief Get Y-gradient image.
+  /// @return Y-gradient component image.
   cv::Mat gy() const { return gy_; }
 
+  /// @brief Get gradient value range.
+  /// @return Range of possible gradient component values.
   GradientRange gradientRange() const { return GradientRange(static_cast<GT>(-mask_), static_cast<GT>(mask_)); }
 
-  //! get magnitude
+  /// @brief Get gradient magnitude image.
+  /// @return Magnitude image.
   cv::Mat magnitude() const { return mag_; }
 
-  //! test if direction is computed
+  /// @brief Check if direction has been computed.
+  /// @return True if direction() has been called, false otherwise.
   inline bool isDirectionDone() const { return dir_done_; }
 
-  //! get direction
+  /// @brief Get gradient direction image.
+  ///
+  /// Direction is computed lazily on first access.
+  /// @return Direction image in range determined by DO::range().
   cv::Mat direction() const {
     if (!dir_done_) {
       DO::process(gx_, gy_, dir_);
@@ -163,15 +222,19 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
     return dir_;
   }
 
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /// @brief Get direction value range.
+  /// @return Range of direction values.
   DirectionRange directionRange() const { return DO::range(); }
 
+  /// @brief Get magnitude value range.
+  /// @return Range of possible magnitude values.
   MagnitudeRange magnitudeRange() const {
     return MagnitudeRange(0, static_cast<MT>(norm(cv::Vec<IT, channels>::all(this->intRange_.upper), norm_)));
   }
 
 
-  //! get name of gradient operator
+  /// @brief Get the name of this gradient operator.
+  /// @return String "rcmg".
   inline std::string name() const { return "rcmg"; }
 
  private:
@@ -376,36 +439,54 @@ class RCMGradient : public Gradient<IT, GT, MT, DT> {
   }
 };
 
+/// @brief Single-channel specialization of RCMG gradient operator.
+///
+/// Specialized implementation of the RCMG algorithm for grayscale images.
+/// Uses scalar intensity differences instead of vector color differences.
+/// @tparam IT Input image type (e.g., uchar).
+/// @tparam GT Gradient component type (default: short).
+/// @tparam MT Magnitude type (default: int).
+/// @tparam DT Direction type (default: float).
+/// @tparam DO Direction operator type.
 template <class IT, class GT, class MT, class DT, class DO>
 class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
-  int mask_, s_, m2_, norm_;
+  int mask_;  ///< Window size.
+  int s_;     ///< Number of pairs to reject.
+  int m2_;    ///< Squared mask size.
+  int norm_;  ///< Norm type.
 
-  cv::Mat_<MT> mag_;
-  cv::Mat_<GT> gx_, gy_;
+  cv::Mat_<MT> mag_;  ///< Computed magnitude image.
+  cv::Mat_<GT> gx_;   ///< Computed X-gradient image.
+  cv::Mat_<GT> gy_;   ///< Computed Y-gradient image.
 
-  mutable cv::Mat_<DT> dir_;
-  mutable bool dir_done_;
+  mutable cv::Mat_<DT> dir_;  ///< Computed direction image (lazy).
+  mutable bool dir_done_;     ///< Direction computation flag.
 
 
   // vectors
-  std::vector<int> locations;
-  std::vector<char> not_removed;
-  std::vector<IT> window;
-  MT max_dist, max_dist2;
-  std::vector<MT> max_dists, copyof_max_dists;
-  cv::Mat_<MT> dists;
+  std::vector<int> locations;                   ///< Location indices for max distances.
+  std::vector<char> not_removed;                ///< Rejection status flags.
+  std::vector<IT> window;                       ///< Current window pixel values.
+  MT max_dist, max_dist2;                       ///< Maximum distance values.
+  std::vector<MT> max_dists, copyof_max_dists;  ///< Per-pixel max distances.
+  cv::Mat_<MT> dists;                           ///< Pairwise distance matrix.
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
-  typedef MT mag_type;
-  typedef DT dir_type;
+  typedef IT img_type;   ///< Input image pixel type.
+  typedef GT grad_type;  ///< Gradient component type.
+  typedef MT mag_type;   ///< Magnitude type.
+  typedef DT dir_type;   ///< Direction type.
 
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<DT> DirectionRange;
+  typedef Range<GT> GradientRange;   ///< Range type for gradient values.
+  typedef Range<MT> MagnitudeRange;  ///< Range type for magnitude values.
+  typedef Range<DT> DirectionRange;  ///< Range type for direction values.
 
-  //! mask for window size and s for vector rejection (noise reduction)
+  /// @brief Construct a single-channel RCMG gradient operator.
+  /// @param mask Window size for computing differences (default: 3).
+  /// @param s Number of pairs to reject for noise reduction (default: 0).
+  /// @param nt Norm type (default: cv::NORM_L2SQR).
+  /// @param int_lower Lower bound of input intensity range.
+  /// @param int_upper Upper bound of input intensity range.
   RCMGradient(int mask = 3,
               int s = 0,
               int nt = cv::NORM_L2SQR,
@@ -455,20 +536,30 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
   }
 
 
-  //! process gradient
+  /// @brief Process an image to compute RCMG edge gradients.
+  /// @param img Input single-channel image.
   void process(const cv::Mat& img) {
     dir_done_ = false;
     do_process(img);
   }
 
-  //! process gradient and get results
+  /// @brief Process image and retrieve gradient components and magnitude.
+  /// @param img Input single-channel image.
+  /// @param gx Output X-gradient image.
+  /// @param gy Output Y-gradient image.
+  /// @param mag Output magnitude image.
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag) {
     process(img);
     directionals(gx, gy);
     mag = magnitude();
   }
 
-  //! process gradient and get results
+  /// @brief Process image and retrieve all gradient outputs.
+  /// @param img Input single-channel image.
+  /// @param gx Output X-gradient image.
+  /// @param gy Output Y-gradient image.
+  /// @param mag Output magnitude image.
+  /// @param dir Output direction image.
   inline void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy, cv::Mat& mag, cv::Mat& dir) {
     process(img);
     directionals(gx, gy);
@@ -476,27 +567,36 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     dir = direction();
   }
 
-  //! get x,y derivatives
+  /// @brief Get both gradient components.
+  /// @param gx X-gradient image reference.
+  /// @param gy Y-gradient image reference.
   void directionals(cv::Mat& gx, cv::Mat& gy) const {
     gx = gx_;
     gy = gy_;
   }
 
-  //! get x derivative
+  /// @brief Get X-gradient image.
+  /// @return X-gradient component image.
   cv::Mat gx() const { return gx_; }
 
-  //! get y derivative
+  /// @brief Get Y-gradient image.
+  /// @return Y-gradient component image.
   cv::Mat gy() const { return gy_; }
 
+  /// @brief Get gradient value range.
+  /// @return Range of possible gradient component values.
   GradientRange gradientRange() const { return GradientRange(static_cast<GT>(-mask_), static_cast<GT>(mask_)); }
 
-  //! get magnitude
+  /// @brief Get gradient magnitude image.
+  /// @return Magnitude image.
   cv::Mat magnitude() const { return mag_; }
 
-  //! test if direction is computed
+  /// @brief Check if direction has been computed.
+  /// @return True if direction() has been called, false otherwise.
   inline bool isDirectionDone() const { return dir_done_; }
 
-  //! get direction
+  /// @brief Get gradient direction image.
+  /// @return Direction image in range determined by DO::range().
   cv::Mat direction() const {
     if (!dir_done_) {
       DO::process(gx_, gy_, dir_);
@@ -505,13 +605,17 @@ class RCMGradient<IT, 1, GT, MT, DT, DO> : public Gradient<IT, GT, MT, DT> {
     return dir_;
   }
 
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /// @brief Get direction value range.
+  /// @return Range of direction values.
   DirectionRange directionRange() const { return DO::range(); }
 
-  MagnitudeRange magnitudeRange() const { return MagnitudeRange(0, static_cast<MT>(this->intRange_.upper)); }
+  /// @brief Get magnitude value range.
+  /// @return Range of possible magnitude values.
+  MagnitudeRange magnitudeRange() const { return MagnitudeRange(0, this->intRange_.upper); }
 
 
-  //! get name of gradient operator
+  /// @brief Get the name of this gradient operator.
+  /// @return String "rcmg".
   inline std::string name() const { return "rcmg"; }
 
  private:

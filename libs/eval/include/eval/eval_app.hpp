@@ -1,3 +1,7 @@
+/// @file eval_app.hpp
+/// @brief Evaluation application framework and runner.
+/// Provides high-level application interface for running evaluation tasks.
+
 #pragma once
 
 #include <utility/console_app.hpp>

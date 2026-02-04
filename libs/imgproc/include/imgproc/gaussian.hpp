@@ -48,10 +48,15 @@
 
 namespace lsfm {
 
-//! compute gaussian with sigma = 1 and no normalization
-//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-//! @param range value range for gaussain -> instead if changing sigma, use range to define
-//!        gaussian curve. Large range corresponds to small sigma
+/// @brief Generate a 1D Gaussian kernel.
+///
+/// Creates a discrete Gaussian with sigma = 1 and no normalization.
+/// The range parameter controls the effective spread (larger range = narrower curve).
+/// @tparam FT Floating-point type for kernel values (float or double)
+/// @param size Kernel size (must be odd, minimum 3, default: 5)
+/// @param range Value range for Gaussian curve (larger = narrower, default: 3)
+/// @return 1xN matrix containing Gaussian values
+/// @note Size is adjusted to be odd if even value is provided
 template <class FT>
 cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
   // size have to be odd and in sane range
@@ -75,10 +80,14 @@ cv::Mat_<FT> gaussian(int size = 5, FT range = 3) {
   return g;
 }
 
-//! compute first derivtive of gaussian with sigma = 1 and no normalization
-//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-//! @param range value range for gaussain -> instead if changing sigma, use range to define
-//!        gaussian curve. Large range corresponds to small sigma
+/// @brief Generate a 1D first derivative of Gaussian kernel.
+///
+/// Creates the first derivative of a Gaussian (edge detection kernel).
+/// Antisymmetric kernel with zero at center.
+/// @tparam FT Floating-point type for kernel values (float or double)
+/// @param size Kernel size (must be odd, minimum 3, default: 5)
+/// @param range Value range for Gaussian curve (larger = narrower, default: 3)
+/// @return 1xN matrix containing first derivative of Gaussian values
 template <class FT>
 cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
   // size have to be odd and in sane range
@@ -105,10 +114,14 @@ cv::Mat_<FT> gaussianD1(int size = 5, FT range = 3) {
 }
 
 
-//! compute second derivtive of gaussian with sigma = 1 and no normalization
-//! @param size size of discrete gaussian values (symmetric to center, has to be odd value)
-//! @param range value range for gaussain -> instead if changing sigma, use range to define
-//!        gaussian curve. Large range corresponds to small sigma
+/// @brief Generate a 1D second derivative of Gaussian kernel (Laplacian of Gaussian).
+///
+/// Creates the second derivative of a Gaussian (blob/ridge detection kernel).
+/// Symmetric kernel with negative value at center (Mexican hat shape in 2D).
+/// @tparam FT Floating-point type for kernel values (float or double)
+/// @param size Kernel size (must be odd, minimum 3, default: 5)
+/// @param range Value range for Gaussian curve (larger = narrower, default: 3)
+/// @return 1xN matrix containing second derivative of Gaussian values
 template <class FT>
 cv::Mat_<FT> gaussianD2(int size = 5, FT range = 3) {
   // size have to be odd and in sane range

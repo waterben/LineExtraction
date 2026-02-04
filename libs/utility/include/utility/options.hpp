@@ -1,4 +1,5 @@
-/// @brief Minimal command line options parser to replace boost::program_options for common use cases.
+/// @file options.hpp
+/// @brief Minimal command-line options parser.
 ///
 /// Features:
 ///  - Long options: --input value or --input=value
@@ -11,6 +12,7 @@
 ///  - No multi-token options, no repeated options aggregation
 ///  - No typed parsing beyond std::string and bool
 ///  - No automatic help generation (but descriptions are stored)
+
 #pragma once
 
 #include <memory>

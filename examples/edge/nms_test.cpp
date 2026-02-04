@@ -1,3 +1,19 @@
+/// @file nms_test.cpp
+/// @brief NMS algorithm benchmarking with multiple gradient operators.
+///
+/// Benchmarks Non-Maximum Suppression performance with various gradient
+/// computation methods including:
+/// - Sobel/Scharr derivatives
+/// - RCMG (Robust Color Morphological Gradient)
+/// - SUSAN edge detector
+/// - Quadrature filters (Gabor, Log-Gabor)
+/// - Phase Congruency
+///
+/// Reports timing and edge pixel throughput for each configuration.
+///
+/// @usage ./nms_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <ctime>
 #include <fstream>
 #include <iomanip>

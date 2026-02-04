@@ -1,3 +1,14 @@
+/// @file arpack_test.cpp
+/// @brief ARPACK++ eigenvalue computation demonstration.
+///
+/// Demonstrates sparse eigenvalue computation using ARPACK++:
+/// - Sparse symmetric matrix construction
+/// - Finding smallest magnitude eigenvalues
+/// - Eigenvector computation
+///
+/// @usage ./arpack_test
+/// @note Requires ARPACK++ and SuperLU libraries.
+
 // NOTE: Include order matters! arlsmat.h must come BEFORE lsymsol.h
 // because lsymsol.h uses conditional includes based on ARLSMAT_H being defined
 // clang-format off

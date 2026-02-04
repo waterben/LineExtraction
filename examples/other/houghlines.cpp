@@ -1,3 +1,14 @@
+/// @file houghlines.cpp
+/// @brief OpenCV Hough transform comparison.
+///
+/// Demonstrates OpenCV's Hough line detection:
+/// - Standard Hough Transform (HoughLines)
+/// - Probabilistic Hough Transform (HoughLinesP)
+/// - Performance comparison and visualization
+///
+/// @usage ./houghlines [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <utility/test_images.hpp>

@@ -1,3 +1,15 @@
+/// @file stereo_match_test.cpp
+/// @brief Stereo line matching with epipolar constraints.
+///
+/// Demonstrates stereo line matching using geometric constraints:
+/// - StereoLineFilter for epipolar constraint filtering
+/// - Significant reduction in matching candidates
+/// - Visualization of filtered correspondence pairs
+///
+/// @usage ./stereo_match_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+
 #include <geometry/draw.hpp>
 #include <lfd/StereoLineFilter.hpp>
 #include <lsd/lsd_cc.hpp>

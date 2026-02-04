@@ -51,10 +51,19 @@
 
 namespace lsfm {
 
+/// @brief Gaussian image pyramid for multi-scale analysis.
+///
+/// Creates and manages a sequence of progressively downsampled images using
+/// Gaussian filtering (cv::pyrDown). Used for scale-space analysis, feature
+/// detection at multiple scales, and coarse-to-fine processing.
+/// @tparam MT Matrix element type (uchar, float, double, etc.)
 template <class MT>
 class Pyramid {
-  std::vector<cv::Mat> scales_;
+  std::vector<cv::Mat> scales_;  ///< Vector of pyramid levels
 
+  /// @brief Create pyramid levels from base image.
+  /// @param data Base image (level 0)
+  /// @param scale_num Number of scales (0=auto, >0=exact count, <0=min width)
   void create(const cv::Mat data, int scale_num) {
     scales_.push_back(data);
     cv::Mat sc = data, level;
@@ -99,32 +108,57 @@ class Pyramid {
   }
 
  public:
-  typedef MT mat_type;
+  typedef MT mat_type;  ///< Matrix element type
 
+  /// @brief Default constructor.
   Pyramid() : scales_() {}
 
+  /// @brief Construct pyramid from dimensions.
+  /// @param rows Image height
+  /// @param cols Image width
+  /// @param scale_num Number of scales (0=auto, >0=exact, <0=min width)
   Pyramid(int rows, int cols, int scale_num = 0) : scales_() { create(cv::Mat(rows, cols, type()), scale_num); }
 
+  /// @brief Construct pyramid from size.
+  /// @param size Image size
+  /// @param scale_num Number of scales
   Pyramid(const cv::Size& size, int scale_num = 0) : scales_() { create(cv::Mat(size, type()), scale_num); }
 
+  /// @brief Construct pyramid with fill value.
+  /// @param rows Image height
+  /// @param cols Image width
+  /// @param fill Initial fill value
+  /// @param scale_num Number of scales
   Pyramid(int rows, int cols, cv::Scalar& fill, int scale_num = 0) : scales_() {
     create(cv::Mat(rows, cols, type(), fill), scale_num);
   }
 
+  /// @brief Construct pyramid with fill value from size.
+  /// @param size Image size
+  /// @param fill Initial fill value
+  /// @param scale_num Number of scales
   Pyramid(const cv::Size& size, cv::Scalar& fill, int scale_num = 0) : scales_() {
     create(cv::Mat(size, type(), fill), scale_num);
   }
 
+  /// @brief Construct pyramid from existing image.
+  /// @param data Source image (becomes level 0)
+  /// @param scale_num Number of scales
   Pyramid(const cv::Mat& data, int scale_num = 0) : scales_() {
     cv::Mat tmp = data;
     if (type() != data.type()) data.convertTo(tmp, type());
     create(data, scale_num);
   }
 
+  /// @brief Copy constructor.
+  /// @param p Source pyramid to copy
   Pyramid(const Pyramid& p) : scales_() {
     for (std::size_t i = 0; i < p.size(); ++i) scales_.push_back(p[static_cast<int>(i)].clone());
   }
 
+  /// @brief Converting copy constructor from different element type.
+  /// @tparam C Source element type
+  /// @param p Source pyramid
   template <class C>
   Pyramid(const Pyramid<C>& p) {
     cv::Mat tmp;
@@ -136,12 +170,17 @@ class Pyramid {
 
   ~Pyramid() {}
 
+  /// @brief Create deep copy of pyramid.
+  /// @return New pyramid with cloned data
   Pyramid clone() const {
     Pyramid pyramid;
     for (std::size_t i = 0; i < scales_.size(); ++i) pyramid.scales_.push_back(scales_[i].clone());
     return pyramid;
   }
 
+  /// @brief Convert pyramid to different element type.
+  /// @tparam C Target element type
+  /// @return New pyramid with converted data
   template <class C>
   Pyramid<C> convert() const {
     if (cv::DataType<C>::type == type()) return clone();
@@ -155,57 +194,98 @@ class Pyramid {
     return pyramid;
   }
 
+  /// @brief Get OpenCV type code.
+  /// @return CV_* type constant
   static inline int type() { return cv::DataType<MT>::type; }
 
+  /// @brief Access pyramid level (const).
+  /// @param i Level index (0 = base)
+  /// @return Matrix at level i
   inline const cv::Mat& operator[](int i) const { return scales_[static_cast<size_t>(i)]; }
 
+  /// @brief Access pyramid level.
+  /// @param i Level index (0 = base)
+  /// @return Matrix at level i
   inline cv::Mat& operator[](int i) { return scales_[static_cast<size_t>(i)]; }
 
+  /// @brief Get number of pyramid levels.
+  /// @return Number of scales
   inline size_t size() const { return scales_.size(); }
 
+  /// @brief Get all scales (const).
+  /// @return Reference to scales vector
   inline const std::vector<cv::Mat>& scales() const { return scales_; }
 
+  /// @brief Get all scales.
+  /// @return Reference to scales vector
   inline std::vector<cv::Mat>& scales() { return scales_; }
 
+  /// @brief Resize number of levels.
+  /// @param size New number of levels
   inline void resize(size_t size) { scales_.resize(size); }
 
+  /// @brief Element-wise multiply with another pyramid.
+  /// @param rhs Right-hand side pyramid
+  /// @return Reference to this
   inline Pyramid& mul(const Pyramid& rhs) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] = scales_[i].mul(rhs);
     return *this;
   }
 
+  /// @brief Element-wise divide by another pyramid.
+  /// @param rhs Right-hand side pyramid
+  /// @return Reference to this
   inline Pyramid& div(const Pyramid& rhs) {
     for (std::size_t i = 0; i < scales_.size(); ++i) cv::divide(scales_[i], rhs, scales_[i]);
     return *this;
   }
 
+  /// @brief Multiply all levels by scalar.
+  /// @param value Scalar multiplier
+  /// @return Reference to this
   inline Pyramid& operator*=(double value) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] *= value;
     return *this;
   }
 
+  /// @brief Add scalar to all levels.
+  /// @param value Scalar to add
+  /// @return Reference to this
   inline Pyramid& operator+=(double value) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += value;
     return *this;
   }
 
-
+  /// @brief Add another pyramid element-wise.
+  /// @param rhs Right-hand side pyramid
+  /// @return Reference to this
   inline Pyramid& operator+=(const Pyramid& rhs) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
     return *this;
   }
 
+  /// @brief Subtract scalar from all levels.
+  /// @param value Scalar to subtract
+  /// @return Reference to this
   inline Pyramid& operator-=(double value) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] -= value;
     return *this;
   }
 
+  /// @brief Subtract another pyramid element-wise.
+  /// @param rhs Right-hand side pyramid
+  /// @return Reference to this
   inline Pyramid& operator-=(const Pyramid& rhs) {
     for (std::size_t i = 0; i < scales_.size(); ++i) scales_[i] += rhs;
     return *this;
   }
 };
 
+/// @brief Multiply scalar by pyramid.
+/// @tparam MT Matrix element type
+/// @param value Scalar multiplier
+/// @param pyramid Source pyramid
+/// @return New pyramid with scaled values
 template <class MT>
 inline Pyramid<MT> operator*(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -213,6 +293,11 @@ inline Pyramid<MT> operator*(double value, const Pyramid<MT>& pyramid) {
   return tmp;
 }
 
+/// @brief Multiply pyramid by scalar.
+/// @tparam MT Matrix element type
+/// @param pyramid Source pyramid
+/// @param value Scalar multiplier
+/// @return New pyramid with scaled values
 template <class MT>
 inline Pyramid<MT> operator*(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -220,6 +305,11 @@ inline Pyramid<MT> operator*(const Pyramid<MT>& pyramid, double value) {
   return tmp;
 }
 
+/// @brief Divide scalar by pyramid element-wise.
+/// @tparam MT Matrix element type
+/// @param value Numerator scalar
+/// @param pyramid Denominator pyramid
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator/(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -227,6 +317,11 @@ inline Pyramid<MT> operator/(double value, const Pyramid<MT>& pyramid) {
   return tmp;
 }
 
+/// @brief Divide pyramid by scalar.
+/// @tparam MT Matrix element type
+/// @param pyramid Numerator pyramid
+/// @param value Denominator scalar
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator/(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -234,6 +329,11 @@ inline Pyramid<MT> operator/(const Pyramid<MT>& pyramid, double value) {
   return tmp;
 }
 
+/// @brief Add scalar to pyramid.
+/// @tparam MT Matrix element type
+/// @param value Scalar to add
+/// @param pyramid Source pyramid
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator+(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -241,6 +341,11 @@ inline Pyramid<MT> operator+(double value, const Pyramid<MT>& pyramid) {
   return tmp;
 }
 
+/// @brief Add scalar to pyramid.
+/// @tparam MT Matrix element type
+/// @param pyramid Source pyramid
+/// @param value Scalar to add
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator+(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -248,6 +353,11 @@ inline Pyramid<MT> operator+(const Pyramid<MT>& pyramid, double value) {
   return tmp;
 }
 
+/// @brief Add two pyramids element-wise.
+/// @tparam MT Matrix element type
+/// @param a First pyramid
+/// @param b Second pyramid
+/// @return New pyramid with sum
 template <class MT>
 inline Pyramid<MT> operator+(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
@@ -255,6 +365,11 @@ inline Pyramid<MT> operator+(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   return tmp;
 }
 
+/// @brief Subtract pyramid from scalar.
+/// @tparam MT Matrix element type
+/// @param value Scalar minuend
+/// @param pyramid Subtrahend pyramid
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator-(double value, const Pyramid<MT>& pyramid) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -262,6 +377,11 @@ inline Pyramid<MT> operator-(double value, const Pyramid<MT>& pyramid) {
   return tmp;
 }
 
+/// @brief Subtract scalar from pyramid.
+/// @tparam MT Matrix element type
+/// @param pyramid Minuend pyramid
+/// @param value Scalar subtrahend
+/// @return New pyramid
 template <class MT>
 inline Pyramid<MT> operator-(const Pyramid<MT>& pyramid, double value) {
   Pyramid<MT> tmp = pyramid.clone();
@@ -269,7 +389,11 @@ inline Pyramid<MT> operator-(const Pyramid<MT>& pyramid, double value) {
   return tmp;
 }
 
-
+/// @brief Subtract two pyramids element-wise.
+/// @tparam MT Matrix element type
+/// @param a First pyramid (minuend)
+/// @param b Second pyramid (subtrahend)
+/// @return New pyramid with difference
 template <class MT>
 inline Pyramid<MT> operator-(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
@@ -277,6 +401,10 @@ inline Pyramid<MT> operator-(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   return tmp;
 }
 
+/// @brief Compute absolute value of pyramid.
+/// @tparam MT Matrix element type
+/// @param a Source pyramid
+/// @return New pyramid with absolute values
 template <class MT>
 inline Pyramid<MT> abs(const Pyramid<MT>& a) {
   Pyramid<MT> tmp = a.clone();
@@ -284,18 +412,34 @@ inline Pyramid<MT> abs(const Pyramid<MT>& a) {
   return tmp;
 }
 
+/// @brief Element-wise multiply two pyramids.
+/// @tparam MT Matrix element type
+/// @param a First pyramid
+/// @param b Second pyramid
+/// @return New pyramid with product
 template <class MT>
 inline Pyramid<MT> mul(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
   return tmp.mul(b);
 }
 
+/// @brief Element-wise divide two pyramids.
+/// @tparam MT Matrix element type
+/// @param a Numerator pyramid
+/// @param b Denominator pyramid
+/// @return New pyramid with quotient
 template <class MT>
 inline Pyramid<MT> div(const Pyramid<MT>& a, const Pyramid<MT>& b) {
   Pyramid<MT> tmp = a.clone();
   return tmp.div(b);
 }
 
+/// @brief Visualize pyramid as single image.
+///
+/// Draws all pyramid levels arranged in a single canvas for visualization.
+/// @tparam MT Matrix element type
+/// @param pyramid Pyramid to visualize
+/// @return Canvas image showing all levels
 template <class MT>
 cv::Mat draw(const Pyramid<MT>& pyramid) {
   cv::Point tl(0, 0);

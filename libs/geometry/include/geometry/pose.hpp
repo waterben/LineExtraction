@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file pose.hpp
+/// @brief 3D pose representation with rotation and translation.
+///
+/// Provides Pose class representing position and orientation in 3D space
+/// using Rodrigues rotation vectors and translation vectors.
 
 #pragma once
 
@@ -53,108 +58,147 @@ using namespace std;
 #endif
 };  // namespace detail
 
-//! Base class for poses in 3d space (rotation and translation)
+/// @brief 3D pose with translation and rotation.
+///
+/// Represents a 6-DOF pose in 3D space using a translation vector
+/// and a Rodrigues rotation vector. Supports transformation operations
+/// and conversion to/from homogeneous matrices.
+/// @tparam FT Floating-point type.
 template <class FT>
 class Pose {
  protected:
-  // trans and rot
-  Vec3<FT> trans_, rot_;
+  Vec3<FT> trans_;  ///< Translation vector (position).
+  Vec3<FT> rot_;    ///< Rodrigues rotation vector (orientation).
 
-  // this can be overwritten to update members if state of object changes, eg. rotate...
+  /// @brief Update internal cached members.
+  ///
+  /// Override in derived classes to update cached values when pose changes.
   virtual void updateInternals() {}
 
  public:
   typedef FT float_type;
 
-  //! init pose by single values (default: (0,0,0), (0,0,0))
+  /// @brief Construct from individual components.
+  /// @param trans_x X translation (default 0).
+  /// @param trans_y Y translation (default 0).
+  /// @param trans_z Z translation (default 0).
+  /// @param rot_x X rotation (Rodrigues, default 0).
+  /// @param rot_y Y rotation (Rodrigues, default 0).
+  /// @param rot_z Z rotation (Rodrigues, default 0).
   Pose(FT trans_x = FT(0), FT trans_y = FT(0), FT trans_z = FT(0), FT rot_x = FT(0), FT rot_y = FT(0), FT rot_z = FT(0))
       : trans_(trans_x, trans_y, trans_z), rot_(rot_x, rot_y, rot_z) {}
 
-  //! init pose by pointer rot trans and rot
+  /// @brief Construct from translation and rotation arrays.
+  /// @param trans Translation array [x, y, z].
+  /// @param rot Rotation array [rx, ry, rz] (Rodrigues).
   Pose(const FT* trans, const FT* rot) : trans_(trans[0], trans[1], trans[2]), rot_(rot[0], rot[1], rot[2]) {}
 
-  //! init pose by pointer (t.x,t.y,t.z,d.x,d.y,d.z)
+  /// @brief Construct from combined pose array.
+  /// @param pose Combined array [tx, ty, tz, rx, ry, rz].
   Pose(const FT* pose) : trans_(pose[0], pose[1], pose[2]), rot_(pose[3], pose[4], pose[5]) {}
 
-  //! init pose by translation and rotation
+  /// @brief Construct from translation and rotation vectors.
+  /// @param trans Translation vector.
+  /// @param rot Rodrigues rotation vector.
   Pose(const Vec3<FT>& trans, const Vec3<FT>& rot) : trans_(trans), rot_(rot) {}
 
-  //! init pose by translation and rotation
+  /// @brief Construct from translation and rotation matrix.
+  /// @param trans Translation vector.
+  /// @param rot Rotation matrix (converted to Rodrigues internally).
   Pose(const Vec3<FT>& trans, const Matx33<FT>& rot) : trans_(trans), rot_(rodrigues(rot)) {}
 
-  //! get origin as pointer for slam
+  /// @name SLAM Interface
+  /// @{
+
+  /// @brief Get origin pointer for SLAM optimization.
+  /// @return Mutable pointer to translation data.
   inline FT* slamOrigin() { return &trans_[0]; }
 
-  //! get rotation as pointer for slam
+  /// @brief Get rotation pointer for SLAM optimization.
+  /// @return Mutable pointer to rotation data.
   inline FT* slamRot() { return &rot_[0]; }
 
-  /* //! get pose as pointer (t.x,t.y,t.z,r.x,r.y,r.z)
-   inline const FT* pose() const{
-       return &trans_[0];
-   }
+  /// @}
 
-   //! get pose as pointer (t.x,t.y,t.z,r.x,r.y,r.z)
-   inline FT* pose() {
-       return &trans_[0];
-   }
+  /// @name Pose Accessors
+  /// @{
 
-   //! set pose as pointer (t.x,t.y,t.z,r.x,r.y,r.z)
-   inline void pose(const FT *pose) {
-       trans_ = Vec3<FT>(pose);
-       rot_ = Vec3<FT>(pose+3);
-   }*/
-
-  // get pose
+  /// @brief Get this pose (const reference).
+  /// @return Reference to this pose.
   const Pose<FT>& pose() const { return *this; }
 
-  //! set pose
+  /// @brief Set pose from another pose.
+  /// @param pose Pose to copy.
   inline void pose(const Pose<FT>& pose) {
     trans_ = pose.trans_;
     rot_ = pose.rot_;
     updateInternals();
   }
 
-  //! get pose origin
+  /// @brief Get translation (origin position).
+  /// @return Translation vector.
   inline const Vec3<FT>& origin() const { return trans_; }
 
-  //! set pose origin
+  /// @brief Set translation (origin position).
+  /// @param o New translation.
   inline void origin(const Vec3<FT>& o) {
     trans_ = o;
     updateInternals();
   }
 
-  //! get pose orientation
+  /// @brief Get Rodrigues rotation vector.
+  /// @return Rotation vector.
   inline const Vec3<FT>& orientation() const { return rot_; }
 
-  //! set pose orientation
+  /// @brief Set Rodrigues rotation vector.
+  /// @param o New rotation.
   inline void orientation(const Vec3<FT>& o) {
     rot_ = o;
     updateInternals();
   }
 
-  //!  set pose orientation by rotation matrix
+  /// @brief Set orientation from rotation matrix.
+  /// @param rMat Rotation matrix (converted to Rodrigues internally).
   virtual void orientation(const Matx33<FT>& rMat) { orientation(rodrigues(rMat)); }
 
-  //! get rotation matrix
+  /// @}
+
+  /// @name Matrix Representations
+  /// @{
+
+  /// @brief Get rotation matrix.
+  /// @return 3x3 rotation matrix from Rodrigues vector.
   virtual Matx33<FT> rotM() const { return rodrigues(rot_); }
 
-  //! get pose as homogeneous matrix (pose to world)
+  /// @brief Get homogeneous transformation matrix (pose to world).
+  /// @return 4x4 homogeneous matrix [R|t; 0 0 0 1].
   virtual Matx44<FT> homM() const { return composeHom(trans_, rot_); }
 
-  //! get base change homogeneous matrix (world to pose)
+  /// @brief Get base change homogeneous matrix (world to pose).
+  /// @return 4x4 inverse transformation matrix.
   virtual Matx44<FT> baseH() const {
     Matx33<FT> rot = rodrigues(Vec3<FT>(-rot_));
     return composeHom(Vec3<FT>((-rot * trans_)), rot);
   }
 
-  //! translate line
+  /// @}
+
+  /// @name Transformation Operations
+  /// @{
+
+  /// @brief Translate pose by vector.
+  /// @param trans Translation to add.
+  /// @return Reference to this pose.
   virtual Pose<FT>& translate(const Vec3<FT>& trans) {
     trans_ += trans;
     updateInternals();
     return *this;
   }
 
-  //! rotate around given pivot
+  /// @brief Rotate around given pivot point.
+  /// @param rotMat Rotation matrix.
+  /// @param pivot Center of rotation.
+  /// @return Reference to this pose.
   virtual Pose<FT>& rotate(const Matx33<FT>& rotMat, const Vec3<FT>& pivot) {
     Matx33<FT> r = rodrigues(rot_), rnew = r * rotMat;
     trans_ = (rnew * r.transpose() * (trans_ - pivot)) + pivot;
@@ -163,21 +207,30 @@ class Pose {
     return *this;
   }
 
-  //! rotate around pose origin
+  /// @brief Rotate around pose origin.
+  /// @param rotMat Rotation matrix.
+  /// @return Reference to this pose.
   virtual Pose<FT>& rotate(const Matx33<FT>& rotMat) {
     rot_ = rodrigues(Matx33<FT>(rodrigues(rot_) * rotMat));
     updateInternals();
     return *this;
   }
 
-  //! rotate around pose origin
+  /// @brief Rotate around pose origin (Rodrigues vector).
+  /// @param rot Rodrigues rotation vector.
+  /// @return Reference to this pose.
   inline Pose<FT>& rotate(const Vec3<FT>& rot) { return rotate(rodrigues(rot)); }
 
-  //! rotate around given pivot
+  /// @brief Rotate around given pivot (Rodrigues vector).
+  /// @param rot Rodrigues rotation vector.
+  /// @param pivot Center of rotation.
+  /// @return Reference to this pose.
   inline Pose<FT>& rotate(const Vec3<FT>& rot, const Vec3<FT>& pivot) { return rotate(rodrigues(rot), pivot); }
 
 
-  //! transform pose by hom matrix
+  /// @brief Transform pose by homogeneous matrix.
+  /// @param m 4x4 transformation matrix.
+  /// @return Reference to this pose.
   inline Pose<FT>& transform(const Matx44<FT>& m) {
     trans_ = matxMul(m, trans_);
     rot_ = matxMulDir(m, rot_);
@@ -185,7 +238,16 @@ class Pose {
     return *this;
   }
 
-  //! "add" pose to current pose, puts the new pose "underneath" the current one
+  /// @}
+
+  /// @name Pose Composition
+  /// @{
+
+  /// @brief Concatenate pose (add pose "underneath" current one).
+  ///
+  /// Computes the composition of this pose with another, effectively
+  /// chaining transformations.
+  /// @param p Pose to concatenate.
   inline void concat(const Pose<FT>& p) {
     //            rotate(p.rotM());
     /*
@@ -217,7 +279,11 @@ class Pose {
                 */
   }
 
-  //! "subtract" pose to current pose, inverse
+  /// @brief Concatenate inverse pose.
+  ///
+  /// Computes the composition of this pose with the inverse of another,
+  /// effectively "subtracting" the other pose.
+  /// @param p Pose whose inverse to concatenate.
   inline void concatInverse(const Pose<FT>& p) {  // TODO: Test!
 
     lsfm::Matx44<FT> homMat = p.homM().inverse() * this->pose().homM();
@@ -231,10 +297,17 @@ class Pose {
     this->pose(newPose);
   }
 
-  //! Virtual destructor for proper inheritance
+  /// @}
+
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~Pose() = default;
 };
 
+/// @brief Transform pose by homogeneous matrix (matrix * pose).
+/// @tparam FT Floating-point type.
+/// @param m 4x4 transformation matrix.
+/// @param pose Pose to transform.
+/// @return Transformed pose.
 template <class FT>
 inline Pose<FT> operator*(const Matx44<FT>& m, const Pose<FT>& pose) {
   Pose<FT> p = pose;
@@ -242,6 +315,9 @@ inline Pose<FT> operator*(const Matx44<FT>& m, const Pose<FT>& pose) {
   return p;
 }
 
+/// @brief Single precision pose.
 typedef Pose<float> Posef;
+
+/// @brief Double precision pose.
 typedef Pose<double> Posed;
 }  // namespace lsfm

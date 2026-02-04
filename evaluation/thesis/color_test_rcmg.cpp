@@ -1,3 +1,9 @@
+/// @file color_test_rcmg.cpp
+/// @brief Thesis evaluation: RCMG gradient computation on color images
+///
+/// Compares grayscale Sobel and color RCMG gradient computation on test images.
+/// Analyzes differences in gradient response for RGB vs grayscale processing.
+
 #include <edge/nms.hpp>
 #include <imgproc/rcmg.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

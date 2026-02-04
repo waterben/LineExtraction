@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file threshold_estimator.hpp
+/// @brief Threshold estimation methods for edge magnitude maps.
+/// Implements automatic threshold estimation including Otsu's method and other
+/// statistical approaches for determining edge thresholds from magnitude histograms.
+
 #pragma once
 
 #include <opencv2/imgproc/imgproc.hpp>

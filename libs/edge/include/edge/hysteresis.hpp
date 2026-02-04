@@ -40,6 +40,11 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file hysteresis.hpp
+/// @brief Hysteresis thresholding for edge detection.
+/// Implements hysteresis thresholding algorithms that connect pixels above a high threshold
+/// with neighboring pixels above a lower threshold, enabling robust edge detection.
+
 #pragma once
 
 #include <edge/index.hpp>
@@ -49,7 +54,12 @@
 namespace lsfm {
 
 namespace detail {
-//! compute hysteresis of seeds and dmap
+
+/// @brief Apply hysteresis thresholding to a direction/classification map.
+/// Tracks seed pixels and expands to neighboring pixels that meet criteria, marking them as valid edges.
+/// @param map Input/output classification map (8-bit signed), modified to mark valid edgels with -1
+/// @param dmap Direction/classification map indicating edge pixels and their directions
+/// @param edgels Input/output vector of seed indices; expanded with newly found edgels
 inline void hysteresis_map(cv::Mat& map, const cv::Mat& dmap, IndexVector& edgels) {
   dmap.copyTo(map);
 

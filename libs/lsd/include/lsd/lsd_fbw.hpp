@@ -133,6 +133,9 @@ class LsdFBW : public LsdBase<FT, LPT> {
 
 
   struct LineData {
+    //! @brief Construct line data from point positions.
+    //! @param b Starting position in the point vector.
+    //! @param e Ending position (past-the-end) in the point vector.
     LineData(size_t b = 0, size_t e = 0) : p_beg(b), p_end(e), wbeg(0), wend(0), prec(0), prob(0) {}
 
     // start / end position in point list (supporting points)
@@ -141,13 +144,20 @@ class LsdFBW : public LsdBase<FT, LPT> {
     FT wbeg, wend;  // width begin and end
     FT prec, prob;  // precision and probability
 
+    //! @brief Get the width of the line (difference between end and begin width).
+    //! @return The absolute width value |wend - wbeg|.
     inline FT width() const { return std::abs(wend - wbeg); }
 
-    // number of supporting points
+    //! @brief Get the number of supporting points in this line data.
+    //! @return The size of the point range (p_end - p_beg).
     inline size_t size() const { return p_end - p_beg; }
 
+    //! @brief Get the starting position in the global point vector.
+    //! @return The index of the first point in this line data.
     inline size_t begpos() const { return p_beg; }
 
+    //! @brief Get the ending position in the global point vector.
+    //! @return The index past the last point in this line data.
     inline size_t endpos() const { return p_end; }
   };
   typedef std::vector<LineData> LineDataVector;  // vector of LineData structs
@@ -180,55 +190,95 @@ class LsdFBW : public LsdBase<FT, LPT> {
     // th_high_ = th_low_ = static_cast<FT>(quant / std::sin(prec_));
   }
 
+  //! @brief Get or set the lower threshold for gradient magnitude.
+  //! @param t The new threshold value, or Value::NAV() to only query.
+  //! @return The current lower threshold value.
   Value valueThresholdLow(const Value& t = Value::NAV()) {
     if (t.type()) thresholdLow(t.get<FT>());
     return th_low_;
   }
 
+  //! @brief Get the lower threshold for gradient magnitude.
+  //! @return The current lower threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   FT thresholdLow() const { return th_low_; }
 
+  //! @brief Set the lower threshold for gradient magnitude.
+  //! @param t The new lower threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   void thresholdLow(FT t) { th_low_ = t; }
 
+  //! @brief Get or set the upper threshold for gradient magnitude.
+  //! @param t The new threshold value, or Value::NAV() to only query.
+  //! @return The current upper threshold value.
   Value valueThresholdHigh(const Value& t = Value::NAV()) {
     if (t.type()) thresholdHigh(t.get<FT>());
     return th_high_;
   }
 
+  //! @brief Get the upper threshold for gradient magnitude.
+  //! @return The current upper threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   FT thresholdHigh() const { return th_high_; }
 
+  //! @brief Set the upper threshold for gradient magnitude.
+  //! @param t The new upper threshold value. Range [0..1] normalized (0.004 ~ 1/255).
   void thresholdHigh(FT t) { th_high_ = t; }
 
+  //! @brief Set both lower and upper thresholds for gradient magnitude.
+  //! @param low The new lower threshold value.
+  //! @param high The new upper threshold value.
   void threshold(FT low, FT high) {
     th_low_ = low;
     th_high_ = high;
   }
 
+  //! @brief Get or set the minimum number of supporting pixels for line segment.
+  //! @param mp The new minimum pixels value, or Value::NAV() to only query.
+  //! @return The current minimum pixels value.
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;
   }
 
+  //! @brief Get the minimum number of supporting pixels for line segment.
+  //! @return The current minimum pixels value. Typical range [0..X].
   int minPixels() const { return min_pix_; }
 
+  //! @brief Set the minimum number of supporting pixels for line segment.
+  //! @param mp The new minimum pixels value. Must be >= 0. Typical range [0..X].
   void minPixels(int mp) { min_pix_ = mp; }
 
-
+  //! @brief Get or set the gradient angle tolerance in degrees.
+  //! @param t The new angle threshold value, or Value::NAV() to only query.
+  //! @return The current angle threshold value.
   Value valueAngleThreshold(const Value& t = Value::NAV()) {
     if (t.type()) angleThreshold(t.get<FT>());
     return angle_th_;
   }
 
+  //! @brief Get the gradient angle tolerance in degrees.
+  //! @return The current angle threshold value. Range (0..90] degrees.
   FT angleThreshold() const { return angle_th_; }
 
+  //! @brief Set the gradient angle tolerance in degrees.
+  //! @param t The new angle threshold value in degrees. Range (0..90].
   void angleThreshold(FT t) { angle_th_ = t; }
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - FBW_NMS: Use Non-Maxima Suppression for flood detector
+  //! - FBW_PATAN: Use precise atan2 computation for angle estimation
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
   using LsdBase<FT, LPT>::detect;

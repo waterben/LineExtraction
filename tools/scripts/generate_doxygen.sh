@@ -5,7 +5,7 @@
 # Generates API documentation using Doxygen.
 # Can be run directly or via: bazel run //:doxygen
 #
-# Output: build/doc/html/index.html
+# Output: docs/generated/html/index.html
 # ==============================================================================
 
 set -e
@@ -43,12 +43,11 @@ if ! command -v doxygen &>/dev/null; then
 fi
 
 # Create output directory
-mkdir -p build/doc
+mkdir -p docs/generated
 
 # Generate Doxyfile from template
 echo "Generating Doxyfile..."
 sed -e "s|@CMAKE_CURRENT_SOURCE_DIR@|${PROJECT_ROOT}|g" \
-    -e "s|@CMAKE_CURRENT_BINARY_DIR@|${PROJECT_ROOT}/build|g" \
     Doxyfile.in > build/Doxyfile
 
 # Run doxygen
@@ -60,11 +59,11 @@ echo -e "${GREEN}═════════════════════
 echo -e "${GREEN}Documentation generated successfully!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo "Open: ${PROJECT_ROOT}/build/doc/html/index.html"
+echo "Open: ${PROJECT_ROOT}/docs/generated/html/index.html"
 echo ""
 
 # Try to show some stats
-if [[ -f "build/doc/html/annotated.html" ]]; then
-    CLASS_COUNT=$(grep -c "class=\"el\"" build/doc/html/annotated.html 2>/dev/null || echo "?")
+if [[ -f "docs/generated/html/annotated.html" ]]; then
+    CLASS_COUNT=$(grep -c "class=\"el\"" docs/generated/html/annotated.html 2>/dev/null || echo "?")
     echo "Documented classes/structs: ${CLASS_COUNT}"
 fi

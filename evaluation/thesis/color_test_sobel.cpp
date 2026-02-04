@@ -1,3 +1,9 @@
+/// @file color_test_sobel.cpp
+/// @brief Thesis evaluation: Sobel gradient computation on color images
+///
+/// Compares grayscale vs color channel Sobel gradient computation.
+/// Evaluates gradient response differences for RGB processing.
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

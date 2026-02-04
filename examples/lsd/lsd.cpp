@@ -1,3 +1,20 @@
+/// @file lsd.cpp
+/// @brief Main LSD demonstration with multiple algorithms.
+///
+/// Comprehensive comparison of Line Segment Detection algorithms:
+/// - LsdCC: Connected component-based LSD
+/// - LsdCP: Control point-based LSD
+/// - LsdEL: Edge linking LSD
+/// - LsdEP: Edge pattern LSD
+/// - LsdBurns: Burns' algorithm
+/// - LsdFGIOI: Grompone's fast LSD (a contrario)
+/// - LsdHCV: Hierarchical chaining validation
+///
+/// Reports timing and detected line count for each algorithm.
+///
+/// @usage ./lsd [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <geometry/draw.hpp>
 #include <lsd/lsd_cc.hpp>
 #include <lsd/lsd_cp.hpp>

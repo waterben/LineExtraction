@@ -40,6 +40,10 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file draw.hpp
+/// @brief Visualization and drawing utilities for edge detection results.
+/// Provides functions to visualize edges, segments, and related data structures.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>

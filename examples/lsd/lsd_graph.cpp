@@ -1,3 +1,14 @@
+/// @file lsd_graph.cpp
+/// @brief Graph-based line segment detection.
+///
+/// Demonstrates the graph-based approach to line segment detection:
+/// - Line segment graph construction
+/// - Segment connectivity analysis
+/// - Junction detection and handling
+///
+/// @usage ./lsd_graph [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <geometry/draw.hpp>
 #include <lsd/lsd_el.hpp>
 #include <opencv2/highgui/highgui.hpp>

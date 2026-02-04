@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file PairwiseLineMatcher.hpp
+/// @brief Pairwise line matcher for stereo or temporal correspondence.
+/// Provides matching between pairs of line sets with optional filtering.
+
 #pragma once
 
 #include <arpack++/arlsmat.h>

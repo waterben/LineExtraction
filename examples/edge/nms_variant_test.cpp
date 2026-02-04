@@ -1,3 +1,16 @@
+/// @file nms_variant_test.cpp
+/// @brief Comparison of NMS variants (4-directional, 8-directional).
+///
+/// Compares different Non-Maximum Suppression implementations:
+/// - 4-directional NMS (horizontal/vertical/diagonal)
+/// - 8-directional NMS (finer angle quantization)
+/// - FastNMS variants with different interpolation schemes
+///
+/// Visualizes edge maps with color-coded direction information.
+///
+/// @usage ./nms_variant_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>

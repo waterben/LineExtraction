@@ -46,8 +46,12 @@
 
 namespace lsfm {
 
-//! Phase Congruency base class (quadrature extension)
-//! Use ET to define energy type (int, float or double)
+/// @brief Abstract interface for phase congruency computation.
+///
+/// Phase congruency is a measure of feature significance based on the principle
+/// that features occur at points where Fourier components are maximally in phase.
+/// It provides illumination and contrast invariant edge/feature detection.
+/// @tparam ET Energy type (float or double)
 template <class ET>
 class PhaseCongruencyI {
   PhaseCongruencyI(const PhaseCongruencyI&);
@@ -56,51 +60,64 @@ class PhaseCongruencyI {
   PhaseCongruencyI() {}
 
  public:
-  typedef ET energy_type;
-  typedef Range<ET> EnergyRange;
+  typedef ET energy_type;         ///< Energy/phase congruency value type
+  typedef Range<ET> EnergyRange;  ///< Range for energy values
 
   virtual ~PhaseCongruencyI() {}
 
-  //! get phase congruency
+  /// @brief Get phase congruency image.
+  /// @return Phase congruency values in range [0, 1]
   virtual cv::Mat phaseCongruency() const = 0;
 
-  //! get phase congruency range
+  /// @brief Get phase congruency value range.
+  /// @return Range [0, 1] by default
   virtual EnergyRange phaseCongruencyRange() const { return EnergyRange(0, 1); }
 };
 
-//! phase congruency base class helper
+/// @brief Base implementation for phase congruency with quadrature filter support.
+///
+/// Combines phase congruency interface with quadrature filter functionality.
+/// @tparam IT Input image pixel type
+/// @tparam GT Gradient type
+/// @tparam MT Magnitude type
+/// @tparam ET Energy type
+/// @tparam DT Direction/phase type
 template <class IT, class GT, class MT, class ET, class DT>
 class PhaseCongruency : public PhaseCongruencyI<ET>, public QuadratureI<IT, GT, MT, ET, DT> {
   PhaseCongruency();
   PhaseCongruency(const PhaseCongruency&);
 
  protected:
-  Range<IT> intRange_;
+  Range<IT> intRange_;  ///< Input intensity range
 
+  /// @brief Construct with intensity range.
+  /// @param int_lower Lower bound of input intensity
+  /// @param int_upper Upper bound of input intensity
   PhaseCongruency(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
     if (intRange_.lower > intRange_.upper) intRange_.swap();
   }
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
-  typedef MT mag_type;
-  typedef ET energy_type;
-  typedef DT dir_type;
-  typedef DT phase_type;
+  typedef IT img_type;     ///< Input image pixel type
+  typedef GT grad_type;    ///< Gradient type
+  typedef MT mag_type;     ///< Magnitude type
+  typedef ET energy_type;  ///< Energy type
+  typedef DT dir_type;     ///< Direction type
+  typedef DT phase_type;   ///< Phase type
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<ET> EnergyRange;
-  typedef Range<DT> DirectionRange;
-  typedef Range<DT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Range for intensity values
+  typedef Range<GT> GradientRange;   ///< Range for gradient values
+  typedef Range<MT> MagnitudeRange;  ///< Range for magnitude values
+  typedef Range<ET> EnergyRange;     ///< Range for energy values
+  typedef Range<DT> DirectionRange;  ///< Range for direction values
+  typedef Range<DT> PhaseRange;      ///< Range for phase values
 
-
-  //! get image intensity range (for single channel)
+  /// @brief Get the expected input image intensity range.
+  /// @return The intensity range for single-channel input images
   IntensityRange intensityRange() const { return intRange_; }
 
-  //! generic interface to get processed data
+  /// @brief Get all filter outputs as named results.
+  /// @return Map containing all outputs including phase congruency
   virtual FilterResults results() const {
     FilterResults ret;
     ret["even"] = FilterData(this->even(), this->evenRange());
@@ -116,8 +133,11 @@ class PhaseCongruency : public PhaseCongruencyI<ET>, public QuadratureI<IT, GT, 
 };
 
 
-//! Phase Congruency laplace base class (local energy)
-//! Use ET to define energy type (int, float or double)
+/// @brief Abstract interface for phase congruency Laplacian responses.
+///
+/// Extends phase congruency with directional Laplacian responses for
+/// more detailed feature characterization.
+/// @tparam ET Energy type (float or double)
 template <class ET>
 class PhaseCongruencyLaplaceI {
   PhaseCongruencyLaplaceI(const PhaseCongruencyLaplaceI&);
@@ -126,66 +146,81 @@ class PhaseCongruencyLaplaceI {
   PhaseCongruencyLaplaceI() {}
 
  public:
-  typedef ET energy_type;
-
-  typedef Range<ET> EnergyRange;
+  typedef ET energy_type;         ///< Energy value type
+  typedef Range<ET> EnergyRange;  ///< Range for energy values
 
   virtual ~PhaseCongruencyLaplaceI() {}
 
-  //! get single pc laplace responses
+  /// @brief Get separate phase congruency Laplacian responses.
+  /// @param[out] lx X-direction Laplacian response
+  /// @param[out] ly Y-direction Laplacian response
   virtual void pcLaplace(cv::Mat& lx, cv::Mat& ly) const = 0;
 
-  //! get x response of pc laplace filter
+  /// @brief Get x-direction phase congruency Laplacian.
+  /// @return X-direction Laplacian response
   virtual cv::Mat pclx() const {
     cv::Mat lx, ly;
     pcLaplace(lx, ly);
     return lx;
   }
 
-  //! get x response of pc laplace filter
+  /// @brief Get y-direction phase congruency Laplacian.
+  /// @return Y-direction Laplacian response
   virtual cv::Mat pcly() const {
     cv::Mat lx, ly;
     pcLaplace(lx, ly);
     return ly;
   }
 
-  //! get phase congruency laplace range
+  /// @brief Get phase congruency Laplacian value range.
+  /// @return Range for Laplacian values
   virtual EnergyRange pcLaplaceRange() const = 0;
 };
 
-//! Quadrature base class helper
+/// @brief Base implementation for phase congruency with Laplacian support.
+///
+/// Combines phase congruency Laplacian interface with quadrature filter functionality.
+/// @tparam IT Input image pixel type
+/// @tparam GT Gradient type
+/// @tparam MT Magnitude type
+/// @tparam ET Energy type
+/// @tparam DT Direction/phase type
 template <class IT, class GT, class MT, class ET, class DT>
 class PhaseCongruencyLaplace : public PhaseCongruencyLaplaceI<ET>, public QuadratureI<IT, GT, MT, ET, DT> {
   PhaseCongruencyLaplace();
   PhaseCongruencyLaplace(const PhaseCongruencyLaplace&);
 
  protected:
-  Range<IT> intRange_;
+  Range<IT> intRange_;  ///< Input intensity range
 
+  /// @brief Construct with intensity range.
+  /// @param int_lower Lower bound of input intensity
+  /// @param int_upper Upper bound of input intensity
   PhaseCongruencyLaplace(IT int_lower, IT int_upper) : intRange_(int_lower, int_upper) {
     if (intRange_.lower > intRange_.upper) intRange_.swap();
   }
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
-  typedef MT mag_type;
-  typedef ET energy_type;
-  typedef DT dir_type;
-  typedef DT phase_type;
+  typedef IT img_type;     ///< Input image pixel type
+  typedef GT grad_type;    ///< Gradient type
+  typedef MT mag_type;     ///< Magnitude type
+  typedef ET energy_type;  ///< Energy type
+  typedef DT dir_type;     ///< Direction type
+  typedef DT phase_type;   ///< Phase type
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<GT> GradientRange;
-  typedef Range<MT> MagnitudeRange;
-  typedef Range<ET> EnergyRange;
-  typedef Range<DT> DirectionRange;
-  typedef Range<DT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Range for intensity values
+  typedef Range<GT> GradientRange;   ///< Range for gradient values
+  typedef Range<MT> MagnitudeRange;  ///< Range for magnitude values
+  typedef Range<ET> EnergyRange;     ///< Range for energy values
+  typedef Range<DT> DirectionRange;  ///< Range for direction values
+  typedef Range<DT> PhaseRange;      ///< Range for phase values
 
-
-  //! get image intensity range (for single channel)
+  /// @brief Get the expected input image intensity range.
+  /// @return The intensity range for single-channel input images
   IntensityRange intensityRange() const { return intRange_; }
 
-  //! generic interface to get processed data
+  /// @brief Get all filter outputs as named results.
+  /// @return Map containing all outputs including PC Laplacian
   virtual FilterResults results() const {
     FilterResults ret;
     ret["even"] = FilterData(this->even(), this->evenRange());

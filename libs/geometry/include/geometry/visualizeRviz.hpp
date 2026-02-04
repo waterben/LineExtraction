@@ -1,3 +1,9 @@
+/// @file visualizeRviz.hpp
+/// @brief ROS RViz visualization utilities.
+///
+/// Provides functions for visualizing 3D line segments and points in RViz
+/// using ROS visualization markers.
+
 #pragma once
 
 #include <visualization_msgs/Marker.h>
@@ -9,6 +15,13 @@
 namespace lsfm {
 
 
+/// @brief Visualize 3D line segments in RViz.
+///
+/// Publishes line segments as ROS visualization markers without text labels.
+/// @tparam MyLine3Dsegment Line segment type with startPoint()/endPoint() methods.
+/// @tparam FT Floating-point type.
+/// @param line3Segments Line segments to visualize.
+/// @param marker_pub ROS publisher for visualization markers.
 template <class MyLine3Dsegment, class FT>
 void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments, const ros::Publisher marker_pub) {
   std::vector<std::string> markerText;
@@ -16,6 +29,16 @@ void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments, const 
   visualizeLinesRviz(line3Segments, markerText, marker_pub, robotPoses);
 }
 
+/// @brief Visualize 3D line segments in RViz with labels and poses.
+///
+/// Publishes line segments as red LINE_LIST markers with optional text labels
+/// and robot poses as green ARROW markers.
+/// @tparam MyLine3Dsegment Line segment type with startPoint()/endPoint() methods.
+/// @tparam FT Floating-point type.
+/// @param line3Segments Line segments to visualize.
+/// @param markerText Text labels (one per line, or empty for no labels).
+/// @param marker_pub ROS publisher for visualization markers.
+/// @param robotPoses Robot poses to visualize as arrows.
 template <class MyLine3Dsegment, class FT>
 void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments,
                         const std::vector<std::string> markerText,
@@ -156,6 +179,16 @@ void visualizeLinesRviz(const std::vector<MyLine3Dsegment> line3Segments,
 }
 
 
+/// @brief Visualize 3D points in RViz with labels and poses.
+///
+/// Publishes points as red SPHERE_LIST markers with optional text labels
+/// and robot poses as green ARROW markers.
+/// @tparam MyPoint3D Point type with point member having x(), y(), z() methods.
+/// @tparam FT Floating-point type.
+/// @param points3D Points to visualize.
+/// @param markerText Text labels (one per point, or empty for no labels).
+/// @param marker_pub ROS publisher for visualization markers.
+/// @param robotPoses Robot poses to visualize as arrows.
 template <class MyPoint3D, class FT>
 void visualizePointsRviz(const std::vector<MyPoint3D> points3D,
                          const std::vector<std::string> markerText,

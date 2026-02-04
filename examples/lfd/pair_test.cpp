@@ -1,3 +1,16 @@
+/// @file pair_test.cpp
+/// @brief Pairwise matching constraint evaluation.
+///
+/// Evaluates different pairwise matching strategies:
+/// - Nearest neighbor matching
+/// - Ratio test filtering (Lowe's ratio)
+/// - Bidirectional consistency check
+/// - Geometric constraint validation
+///
+/// @usage ./pair_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+
 #include <geometry/draw.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>
 #include <lfd/LRDescriptor.hpp>

@@ -43,13 +43,24 @@
  *  (C) by Benjamin Wassermann
  */
 
+/// @file edge_segment.hpp
+/// @brief Edge segment data structures and operations.
+/// Defines edge segment representation and base classes for edge detection algorithms,
+/// providing a common interface for different edge detection methods.
+
 #pragma once
 
 #include <edge/edge_source.hpp>
 #include <utility/value_manager.hpp>
 
 namespace lsfm {
-enum { ES_NONE = 0, ES_REVERSE = 1, ES_CLOSED = 2 };
+
+/// @brief Flags for edge segment properties.
+enum {
+  ES_NONE = 0,     ///< No special flags
+  ES_REVERSE = 1,  ///< Segment points are in reverse order
+  ES_CLOSED = 2    ///< Segment forms a closed loop
+};
 
 // edge segment class
 /*class EdgeSegment {
@@ -133,21 +144,39 @@ class EdgeSegment {
   int flags_, id_;
 
  public:
+  /// @brief Construct an edge segment.
+  /// @param b Starting index in the point array
+  /// @param e Ending index in the point array (exclusive)
+  /// @param f Flags (ES_NONE, ES_REVERSE, ES_CLOSED)
+  /// @param id Optional segment identifier
   EdgeSegment(size_t b = 0, size_t e = 0, int f = ES_NONE, int id = 0) : beg_(b), end_(e), flags_(f), id_(id) {}
 
-  // number of supporting points
+  /// @brief Get the number of supporting points in this segment.
+  /// @return Size of the segment (number of points)
   inline size_t size() const { return end_ - beg_; }
 
+  /// @brief Get the beginning index of the segment.
+  /// @return Index of the first point in the point array
   inline size_t begin() const { return beg_; }
 
+  /// @brief Get the ending index of the segment (exclusive).
+  /// @return Index one past the last point in the point array
   inline size_t end() const { return end_; }
 
+  /// @brief Set the beginning index of the segment.
+  /// @param b New starting index
   inline void begin(size_t b) { beg_ = b; }
 
+  /// @brief Set the ending index of the segment (exclusive).
+  /// @param e New ending index
   inline void end(size_t e) { end_ = e; }
 
+  /// @brief Set the size of the segment, adjusting end based on begin.
+  /// @param s New size of the segment
   inline void size(size_t s) { end_ = beg_ + s; }
 
+  /// @brief Move the segment to a new position in the point array.
+  /// @param p New absolute position for the beginning of the segment
   inline void moveTo(size_t p) {
     if (p >= beg_)
       move(static_cast<ptrdiff_t>(p - beg_));
@@ -155,6 +184,8 @@ class EdgeSegment {
       move(-static_cast<ptrdiff_t>(beg_ - p));
   }
 
+  /// @brief Move the segment by a relative offset.
+  /// @param m Offset to move (positive moves forward, negative backward)
   inline void move(ptrdiff_t m) {
     if (m >= 0) {
       const size_t offset = static_cast<size_t>(m);
@@ -167,20 +198,36 @@ class EdgeSegment {
     }
   }
 
+  /// @brief Get the index of the first point considering reverse flag.
+  /// @return Index of the first point (respects ES_REVERSE flag)
   inline size_t first() const { return reverse() ? end_ - 1 : beg_; }
 
+  /// @brief Get the index of the last point considering reverse flag.
+  /// @return Index of the last point (respects ES_REVERSE flag)
   inline size_t last() const { return reverse() ? beg_ : end_ - 1; }
 
+  /// @brief Check if segment is marked as reversed.
+  /// @return True if ES_REVERSE flag is set
   inline bool reverse() const { return (flags_ & ES_REVERSE) != 0; }
 
+  /// @brief Check if segment is marked as closed.
+  /// @return True if ES_CLOSED flag is set
   inline bool closed() const { return (flags_ & ES_CLOSED) != 0; }
 
+  /// @brief Get the flags for this segment.
+  /// @return Bitwise flags (ES_NONE, ES_REVERSE, ES_CLOSED)
   inline int flags() const { return flags_; }
 
+  /// @brief Set the flags for this segment.
+  /// @param f New flags value
   inline void flags(int f) { flags_ = f; }
 
+  /// @brief Get the identifier of this segment.
+  /// @return Segment ID
   inline int id() const { return id_; }
 
+  /// @brief Set the identifier of this segment.
+  /// @param i New segment ID
   inline void id(int i) { id_ = i; }
 };
 

@@ -39,6 +39,9 @@
 //
 //M*/
 
+/// @file value_manager.hpp
+/// @brief Runtime parameter management via name-value pairs.
+
 #pragma once
 
 #include <utility/value.hpp>
@@ -51,17 +54,26 @@
 
 namespace lsfm {
 
-//! Helper to manage internal setting and states via a generic interface
+/// @brief Base class for managing runtime-configurable parameters.
+///
+/// ValueManager provides a generic interface for setting and getting algorithm
+/// parameters by name. Classes inherit from ValueManager and register their
+/// parameters via functors that handle get/set operations.
 class ValueManager {
  protected:
+  /// @brief Functor type for get/set operations.
   typedef std::function<Value(const Value& v)> Functor;
 
+  /// @brief Internal entry storing a parameter's functor and description.
   struct ValueEntry {
-    std::string description{};
-    Functor func{};
+    std::string description{};  ///< Human-readable parameter description.
+    Functor func{};             ///< Functor for get (NAV input) or set operations.
 
     ValueEntry() = default;
 
+    /// @brief Construct with functor and optional description.
+    /// @param f Functor handling get/set.
+    /// @param dsc Parameter description.
     ValueEntry(Functor f, std::string dsc = std::string()) : description(std::move(dsc)), func(std::move(f)) {}
   };
 
@@ -88,12 +100,17 @@ class ValueManager {
     return *this;
   }
 
-  // add new option
+  /// @brief Register a new parameter.
+  /// @param name Parameter name (key).
+  /// @param func Functor: returns current value when called with NAV, sets when called with value.
+  /// @param dsc Optional description.
   void add(const std::string& name, const Functor& func, const std::string& dsc = std::string()) {
     values_[name] = ValueEntry(func, dsc);
   }
 
-
+  /// @brief Merge parameters from another ValueManager.
+  /// @tparam VM Type derived from ValueManager.
+  /// @param vm Manager whose parameters to add.
   template <class VM>
   void addManager(const VM& vm) {
     const ValueManager* tmp = dynamic_cast<const ValueManager*>(&vm);
@@ -104,22 +121,25 @@ class ValueManager {
  public:
   virtual ~ValueManager() = default;
 
+  /// @brief Container for parameter name, value, and description.
   struct NameValuePair {
-    std::string name{};
-    std::string description{};
-    Value value{};
+    std::string name{};         ///< Parameter name.
+    std::string description{};  ///< Parameter description.
+    Value value{};              ///< Current parameter value.
 
     NameValuePair() = default;
+
+    /// @brief Construct with name, value, and optional description.
     NameValuePair(std::string n, Value v, std::string d = std::string())
         : name(std::move(n)), description(std::move(d)), value(std::move(v)) {}
   };
 
 
-  typedef std::vector<NameValuePair> NameValueVector;
-  typedef std::initializer_list<NameValuePair> InitializerList;
+  typedef std::vector<NameValuePair> NameValueVector;            ///< Vector of name-value pairs.
+  typedef std::initializer_list<NameValuePair> InitializerList;  ///< Initializer list type.
 
-
-  //! Get list of all values as name value pairs
+  /// @brief Get all registered parameters.
+  /// @return Vector of all name-value pairs.
   inline NameValueVector values() const {
     NameValueVector ret;
     for_each(values_.begin(), values_.end(), [&ret](const std::pair<std::string, ValueEntry>& e) {
@@ -128,14 +148,18 @@ class ValueManager {
     return ret;
   }
 
-  //! Get name value pair by name
+  /// @brief Get parameter by name as NameValuePair.
+  /// @param name Parameter name.
+  /// @return NameValuePair or empty if not found.
   NameValuePair valuePair(const std::string& name) const {
     ValueMap::const_iterator f = values_.find(name);
     if (f != values_.end()) return NameValuePair(f->first, f->second.func(Value::NAV()), f->second.description);
     return NameValuePair();
   }
 
-  //! Get value entry by index
+  /// @brief Get parameter by index as NameValuePair.
+  /// @param idx Parameter index.
+  /// @return NameValuePair or empty if index out of range.
   NameValuePair valuePair(size_t idx) const {
     if (idx > values_.size()) return NameValuePair();
     ValueMap::const_iterator f = values_.begin();
@@ -143,15 +167,18 @@ class ValueManager {
     return NameValuePair(f->first, f->second.func(Value::NAV()), f->second.description);
   }
 
-
-  //! Get value entry by name
+  /// @brief Get parameter value by name.
+  /// @param name Parameter name.
+  /// @return Value or empty Value if not found.
   Value value(const std::string& name) const {
     ValueMap::const_iterator f = values_.find(name);
     if (f != values_.end()) return f->second.func(Value::NAV());
     return Value();
   }
 
-  //! Get value entry by index
+  /// @brief Get parameter value by index.
+  /// @param idx Parameter index.
+  /// @return Value or empty Value if index out of range.
   Value value(size_t idx) const {
     if (idx > values_.size()) return Value();
     ValueMap::const_iterator f = values_.begin();
@@ -159,14 +186,17 @@ class ValueManager {
     return f->second.func(Value::NAV());
   }
 
-
-  //! Set single value by name
+  /// @brief Set parameter value by name.
+  /// @param name Parameter name.
+  /// @param value New value to set.
   inline void value(const std::string& name, const Value& value) {
     ValueMap::iterator f = values_.find(name);
     if (f != values_.end()) f->second.func(value);
   }
 
-  //! Set single value by idx
+  /// @brief Set parameter value by index.
+  /// @param idx Parameter index.
+  /// @param value New value to set.
   inline void value(size_t idx, const Value& value) {
     if (idx > values_.size()) return;
     ValueMap::iterator f = values_.begin();
@@ -174,26 +204,30 @@ class ValueManager {
     f->second.func(value);
   }
 
-  //! Set single values by NameValuePair
+  /// @brief Set parameter from NameValuePair.
+  /// @param p Name-value pair to set.
   inline void value(const NameValuePair& p) { value(p.name, p.value); }
 
-  //! Set multiple values by NameValueVector
+  /// @brief Set multiple parameters from vector.
+  /// @param v Vector of name-value pairs.
   inline void value(const NameValueVector& v) {
     for_each(v.begin(), v.end(), [this](const NameValuePair& p) { this->value(p.name, p.value); });
   }
 
-  //! Set multiple values by NameValueVector
+  /// @brief Set multiple parameters from initializer list.
+  /// @param list Initializer list of name-value pairs.
   inline void value(InitializerList list) {
     std::for_each(list.begin(), list.end(), [this](const NameValuePair& p) { this->value(p.name, p.value); });
   }
 };
 
+/// @brief Specialization to merge all parameters from another ValueManager.
 template <>
 inline void ValueManager::addManager<ValueManager>(const ValueManager& vm) {
   for_each(vm.values_.begin(), vm.values_.end(),
            [this](const std::pair<std::string, ValueEntry>& e) { this->values_[e.first] = e.second; });
 }
 
-typedef ValueManager::NameValuePair NV;
-typedef ValueManager::InitializerList IL;
+typedef ValueManager::NameValuePair NV;    ///< Shorthand for NameValuePair.
+typedef ValueManager::InitializerList IL;  ///< Shorthand for InitializerList.
 }  // namespace lsfm

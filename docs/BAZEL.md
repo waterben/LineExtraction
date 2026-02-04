@@ -190,7 +190,7 @@ LineExtraction/
         └── detect_bazel_features.sh  # Feature detection
 ```
 
-## Dependencies (January 2026)
+## Dependencies (February 2026)
 
 Managed via Bzlmod (`MODULE.bazel`):
 
@@ -202,6 +202,7 @@ Managed via Bzlmod (`MODULE.bazel`):
 | SuperLU | 7.0.0 | Local Registry |
 | libjpeg_turbo | 3.1.3.bcr.2 | BCR |
 | GoogleTest | 1.15.2 | BCR |
+| Google Benchmark | 1.9.1 | BCR |
 | Eigen | 3.4.0 | http_archive |
 | dlib | 19.24.7 | Local Registry |
 | bazel_skylib | 1.9.0 | BCR |
@@ -259,6 +260,85 @@ The following opencv_contrib modules are available for use:
 
 ```bash
 bazel test //libs/...
+```
+
+### Benchmarks
+
+Performance benchmarks using Google Benchmark:
+
+| Target | Algorithms | Description |
+|--------|------------|-------------|
+| `//libs/lsd:bench_lsd` | LsdCC, LsdCP, LsdEL, LsdEP, LsdBurns, LsdFBW, LsdFGioi, LsdEDLZ | All 8 LSD variants |
+| `//libs/edge:bench_edge` | Sobel, Scharr, NMS, EsdSimple, EsdDrawing, EsdLinking, EsdPattern | Gradient, NMS and ESD benchmarks |
+
+```bash
+# Run all LSD benchmarks
+bazel run //libs/lsd:bench_lsd
+
+# Run all edge benchmarks
+bazel run //libs/edge:bench_edge
+
+# Filter specific algorithm
+bazel run //libs/lsd:bench_lsd -- --benchmark_filter="BM_LsdCC"
+
+# Export to JSON
+bazel run //libs/lsd:bench_lsd -- --benchmark_format=json > lsd_bench.json
+```
+
+## Data Dependencies (Datasets)
+
+The project supports external image datasets for evaluation and testing.
+
+### BSDS500 (Auto-Download)
+
+The Berkeley Segmentation Dataset is automatically downloaded when needed:
+
+```starlark
+# In BUILD.bazel
+cc_test(
+    name = "my_eval_test",
+    data = ["@bsds500//:all"],
+    deps = ["//libs/eval:lib_eval"],
+)
+```
+
+**Bazel Targets:**
+
+- `@bsds500//:all` - All images (~500 images, ~50MB)
+- `@bsds500//:train` - Training set
+- `@bsds500//:test` - Test set
+- `@bsds500//:val` - Validation set
+
+### MDB (Manual Setup)
+
+The Middlebury Stereo Dataset requires manual download due to size (~1GB):
+
+```bash
+# Download and setup MDB dataset
+./tools/scripts/setup_mdb_dataset.sh --resolution all
+
+# Or only quarter resolution (~50MB)
+./tools/scripts/setup_mdb_dataset.sh --resolution Q
+```
+
+**Bazel Targets:**
+
+- `//resources/datasets:mdb_q` - Quarter resolution
+- `//resources/datasets:mdb_h` - Half resolution
+- `//resources/datasets:mdb_f` - Full resolution
+
+### Using Datasets in C++ Code
+
+```cpp
+#include <eval/runfiles.hpp>
+
+int main(int argc, char** argv) {
+    auto runfiles = lsfm::Runfiles::Create(argv[0]);
+
+    // Automatic path resolution (Bazel or CMake)
+    std::string bsds_path = runfiles->Rlocation("bsds500/BSDS500/data/images/train");
+    std::string mdb_path = runfiles->Rlocation("line_extraction/resources/datasets/MDB/MiddEval3-Q");
+}
 ```
 
 ## Adding New Features

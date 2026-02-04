@@ -1,3 +1,11 @@
+/// @file quadratureG2.hpp
+/// @brief Second-order Gaussian quadrature filter (G2/H2) for edge detection.
+///
+/// This file implements a steerable quadrature filter pair using second-order
+/// Gaussian derivatives (G2) and their Hilbert transform pairs (H2). The filters
+/// can be steered to any orientation to detect oriented features like edges.
+/// The implementation is based on Freeman & Adelson's steerable filters framework.
+/// @see "The Design and Use of Steerable Filters", Freeman & Adelson, PAMI 1991
 
 #pragma once
 
@@ -10,20 +18,76 @@
 
 namespace lsfm {
 
+/// @brief Second-order Gaussian quadrature filter for steerable edge detection.
+///
+/// QuadratureG2 implements a quadrature filter pair using second-order Gaussian
+/// derivatives (G2 - even symmetric) and their Hilbert transforms (H2 - odd symmetric).
+/// These filters can be steered to any orientation using steering coefficients,
+/// enabling detection of edges at arbitrary angles.
+/// The G2 filter is defined by three basis functions:
+/// - G21(x) = 0.9213 * (2x² - 1) * exp(-x²)
+/// - G22(x) = exp(-x²)
+/// - G23(x) = √1.843 * x * exp(-x²)
+/// The H2 filter is defined by four basis functions:
+/// - H21(x) = 0.9780 * (-2.254x + x³) * exp(-x²)
+/// - H22(x) = exp(-x²)
+/// - H23(x) = x * exp(-x²)
+/// - H24(x) = 0.9780 * (-0.7515 + x²) * exp(-x²)
+/// Key features:
+/// - Separable filter implementation for efficiency
+/// - Automatic dominant orientation computation
+/// - Lazy computation of energy and phase
+/// - Configurable kernel size and spacing
+/// @tparam IT Input image type (default: uchar).
+/// @tparam FT Floating-point type for computations (default: float).
+/// @tparam P Polar coordinate class template (default: Polar).
+/// @see Quadrature Base class providing interface.
 template <class IT = uchar, class FT = float, template <typename, typename> class P = Polar>
 class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
  public:
+  /// @brief G2 basis function 1.
+  /// @param x Input coordinate.
+  /// @return Function value: 0.9213 * (2x² - 1) * exp(-x²).
   static FT G21(FT x) { return static_cast<FT>(0.9213 * (2.0 * x * x - 1.0) * exp(-x * x)); }
+
+  /// @brief G2 basis function 2 (Gaussian).
+  /// @param x Input coordinate.
+  /// @return Function value: exp(-x²).
   static FT G22(FT x) { return exp(-x * x); }
+
+  /// @brief G2 basis function 3.
+  /// @param x Input coordinate.
+  /// @return Function value: √1.843 * x * exp(-x²).
   static FT G23(FT x) { return sqrt(static_cast<FT>(1.8430)) * x * exp(-x * x); }
 
+  /// @brief H2 basis function 1.
+  /// @param x Input coordinate.
+  /// @return Function value: 0.9780 * (-2.254x + x³) * exp(-x²).
   static FT H21(FT x) { return static_cast<FT>(0.9780 * (-2.254 * x + x * x * x)) * exp(-x * x); }
+
+  /// @brief H2 basis function 2 (Gaussian).
+  /// @param x Input coordinate.
+  /// @return Function value: exp(-x²).
   static FT H22(FT x) { return exp(-x * x); }
+
+  /// @brief H2 basis function 3.
+  /// @param x Input coordinate.
+  /// @return Function value: x * exp(-x²).
   static FT H23(FT x) { return x * exp(-x * x); }
+
+  /// @brief H2 basis function 4.
+  /// @param x Input coordinate.
+  /// @return Function value: 0.9780 * (-0.7515 + x²) * exp(-x²).
   static FT H24(FT x) { return static_cast<FT>(0.9780 * (-0.7515 + x * x)) * exp(-x * x); }
 
+  /// Function pointer type for kernel generation.
   typedef FT (*KernelType)(FT x);
 
+  /// @brief Create a 1D filter kernel from a basis function.
+  /// @param width Kernel width (will be centered).
+  /// @param spacing Sample spacing between kernel elements.
+  /// @param f Basis function to evaluate.
+  /// @return 1D kernel matrix.
   static cv::Mat_<FT> createFilter(int width, FT spacing, KernelType f) {
     width = width / 2;
     cv::Mat_<FT> kernel(1, width * 2 + 1);
@@ -33,27 +97,97 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
  private:
-  // the kernels
-  cv::Mat_<FT> m_dx, m_dy;
-  cv::Mat_<FT> m_g1, m_g2, m_g3, m_h1, m_h2, m_h3, m_h4;
-  cv::Mat_<FT> m_g2a, m_g2b, m_g2c, m_h2a, m_h2b, m_h2c, m_h2d;
-  cv::Mat_<FT> m_c1, m_c2, m_c3, m_theta;
+  /// X-derivative kernel (unused in current implementation).
+  cv::Mat_<FT> m_dx;
+  /// Y-derivative kernel (unused in current implementation).
+  cv::Mat_<FT> m_dy;
+
+  /// G2 basis filter 1 (second derivative).
+  cv::Mat_<FT> m_g1;
+  /// G2 basis filter 2 (Gaussian envelope).
+  cv::Mat_<FT> m_g2;
+  /// G2 basis filter 3 (first derivative scaled).
+  cv::Mat_<FT> m_g3;
+  /// H2 basis filter 1.
+  cv::Mat_<FT> m_h1;
+  /// H2 basis filter 2.
+  cv::Mat_<FT> m_h2;
+  /// H2 basis filter 3.
+  cv::Mat_<FT> m_h3;
+  /// H2 basis filter 4.
+  cv::Mat_<FT> m_h4;
+
+  /// G2 filter response a (g1 * g2^T).
+  cv::Mat_<FT> m_g2a;
+  /// G2 filter response b (g3 * g3^T).
+  cv::Mat_<FT> m_g2b;
+  /// G2 filter response c (g2 * g1^T).
+  cv::Mat_<FT> m_g2c;
+  /// H2 filter response a.
+  cv::Mat_<FT> m_h2a;
+  /// H2 filter response b.
+  cv::Mat_<FT> m_h2b;
+  /// H2 filter response c.
+  cv::Mat_<FT> m_h2c;
+  /// H2 filter response d.
+  cv::Mat_<FT> m_h2d;
+
+  /// Steering coefficient 1 for full steering mode.
+  cv::Mat_<FT> m_c1;
+  /// Steering coefficient 2 for orientation computation.
+  cv::Mat_<FT> m_c2;
+  /// Steering coefficient 3 for orientation computation.
+  cv::Mat_<FT> m_c3;
+  /// Dominant orientation (theta).
+  cv::Mat_<FT> m_theta;
 
 #ifdef ENABLE_G2_FULL_STEER
+  /// Orientation strength for full steering mode.
   cv::Mat_<FT> m_s;
 #endif
 
-  mutable cv::Mat energy_, phase_, ox_, oy_, e_, o_;
+  /// Cached energy image.
+  mutable cv::Mat energy_;
+  /// Cached phase image.
+  mutable cv::Mat phase_;
+  /// Cached odd response X component.
+  mutable cv::Mat ox_;
+  /// Cached odd response Y component.
+  mutable cv::Mat oy_;
+  /// Cached even filter response.
+  mutable cv::Mat e_;
+  /// Cached odd filter response.
+  mutable cv::Mat o_;
 
-  Range<FT> oddRange_, evenRange_, energyRange_;
+  /// Range of odd filter responses.
+  Range<FT> oddRange_;
+  /// Range of even filter responses.
+  Range<FT> evenRange_;
+  /// Range of energy values.
+  Range<FT> energyRange_;
+
   using Quadrature<IT, FT, FT, FT, FT>::intRange_;
 
+  /// Kernel size.
   int ksize_;
+  /// Kernel spacing.
   FT kspacing_;
+  /// Filter anchor point.
   cv::Point anchor;
 
-  mutable bool energy_done_, phase_done_, oxy_done_, eo_done_;
+  /// Flag indicating energy has been computed.
+  mutable bool energy_done_;
+  /// Flag indicating phase has been computed.
+  mutable bool phase_done_;
+  /// Flag indicating odd X/Y have been computed.
+  mutable bool oxy_done_;
+  /// Flag indicating even/odd have been computed.
+  mutable bool eo_done_;
 
+  /// @brief Create all filter kernels.
+  ///
+  /// Creates separable G2 and H2 basis filters using the configured
+  /// kernel size and spacing. Also applies DC offset correction.
   void create_kernels() {
     // Create separable filters for G2
     m_g1 = createFilter(ksize_, kspacing_, G21);
@@ -74,6 +208,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     max_response();
   }
 
+  /// @brief Compute maximum filter responses.
+  ///
+  /// Creates a step edge test pattern and processes it to determine
+  /// the maximum possible energy, odd, and even response values.
   void max_response() {
     cv::Mat_<IT> tmp(2 * ksize_, 2 * ksize_);
     tmp.setTo(this->intRange_.lower);
@@ -90,6 +228,9 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     evenRange_.lower = -evenRange_.upper;
   }
 
+  /// @brief Initialize option manager entries.
+  ///
+  /// Registers kernel_size and kernel_spacing as configurable options.
   void init() {
     this->add("grad_kernel_size", std::bind(&QuadratureG2<IT, FT, P>::valueKernelSize, this, std::placeholders::_1),
               "Kernel size for Quadrature-Operators.");
@@ -101,22 +242,25 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
  public:
-  typedef IT img_type;
-  typedef FT grad_type;
-  typedef FT mag_type;
-  typedef FT energy_type;
-  typedef FT dir_type;
-  typedef FT phase_type;
+  typedef IT img_type;     ///< Input image element type.
+  typedef FT grad_type;    ///< Gradient element type.
+  typedef FT mag_type;     ///< Magnitude element type.
+  typedef FT energy_type;  ///< Energy element type.
+  typedef FT dir_type;     ///< Direction element type.
+  typedef FT phase_type;   ///< Phase element type.
 
+  typedef Range<IT> IntensityRange;  ///< Intensity value range type.
+  typedef Range<FT> GradientRange;   ///< Gradient value range type.
+  typedef Range<FT> MagnitudeRange;  ///< Magnitude value range type.
+  typedef Range<FT> EnergyRange;     ///< Energy value range type.
+  typedef Range<FT> DirectionRange;  ///< Direction value range type.
+  typedef Range<FT> PhaseRange;      ///< Phase value range type.
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<FT> GradientRange;
-  typedef Range<FT> MagnitudeRange;
-  typedef Range<FT> EnergyRange;
-  typedef Range<FT> DirectionRange;
-  typedef Range<FT> PhaseRange;
-
-
+  /// @brief Construct a G2 quadrature filter with specified parameters.
+  /// @param kernel_size Kernel size (default: 9, must be odd, range 3-99).
+  /// @param kernel_spacing Sample spacing for kernel generation (default: 0.782).
+  /// @param int_lower Lower bound of input intensity range.
+  /// @param int_upper Upper bound of input intensity range.
   QuadratureG2(int kernel_size = 9,
                FT kernel_spacing = static_cast<FT>(0.782),
                IT int_lower = std::numeric_limits<IT>::lowest(),
@@ -161,6 +305,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     init();
   }
 
+  /// @brief Construct from a name-value option vector.
+  /// @param options Configuration options (grad_kernel_size, grad_kernel_spacing).
+  /// @param int_lower Lower bound of input intensity range.
+  /// @param int_upper Upper bound of input intensity range.
   QuadratureG2(const ValueManager::NameValueVector& options,
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
@@ -205,6 +353,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     this->value(options);
   }
 
+  /// @brief Construct from an initializer list of options.
+  /// @param options Configuration options as initializer list.
+  /// @param int_lower Lower bound of input intensity range.
+  /// @param int_upper Upper bound of input intensity range.
   QuadratureG2(ValueManager::InitializerList options,
                img_type int_lower = std::numeric_limits<img_type>::lowest(),
                img_type int_upper = std::numeric_limits<img_type>::max())
@@ -249,16 +401,24 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     this->value(options);
   }
 
+  /// @brief Get or set kernel size through ValueManager interface.
+  /// @param ks Optional new kernel size value.
+  /// @return Current kernel size.
   Value valueKernelSize(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSize(ks);
     return ksize_;
   }
 
-  //! get kernel size
+  /// @brief Get the kernel size.
+  /// @return Current kernel size.
   int kernelSize() const { return ksize_; }
 
-  //! set kernel size (range 3-99, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like int or long long int
+  /// @brief Set the kernel size.
+  ///
+  /// The kernel size must be odd and in range [3, 99].
+  /// Even values are automatically incremented.
+  /// @param ks New kernel size.
+  /// @note Large kernels may require larger gradient types (int, long long).
   void kernelSize(int ks) {
     if (ks == ksize_) return;
 
@@ -269,22 +429,35 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     create_kernels();
   }
 
+  /// @brief Get or set kernel spacing through ValueManager interface.
+  /// @param ks Optional new kernel spacing value.
+  /// @return Current kernel spacing.
   Value valueKernelSpacing(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSpacing(ks);
     return kspacing_;
   }
 
-  //! get kernel spacing
+  /// @brief Get the kernel spacing.
+  /// @return Current kernel spacing.
   FT kernelSpacing() const { return kspacing_; }
 
-  //! set kernel size (range 3-99, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like int or long long int
+  /// @brief Set the kernel spacing.
+  ///
+  /// The spacing controls the sampling density of the filter kernel.
+  /// Smaller values give higher resolution.
+  /// @param ks New kernel spacing (must be positive).
   void kernelSpacing(FT ks) {
     if (ks == kspacing_ || ks <= 0) return;
     kspacing_ = ks;
     create_kernels();
   }
 
+  /// @brief Process an image to compute quadrature filter responses.
+  ///
+  /// Applies all G2 and H2 basis filters to the image and computes
+  /// the dominant orientation at each pixel. Energy, phase, and
+  /// steered responses are computed lazily when accessed.
+  /// @param[in] img Input image.
   void process(const cv::Mat& img) {
     energy_done_ = false;
     oxy_done_ = false;
@@ -334,19 +507,29 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     m_theta *= -0.5;
   }
 
+  /// @brief Get the 2D kernel used for G2 filtering.
+  /// @return 2D kernel matrix (m_g1 * m_g2^T).
   cv::Mat kernel() const { return m_g1 * m_g2.t(); }
 
-  //! get direction
+  /// @brief Get the dominant orientation at each pixel.
+  /// @return Direction image with angles.
   cv::Mat direction() const { return m_theta; }
 
+  /// @brief Get the direction value range.
+  /// @return Range of direction values from Polar class.
   DirectionRange directionRange() const { return P<FT, FT>::range(); }
 
 #ifdef ENABLE_G2_FULL_STEER
-  //! get direction strength
+  /// @brief Get the orientation strength at each pixel.
+  /// @return Strength image (only in full steer mode).
   cv::Mat strength() const { return m_s; }
 #endif
 
-  //! get odd response
+  /// @brief Get the odd filter response as X and Y components.
+  ///
+  /// Converts the dominant orientation to unit vector components.
+  /// @param[out] ox X component of odd response direction.
+  /// @param[out] oy Y component of odd response direction.
   void odd(cv::Mat& ox, cv::Mat& oy) const {
     if (!oxy_done_) {
       P<FT, FT>::polar2Cart(m_theta, ox_, oy_);
@@ -356,7 +539,13 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     oy = oy_;
   }
 
-  //! steer to theta to get maximal responses
+  /// @brief Steer the filters to a given orientation image.
+  ///
+  /// Computes the G2 and H2 responses at the orientations specified
+  /// in the theta image using the steering equations.
+  /// @param[in] theta Orientation image (angles).
+  /// @param[out] g2 G2 (even) filter response at theta.
+  /// @param[out] h2 H2 (odd) filter response at theta.
   void steer(const cv::Mat& theta, cv::Mat& g2, cv::Mat& h2) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     cv::Mat ct, ct2, ct3, st, st2, st3;
@@ -366,7 +555,14 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     h2 = ct3.mul(m_h2a) + (-3.0 * ct2.mul(st).mul(m_h2b)) + (3.0 * ct.mul(st2).mul(m_h2c)) + (-st3.mul(m_h2d));
   }
 
-  //! steer to theta to get maximal responses
+  /// @brief Steer filters using pre-computed gradient components.
+  ///
+  /// Computes the G2 and H2 responses using gradient X/Y components
+  /// as steering direction (avoids trigonometric functions).
+  /// @param[in] gx X-gradient component (cos(theta)).
+  /// @param[in] gy Y-gradient component (sin(theta)).
+  /// @param[out] g2 G2 (even) filter response.
+  /// @param[out] h2 H2 (odd) filter response.
   void steer(const cv::Mat& gx, const cv::Mat& gy, cv::Mat& g2, cv::Mat& h2) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     cv::Mat ct2, ct3, st2, st3, mgy = -gy;
@@ -375,10 +571,15 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     h2 = ct3.mul(m_h2a) + (-3.0 * ct2.mul(mgy).mul(m_h2b)) + (3.0 * gx.mul(st2).mul(m_h2c)) + (-st3.mul(m_h2d));
   }
 
-  //! test if even responses are computed
+  /// @brief Check if even/odd responses have been computed.
+  /// @return True if even() or odd() has been called, false otherwise.
   inline bool isEvenDone() const { return eo_done_; }
 
-  //! get response of even filter at strongest direction
+  /// @brief Get the even filter response at dominant orientation.
+  ///
+  /// Returns the G2 (even symmetric) response steered to the
+  /// dominant orientation at each pixel.
+  /// @return Even filter response image.
   cv::Mat even() const {
     if (!eo_done_) {
       cv::Mat t1, t2;
@@ -387,12 +588,19 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     return e_;
   }
 
+  /// @brief Get the even filter response range.
+  /// @return Range of even filter values.
   GradientRange evenRange() const { return evenRange_; }
 
-  //! test if odd responses are computed
+  /// @brief Check if odd responses have been computed.
+  /// @return True if even/odd responses have been computed.
   inline bool isOddDone() const { return eo_done_; }
 
-  //! get response of odd filter at strongest direction
+  /// @brief Get the odd filter response at dominant orientation.
+  ///
+  /// Returns the H2 (odd symmetric) response steered to the
+  /// dominant orientation at each pixel. The absolute value is returned.
+  /// @return Odd filter response image (absolute values).
   cv::Mat odd() const {
     if (!eo_done_) {
       cv::Mat t1, t2;
@@ -401,7 +609,12 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     return o_;
   }
 
-  //! get response of even and odd filter at strongest direction
+  /// @brief Get both even and odd filter responses at dominant orientation.
+  ///
+  /// Steers both G2 and H2 filters to the dominant orientation and
+  /// returns the responses.
+  /// @param[out] e Even (G2) filter response.
+  /// @param[out] o Odd (H2) filter response (absolute value).
   void evenOdd(cv::Mat& e, cv::Mat& o) const {
     if (!eo_done_) {
       steer(this->oddx(), oy_, e_, o_);
@@ -412,13 +625,19 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     o = o_;
   }
 
+  /// @brief Get the odd filter response range.
+  /// @return Range of odd filter magnitude values.
   MagnitudeRange oddRange() const { return oddRange_; }
 
-
-  //! test if magnitude is computed
+  /// @brief Check if energy has been computed.
+  /// @return True if energy() has been called, false otherwise.
   inline bool isEnergyDone() const { return energy_done_; }
 
-  //! get magnitude
+  /// @brief Get the local energy.
+  ///
+  /// Local energy is computed as the magnitude of the complex
+  /// quadrature response (even + i*odd).
+  /// @return Energy image.
   cv::Mat energy() const {
     if (!energy_done_) {
       P<FT, FT>::magnitude(odd(), e_, energy_);
@@ -427,13 +646,19 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     return energy_;
   }
 
+  /// @brief Get the energy value range.
+  /// @return Range of energy values.
   EnergyRange energyRange() const { return energyRange_; }
 
-
-  //! test if phase is computed
+  /// @brief Check if phase has been computed.
+  /// @return True if phase() has been called, false otherwise.
   inline bool isPhaseDone() const { return phase_done_; }
 
-  //! get phase
+  /// @brief Get the local phase.
+  ///
+  /// Local phase is the angle of the complex quadrature response.
+  /// It indicates the type of feature (edge, line, etc.).
+  /// @return Phase image.
   cv::Mat phase() const {
     if (!phase_done_) {
       P<FT, FT>::phase(odd(), e_, phase_);
@@ -442,10 +667,16 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     return phase_;
   }
 
-  //! get direction range ([-PI,PI], [0,2PI] or [0,360])
+  /// @brief Get the phase value range.
+  /// @return Range of phase values from Polar class.
   PhaseRange phaseRange() const { return P<FT, FT>::range(); }
 
-  //! get phase and energy
+  /// @brief Get both energy and phase.
+  ///
+  /// Efficiently computes both energy and phase together using
+  /// a single cart2Polar call if neither has been computed yet.
+  /// @param[out] en Energy image.
+  /// @param[out] ph Phase image.
   void energyPhase(cv::Mat& en, cv::Mat& ph) const {
     if (!phase_done_ && !energy_done_) {
       P<FT, FT>::cart2Polar(odd(), e_, energy_, phase_);
@@ -461,7 +692,8 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   }
 
 
-  //! get name of gradient operator
+  /// @brief Get the name of this gradient operator.
+  /// @return "quadratureG2".
   inline std::string name() const { return "quadratureG2"; }
 
   using ValueManager::value;
@@ -478,6 +710,11 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   using Quadrature<IT, FT, FT, FT, FT>::energyThreshold;
 
 #ifdef ENABLE_G2_FULL_STEER
+  /// @brief Compute energy and phase from G2/H2 responses.
+  /// @param[in] g2 G2 (even) filter response.
+  /// @param[in] h2 H2 (odd) filter response.
+  /// @param[out] energy Energy (magnitude).
+  /// @param[out] phase Phase (angle).
   void computeEnergyAndPhase(const cv::Mat& g2, const cv::Mat& h2, cv::Mat& energy, cv::Mat& phase) const {
     P<FT, FT>::cart2Polar(g2, h2, energy, phase);
     // cv::cartToPolar(g2, h2, energy, phase); // [0..2*piI]
@@ -486,7 +723,11 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     // phase.setTo(10000, energy < 1e-2f);
   }
 
-  // Steer filters at a single pixel:
+  /// @brief Steer filters at a single pixel.
+  /// @param[in] p Pixel location.
+  /// @param[in] theta Orientation angle.
+  /// @param[out] g2 G2 response at p steered to theta.
+  /// @param[out] h2 H2 response at p steered to theta.
   void steer(const cv::Point& p, FT theta, FT& g2, FT& h2) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     FT ct(std::cos(theta)), ct2(ct * ct), ct3(ct2 * ct), st(std::sin(theta)), st2(st * st), st3(st2 * st);
@@ -496,6 +737,14 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     h2 = ha * m_h2a(p) + hb * m_h2b(p) + hc * m_h2c(p) + hd * m_h2d(p);
   }
 
+  /// @brief Steer filters at a single pixel with full output.
+  /// @param[in] p Pixel location.
+  /// @param[in] theta Orientation angle.
+  /// @param[out] g2 G2 response.
+  /// @param[out] h2 H2 response.
+  /// @param[out] e Oriented energy.
+  /// @param[out] energy Quadrature energy.
+  /// @param[out] phase Quadrature phase.
   void steer(const cv::Point& p, FT theta, FT& g2, FT& h2, FT& e, FT& energy, FT& phase) const {
     steer(p, theta, g2, h2);
     phase = std::atan2(h2, g2);
@@ -506,7 +755,10 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     e = m_c1(p) + (c2t * m_c2(p)) + (s2t * m_c3(p));
   }
 
-  // Steer filters across the entire image:
+  /// @brief Steer filters across entire image to a single angle.
+  /// @param[in] theta Orientation angle.
+  /// @param[out] g2 G2 response image.
+  /// @param[out] h2 H2 response image.
   void steer(FT theta, cv::Mat& g2, cv::Mat& h2) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     FT ct(std::cos(theta)), ct2(ct * ct), ct3(ct2 * ct), st(std::sin(theta)), st2(st * st), st3(st2 * st);
@@ -516,7 +768,13 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     h2 = ha * m_h2a + hb * m_h2b + hc * m_h2c + hd * m_h2d;
   }
 
-
+  /// @brief Steer filters to single angle with full output.
+  /// @param[in] theta Orientation angle.
+  /// @param[out] g2 G2 response image.
+  /// @param[out] h2 H2 response image.
+  /// @param[out] e Oriented energy image.
+  /// @param[out] energy Quadrature energy image.
+  /// @param[out] phase Quadrature phase image.
   void steer(FT theta, cv::Mat& g2, cv::Mat& h2, cv::Mat& e, cv::Mat& energy, cv::Mat& phase) const {
     steer(theta, g2, h2);
     computeEnergyAndPhase(g2, h2, energy, phase);
@@ -526,6 +784,13 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
     e = m_c1 + (c2t * m_c2) + (s2t * m_c3);
   }
 
+  /// @brief Steer filters to orientation image with full output.
+  /// @param[in] theta Orientation image (angle at each pixel).
+  /// @param[out] g2 G2 response image.
+  /// @param[out] h2 H2 response image.
+  /// @param[out] e Oriented energy image.
+  /// @param[out] energy Quadrature energy image.
+  /// @param[out] phase Quadrature phase image.
   void steer(const cv::Mat& theta, cv::Mat& g2, cv::Mat& h2, cv::Mat& e, cv::Mat& energy, cv::Mat& phase) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     steer(theta, g2, h2);

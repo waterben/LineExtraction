@@ -6,6 +6,9 @@ doc/
 extern/
 .cache/
 images/
+thesis/
+resources/datasets/
+docs/generated/
 
 #cmake
 CMakeLists.txt.user

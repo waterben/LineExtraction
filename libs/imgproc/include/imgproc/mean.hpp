@@ -47,13 +47,31 @@
 
 namespace lsfm {
 
+/// @brief Compute mean value along a line segment with sub-pixel interpolation.
+///
+/// This struct provides methods to sample pixel values along a line segment and
+/// compute statistical measures (mean, variance). The sampling uses a configurable
+/// interpolator for sub-pixel accuracy and walks along the line at specified
+/// distance intervals.
+/// @tparam FT Floating-point type for calculations (e.g., float, double).
+/// @tparam MT Matrix element type for the input image.
+/// @tparam IP Interpolator type (defaults to LinearInterpolator).
 template <class FT, class MT, class IP = LinearInterpolator<FT, MT>>
 struct Mean {
-  typedef FT float_type;
-  typedef MT mat_type;
-  typedef IP interpolation_type;
+  typedef FT float_type;          ///< Floating-point type for calculations.
+  typedef MT mat_type;            ///< Matrix element type.
+  typedef IP interpolation_type;  ///< Interpolation policy type.
 
-  //! compute mean value of mag along line segment (uses dist as distance to walk along line)
+  /// @brief Compute mean value along a line segment.
+  ///
+  /// Samples the image at regular intervals along the line segment and returns
+  /// the arithmetic mean of all sampled values. The line is trimmed to fit
+  /// within the image boundaries before sampling.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points (default: 1 pixel).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -78,6 +96,16 @@ struct Mean {
     return ret;
   }
 
+  /// @brief Compute mean value and variance along a line segment.
+  ///
+  /// Samples the image at regular intervals along the line segment and computes
+  /// both the arithmetic mean and variance of all sampled values.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] variance Computed variance of the sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points (default: 1 pixel).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(FT& variance, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -110,6 +138,16 @@ struct Mean {
     return ret;
   }
 
+  /// @brief Collect all sample values along a line segment.
+  ///
+  /// Samples the image at regular intervals along the line segment and stores
+  /// all values in the provided container.
+  /// @tparam V Container type for output values (e.g., std::vector<FT>).
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] ret Output container to store sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points (default: 1 pixel).
   template <class V, template <class> class PT>
   static inline void process(V& ret, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -130,37 +168,84 @@ struct Mean {
   }
 };
 
+/// @brief Compute mean value along a line segment using sample count.
+///
+/// This struct wraps Mean to provide sampling based on a specified number of
+/// samples rather than a fixed distance. The distance between samples is
+/// computed from the line length and desired sample count.
+/// @tparam FT Floating-point type for calculations (e.g., float, double).
+/// @tparam MT Matrix element type for the input image.
+/// @tparam IP Interpolator type (defaults to LinearInterpolator).
 template <class FT, class MT, class IP = LinearInterpolator<FT, MT>>
 struct MeanSampled {
-  typedef FT float_type;
-  typedef MT mat_type;
-  typedef IP interpolation_type;
+  typedef FT float_type;          ///< Floating-point type for calculations.
+  typedef MT mat_type;            ///< Matrix element type.
+  typedef IP interpolation_type;  ///< Interpolation policy type.
 
-  //! compute mean value of mag along line segment (compute mean along line with number of samples)
+  /// @brief Compute mean value along a line segment.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     return Mean<FT, MT, IP>::process(mag, l, l.length() / floor(samples) - 1);
   }
 
-
+  /// @brief Compute mean value and variance along a line segment.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] variance Computed variance of the sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(FT& variance, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     return Mean<FT, MT, IP>::process(variance, mag, l, l.length() / floor(samples) - 1);
   }
 
+  /// @brief Collect all sample values along a line segment.
+  /// @tparam V Container type for output values.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] ret Output container to store sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
   template <class V, template <class> class PT>
   static inline void process(V& ret, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     Mean<FT, MT, IP>::process(ret, mag, l, l.length() / floor(samples) - 1);
   }
 };
 
+/// @brief Fast mean computation along a line segment using axis-aligned traversal.
+///
+/// This struct provides an optimized implementation of line sampling by walking
+/// along the dominant axis (X or Y) rather than walking along the actual line
+/// direction. This is faster because it avoids computing line distances for
+/// each sample point.
+/// @note This implementation may produce slightly different results than Mean
+///
+/// for diagonal lines due to the axis-aligned sampling strategy.
+/// @tparam FT Floating-point type for calculations (e.g., float, double).
+/// @tparam MT Matrix element type for the input image.
+/// @tparam IP Interpolator type (defaults to LinearInterpolator).
 template <class FT, class MT, class IP = LinearInterpolator<FT, MT>>
 struct FastMean {
-  typedef FT float_type;
-  typedef MT mat_type;
-  typedef IP interpolation_type;
+  typedef FT float_type;          ///< Floating-point type for calculations.
+  typedef MT mat_type;            ///< Matrix element type.
+  typedef IP interpolation_type;  ///< Interpolation policy type.
 
-  //! compute mean value of mag along line segment (uses dist as distance to walk along line)
+  /// @brief Compute mean value along a line segment using fast axis-aligned traversal.
+  ///
+  /// Walks along the dominant axis direction and interpolates the perpendicular
+  /// coordinate for each sample. This is faster than walking along the actual
+  /// line direction.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points in pixels (default: 1).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -254,6 +339,13 @@ struct FastMean {
     return ret;
   }
 
+  /// @brief Compute mean and variance along a line using fast axis-aligned traversal.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] variance Computed variance of the sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points in pixels (default: 1).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(FT& variance, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -352,6 +444,13 @@ struct FastMean {
     return ret;
   }
 
+  /// @brief Collect all sample values along a line using fast axis-aligned traversal.
+  /// @tparam V Container type for output values (e.g., std::vector<FT>).
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] ret Output container to store sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] dist Distance between sample points in pixels (default: 1).
   template <class V, template <class> class PT>
   static inline void process(V& ret, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT dist = 1) {
     CV_Assert(cv::DataType<MT>::type == mag.type());
@@ -440,22 +539,49 @@ struct FastMean {
   }
 };
 
+/// @brief Fast mean computation along a line segment using sample count.
+///
+/// This struct wraps FastMean to provide sampling based on a specified number
+/// of samples rather than a fixed distance.
+/// @tparam FT Floating-point type for calculations (e.g., float, double).
+/// @tparam MT Matrix element type for the input image.
+/// @tparam IP Interpolator type (defaults to LinearInterpolator).
 template <class FT, class MT, class IP = LinearInterpolator<FT, MT>>
 struct FastMeanSampled {
-  typedef FT float_type;
-  typedef MT mat_type;
-  typedef IP interpolation_type;
+  typedef FT float_type;          ///< Floating-point type for calculations.
+  typedef MT mat_type;            ///< Matrix element type.
+  typedef IP interpolation_type;  ///< Interpolation policy type.
 
+  /// @brief Compute mean value along a line segment.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     return FastMean<FT, MT, IP>::process(mag, l, l.length() / floor(samples) - 1);
   }
 
+  /// @brief Compute mean value and variance along a line segment.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] variance Computed variance of the sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
+  /// @return Mean value of all samples along the line.
   template <template <class> class PT>
   static inline FT process(FT& variance, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     return FastMean<FT, MT, IP>::process(variance, mag, l, l.length() / floor(samples) - 1);
   }
 
+  /// @brief Collect all sample values along a line segment.
+  /// @tparam V Container type for output values.
+  /// @tparam PT Point template type (e.g., Vec2).
+  /// @param[out] ret Output container to store sampled values.
+  /// @param[in] mag Input image (magnitude or intensity).
+  /// @param[in] l Line segment to sample along.
+  /// @param[in] samples Number of samples to take along the line (default: 20).
   template <class V, template <class> class PT>
   static inline void process(V& ret, const cv::Mat& mag, const LineSegment<FT, PT>& l, FT samples = 20) {
     FastMean<FT, MT, IP>::process(ret, mag, l, l.length() / floor(samples) - 1);
@@ -463,10 +589,19 @@ struct FastMeanSampled {
 };
 
 
-//! helper to access templated mean function pointer for optimize
+/// @brief Helper struct for obtaining function pointers to mean computation functions.
+///
+/// This helper provides type aliases for function pointers to the templated mean
+/// functions, enabling their use in optimization routines that require function
+/// pointers as parameters.
+/// @tparam FT Floating-point type for calculations.
+/// @tparam PT Point template type (e.g., Vec2).
 template <class FT, template <class> class PT>
 struct MeanHelper {
+  /// Function pointer type for mean computation.
   typedef FT (*func_type)(const cv::Mat&, const LineSegment<FT, PT>&, FT param);
+
+  /// Function pointer type for mean computation with variance output.
   typedef FT (*func_type_variance)(FT&, const cv::Mat&, const LineSegment<FT, PT>&, FT param);
 };
 

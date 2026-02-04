@@ -1,3 +1,14 @@
+/// @file poly_test.cpp
+/// @brief Polygon operations and manipulations.
+///
+/// Demonstrates polygon primitive operations:
+/// - Polygon construction and transformation
+/// - Area and perimeter calculations
+/// - Point-in-polygon tests
+/// - Polygon rendering and filling
+///
+/// @usage ./poly_test
+
 #include <geometry/polygon.hpp>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/opencv.hpp>

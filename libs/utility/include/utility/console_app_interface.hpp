@@ -1,3 +1,6 @@
+/// @file console_app_interface.hpp
+/// @brief Abstract base interface for console applications.
+
 #pragma once
 
 #include <string>
@@ -5,41 +8,53 @@
 
 namespace lsfm {
 
-/// @brief Simple console app base interface
+/// @brief Abstract interface for console applications.
+///
+/// Provides structure for command-line applications with argument parsing
+/// and application lifecycle management.
 class ConsoleAppInterface {
  public:
+  /// @brief Construct with application metadata.
+  /// @param name Application name.
+  /// @param description Short description.
+  /// @param version Version string.
   explicit ConsoleAppInterface(std::string name, std::string description = "", std::string version = "1.0.0")
       : name_(std::move(name)), description_(std::move(description)), version_(std::move(version)) {}
 
   virtual ~ConsoleAppInterface() = default;
 
-  /// @brief Main entry point for application
-  /// @param argc main argc
-  /// @param argv main argv
-  /// @return exit code
+  /// @brief Main entry point.
+  /// @param argc Argument count from main().
+  /// @param argv Argument values from main().
+  /// @return Exit code.
   int run(int argc, char** argv);
 
-  /// @brief Return application name
+  /// @brief Get application name.
   const std::string& name() const { return name_; }
-  /// @brief Return application description
+
+  /// @brief Get application description.
   const std::string& description() const { return description_; }
-  /// @brief Return application version
+
+  /// @brief Get application version.
   const std::string& version() const { return version_; }
 
  protected:
-  /// @brief Define parse arguments
+  /// @brief Define command-line arguments.
   virtual void defineArgs() = 0;
 
-  /// @brief Parse and eval arguments. If invalid, should print help and exit
+  /// @brief Parse command-line arguments.
+  /// @param argc Argument count.
+  /// @param argv Argument values.
   virtual void parseArgs(int argc, char** argv) = 0;
 
-  /// @brief Run application
+  /// @brief Execute application logic.
+  /// @return Exit code.
   virtual int run() = 0;
 
  private:
-  std::string name_{};
-  std::string description_{};
-  std::string version_{"1.0.0"};
+  std::string name_{};            ///< Application name.
+  std::string description_{};     ///< Application description.
+  std::string version_{"1.0.0"};  ///< Application version.
 };
 
 }  // namespace lsfm

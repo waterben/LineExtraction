@@ -1,3 +1,14 @@
+/// @file stereo_pluecker_test.cpp
+/// @brief Plücker line representation for stereo geometry.
+///
+/// Demonstrates Plücker coordinates for 3D line representation:
+/// - Plücker line construction from 3D points
+/// - Line triangulation from stereo views
+/// - Plücker line intersection and distance
+/// - Visualization of triangulated 3D lines
+///
+/// @usage ./stereo_pluecker_test
+
 #include <geometry/draw.hpp>
 #include <geometry/stereocv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

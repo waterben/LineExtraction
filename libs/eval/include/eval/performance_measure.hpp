@@ -21,7 +21,7 @@ struct PerformanceResult {
 /// @brief Timing strategy interface (for dependency injection)
 ///
 /// Abstracts the timing mechanism, allowing different backends:
-/// - std::chrono (default, portable)
+/// @file performance_measure.hpp
 /// - OpenCV cv::getTickCount() (for CV applications)
 /// - Custom high-resolution timers
 struct TimingStrategy {

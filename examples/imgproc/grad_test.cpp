@@ -1,3 +1,16 @@
+/// @file grad_test.cpp
+/// @brief Gradient operators (Sobel, RCMG, SUSAN) comparison.
+///
+/// Benchmarks and compares various gradient computation methods:
+/// - Sobel/Scharr derivatives
+/// - RCMG (Robust Color Morphological Gradient)
+/// - SUSAN edge/corner detector
+///
+/// Includes automatic threshold estimation using Otsu's method.
+///
+/// @usage ./grad_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <edge/threshold_estimator.hpp>
 #include <imgproc/derivative_gradient.hpp>

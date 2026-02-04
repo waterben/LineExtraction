@@ -40,6 +40,10 @@
 //M*/
 
 
+/// @file StereoLineFilter.hpp
+/// @brief Stereo line filtering with geometric constraints.
+/// Filters stereo line matches using epipolar geometry and spatial binning.
+
 #pragma once
 
 #include <geometry/line.hpp>

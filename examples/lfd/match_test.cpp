@@ -1,3 +1,17 @@
+/// @file match_test.cpp
+/// @brief Pairwise line matching with LBD descriptors.
+///
+/// Demonstrates comprehensive line matching pipeline:
+/// - LSD line segment detection
+/// - LBD (Line Band Descriptor) creation
+/// - Global rotation filtering for outlier removal
+/// - Pairwise matching with geometric consistency
+/// - Match visualization and validation
+///
+/// @usage ./match_test [left_image] [right_image]
+/// @param left_image Optional path to left stereo image
+/// @param right_image Optional path to right stereo image
+
 #include <geometry/draw.hpp>
 #include <lfd/FeatureDescriptorLBD.hpp>
 #include <lfd/FeatureMatcher.hpp>

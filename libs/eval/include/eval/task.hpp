@@ -1,3 +1,7 @@
+/// @file task.hpp
+/// @brief Base task and task runner interfaces for evaluation framework.
+/// Provides abstract base classes for implementing evaluation tasks that can be run in loops.
+
 #pragma once
 
 #include <utility/string_table.hpp>
@@ -8,17 +12,17 @@
 
 namespace lsfm {
 
-/// @brief Generic input data struct
-///
-/// Base class for all input data types. Contains common fields
-/// that all data sources need. Extend this for domain-specific data.
+/// @brief Generic input data struct for evaluation tasks.
+/// Base class for all input data types containing common fields.
+/// Extend this for domain-specific input data.
 struct GenericInputData {
   GenericInputData() = default;
+  /// @brief Construct with a name.
+  /// @param n Name of the input data source
   explicit GenericInputData(const std::string& n) : name(n) {}
   virtual ~GenericInputData() = default;
 
-  /// Name of source
-  std::string name{};
+  std::string name{};  ///< Name of data source
 };
 
 /// @brief Type-erased task interface for Python binding

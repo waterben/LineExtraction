@@ -1,3 +1,15 @@
+/// @file pc_sqf.hpp
+/// @brief Phase Congruency using Spherical Quadrature Filters.
+///
+/// Implements phase congruency computation using Spherical Quadrature Filters
+/// (difference of Poisson kernels) in both frequency and spatial domains.
+/// Includes variants with Laplacian-based phase congruency for improved
+/// edge localization.
+/// Contains:
+/// - PCSqf: Phase Congruency with SQF in frequency domain
+/// - PCLSqf: Phase Congruency with Laplacian in frequency domain
+/// - PCLSq: Phase Congruency with Laplacian in spatial domain
+
 #pragma once
 
 #include <imgproc/laplace.hpp>
@@ -8,18 +20,42 @@
 #include <utility/matlab_helpers.hpp>
 
 namespace lsfm {
+
+/// @brief Phase Congruency detector using Spherical Quadrature Filters.
+///
+/// Implements multi-scale phase congruency using difference of Poisson (DoP)
+/// kernels in the frequency domain. This approach combines the benefits of
+/// spherical quadrature filters with Kovesi-style phase congruency weighting.
+/// Features:
+/// - Multi-scale filter bank with DoP kernels
+/// - Frequency spread weighting
+/// - Automatic noise estimation
+/// - FFT-based processing for efficiency
+/// @tparam IT Input image pixel type.
+/// @tparam FT Floating-point type for computations.
+/// @tparam P Phase computation policy (default: Polar).
+/// @see QuadratureSF Base spherical quadrature filter
+/// @see PhaseCongruencyI Phase congruency interface
 template <class IT = uchar, class FT = float, template <typename, typename> class P = Polar>
 class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
-  std::vector<cv::Mat_<std::complex<FT>>> fo_;
-  std::vector<cv::Mat_<FT>> fe_;
+  std::vector<cv::Mat_<std::complex<FT>>> fo_;  ///< Odd filters per scale.
+  std::vector<cv::Mat_<FT>> fe_;                ///< Even filters per scale.
 
-  cv::Mat_<FT> weight, sumAn, zeros;
+  cv::Mat_<FT> weight;  ///< Frequency spread weighting.
+  cv::Mat_<FT> sumAn;   ///< Sum of amplitudes across scales.
+  cv::Mat_<FT> zeros;   ///< Zero matrix for max operations.
 
-  mutable bool pc_done_;
-  mutable cv::Mat_<FT> pc_;
+  mutable bool pc_done_;     ///< Phase congruency computed flag.
+  mutable cv::Mat_<FT> pc_;  ///< Cached phase congruency.
 
-  FT k_, g_, cutOff_, dGain_, nMethod_, eps_, T_;
-  int nscale_;
+  FT k_;        ///< Noise threshold multiplier.
+  FT g_;        ///< Frequency spread weighting gain.
+  FT cutOff_;   ///< Frequency spread weighting cutoff.
+  FT dGain_;    ///< Frequency deviation penalty.
+  FT nMethod_;  ///< Noise estimation method.
+  FT eps_;      ///< Small value to avoid division by zero.
+  FT T_;        ///< Estimated noise threshold.
+  int nscale_;  ///< Number of filter scales.
 
   using QuadratureSF<IT, FT, P>::imgf_;
 
@@ -45,6 +81,12 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   using QuadratureSF<IT, FT, P>::phase_done_;
   using QuadratureSF<IT, FT, P>::even_done_;
 
+  /// @brief Update filter bank for new image size.
+  ///
+  /// Creates DoP filters for each scale in frequency domain.
+  /// @param img Input image (for size).
+  /// @param force If true, always rebuild; if false, only if size changed.
+  /// @return True if filters were updated, false otherwise.
   bool updateFilter(const cv::Mat img, bool force = true) {
     // if force is of, only renew if image size has changed
     if (!force && img.rows == rows_ && img.cols == cols_) return false;
@@ -71,6 +113,7 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     return true;
   }
 
+  /// @brief Initialize ValueManager parameters.
   void init() {
     this->add("grad_numScales", std::bind(&PCSqf::numScales, this, std::placeholders::_1), "Number of scales.");
     this->add("grad_k", std::bind(&PCSqf::k, this, std::placeholders::_1), "k.");
@@ -83,20 +126,32 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
 
 
  public:
-  typedef IT img_type;
-  typedef FT grad_type;
-  typedef FT mag_type;
-  typedef FT energy_type;
-  typedef FT dir_type;
-  typedef FT phase_type;
+  typedef IT img_type;     ///< Input image type.
+  typedef FT grad_type;    ///< Gradient type.
+  typedef FT mag_type;     ///< Magnitude type.
+  typedef FT energy_type;  ///< Energy type.
+  typedef FT dir_type;     ///< Direction type.
+  typedef FT phase_type;   ///< Phase type.
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<FT> GradientRange;
-  typedef Range<FT> MagnitudeRange;
-  typedef Range<FT> EnergyRange;
-  typedef Range<FT> DirectionRange;
-  typedef Range<FT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Intensity value range.
+  typedef Range<FT> GradientRange;   ///< Gradient value range.
+  typedef Range<FT> MagnitudeRange;  ///< Magnitude value range.
+  typedef Range<FT> EnergyRange;     ///< Energy value range.
+  typedef Range<FT> DirectionRange;  ///< Direction value range.
+  typedef Range<FT> PhaseRange;      ///< Phase value range.
 
+  /// @brief Construct Phase Congruency detector with SQF.
+  /// @param scale Base filter scale (default: 1).
+  /// @param muls Scale multiplier (default: 2).
+  /// @param kernel_spacing Kernel sampling spacing (default: 1).
+  /// @param nscale Number of scales (default: 4).
+  /// @param kn Noise threshold multiplier (default: 3).
+  /// @param cutOff Frequency spread weighting cutoff (default: 0.5).
+  /// @param g Frequency spread weighting gain (default: 10).
+  /// @param deviationGain Frequency deviation penalty (default: 1.5).
+  /// @param noiseMethod Noise estimation: -1=median, -2=Rayleigh, >=0=fixed.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCSqf(FT scale = 1,
         FT muls = 2,
         FT kernel_spacing = 1,
@@ -127,6 +182,19 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     init();
   }
 
+  /// @brief Construct with scale-space parameters.
+  /// @param scale Base scale.
+  /// @param l Scale ratio (lambda).
+  /// @param k Scale index.
+  /// @param kernel_spacing Kernel sampling spacing.
+  /// @param nscale Number of scales.
+  /// @param kn Noise threshold multiplier.
+  /// @param cutOff Frequency spread weighting cutoff.
+  /// @param g Frequency spread weighting gain.
+  /// @param deviationGain Frequency deviation penalty.
+  /// @param noiseMethod Noise estimation method.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCSqf(FT scale,
         FT l,
         int k,
@@ -158,6 +226,10 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     init();
   }
 
+  /// @brief Construct from name-value parameter list.
+  /// @param options Vector of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCSqf(const ValueManager::NameValueVector& options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -181,6 +253,10 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     value(options);
   }
 
+  /// @brief Construct from initializer list of parameters.
+  /// @param options Initializer list of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCSqf(ValueManager::InitializerList options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -204,6 +280,9 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     value(options);
   }
 
+  /// @brief Get or set number of filter scales.
+  /// @param ns Optional new value.
+  /// @return Current number of scales.
   Value numScales(const Value& ns = Value::NAV()) {
     if (ns.type()) {
       nscale_ = ns;
@@ -211,27 +290,56 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     }
     return nscale_;
   }
+
+  /// @brief Get or set noise threshold multiplier.
+  /// @param kv Optional new value.
+  /// @return Current k value.
   Value k(const Value& kv = Value::NAV()) {
     if (kv.type()) k_ = kv;
     return k_;
   }
+
+  /// @brief Get or set frequency spread weighting cutoff.
+  /// @param cutOff Optional new value.
+  /// @return Current cutoff.
   Value cutOff(const Value& cutOff = Value::NAV()) {
     if (cutOff.type()) cutOff_ = cutOff;
     return cutOff_;
   }
+
+  /// @brief Get or set frequency spread weighting gain.
+  /// @param gv Optional new value.
+  /// @return Current g value.
   Value g(const Value& gv = Value::NAV()) {
     if (gv.type()) g_ = gv;
     return g_;
   }
+
+  /// @brief Get or set frequency deviation penalty.
+  /// @param g Optional new value.
+  /// @return Current deviation gain.
   Value deviationGain(const Value& g = Value::NAV()) {
     if (g.type()) dGain_ = g;
     return dGain_;
   }
+
+  /// @brief Get or set noise estimation method.
+  ///
+  /// - -1: Median-based estimation
+  /// - -2: Rayleigh distribution mode
+  /// - >= 0: Fixed threshold value
+  /// @param n Optional new value.
+  /// @return Current noise method.
   Value noiseMethod(const Value& n = Value::NAV()) {
     if (n.type()) nMethod_ = n;
     return nMethod_;
   }
 
+  /// @brief Process an image to compute phase congruency.
+  ///
+  /// Applies multi-scale DoP filter bank, accumulates responses,
+  /// estimates noise, and computes frequency spread weighting.
+  /// @param[in] img Input image.
   virtual void process(const cv::Mat& img) {
     cv::Mat_<FT> e, ox, oy, An, maxAn, tmp;
     cv::Mat_<std::complex<FT>> tmpc;
@@ -313,6 +421,11 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     }
   }
 
+  /// @brief Get phase congruency measure.
+  ///
+  /// Computes weighted, noise-compensated phase congruency:
+  /// PC = weight * (1 - deviation) * (energy - T) / energy
+  /// @return Phase congruency image [0, 1].
   cv::Mat phaseCongruency() const {
     if (!pc_done_) {
       this->energy();
@@ -328,14 +441,21 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
     return pc_;
   }
 
+  /// @brief Get phase congruency value range.
+  /// @return [0, 1].
   EnergyRange phaseCongruencyRange() const { return EnergyRange(0, 1); }
 
+  /// @brief Convert threshold percentage to phase congruency value.
+  /// @param val Threshold percentage [0, 1].
+  /// @return Threshold value.
   inline FT phaseCongruencyThreshold(double val) const { return static_cast<FT>(val); }
 
-  //! get name of gradient operator
+  /// @brief Get the name of the detector.
+  /// @return "pc_sqf".
   virtual std::string name() const { return "pc_sqf"; }
 
-  //! generic interface to get processed data
+  /// @brief Get all filter results as a map.
+  /// @return Map of result names to FilterData.
   virtual FilterResults results() const {
     FilterResults ret;
     ret["even"] = FilterData(this->even(), this->evenRange());
@@ -369,15 +489,40 @@ class PCSqf : public PhaseCongruencyI<FT>, public QuadratureSF<IT, FT, P> {
   using QuadratureSF<IT, FT, P>::normType;
 };
 
+/// @brief Phase Congruency with Laplacian using SQF in frequency domain.
+///
+/// Extends QuadratureSF with scale-derivative filters to compute the
+/// Laplacian of phase congruency. This provides improved edge localization
+/// through zero-crossing detection.
+/// The Laplacian is computed as:
+/// L = even * d(odd)/ds - odd * d(even)/ds
+/// @tparam IT Input image pixel type.
+/// @tparam FT Floating-point type for computations.
+/// @tparam P Phase computation policy (default: Polar).
+/// @see QuadratureSF Base spherical quadrature filter
+/// @see PhaseCongruencyLaplaceI Laplacian interface
 template <class IT = uchar, class FT = float, template <typename, typename> class P = Polar>
 class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P> {
  public:
-  using QuadratureSF<IT, FT, P>::PI2;
+  using QuadratureSF<IT, FT, P>::PI2;  ///< 2*PI constant.
 
+  /// @brief Scale-derivative of complex odd filter (frequency domain).
+  /// @param u Frequency X coordinate.
+  /// @param v Frequency Y coordinate.
+  /// @param s Scale parameter.
+  /// @param m Scale multiplier.
+  /// @return Complex scale-derivative value.
   static inline std::complex<FT> docpfds(FT u, FT v, FT s, FT m) {
     FT a = -PI2 * std::sqrt(u * u + v * v) * s, b = m * std::exp(a * m) - std::exp(a);
     return std::complex<FT>(PI2 * -u * b, PI2 * v * b);
   }
+
+  /// @brief Scale-derivative of even filter (frequency domain).
+  /// @param u Frequency X coordinate.
+  /// @param v Frequency Y coordinate.
+  /// @param s Scale parameter.
+  /// @param m Scale multiplier.
+  /// @return Scale-derivative value.
   static inline FT dopfds(FT u, FT v, FT s, FT m) {
     FT a = PI2 * std::sqrt(u * u + v * v);
     return a * (m * std::exp(-a * s * m) - std::exp(-a * s));
@@ -403,12 +548,22 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
   using QuadratureSF<IT, FT, P>::oddRange_;
 
 
-  cv::Mat_<FT> dfe_;
-  cv::Mat_<std::complex<FT>> dfo_;
+  cv::Mat_<FT> dfe_;                ///< Scale-derivative of even filter.
+  cv::Mat_<std::complex<FT>> dfo_;  ///< Scale-derivative of odd filter.
 
-  mutable bool plaplace_done_;
-  mutable cv::Mat_<FT> oxds_, oyds_, eds_, lx_, ly_;
+  mutable bool plaplace_done_;  ///< Laplacian computed flag.
+  mutable cv::Mat_<FT> oxds_;   ///< d(odd_x)/ds.
+  mutable cv::Mat_<FT> oyds_;   ///< d(odd_y)/ds.
+  mutable cv::Mat_<FT> eds_;    ///< d(even)/ds.
+  mutable cv::Mat_<FT> lx_;     ///< Laplacian X component.
+  mutable cv::Mat_<FT> ly_;     ///< Laplacian Y component.
 
+  /// @brief Update filter bank for new image size.
+  ///
+  /// Creates both standard and scale-derivative filters.
+  /// @param img Input image (for size).
+  /// @param force If true, always rebuild; if false, only if size changed.
+  /// @return True if filters were updated, false otherwise.
   virtual bool updateFilter(const cv::Mat img, bool force = true) {
     // if force is of, only renew if image size has changed
     if (!force && img.rows == rows_ && img.cols == cols_) return false;
@@ -429,20 +584,26 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
 
 
  public:
-  typedef IT img_type;
-  typedef FT grad_type;
-  typedef FT mag_type;
-  typedef FT energy_type;
-  typedef FT dir_type;
-  typedef FT phase_type;
+  typedef IT img_type;     ///< Input image type.
+  typedef FT grad_type;    ///< Gradient type.
+  typedef FT mag_type;     ///< Magnitude type.
+  typedef FT energy_type;  ///< Energy type.
+  typedef FT dir_type;     ///< Direction type.
+  typedef FT phase_type;   ///< Phase type.
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<FT> GradientRange;
-  typedef Range<FT> MagnitudeRange;
-  typedef Range<FT> EnergyRange;
-  typedef Range<FT> DirectionRange;
-  typedef Range<FT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Intensity value range.
+  typedef Range<FT> GradientRange;   ///< Gradient value range.
+  typedef Range<FT> MagnitudeRange;  ///< Magnitude value range.
+  typedef Range<FT> EnergyRange;     ///< Energy value range.
+  typedef Range<FT> DirectionRange;  ///< Direction value range.
+  typedef Range<FT> PhaseRange;      ///< Phase value range.
 
+  /// @brief Construct Phase Congruency Laplacian detector (frequency domain).
+  /// @param scale Base filter scale (default: 1).
+  /// @param muls Scale multiplier (default: 2).
+  /// @param kernel_spacing Kernel sampling spacing (default: 1).
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSqf(FT scale = 1,
          FT muls = 2,
          FT kernel_spacing = 1,
@@ -458,6 +619,13 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
         lx_(),
         ly_() {}
 
+  /// @brief Construct with scale-space parameters.
+  /// @param scale Base scale.
+  /// @param l Scale ratio (lambda).
+  /// @param k Scale index.
+  /// @param kernel_spacing Kernel sampling spacing.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSqf(FT scale,
          FT l,
          int k,
@@ -474,6 +642,10 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
         lx_(),
         ly_() {}
 
+  /// @brief Construct from name-value parameter list.
+  /// @param options Vector of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSqf(const ValueManager::NameValueVector& options,
          img_type int_lower = std::numeric_limits<img_type>::lowest(),
          img_type int_upper = std::numeric_limits<img_type>::max())
@@ -487,6 +659,10 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
         lx_(),
         ly_() {}
 
+  /// @brief Construct from initializer list of parameters.
+  /// @param options Initializer list of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSqf(ValueManager::InitializerList options,
          img_type int_lower = std::numeric_limits<img_type>::lowest(),
          img_type int_upper = std::numeric_limits<img_type>::max())
@@ -500,11 +676,18 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
         lx_(),
         ly_() {}
 
+  /// @brief Process an image.
+  /// @param[in] img Input image.
   virtual void process(const cv::Mat& img) {
     plaplace_done_ = false;
     QuadratureSF<IT, FT, P>::process(img);
   }
 
+  /// @brief Get X and Y components of phase congruency Laplacian.
+  ///
+  /// Computes L = even * d(odd)/ds - odd * d(even)/ds
+  /// @param[out] pdsx Laplacian X component.
+  /// @param[out] pdsy Laplacian Y component.
   void pcLaplace(cv::Mat& pdsx, cv::Mat& pdsy) const {
     if (!plaplace_done_) {
       even();
@@ -546,32 +729,28 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
     pdsy = ly_;
   }
 
+  /// @brief Get phase congruency Laplacian magnitude.
+  /// @return sqrt(pclx^2 + pcly^2).
   inline cv::Mat pclMag() const {
     cv::Mat tmp;
     P<FT, FT>::magnitude(this->pclx(), this->pcly(), tmp);
     return tmp;
   }
 
+  /// @brief Get Laplacian value range.
+  /// @return Valid range for Laplacian values.
   EnergyRange pcLaplaceRange() const {
     FT val = evenRange_.upper * evenRange_.upper + oddRange_.upper * oddRange_.upper;
     return EnergyRange(-val, val);
   }
 
+  /// @brief Convert threshold percentage to Laplacian value.
+  /// @param val Threshold percentage [0, 1].
+  /// @return Threshold value.
   inline FT pcLaplaceThreshold(double val) const { return static_cast<FT>(pcLaplaceRange().size() * val * val); }
 
-  /*cv::Mat laplace() const {
-      return this->pclx()+this->pcly();
-  }
-
-  EnergyRange laplaceRange() const {
-      return pcLaplaceRange();
-  }
-
-  FT laplaceThreshold(double val) const {
-      return pcLaplaceThreshold(val);
-  }*/
-
-  //! generic interface to get processed data
+  /// @brief Get all filter results as a map.
+  /// @return Map of result names to FilterData.
   virtual FilterResults results() const {
     FilterResults ret;
     ret["even"] = FilterData(this->even(), this->evenRange());
@@ -587,9 +766,12 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
     return ret;
   }
 
-  //! get name of gradient operator
+  /// @brief Get the name of the detector.
+  /// @return "pcl_sqf".
   virtual std::string name() const { return "pcl_sqf"; }
 
+  /// @brief Get intensity value range.
+  /// @return Valid intensity range.
   virtual IntensityRange intensityRange() const { return QuadratureSF<IT, FT, P>::intensityRange(); }
 
   using QuadratureSF<IT, FT, P>::values;
@@ -612,15 +794,44 @@ class PCLSqf : public PhaseCongruencyLaplaceI<FT>, public QuadratureSF<IT, FT, P
   using QuadratureSF<IT, FT, P>::normType;
 };
 
+/// @brief Phase Congruency with Laplacian using SQF in spatial domain.
+///
+/// Implements phase congruency Laplacian computation using difference of
+/// Poisson (DoP) kernels with 2D convolution in the spatial domain.
+/// Provides the same functionality as PCLSqf but with spatial domain
+/// processing that may be more efficient for small kernels.
+/// The Laplacian is computed as:
+/// L = even * d(odd)/ds - odd * d(even)/ds
+/// @tparam IT Input image pixel type.
+/// @tparam GT Gradient output type.
+/// @tparam FT Floating-point type for computations.
+/// @tparam P Phase computation policy (default: Polar).
+/// @see QuadratureS Base spatial quadrature filter
+/// @see PhaseCongruencyLaplaceI Laplacian interface
+/// @see PCLSqf Frequency domain variant
 template <class IT = uchar, class GT = float, class FT = float, template <typename, typename> class P = Polar>
 class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT, P> {
  public:
-  using QuadratureS<IT, GT, FT, P>::createFilter;
+  using QuadratureS<IT, GT, FT, P>::createFilter;  ///< Filter creation function.
+
+  /// @brief Scale-derivative of complex odd filter (spatial domain).
+  /// @param x Spatial X coordinate.
+  /// @param y Spatial Y coordinate.
+  /// @param s Scale parameter.
+  /// @param m Scale multiplier.
+  /// @return Scale-derivative value.
   static inline FT docpds(FT x, FT y, FT s, FT m) {
     FT a = (s * s + x * x + y * y), b = (m * m * s * s + x * x + y * y);
     return (3 * m * m * s * x) / (2 * static_cast<FT>(CV_PI) * std::sqrt(b * b * b * b * b)) -
            (3 * s * x) / (2 * static_cast<FT>(CV_PI) * std::sqrt(a * a * a * a * a));
   }
+
+  /// @brief Scale-derivative of even filter (spatial domain).
+  /// @param x Spatial X coordinate.
+  /// @param y Spatial Y coordinate.
+  /// @param s Scale parameter.
+  /// @param m Scale multiplier.
+  /// @return Scale-derivative value.
   static inline FT dopds(FT x, FT y, FT s, FT m) {
     FT a = (s * s + x * x + y * y), b = (m * m * s * s + x * x + y * y);
     return 1 / (2 * static_cast<FT>(CV_PI) * std::sqrt(a * a * a)) -
@@ -630,10 +841,16 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
   }
 
  private:
-  cv::Mat_<FT> koxds_, koyds_, keds_;
+  cv::Mat_<FT> koxds_;  ///< Scale-derivative kernel for odd X.
+  cv::Mat_<FT> koyds_;  ///< Scale-derivative kernel for odd Y.
+  cv::Mat_<FT> keds_;   ///< Scale-derivative kernel for even.
 
-  mutable bool plaplace_done_;
-  mutable cv::Mat_<FT> oxds_, oyds_, eds_, lx_, ly_;
+  mutable bool plaplace_done_;  ///< Laplacian computed flag.
+  mutable cv::Mat_<FT> oxds_;   ///< d(odd_x)/ds.
+  mutable cv::Mat_<FT> oyds_;   ///< d(odd_y)/ds.
+  mutable cv::Mat_<FT> eds_;    ///< d(even)/ds.
+  mutable cv::Mat_<FT> lx_;     ///< Laplacian X component.
+  mutable cv::Mat_<FT> ly_;     ///< Laplacian Y component.
 
   using QuadratureS<IT, GT, FT, P>::img_;
 
@@ -651,6 +868,7 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
   using QuadratureS<IT, GT, FT, P>::evenRange_;
   using QuadratureS<IT, GT, FT, P>::anchor;
 
+  /// @brief Create convolution kernels including scale derivatives.
   virtual void create_kernels() {
     QuadratureS<IT, GT, FT, P>::create_kernels();
     koxds_ = createFilter(ksize_, kspacing_, scale_, muls_, docpds) * kscale_;
@@ -671,20 +889,28 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
 
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
-  typedef FT mag_type;
-  typedef FT energy_type;
-  typedef FT dir_type;
-  typedef FT phase_type;
+  typedef IT img_type;     ///< Input image type.
+  typedef GT grad_type;    ///< Gradient type.
+  typedef FT mag_type;     ///< Magnitude type.
+  typedef FT energy_type;  ///< Energy type.
+  typedef FT dir_type;     ///< Direction type.
+  typedef FT phase_type;   ///< Phase type.
 
-  typedef Range<IT> IntensityRange;
-  typedef Range<GT> GradientRange;
-  typedef Range<FT> MagnitudeRange;
-  typedef Range<FT> EnergyRange;
-  typedef Range<FT> DirectionRange;
-  typedef Range<FT> PhaseRange;
+  typedef Range<IT> IntensityRange;  ///< Intensity value range.
+  typedef Range<GT> GradientRange;   ///< Gradient value range.
+  typedef Range<FT> MagnitudeRange;  ///< Magnitude value range.
+  typedef Range<FT> EnergyRange;     ///< Energy value range.
+  typedef Range<FT> DirectionRange;  ///< Direction value range.
+  typedef Range<FT> PhaseRange;      ///< Phase value range.
 
+  /// @brief Construct Phase Congruency Laplacian detector (spatial domain).
+  /// @param scale Base filter scale (default: 1).
+  /// @param muls Scale multiplier (default: 2).
+  /// @param kernel_size Kernel size in pixels (default: 5).
+  /// @param kernel_spacing Kernel sampling spacing (default: 1).
+  /// @param kernel_scale Output scaling factor (default: 1).
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSq(FT scale = 1,
         FT muls = 2,
         int kernel_size = 5,
@@ -705,6 +931,15 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     create_kernels();
   }
 
+  /// @brief Construct with scale-space parameters.
+  /// @param scale Base scale.
+  /// @param l Scale ratio (lambda).
+  /// @param k Scale index.
+  /// @param kernel_size Kernel size in pixels.
+  /// @param kernel_spacing Kernel sampling spacing.
+  /// @param kernel_scale Output scaling factor.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSq(FT scale,
         FT l,
         int k,
@@ -726,6 +961,10 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     create_kernels();
   }
 
+  /// @brief Construct from name-value parameter list.
+  /// @param options Vector of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSq(const ValueManager::NameValueVector& options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -742,6 +981,10 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     create_kernels();
   }
 
+  /// @brief Construct from initializer list of parameters.
+  /// @param options Initializer list of parameter name-value pairs.
+  /// @param int_lower Minimum input intensity.
+  /// @param int_upper Maximum input intensity.
   PCLSq(ValueManager::InitializerList options,
         img_type int_lower = std::numeric_limits<img_type>::lowest(),
         img_type int_upper = std::numeric_limits<img_type>::max())
@@ -758,11 +1001,19 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     create_kernels();
   }
 
+  /// @brief Process an image.
+  /// @param[in] img Input image.
   virtual void process(const cv::Mat& img) {
     plaplace_done_ = false;
     QuadratureS<IT, GT, FT, P>::process(img);
   }
 
+  /// @brief Get X and Y components of phase congruency Laplacian.
+  ///
+  /// Computes L = even * d(odd)/ds - odd * d(even)/ds
+  /// using spatial convolution.
+  /// @param[out] pdsx Laplacian X component.
+  /// @param[out] pdsy Laplacian Y component.
   void pcLaplace(cv::Mat& pdsx, cv::Mat& pdsy) const {
     if (!plaplace_done_) {
       even();
@@ -792,32 +1043,28 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     pdsy = ly_;
   }
 
+  /// @brief Get phase congruency Laplacian magnitude.
+  /// @return sqrt(pclx^2 + pcly^2).
   inline cv::Mat pclMag() const {
     cv::Mat tmp;
     P<FT, FT>::magnitude(this->pclx(), this->pcly(), tmp);
     return tmp;
   }
 
+  /// @brief Get Laplacian value range.
+  /// @return Valid range for Laplacian values.
   EnergyRange pcLaplaceRange() const {
     FT val = evenRange_.upper * evenRange_.upper + oddRange().upper * oddRange().upper;
     return EnergyRange(-val, val);
   }
 
+  /// @brief Convert threshold percentage to Laplacian value.
+  /// @param val Threshold percentage [0, 1].
+  /// @return Threshold value.
   inline FT pcLaplaceThreshold(double val) const { return static_cast<FT>(pcLaplaceRange().size() * val * val); }
 
-  /*cv::Mat laplace() const {
-      return this->pclx()+this->pcly();
-  }
-
-  GradientRange laplaceRange() const {
-      return pcLaplaceRange();
-  }
-
-  GT laplaceThreshold(double val) const {
-      return static_cast<GT>(pcLaplaceThreshold(val));
-  }*/
-
-  //! generic interface to get processed data
+  /// @brief Get all filter results as a map.
+  /// @return Map of result names to FilterData.
   virtual FilterResults results() const {
     FilterResults ret;
     ret["even"] = FilterData(this->even(), this->evenRange());
@@ -833,9 +1080,12 @@ class PCLSq : public PhaseCongruencyLaplaceI<FT>, public QuadratureS<IT, GT, FT,
     return ret;
   }
 
-  //! get name of gradient operator
+  /// @brief Get the name of the detector.
+  /// @return "pcl_sq".
   virtual std::string name() const { return "pcl_sq"; }
 
+  /// @brief Get intensity value range.
+  /// @return Valid intensity range.
   virtual IntensityRange intensityRange() const { return QuadratureS<IT, GT, FT, P>::intensityRange(); }
 
   using QuadratureS<IT, GT, FT, P>::values;

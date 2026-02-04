@@ -1,3 +1,6 @@
+/// @file camera_utilities.hpp
+/// @brief Stereo camera calibration and rectification utilities.
+
 #pragma once
 
 #include <opencv/cv.h>
@@ -8,9 +11,12 @@
 
 namespace lsfm {
 
-
-//! Calculates the width of the black border on each side of the image, order: top, bottom, left, right
-//! Function has to be changed if any of the Borders reach more than one quater of the width/height into the image
+/// @brief Calculate black border width on each side of an image.
+/// @tparam MTYPE Pixel type.
+/// @param img Input image.
+/// @param[out] border Vector receiving border sizes [top, bottom, left, right].
+///
+/// Function assumes borders do not exceed one quarter of image dimensions.
 template <class MTYPE>
 void findBlackCroppingArea(const cv::Mat img, std::vector<int>& border) {
   cv::Mat upper =
@@ -59,7 +65,18 @@ void findBlackCroppingArea(const cv::Mat img, std::vector<int>& border) {
   }
 }
 
-//! Calculates Undistort-Rectify Map
+/// @brief Calculate stereo rectification maps from calibration files.
+/// @param intrinsic_filename Path to intrinsic calibration file.
+/// @param extrinsic_filename Path to extrinsic calibration file.
+/// @param img_size Image size to use for rectification.
+/// @param[out] P1 Left camera projection matrix.
+/// @param[out] P2 Right camera projection matrix.
+/// @param[out] map11 Left camera X remap matrix.
+/// @param[out] map12 Left camera Y remap matrix.
+/// @param[out] map21 Right camera X remap matrix.
+/// @param[out] map22 Right camera Y remap matrix.
+/// @param scaleFactor Scale factor for camera matrices (default: 1.0).
+/// @return 1 on success, -1 on failure.
 int stereoRectification(const std::string intrinsic_filename,
                         const std::string extrinsic_filename,
                         const cv::Size img_size,
@@ -111,6 +128,20 @@ int stereoRectification(const std::string intrinsic_filename,
   return 1;
 }
 
+/// @brief Calculate stereo rectification maps with preprocessing and output sizes.
+/// @param intrinsic_filename Path to intrinsic calibration file.
+/// @param extrinsic_filename Path to extrinsic calibration file.
+/// @param preprocessing_filename Path to preprocessing parameters file.
+/// @param[out] P1 Left camera projection matrix.
+/// @param[out] P2 Right camera projection matrix.
+/// @param[out] map11 Left camera X remap matrix.
+/// @param[out] map12 Left camera Y remap matrix.
+/// @param[out] map21 Right camera X remap matrix.
+/// @param[out] map22 Right camera Y remap matrix.
+/// @param[out] S1 Left image size.
+/// @param[out] S2 Right image size.
+/// @param scaleFactor Scale factor for camera matrices (default: 1.0).
+/// @return 1 on success, -1 on failure.
 int stereoRectification(const std::string intrinsic_filename,
                         const std::string extrinsic_filename,
                         const std::string preprocessing_filename,
@@ -139,6 +170,18 @@ int stereoRectification(const std::string intrinsic_filename,
                              scaleFactor);
 }
 
+/// @brief Calculate stereo rectification maps with preprocessing file.
+/// @param intrinsic_filename Path to intrinsic calibration file.
+/// @param extrinsic_filename Path to extrinsic calibration file.
+/// @param preprocessing_filename Path to preprocessing parameters file.
+/// @param[out] P1 Left camera projection matrix.
+/// @param[out] P2 Right camera projection matrix.
+/// @param[out] map11 Left camera X remap matrix.
+/// @param[out] map12 Left camera Y remap matrix.
+/// @param[out] map21 Right camera X remap matrix.
+/// @param[out] map22 Right camera Y remap matrix.
+/// @param scaleFactor Scale factor for camera matrices (default: 1.0).
+/// @return 1 on success, -1 on failure.
 int stereoRectification(const std::string intrinsic_filename,
                         const std::string extrinsic_filename,
                         const std::string preprocessing_filename,
@@ -155,17 +198,28 @@ int stereoRectification(const std::string intrinsic_filename,
                              map21, map22, S1, S2, scaleFactor);
 }
 
-/**
- * @brief The StereoPreprocessor class stores rectification information and is used to rectify images.
- */
-
+/// @brief Stereo image preprocessor for rectification and cropping.
+///
+/// Stores rectification information from calibration files and provides
+/// methods to undistort and crop stereo images.
 class StereoPreprocessor {
  public:
-  cv::Mat P1, P2, map11, map12, map21, map22;
-  cv::Size sizeFull, sizeCropped;
-  int croppingHeight, croppingWidth;
-  bool valid = false;
+  cv::Mat P1;            ///< Left camera projection matrix.
+  cv::Mat P2;            ///< Right camera projection matrix.
+  cv::Mat map11;         ///< Left camera X remap matrix.
+  cv::Mat map12;         ///< Left camera Y remap matrix.
+  cv::Mat map21;         ///< Right camera X remap matrix.
+  cv::Mat map22;         ///< Right camera Y remap matrix.
+  cv::Size sizeFull;     ///< Full image size before cropping.
+  cv::Size sizeCropped;  ///< Image size after cropping.
+  int croppingHeight;    ///< Vertical cropping amount.
+  int croppingWidth;     ///< Horizontal cropping amount.
+  bool valid = false;    ///< Whether initialization succeeded.
 
+  /// @brief Construct preprocessor from calibration files.
+  /// @param intrinsic_filename Path to intrinsic calibration file.
+  /// @param extrinsic_filename Path to extrinsic calibration file.
+  /// @param preprocessing_filename Path to preprocessing parameters file.
   StereoPreprocessor(const std::string intrinsic_filename,
                      const std::string extrinsic_filename,
                      const std::string preprocessing_filename) {
@@ -195,8 +249,14 @@ class StereoPreprocessor {
     valid = true;
   }
 
+  /// @brief Check if the preprocessor was initialized successfully.
+  /// @return true if valid, false otherwise.
   bool isValid() { return valid; }
 
+  /// @brief Undistort, rectify and crop a stereo image.
+  /// @param img Input image.
+  /// @param id Camera ID (0 = left, 1 = right).
+  /// @return Preprocessed image.
   cv::Mat preprocessImage(const cv::Mat img, const int id) {
     //            cvtColor(img,img,cv::COLOR_RGB2GRAY);
     cv::Mat img1, im_gray;

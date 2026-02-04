@@ -49,45 +49,59 @@
 
 namespace lsfm {
 
-//! Store derivative max values for intensity change of 1
-//! 1st max possible value for one direction
-//! 2nd max possible value if both direction are equaly included
-//! 3rd max possible value for second direction, if frist is max
+/// @brief Maximum derivative values for unit intensity change.
+///
+/// Stores the maximum possible derivative response values for a given operator
+/// when the intensity changes by 1. Used for normalization and thresholding.
+/// @tparam GT Gradient/derivative type (short, float, or double)
 template <class GT = short>
 struct DerivativeMax {
-  typedef GT grad_type;
+  typedef GT grad_type;  ///< Gradient value type
 
+  /// @brief Construct with maximum values.
+  /// @param mf Maximum when derivative is in primary direction only
+  /// @param ms Maximum when both directions contribute equally
+  /// @param mt Maximum for secondary direction when primary is at max
   DerivativeMax(grad_type mf = 0, grad_type ms = 0, grad_type mt = 0) : max_1st(mf), max_2nd(ms), max_3rd(mt) {}
-  grad_type max_1st, max_2nd, max_3rd;
+
+  grad_type max_1st;  ///< Max value for primary direction only
+  grad_type max_2nd;  ///< Max value when both directions equal
+  grad_type max_3rd;  ///< Max for secondary when primary is max
 };
 
-//! Derivative base class
-//! Use IT to define Image Type (8Bit, 16Bit, 32Bit, or floating type float or double)
-//! Use GT to define Derivative Type (short, float or double)
-//! For 8 Bit images use GT = short, for 16 Bit images float.
-//! For images with floating values, use IT and GT = image floating type (float or double)
+/// @brief Abstract base class for derivative operators.
+///
+/// Provides interface for computing image derivatives (gradients) using
+/// various convolution kernels (Sobel, Scharr, Prewitt, etc.).
+/// @tparam IT Input image pixel type (uchar for 8-bit, short for 16-bit)
+/// @tparam GT Gradient output type (short for 8-bit input, float for 16-bit)
 template <class IT = uchar, class GT = short>
 struct Derivative {
-  //! Compute derivative gx and gy from image
-  //! 8bit images should produce gx and gy of type short
-  //! 16bit/32bit images should produce gx and gy of type float
-  //! float images should produce gy and gy of type float/double
+  /// @brief Compute X and Y derivatives from input image.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
+  /// @note 8-bit images produce short output, 16/32-bit produce float output
   virtual void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const = 0;
 
-  //! get max derivative values for intensity change of 1
-  //! 1st max possible value for one direction
-  //! 2nd max possible value if both direction are equaly included
-  //! 3rd max possible value for second direction, if frist is max
+  /// @brief Get maximum derivative values for unit intensity change.
+  /// @return DerivativeMax containing max values for normalization
   virtual DerivativeMax<GT> max() const = 0;
 
-  //! get name of derivative operator
+  /// @brief Get the name of this derivative operator.
+  /// @return String identifier (e.g., "sobel", "scharr", "prewitt")
   virtual std::string name() const = 0;
 
   virtual ~Derivative() = default;
 };
 
 
-//! Roberts Derivative
+/// @brief Roberts cross derivative operator.
+///
+/// Computes diagonal derivatives using 2x2 cross-difference kernels.
+/// Fast but sensitive to noise due to small kernel size.
+/// @tparam IT Input image pixel type
+/// @tparam GT Gradient output type (default: short)
 template <class IT, class GT = short>
 class RobertsDerivative : public Derivative<IT, GT> {
   cv::Mat kx, ky;
@@ -95,9 +109,12 @@ class RobertsDerivative : public Derivative<IT, GT> {
   cv::Point anchor;
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
+  typedef IT img_type;   ///< Input image pixel type
+  typedef GT grad_type;  ///< Gradient output type
 
+  /// @brief Construct Roberts derivative operator.
+  ///
+  /// Initializes 2x2 diagonal difference kernels.
   RobertsDerivative() : kx(), ky(), da(), bc(), anchor(0, 0) {
     kx.create(2, 2, cv::DataType<GT>::type);
     kx.at<GT>(0, 0) = -1;
@@ -112,6 +129,10 @@ class RobertsDerivative : public Derivative<IT, GT> {
     ky.at<GT>(1, 0) = -1;
   }
 
+  /// @brief Compute Roberts cross derivatives.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
   void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const {
     cv::filter2D(img, da, cv::DataType<GT>::type, kx, anchor, 0, cv::BORDER_REFLECT_101);
     cv::filter2D(img, bc, cv::DataType<GT>::type, ky, anchor, 0, cv::BORDER_REFLECT_101);
@@ -121,22 +142,33 @@ class RobertsDerivative : public Derivative<IT, GT> {
   }
 
 
+  /// @brief Get maximum derivative values.
+  /// @return DerivativeMax with values (2, 1, 0)
   DerivativeMax<GT> max() const { return DerivativeMax<GT>(2, 1, 0); }
 
-  //! get name of derivative operator
+  /// @brief Get operator name.
+  /// @return "roberts"
   std::string name() const { return "roberts"; }
 };
 
-//! Prewitt Derivative
+/// @brief Prewitt derivative operator.
+///
+/// Uses 3x3 separable kernel with uniform smoothing perpendicular to
+/// the derivative direction. Simple and fast with moderate noise reduction.
+/// @tparam IT Input image pixel type
+/// @tparam GT Gradient output type (default: short)
 template <class IT, class GT = short>
 class PrewittDerivative : public Derivative<IT, GT> {
   cv::Mat kx, ky;
   cv::Point anchor;
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
+  typedef IT img_type;   ///< Input image pixel type
+  typedef GT grad_type;  ///< Gradient output type
 
+  /// @brief Construct Prewitt derivative operator.
+  ///
+  /// Initializes 3x3 separable kernels with uniform weights.
   PrewittDerivative() : kx(), ky(), anchor(-1, -1) {
     kx.create(3, 1, cv::DataType<GT>::type);
     kx.at<GT>(0) = -1;
@@ -148,21 +180,33 @@ class PrewittDerivative : public Derivative<IT, GT> {
     ky.at<GT>(2) = 1;
   }
 
-
+  /// @brief Compute Prewitt derivatives.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
   void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const {
     // std::cout << "prewitt: " << kx << "; " << ky << std::endl;
     cv::sepFilter2D(img, gx, cv::DataType<GT>::type, kx, ky, anchor, 0, cv::BORDER_REFLECT_101);
     cv::sepFilter2D(img, gy, cv::DataType<GT>::type, ky, kx, anchor, 0, cv::BORDER_REFLECT_101);
   }
 
+  /// @brief Get maximum derivative values.
+  /// @return DerivativeMax with values (3, 2, 1)
   DerivativeMax<GT> max() const { return DerivativeMax<GT>(3, 2, 1); }
 
-  //! get name of derivative operator
+  /// @brief Get operator name.
+  /// @return "prewitt"
   std::string name() const { return "prewitt"; }
 };
 
 
-//! Sobel Derivative
+/// @brief Sobel derivative operator with configurable kernel size.
+///
+/// Uses separable Gaussian-weighted kernels for noise-robust gradient estimation.
+/// The most commonly used derivative operator with good balance of accuracy and
+/// noise reduction. Supports kernel sizes from 3 to 31.
+/// @tparam IT Input image pixel type (default: uchar)
+/// @tparam GT Gradient output type (default: short)
 template <class IT = uchar, class GT = short>
 class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
   cv::Mat kx, ky;
@@ -171,26 +215,35 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
   int ksize_;
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
+  typedef IT img_type;   ///< Input image pixel type
+  typedef GT grad_type;  ///< Gradient output type
 
+  /// @brief Construct Sobel derivative operator.
+  /// @param kernel_size Kernel size (3-31, must be odd, default: 3)
   SobelDerivative(int kernel_size = 3) : kx(), ky(), gm(4, 3, 2), anchor(-1, -1), ksize_(0) {
     this->add("grad_kernel_size", std::bind(&SobelDerivative<IT, GT>::valueKernelSize, this, std::placeholders::_1),
               "Kernel size for Sobel-Operator.");
     kernelSize(kernel_size);
   }
 
+  /// @brief Value accessor for kernel size (for ValueManager).
+  /// @param ks New kernel size value (optional)
+  /// @return Current kernel size
   Value valueKernelSize(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSize(ks.getInt());
     return ksize_;
   }
 
-  //! Get kernel size
+  /// @brief Get current kernel size.
+  /// @return Kernel size (3, 5, 7, ..., 31)
   int kernelSize() const { return ksize_; }
 
 
-  //! Set kernel size (range 3-31, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like float or double
+  /// @brief Set kernel size.
+  ///
+  /// Larger kernels provide more noise reduction but less localization.
+  /// @param ks New kernel size (3-31, odd values only, even values rounded up)
+  /// @note Large kernels require larger GT type (float or double)
   void kernelSize(int ks) {
     if (ksize_ == ks) return;
     if (ks < 3) ks = 3;
@@ -216,49 +269,75 @@ class SobelDerivative : public Derivative<IT, GT>, public ValueManager {
     ksize_ = ks;
   }
 
+  /// @brief Compute Sobel derivatives.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
   void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const {
     // std::cout << "sobel: " << kx << "; " << ky << std::endl;
     cv::sepFilter2D(img, gx, cv::DataType<GT>::type, kx, ky, anchor, 0, cv::BORDER_REFLECT_101);
     cv::sepFilter2D(img, gy, cv::DataType<GT>::type, ky, kx, anchor, 0, cv::BORDER_REFLECT_101);
   }
 
-
+  /// @brief Get maximum derivative values.
+  /// @return DerivativeMax computed for current kernel size
   DerivativeMax<GT> max() const { return gm; }
 
-  //! get name of derivative operator
+  /// @brief Get operator name.
+  /// @return "sobel"
   std::string name() const { return "sobel"; }
 };
 
-//! Scharr Derivative
+/// @brief Scharr derivative operator.
+///
+/// Optimized 3x3 kernel providing more rotational symmetry than Sobel.
+/// Better approximation to true image gradient at the cost of fixed kernel size.
+/// @tparam IT Input image pixel type (default: uchar)
+/// @tparam GT Gradient output type (default: short)
 template <class IT = uchar, class GT = short>
 class ScharrDerivative : public Derivative<IT, GT> {
   cv::Mat kx, ky;
   cv::Point anchor;
 
  public:
-  typedef IT img_type;
-  typedef GT grad_type;
+  typedef IT img_type;   ///< Input image pixel type
+  typedef GT grad_type;  ///< Gradient output type
 
+  /// @brief Construct Scharr derivative operator.
+  ///
+  /// Uses optimized 3x3 kernel with weights [-3, 0, 3] and [3, 10, 3].
   ScharrDerivative() : kx(), ky(), anchor(-1, -1) {
     cv::getDerivKernels(kx, ky, 1, 0, -1, false, std::max<int>(CV_32F, cv::DataType<GT>::type));
     kx.convertTo(kx, cv::DataType<GT>::type);
     ky.convertTo(ky, cv::DataType<GT>::type);
   }
 
+  /// @brief Compute Scharr derivatives.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
   void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const {
     // std::cout << "scharr: " << kx << "; " << ky << std::endl;
     cv::sepFilter2D(img, gx, cv::DataType<GT>::type, kx, ky, anchor, 0, cv::BORDER_REFLECT_101);
     cv::sepFilter2D(img, gy, cv::DataType<GT>::type, ky, kx, anchor, 0, cv::BORDER_REFLECT_101);
   }
 
+  /// @brief Get maximum derivative values.
+  /// @return DerivativeMax with values (16, 13, 10)
   DerivativeMax<GT> max() const { return DerivativeMax<GT>(16, 13, 10); }
 
-  //! get name of derivative operator
+  /// @brief Get operator name.
+  /// @return "scharr"
   std::string name() const { return "scharr"; }
 };
 
 
-//! Gaussian Derivative
+/// @brief Gaussian derivative operator with scale-space support.
+///
+/// Computes first derivative of Gaussian for scale-space edge detection.
+/// Configurable kernel size, range (sigma-equivalent), and scale factor.
+/// @tparam IT Input image pixel type (default: uchar)
+/// @tparam GT Gradient output type (default: short)
 template <class IT = uchar, class GT = short>
 class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   cv::Mat kx, ky;
@@ -267,6 +346,10 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   int ksize_;
   double range_, scale_;
 
+  /// @brief Create Gaussian derivative kernels.
+  /// @param ksize Kernel size
+  /// @param range Value range (inversely related to sigma)
+  /// @param scale Scaling factor for kernel values
   void create_kernel(int ksize, double range, double scale) {
     kx = gaussianD1<double>(ksize, range);
     kx *= std::sqrt(scale);
@@ -296,6 +379,13 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   }
 
  public:
+  typedef IT img_type;   ///< Input image pixel type
+  typedef GT grad_type;  ///< Gradient output type
+
+  /// @brief Construct Gaussian derivative operator.
+  /// @param kernel_size Kernel size (3-99, must be odd, default: 5)
+  /// @param range Value range parameter (larger = narrower Gaussian, default: 3)
+  /// @param scale Scaling factor for output (default: 1)
   GaussianDerivative(int kernel_size = 5, double range = 3, double scale = 1)
       : kx(), ky(), gm(0, 0, 0), anchor(-1, -1), ksize_(0), range_(range), scale_(scale) {
     CV_Assert(kernel_size > 2 && range > 0 && scale > 0);
@@ -309,16 +399,21 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
     kernelSize(kernel_size);
   }
 
+  /// @brief Value accessor for kernel size (for ValueManager).
+  /// @param ks New kernel size value (optional)
+  /// @return Current kernel size
   Value valueKernelSize(const Value& ks = Value::NAV()) {
     if (ks.type()) kernelSize(ks);
     return ksize_;
   }
 
-  //! get kernel size
+  /// @brief Get current kernel size.
+  /// @return Kernel size (3, 5, 7, ..., 99)
   int kernelSize() const { return ksize_; }
 
-  //! set kernel size (range 3-99, has to be odd, even will be corrected to ksize+1)
-  //! Note: large kernels needs larger GT type like int or long long int
+  /// @brief Set kernel size.
+  /// @param ks New kernel size (3-99, odd values only)
+  /// @note Large kernels may require larger GT type (int or long long)
   void kernelSize(int ks) {
     if (ks == ksize_) return;
 
@@ -330,44 +425,65 @@ class GaussianDerivative : public Derivative<IT, GT>, public ValueManager {
   }
 
 
+  /// @brief Value accessor for range (for ValueManager).
+  /// @param r New range value (optional)
+  /// @return Current range value
   Value valueRange(const Value& r = Value::NAV()) {
     if (r.type()) range(r);
     return range_;
   }
 
-  //! get range
+  /// @brief Get current range parameter.
+  /// @return Range value (inversely related to sigma)
   double range() const { return range_; }
-  //! set range (range 0-X), 0: determine range by kernel size and sigma
+
+  /// @brief Set range parameter.
+  ///
+  /// Larger range values produce narrower Gaussians (smaller sigma equivalent).
+  /// @param r New range value (must be > 0)
   void range(double r) {
     if (r <= 0 || r == range_) return;
     create_kernel(ksize_, r, scale_);
     range_ = r;
   }
 
+  /// @brief Value accessor for scale (for ValueManager).
+  /// @param s New scale value (optional)
+  /// @return Current scale value
   Value valueScale(const Value& s = Value::NAV()) {
     if (s.type()) scale(s);
     return scale_;
   }
 
-  //! get scale
+  /// @brief Get current scale factor.
+  /// @return Scale multiplier for kernel values
   double scale() const { return scale_; }
-  //! set scale (range 0-X), 0: no scaling
-  //! Will compute factor beween greates value in kernel and scale value and scale
-  //! up the kernel by this factor
+
+  /// @brief Set scale factor.
+  ///
+  /// Scales the kernel values to control output magnitude range.
+  /// @param sc New scale value (must be > 0)
   void scale(double sc) {
     if (sc <= 0 || sc == scale_) return;
     create_kernel(ksize_, range_, sc);
     scale_ = sc;
   }
 
+  /// @brief Compute Gaussian derivatives.
+  /// @param img Input grayscale image
+  /// @param[out] gx Output X-direction derivative
+  /// @param[out] gy Output Y-direction derivative
   void process(const cv::Mat& img, cv::Mat& gx, cv::Mat& gy) const {
     cv::sepFilter2D(img, gx, cv::DataType<GT>::type, kx, ky, anchor, 0, cv::BORDER_REFLECT_101);
     cv::sepFilter2D(img, gy, cv::DataType<GT>::type, ky, kx, anchor, 0, cv::BORDER_REFLECT_101);
   }
 
+  /// @brief Get maximum derivative values.
+  /// @return DerivativeMax computed for current parameters
   DerivativeMax<GT> max() const { return gm; }
 
-  //! get name of derivative operator
+  /// @brief Get operator name.
+  /// @return "gauss"
   std::string name() const { return "gauss"; }
 };
 }  // namespace lsfm

@@ -1,3 +1,8 @@
+/// @file spe.hpp
+/// @brief Sub-pixel edge localization estimators.
+/// Provides various sub-pixel edge localization methods (Linear, Quadratic, CoG, Sobel)
+/// that refine edge positions to sub-pixel accuracy using local magnitude derivatives.
+
 #pragma once
 
 #include <edge/edge_segment.hpp>
@@ -8,48 +13,118 @@
 
 namespace lsfm {
 
-// Basic worker, applies the pyramid fitting equation
+/// @brief Linear sub-pixel edge localization estimator.
+/// Uses linear interpolation (pyramid fitting) to refine edge position to sub-pixel accuracy.
+/// @tparam FT Floating-point type for output
+/// @tparam MT Magnitude/data element type
 template <class FT, class MT>
 struct LinearEstimate {
+  /// @typedef mag_type
+  /// @brief Magnitude element type
   typedef MT mag_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point output type
   typedef FT float_type;
 
+  /// @brief Estimate sub-pixel displacement along an edge direction.
+  /// Uses linear (pyramid) fitting on three neighboring magnitude values.
+  /// @param p Central pixel magnitude
+  /// @param p_m Magnitude of pixel in negative direction
+  /// @param p_p Magnitude of pixel in positive direction
+  /// @return Sub-pixel displacement offset (typically in range [-0.5, 0.5])
   static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (2 * (p - std::min(p_m, p_p))); }
 };
 
-// Basic worker, applies the parable fitting equation
+/// @brief Quadratic (parabolic) sub-pixel edge localization estimator.
+/// Fits a parabola to three neighboring points for high-accuracy sub-pixel localization.
+/// @tparam FT Floating-point type for output
+/// @tparam MT Magnitude/data element type
 template <class FT, class MT>
 struct QuadraticEstimate {
+  /// @typedef mag_type
+  /// @brief Magnitude element type
   typedef MT mag_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point output type
   typedef FT float_type;
 
+  /// @brief Estimate sub-pixel displacement using parabolic fitting.
+  /// Fits a parabola to three neighboring magnitude values.
+  /// @param p Central pixel magnitude
+  /// @param p_m Magnitude of pixel in negative direction
+  /// @param p_p Magnitude of pixel in positive direction
+  /// @return Sub-pixel displacement offset
   static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (4 * p - 2 * (p_p + p_m)); }
 };
 
-// Basic worker, applies the center of gravity fitting equation
+/// @brief Center-of-Gravity (CoG) sub-pixel edge localization estimator.
+/// Uses weighted center of gravity of neighboring magnitudes for localization.
+/// @tparam FT Floating-point type for output
+/// @tparam MT Magnitude/data element type
 template <class FT, class MT>
 struct CoGEstimate {
+  /// @typedef mag_type
+  /// @brief Magnitude element type
   typedef MT mag_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point output type
   typedef FT float_type;
 
+  /// @brief Estimate sub-pixel displacement using center of gravity.
+  /// Computes weighted center of mass of three neighboring pixels.
+  /// @param p Central pixel magnitude
+  /// @param p_m Magnitude of pixel in negative direction
+  /// @param p_p Magnitude of pixel in positive direction
+  /// @return Sub-pixel displacement offset
   static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (p + p_p + p_m - 3 * std::min(p_m, p_p)); }
 };
 
-// Basic worker, applies the sobel fitting equation
+/// @brief Sobel-based sub-pixel edge localization estimator.
+/// Uses Sobel-like derivative-based approach for sub-pixel refinement.
+/// @tparam FT Floating-point type for output
+/// @tparam MT Magnitude/data element type
 template <class FT, class MT>
 struct SobelEstimate {
+  /// @typedef mag_type
+  /// @brief Magnitude element type
   typedef MT mag_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point output type
   typedef FT float_type;
 
+  /// @brief Estimate sub-pixel displacement using Sobel-like method.
+  /// Uses symmetric difference divided by central magnitude.
+  /// @param p Central pixel magnitude
+  /// @param p_m Magnitude of pixel in negative direction
+  /// @param p_p Magnitude of pixel in positive direction
+  /// @return Sub-pixel displacement offset
   static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (2 * p); }
 };
 
-// Basic worker, applies the sobel fitting equation for zero crossing
+/// @brief Sobel-based zero-crossing sub-pixel edge localization estimator.
+/// Specialized for zero-crossing detection using Laplacian values.
+/// @tparam FT Floating-point type for output
+/// @tparam LT Laplacian/data element type
 template <class FT, class LT>
 struct SobelZCEstimate {
+  /// @typedef laplace_type
+  /// @brief Laplacian element type
   typedef LT laplace_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point output type
   typedef FT float_type;
 
+  /// @brief Estimate sub-pixel zero-crossing position using Sobel method.
+  /// Interpolates between sign changes in Laplacian values.
+  /// @param p Central pixel Laplacian value
+  /// @param p_m Laplacian of pixel in negative direction
+  /// @param p_p Laplacian of pixel in positive direction
+  /// @return Sub-pixel offset to zero-crossing
   static inline FT estimate(LT p, LT p_m, LT p_p) {
     return static_cast<FT>(p) / (neg_sign(p, p_p) ? (p - p_p) : (p_m - p));
   }

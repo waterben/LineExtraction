@@ -133,13 +133,23 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
   using MyLsdBase::lines;
   using MyLsdBase::lineSegments;
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - LD_TRACER_DIRMAP: Use line tracer with direction map for enhanced tracing
+  //! - LD_USE_PRECISE_SPE: Use precise sub-pixel estimation for endpoint localization
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
   virtual void detect(const cv::Mat& image) override {
@@ -195,12 +205,20 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
 
   virtual const IndexVector& indexes() const final { return tracer_.indexes(); }
 
+  //! @brief Get access to the underlying line detector object.
+  //! @return Reference to the line detector used for initial line detection.
   LineDetector& lineDetector() { return lineDetector_; }
 
+  //! @brief Get const access to the underlying line detector object.
+  //! @return Constant reference to the line detector used for initial line detection.
   const LineDetector& lineDetector() const { return lineDetector_; }
 
+  //! @brief Get access to the edge source containing gradient information.
+  //! @return Reference to the edge source providing gradient and edge maps.
   EdgeSource& edgeSource() { return lineDetector_.edgeSource(); }
 
+  //! @brief Get const access to the edge source containing gradient information.
+  //! @return Constant reference to the edge source providing gradient and edge maps.
   const EdgeSource& edgeSource() const { return lineDetector_.edgeSource(); }
 };
 
@@ -289,13 +307,23 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
   using MyLsdBase::lines;
   using MyLsdBase::lineSegments;
 
+  //! @brief Get or set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value, or Value::NAV() to only query.
+  //! @return The current flags value.
+  //! Supported flags:
+  //! - LD_TRACER_DIRMAP: Use line tracer with direction map for enhanced tracing
+  //! - LD_USE_PRECISE_SPE: Use precise sub-pixel estimation for endpoint localization
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  //! @brief Get the detection flags controlling algorithm behavior.
+  //! @return The current flags value. See valueFlags() documentation for flag meanings.
   int flags() const { return flags_; }
 
+  //! @brief Set the detection flags controlling algorithm behavior.
+  //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
   virtual void detect(const cv::Mat& image) override {
@@ -398,12 +426,20 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
 
   virtual const IndexVector& indexes() const final { return tracer_.indexes(); }
 
+  //! @brief Get access to the underlying line detector object.
+  //! @return Reference to the line detector used for initial line detection.
   LineDetector& lineDetector() { return lineDetector_; }
 
+  //! @brief Get const access to the underlying line detector object.
+  //! @return Constant reference to the line detector used for initial line detection.
   const LineDetector& lineDetector() const { return lineDetector_; }
 
+  //! @brief Get access to the edge source containing gradient information.
+  //! @return Reference to the edge source providing gradient and edge maps.
   EdgeSource& edgeSource() { return esource_; }
 
+  //! @brief Get const access to the edge source containing gradient information.
+  //! @return Constant reference to the edge source providing gradient and edge maps.
   const EdgeSource& edgeSource() const { return esource_; }
 };
 

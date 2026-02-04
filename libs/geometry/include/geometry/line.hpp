@@ -40,6 +40,18 @@
 // C by Benjamin Wassermann
 //M*/
 
+/// @file line.hpp
+/// @brief 2D line and line segment representations.
+///
+/// Provides Line and LineSegment classes for 2D geometric computations.
+/// Lines are represented in normal form: n·p = d, where n is the unit normal,
+/// p is a point on the line, and d is the signed distance to the origin.
+/// @note The normal has the direction of the corresponding gradient.
+///
+/// The gradient direction is always from dark to bright, so the normal angle
+/// is -PI/2 from the line angle (90° counterclockwise to line direction).
+/// Since the positive y-axis for images is top-to-bottom, positive rotation
+/// is clockwise.
 
 #pragma once
 
@@ -54,44 +66,61 @@
 
 namespace lsfm {
 
-//! Line object
-//! Note: The normal has direction of corresponding gradient. The gradient
-//! direction is always directed from dark to bright. So the normal angle
-//! is - PI/2 of line angle (90° counterclockwise to line direction)
-//!  Since the positive y axis for images is from top to bottom, a positive rotation is clockwise
+/// @brief 2D infinite line in normal form.
+///
+/// Represents a 2D line using Hesse normal form: n·p = d, where:
+/// - n = (nx, ny) is the unit normal vector
+/// - d is the signed perpendicular distance to the origin
+/// The normal direction corresponds to the gradient direction (dark to bright).
+/// @tparam FT Floating point type (float or double).
+/// @tparam PT Point template (default Vec2).
+/// @note Line direction is perpendicular to normal: dir = (ny, -nx)
 template <class FT, template <class> class PT = Vec2>
 class Line {
  protected:
-  // line internals (normal, distance to coord-origin)
-  FT nx_, ny_, d_;
+  FT nx_, ny_, d_;  ///< Normal components and signed distance to origin.
 
  public:
-  typedef FT float_type;
-  typedef PT<FT> point_type;
+  typedef FT float_type;      ///< Scalar type.
+  typedef PT<FT> point_type;  ///< Point type.
 
+  /// @brief Default constructor (zero line).
   Line() : nx_(0), ny_(0), d_(0) {}
 
+  /// @brief Copy constructor with type conversion.
   template <class AFT, template <class> class APT>
   Line(const Line<AFT, APT>& l) : nx_(l.normalX()), ny_(l.normalY()), d_(l.originDist()) {}
 
-  //! Init Line by normal angle (radian -> line angle + PI/2) and distance to coord-origin
+  /// @brief Construct from normal angle and distance.
+  /// @param normal_ang Normal angle in radians (line angle + PI/2).
+  /// @param distance Signed distance to origin.
   Line(FT normal_ang, FT distance) : nx_(0), ny_(0), d_(distance) {
     nx_ = cos(normal_ang);
     ny_ = sin(normal_ang);
   }
 
 
-  //! Init Line by normal and distance to coord-origin
+  /// @brief Construct from normal components and distance.
+  /// @param normal_x Normal x-component.
+  /// @param normal_y Normal y-component.
+  /// @param distance Signed distance to origin.
   Line(FT normal_x, FT normal_y, FT distance) : nx_(normal_x), ny_(normal_y), d_(distance) {}
 
 
-  //! Init Line by normal and starting coords
+  /// @brief Construct from normal and a point on the line.
+  /// @param normal_x Normal x-component.
+  /// @param normal_y Normal y-component.
+  /// @param dist_x X-coordinate of point on line.
+  /// @param dist_y Y-coordinate of point on line.
   Line(FT normal_x, FT normal_y, FT dist_x, FT dist_y) : nx_(normal_x), ny_(normal_y), d_(0) {
     d_ = nx_ * dist_x + ny_ * dist_y;
   }
 
 
-  //! Init Line by start and end points (as two point_type)
+  /// @brief Construct from two points defining the line.
+  /// @tparam APT Point type.
+  /// @param beg Start point.
+  /// @param end End point.
   template <class APT>
   Line(const APT& beg, const APT& end) : nx_(0), ny_(0), d_(0) {
     nx_ = static_cast<FT>(getY(beg) - getY(end));  //-y
@@ -108,7 +137,8 @@ class Line {
     d_ = normalProject(static_cast<FT>(getX(beg)), static_cast<FT>(getY(beg)));
   }
 
-  //! Init Line by start and end points (as Vec<FT,4>)
+  /// @brief Construct from Vec4 containing endpoints (x1,y1,x2,y2).
+  /// @param points Vector with [x1, y1, x2, y2].
   Line(const Vec4<FT>& points) : nx_(0), ny_(0), d_(0) {
     nx_ = points[1] - points[3];  //-y
     ny_ = points[2] - points[0];  // x
@@ -124,7 +154,8 @@ class Line {
     d_ = nx_ * points[0] + ny_ * points[1];
   }
 
-  //! Init Line by start and end points as list of x1,y1,x2,y2
+  /// @brief Construct from raw pointer to endpoints [x1,y1,x2,y2].
+  /// @param points Pointer to array of 4 coordinates.
   Line(const FT* points) : nx_(0), ny_(0), d_(0) {
     CV_Assert(points);
 
@@ -142,185 +173,204 @@ class Line {
     d_ = nx_ * points[0] + ny_ * points[1];
   }
 
+  /// @brief Check if line normal is unit length.
   bool valid() const { return detail::abs((nx_ * nx_ + ny_ * ny_) - 1) <= LIMITS<FT>::eps(); }
 
+  /// @brief Check if line is degenerate (zero normal).
   bool empty() const { return nx_ == FT(0) && ny_ == FT(0); }
 
+  /// @brief Convert to different floating-point/point type.
+  /// @tparam newFT New floating-point type.
+  /// @tparam newPT New point template.
+  /// @return Converted line.
   template <class newFT, template <class> class newPT = Vec2>
   Line<newFT, newPT> convertTo() {
     return Line<newFT, newPT>(static_cast<newFT>(nx_), static_cast<newFT>(ny_), static_cast<newFT>(d_));
   }
 
-  ////// Access internal attributes
+  /// @name Attribute accessors
+  /// @{
 
-  //! get distance of line to origin
+  /// @brief Get signed distance from line to origin.
   inline FT originDist() const { return d_; }
 
-  //! get x part of line distance
+  /// @brief Get x-component of closest point to origin.
   inline FT originX() const { return d_ * nx_; }
 
-  //! get y part of line distance
+  /// @brief Get y-component of closest point to origin.
   inline FT originY() const { return d_ * ny_; }
 
-  //! get x,y part of line distance (origin point of line) as point
+  /// @brief Get closest point on line to origin.
   inline point_type origin() const { return point_type(originX(), originY()); }
 
-  //! get x part of line direction
+  /// @brief Get x-component of line direction.
   inline FT directionX() const { return ny_; }
 
-  //! get y part of line direction
+  /// @brief Get y-component of line direction.
   inline FT directionY() const { return -nx_; }
 
-  //! get line direction as point
+  /// @brief Get line direction as unit vector.
   inline point_type direction() const { return point_type(ny_, -nx_); }
 
-  //! get x part of normal
+  /// @brief Get x-component of normal.
   inline FT normalX() const { return nx_; }
 
-  //! get y part of normal
+  /// @brief Get y-component of normal.
   inline FT normalY() const { return ny_; }
 
-  //! get normal as point
+  /// @brief Get normal as unit vector.
   inline point_type normal() const { return point_type(nx_, ny_); }
 
-  //! get fast angle of line to x-axis (less precision - 0.3°, in degrees[0,360))
+  /// @brief Get fast line angle to x-axis (degrees, ~0.3° precision).
   inline FT anglef() const {
     return cv::fastAtan2(static_cast<const float>(getScalar(-nx_)), static_cast<const float>(getScalar(ny_)));
   }
 
-  //! get precise angle of line to x-axis (in radian [-PI,PI))
+  /// @brief Get precise line angle to x-axis (radians [-PI,PI)).
   inline FT angle() const { return detail::atan2(-nx_, ny_); }
 
-  //! compute angle between two lines
+  /// @brief Compute angle between this line and another.
   inline FT angle(const Line<FT, PT>& l) const { return detail::acos(nx_ * l.nx_ + ny_ * l.ny_); }
 
-  //! get fast angle of normal to x-axis (less precision - 0.3°, in degrees[0,360))
+  /// @brief Get fast normal angle to x-axis (degrees, ~0.3° precision).
   inline FT normalAnglef() const {
     return cv::fastAtan2(static_cast<const float>(getScalar(ny_)), static_cast<const float>(getScalar(nx_)));
   }
 
-  //! get precise angle of line to x-axis (in radian [-PI,PI))
+  /// @brief Get precise normal angle to x-axis (radians [-PI,PI)).
   inline FT normalAngle() const { return detail::atan2(ny_, nx_); }
 
-  //! get fast angle of gradient (less precision - 0.3°, in degrees[0,360))
+  /// @brief Get fast gradient angle (degrees, ~0.3° precision).
   inline FT gradientAnglef() const {
     return cv::fastAtan2(static_cast<const float>(-getScalar(ny_)), static_cast<const float>(-getScalar(nx_)));
   }
 
-  //! get precise angle of gradient (in radian [-PI,PI))
+  /// @brief Get precise gradient angle (radians [-PI,PI)).
   inline FT gradientAngle() const { return detail::atan2(-ny_, -nx_); }
+  /// @}
 
-  ////// Compute line / normal function
+  /// @name Line/normal function evaluation
+  /// @{
 
-  //! compute x value of line by given y value
+  /// @brief Compute x value on line for given y.
   inline FT x(FT y) const { return (d_ - ny_ * y) / nx_; }
 
-  //! compute y value of line by given x value
+  /// @brief Compute y value on line for given x.
   inline FT y(FT x) const { return (d_ - nx_ * x) / ny_; }
 
-  //! compute x value of normal line (90° rotated) by given y value
+  /// @brief Compute x value on normal line for given y.
   inline FT normalX(FT y) const { return (d_ + nx_ * y) / ny_; }
 
-  //! compute y value of normal line (90° rotated) by given x value
+  /// @brief Compute y value on normal line for given x.
   inline FT normalY(FT x) const { return (d_ - ny_ * x) / (-nx_); }
+  /// @}
 
-  ////// convert line / normal distances to x-y coords
+  /// @name Distance conversion functions
+  /// @{
 
-  //! compute point with distance d along the line (in respect to coord-origin,
-  //  add originPoint to get point in resprect to line origin)
+  /// @brief Get point at distance d along line direction (relative to origin).
   inline point_type lineDist(FT d) const { return point_type(ny_ * d, -nx_ * d); }
 
-  //! compute point with distance d along the line and add starting point
+  /// @brief Get point at distance d along line from (x,y).
   inline point_type lineDist(FT d, FT x, FT y) const { return point_type(x + ny_ * d, y - nx_ * d); }
 
-  //! compute point with distance d along the line and add starting point
+  /// @brief Get point at distance d along line from start point.
   inline point_type lineDist(FT d, const point_type& start) const {
     return point_type(getX(start) + ny_ * d, getY(start) - nx_ * d);
   }
 
-  //! compute point with distance d along the line and add origin
+  /// @brief Get point at distance d along line from line's origin point.
   inline point_type lineDistOrigin(FT d) const { return lineDist(d, origin()); }
 
 
-  //! compute point with distance s along the normal line (in respect to coord-origin,
-  //  add originPoint to get point in resprect to line origin)
+  /// @brief Get point at distance s along normal direction (relative to origin).
   inline point_type normalLineDist(FT s) const { return point_type(nx_ * s, ny_ * s); }
 
-  //! compute point with distance s along the normal line and add to additional starting point
+  /// @brief Get point at distance d along normal from (x,y).
   inline point_type normalLineDist(FT d, FT x, FT y) const { return point_type(x + nx_ * d, y + ny_ * d); }
 
-  //! compute vec with distance s along the normal line and add to additional starting point
+  /// @brief Get point at distance d along normal from start point.
   inline point_type normalLineDist(FT d, const point_type& start) const {
     return point_type(getX(start) + nx_ * d, getY(start) + ny_ * d);
   }
+  /// @}
 
 
-  ////// convert point to line / normal distance with projection
+  /// @name Projection functions
+  /// @{
 
-  //! project point by line direction (through coord origin) and compute distance
+  /// @brief Project point onto line direction and get signed distance.
   inline FT project(FT x, FT y) const { return ny_ * x - nx_ * y; }
 
-  //! project point by line direction (through coord origin) and compute distance
+  /// @brief Project point onto line direction and get signed distance.
   inline FT project(const point_type& p) const { return ny_ * getX(p) - nx_ * getY(p); }
 
-  //! project point by normal direction at line (through coord origin) and compute distance
+  /// @brief Project point onto normal direction and get signed distance.
   inline FT normalProject(FT x, FT y) const { return nx_ * x + ny_ * y; }
 
-  //! project point by normal direction at line (through coord origin) and compute distance
+  /// @brief Project point onto normal direction and get signed distance.
   inline FT normalProject(const point_type& p) const { return nx_ * getX(p) + ny_ * getY(p); }
+  /// @}
 
 
-  /////// Base change -> rotate ( + translate)
+  /// @name Coordinate transformations
+  /// @{
 
-  //! convert point / vector from line coord system to world coord system
+  /// @brief Transform point from line coordinates to world coordinates.
   inline point_type line2world(FT x, FT y) const { return point_type(ny_ * x + nx_ * y, ny_ * y - nx_ * x); }
 
-  //! convert point / vector from line coord system to world coord system
+  /// @brief Transform point from line coordinates to world coordinates with offset.
   inline point_type line2world(FT x, FT y, FT ox, FT oy) const {
     return point_type(ny_ * x + nx_ * y + ox, ny_ * y - nx_ * x + oy);
   }
 
 
-  //! convert point / vector from line coord system to world coord system
+  /// @brief Transform point from line coordinates to world coordinates.
   inline point_type line2world(const point_type& v) const { return line2world(getX(v), getY(v)); }
 
-  //! convert point / vector from line coord system to world coord system
+  /// @brief Transform point from line coordinates to world coordinates with offset.
   inline point_type line2world(const point_type& v, const point_type& o) const {
     return line2world(getX(v), getY(v), getX(o), getY(o));
   }
 
 
-  //! convert point / vector from world coord system to line coord system
+  /// @brief Transform point from world coordinates to line coordinates.
   inline point_type world2line(FT x, FT y) const { return point_type(ny_ * x - nx_ * y, nx_ * x + ny_ * y); }
 
-  //! convert point / vector from world coord system to line coord system
+  /// @brief Transform vector from world coordinates to line coordinates.
   inline point_type world2lineV(FT x, FT y) const { return point_type(ny_ * x - nx_ * y, nx_ * x + ny_ * y); }
 
-  //! convert point / vector form world coord system to line coord system
+  /// @brief Transform point from world coordinates to line coordinates with offset.
   inline point_type world2line(FT x, FT y, FT ox, FT oy) const { return world2line(x - ox, y - oy); }
 
-  //! convert point / vector from world coord system to line coord system
+  /// @brief Transform point from world coordinates to line coordinates.
   inline point_type world2line(const point_type& v) const { world2line(getX(v), v[1]); }
 
-  //! convert point / vector from world coord system to line coord system
+  /// @brief Transform point from world coordinates to line coordinates with offset.
   inline point_type world2line(const point_type& v, const point_type& o) const { return world2line(v - o); }
+  /// @}
 
 
-  /////// operations: line with point and line
-  // to get distance from point to normal (normal always runs through origin), call project(point)
-  //! compute distance between point and line
+  /// @name Point and line operations
+  /// @{
+
+  /// @brief Compute signed distance from point to line.
   inline FT distance(FT x, FT y) const { return normalProject(x, y) - d_; }
 
-  //! compute distance between point and line
+  /// @brief Compute signed distance from point to line.
   inline FT distance(const point_type& v) const { return normalProject(v) - d_; }
 
-  //! check if other line is parallel to this line
+  /// @brief Check if another line is parallel to this line.
   inline bool isParallel(const Line& l) const { return detail::abs(nx_ * l.ny_ - ny_ * l.nx_) <= LIMITS<FT>::eps(); }
 
-  //! check for intersection
+  /// @brief Check if lines intersect (not parallel).
   inline bool intersection(const Line& l) const { return !isParallel(l, LIMITS<FT>::eps()); }
 
-  //! check for intersection and compute intersection point if possible
+  /// @brief Compute intersection point with another line.
+  /// @param l Other line.
+  /// @param[out] x X-coordinate of intersection.
+  /// @param[out] y Y-coordinate of intersection.
+  /// @return True if lines intersect, false if parallel.
   inline bool intersection(const Line& l, FT& x, FT& y) const {
     FT dn = nx_ * l.ny_ - ny_ * l.nx_;
     if (detail::abs(dn) <= LIMITS<FT>::eps()) return false;
@@ -329,30 +379,32 @@ class Line {
     return true;
   }
 
-  //! check for intersection and compute intersection point if possible
+  /// @brief Compute intersection point with another line.
   inline bool intersection(const Line& l, point_type& v) const { return intersection(l, getX(v), getY(v)); }
+  /// @}
 
 
-  ////// manipulation operators
+  /// @name Transformation operations
+  /// @{
 
-  //! translate line so that it went through point p
+  /// @brief Translate line to pass through point (x,y).
   inline void translateTo(FT x, FT y) { d_ = normalProject(x, y); }
 
-  //! translate line so that it went through point p
+  /// @brief Translate line to pass through point.
   inline void translateTo(const point_type& v) { d_ = normalProject(v); }
 
-  //! translate line orthogonal by changing distance
+  /// @brief Translate line orthogonally by dist.
   inline void translateOrtho(FT dist) { d_ += dist; }
 
-  //! tanslate line by point
+  /// @brief Translate line by vector (x,y).
   inline void translate(FT x, FT y) { this->translateImpl(point_type(x, y)); }
 
-  //! tanslate line by point
+  /// @brief Translate line by vector.
   inline void translate(const point_type& dist) { this->translateImpl(dist); }
 
 
-  //! rotate line by angle (radian) at line origin (shortes point of line to origin ->
-  //! just rotate normal)
+  /// @brief Rotate line about its origin point.
+  /// @param angle Rotation angle in radians.
   inline void rotate(FT angle) {
     FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     FT tmp = nx_ * ca - ny_ * sa;
@@ -360,38 +412,46 @@ class Line {
     nx_ = tmp;
   }
 
-  //! rotate line around line point (radian)
+  /// @brief Rotate line about point at distance pivot along line.
   inline void rotate(FT angle, const FT pivot) { this->rotateImpl(angle, pivot); }
 
-  //! rotate line around point (radian)
+  /// @brief Rotate line about point (x,y).
   inline void rotate(FT angle, FT x, FT y) { this->rotateImpl(angle, point_type(x, y)); }
 
-  //! rotate line around point (radian)
+  /// @brief Rotate line about pivot point.
   inline void rotate(float_type angle, const point_type& pivot) { this->rotateImpl(angle, pivot); }
 
-  //! scale line at origin (0,0)
+  /// @brief Scale line about origin.
   virtual void scale(FT s) {
     // update distance
     d_ *= s;
   }
 
-  //! scale line at point
+  /// @brief Scale line about point (x,y).
   inline void scale(float_type s, FT x, FT y) { this->scaleImpl(s, point_type(x, y)); }
 
-  //! scale line at point
+  /// @brief Scale line about pivot point.
   inline void scale(float_type s, const point_type& pivot) { this->scaleImpl(s, pivot); }
 
-  //! flip normal
+  /// @brief Flip normal direction (reverses line orientation).
   virtual void normalFlip() {
     nx_ *= FT(-1);
     ny_ *= FT(-1);
     d_ *= FT(-1);
   }
+  /// @}
 
 
-  /////// Output
+  /// @name Drawing
+  /// @{
 
-  //! draw line
+  /// @brief Draw line on image.
+  /// @param img Output image.
+  /// @param color Line color.
+  /// @param thickness Line thickness.
+  /// @param lineType OpenCV line type (default 8-connected).
+  /// @param normalLength Length of normal indicator (0 to disable).
+  /// @param tipLength Length of arrow tip (0 to disable).
   inline void draw(cv::Mat& img,
                    cv::Scalar color,
                    int thickness = 1,
@@ -400,13 +460,14 @@ class Line {
                    double tipLength = 0) const {
     this->drawImpl(img, color, thickness, lineType, normalLength, tipLength);
   }
+  /// @}
 
 
  protected:
-  //! tanslate line by point impl
+  /// @brief Implementation of translate by vector.
   virtual void translateImpl(const point_type& dist) { d_ += normalProject(dist); }
 
-  //! rotate line around point (radian) impl
+  /// @brief Implementation of rotate about point.
   virtual void rotateImpl(FT angle, const point_type& pivot) {
     FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
     point_type p = origin();
@@ -422,7 +483,7 @@ class Line {
     translateTo(p);
   }
 
-  //! rotate line around line point (radian)
+  /// @brief Implementation of rotate about point on line.
   virtual void rotateImpl(FT angle, FT pivot) {
     FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
@@ -438,7 +499,7 @@ class Line {
     translateTo(p);
   }
 
-  //! scale line at point impl
+  /// @brief Implementation of scale about point.
   virtual void scaleImpl(FT s, const point_type& pivot) {
     FT dpv = normalProject(pivot);
     d_ -= dpv;
@@ -446,30 +507,37 @@ class Line {
     d_ += dpv;
   }
 
-  //! draw line
+  /// @brief Implementation of draw method.
   virtual void drawImpl(
       cv::Mat& img, cv::Scalar color, int thickness, int lineType, double normalLength, double tipLength) const;
 
  public:
-  //! Virtual destructor for proper inheritance
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~Line() = default;
 };
 
+/// @name Line type aliases
+/// @{
 template <class FT, template <class> class PT = Vec2>
-using Line2 = Line<FT, PT>;
+using Line2 = Line<FT, PT>;  ///< 2D Line alias.
 
-typedef Line2<float> Line2f;
-typedef Line2<double> Line2d;
+typedef Line2<float> Line2f;   ///< 2D float line.
+typedef Line2<double> Line2d;  ///< 2D double line.
 
 template <class FT, template <class> class PT = Vec2>
-using Line2Vector = std::vector<Line2<FT, PT>>;
+using Line2Vector = std::vector<Line2<FT, PT>>;  ///< Vector of 2D lines.
 
-typedef Line2Vector<float> Line2Vectorf;
-typedef Line2Vector<double> Line2Vectord;
+typedef Line2Vector<float> Line2Vectorf;   ///< Vector of float lines.
+typedef Line2Vector<double> Line2Vectord;  ///< Vector of double lines.
+/// @}
 
-/**
- * Line segement object
- */
+/// @brief 2D line segment with finite extent.
+///
+/// Extends Line with start/end distances along the line direction,
+/// defining a finite segment. Supports clipping, overlap detection,
+/// and segment-specific transformations.
+/// @tparam FT Floating point type.
+/// @tparam PT Point template.
 template <class FT, template <class> class PT = Vec2>
 class LineSegment : public Line<FT, PT> {
  protected:
@@ -477,41 +545,40 @@ class LineSegment : public Line<FT, PT> {
   using Line<FT, PT>::ny_;
   using Line<FT, PT>::d_;
 
-  // beg / end of line as distances to starting point
-  FT beg_, end_;
-
-  // the octave at which it was detected
-  int octave_;
+  FT beg_, end_;  ///< Start and end distances along line direction.
+  int octave_;    ///< Octave level where segment was detected.
 
  public:
-  typedef FT float_type;
-  typedef PT<FT> point_type;
+  typedef FT float_type;      ///< Scalar type.
+  typedef PT<FT> point_type;  ///< Point type.
 
+  /// @brief Default constructor (zero segment).
   LineSegment() : Line<FT, PT>(), beg_(0), end_(0), octave_(0) {}
 
+  /// @brief Copy constructor with optional octave.
   template <class AFT, template <class> class APT>
   LineSegment(const LineSegment<AFT, APT>& ls, int octave = 0)
       : Line<FT, PT>(ls), beg_(ls.start()), end_(ls.end()), octave_(octave) {}
 
-  //! Init Line by normal angle, distance to origin and line begin and line end
+  /// @brief Construct from normal angle, distance, and line extents.
   LineSegment(FT normal_ang, FT distance, FT line_beg, FT line_end, int octave = 0)
       : Line<FT, PT>(normal_ang, distance), beg_(line_beg), end_(line_end), octave_(octave) {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by normal, distance to origin and line begin and line end
+  /// @brief Construct from normal components, distance, and line extents.
   LineSegment(FT normal_x, FT normal_y, FT distance, FT line_beg, FT line_end, int octave = 0)
       : Line<FT, PT>(normal_x, normal_y, distance), beg_(line_beg), end_(line_end), octave_(octave) {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by normal, distance to origin and line begin and line end
+  /// @brief Construct from normal, origin point, and line extents.
   LineSegment(FT normal_x, FT normal_y, FT dist_x, FT dist_y, FT line_beg, FT line_end, int octave = 0)
       : Line<FT, PT>(normal_x, normal_y, dist_x, dist_y), beg_(line_beg), end_(line_end), octave_(octave) {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by normal, distance to origin and line begin and line end
+  /// @brief Construct from normal, origin point, and endpoint coordinates.
   LineSegment(FT normal_x, FT normal_y, FT dist_x, FT dist_y, FT beg_x, FT beg_y, FT end_x, FT end_y, int octave = 0)
       : Line<FT, PT>(normal_x, normal_y, dist_x, dist_y), beg_(0), end_(0), octave_(octave) {
     beg_ = ny_ * beg_x - nx_ * beg_y;
@@ -521,7 +588,7 @@ class LineSegment : public Line<FT, PT> {
   }
 
 
-  //! Init Line by normal, distance to origin and line begin and line end (as point_type)
+  /// @brief Construct from normal, distance origin, and endpoint vectors.
   LineSegment(
       const point_type& normal, const point_type& dist, const point_type& beg, const point_type& end, int octave = 0)
       : Line<FT, PT>(getX(normal), getY(normal), getX(dist), getY(dist)), beg_(0), end_(0), octave_(octave) {
@@ -532,7 +599,11 @@ class LineSegment : public Line<FT, PT> {
   }
 
 
-  //! Init Line by start and end points (as two point_type)
+  /// @brief Construct from two endpoint points.
+  /// @tparam APT Point type.
+  /// @param beg Start point.
+  /// @param end End point.
+  /// @param octave Detection octave (default 0).
   template <class APT>
   LineSegment(const APT& beg, const APT& end, int octave = 0)
       : Line<FT, PT>(beg, end), beg_(0), end_(0), octave_(octave) {
@@ -542,7 +613,7 @@ class LineSegment : public Line<FT, PT> {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by start and end points (as Vec4x list of x1,y1,x2,y2)
+  /// @brief Construct from Vec4 containing endpoints [x1,y1,x2,y2].
   LineSegment(const Vec4<FT>& points, int octave = 0) : Line<FT, PT>(points), beg_(0), end_(0), octave_(octave) {
     beg_ = ny_ * points[0] - nx_ * points[1];
     end_ = ny_ * points[2] - nx_ * points[3];
@@ -550,7 +621,7 @@ class LineSegment : public Line<FT, PT> {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by start and end points as list of x1,y1,x2,y2
+  /// @brief Construct from raw pointer to endpoints [x1,y1,x2,y2].
   LineSegment(const FT* points, int octave = 0) : Line<FT, PT>(points), beg_(0), end_(0), octave_(octave) {
     beg_ = ny_ * points[0] - nx_ * points[1];
     end_ = ny_ * points[2] - nx_ * points[3];
@@ -558,7 +629,7 @@ class LineSegment : public Line<FT, PT> {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by Line and endpoints of any point type
+  /// @brief Construct from Line and endpoint points.
   template <class AFT, template <class> class APT, class APT2>
   LineSegment(const Line<AFT, APT>& l, const APT2& beg, const APT2& end, int octave = 0)
       : Line<FT, PT>(l), beg_(0), end_(0), octave_(octave) {
@@ -568,92 +639,105 @@ class LineSegment : public Line<FT, PT> {
     if (beg_ > end_) flip();
   }
 
-  //! Init Line by Line and endpoints
+  /// @brief Construct from Line and distance extents.
   LineSegment(const Line<FT, PT>& l, FT line_beg, FT line_end, int octave = 0)
       : Line<FT, PT>(l), beg_(line_beg), end_(line_end), octave_(octave) {
     if (beg_ > end_) flip();
   }
 
+  /// @brief Convert to different floating-point/point type.
+  /// @tparam newFT New floating-point type.
+  /// @tparam newPT New point template.
+  /// @return Converted line segment.
   template <class newFT, template <class> class newPT = Vec2>
   LineSegment<newFT, newPT> convertTo() {
     return LineSegment<newFT, newPT>(static_cast<newFT>(nx_), static_cast<newFT>(ny_), static_cast<newFT>(d_),
                                      static_cast<newFT>(beg_), static_cast<newFT>(end_), octave_);
   }
 
-  ////// Access internals
+  /// @name Attribute accessors
+  /// @{
 
-
-  //! get line start as distance
+  /// @brief Get start distance along line direction.
   inline FT start() const { return beg_; }
 
-  //! get line end as distance
+  /// @brief Get end distance along line direction.
   inline FT end() const { return end_; }
 
-  //! get line center as distance
+  /// @brief Get center distance along line direction.
   inline FT center() const { return beg_ + (end_ - beg_) / FT(2); }
 
-  //! get line start as point
+  /// @brief Get start point.
   inline point_type startPoint() const { return this->lineDist(beg_, this->origin()); }
+  /// @brief Get start point (alias).
   inline point_type getStartPoint() const { return startPoint(); }
 
-  //! get line end as point
+  /// @brief Get end point.
   inline point_type endPoint() const { return this->lineDist(end_, this->origin()); }
+  /// @brief Get end point (alias).
   inline point_type getEndPoint() const { return endPoint(); }
 
-  //! get line endpoints of line as Vec4f
+  /// @brief Get endpoints as Vec4 [x1,y1,x2,y2].
   inline Vec4<FT> endPoints() const {
     FT dx = this->originX(), dy = this->originY();
     return Vec4<FT>(dx + ny_ * beg_, dy - nx_ * beg_, dx + ny_ * end_, dy - nx_ * end_);
   }
 
-  //! get line endpoints as vectors
+  /// @brief Get endpoints as separate vectors.
   inline void endPoints(point_type& vbeg, point_type& vend) const {
     FT dx = this->originX(), dy = this->originY();
     set(vbeg, dx + ny_ * beg_, dy - nx_ * beg_);
     set(vend, dx + ny_ * end_, dy - nx_ * end_);
   }
 
-  //! get center of line as point
+  /// @brief Get center point of segment.
   inline point_type centerPoint() const { return this->lineDist(this->center(), this->origin()); }
 
-  //! get length of line
+  /// @brief Get segment length.
   inline FT length() const { return detail::abs(end_ - beg_); }
 
-  //! get octave where it was detected
+  /// @brief Get detection octave.
   inline int octave() const { return octave; }
 
-  //! set the octave where it was detected
+  /// @brief Set detection octave.
   inline void octave(int oct) const { this->octave_ = oct; }
+  /// @}
 
-  ////// helpers
+  /// @name Range checking
+  /// @{
 
-  //! check if distance is within line segment range
+  /// @brief Check if distance is within segment range.
   inline bool inRange(FT dist) const { return dist >= beg_ && dist <= end_; }
 
-  //! check if distance is within line segment range
+  /// @brief Check if distance is within segment range with tolerance.
   inline bool inRangeTol(FT dist, FT tol) const { return dist >= (beg_ - tol) && dist <= (end_ + tol); }
 
-  //! check if point is within line segment range
+  /// @brief Check if point projection is within segment range.
   inline bool inRange(FT x, FT y) const {
     FT dist = this->project(x, y);
     return inRange(dist);
   }
 
-  //! check if point is within line segment range
+  /// @brief Check if point projection is within segment range with tolerance.
   inline bool inRangeTol(FT x, FT y, FT tol) const {
     FT dist = this->project(x, y);
     return inRangeTol(dist, tol);
   }
 
-  //! check if point is within line segment range
+  /// @brief Check if point projection is within segment range.
   inline bool inRange(const point_type& v) const { return inRange(getX(v), getY(v)); }
 
-  //! check if point is within line segment range
+  /// @brief Check if point projection is within segment range with tolerance.
   inline bool inRangeTol(const point_type& v, FT tol) const { return inRangeTol(getX(v), getY(v), tol); }
+  /// @}
 
 
-  //! trim line to box (default start is 0,0 and max_x is width and max_y is height)
-  //! return true for success and false if line has no overlap with box
+  /// @brief Trim segment to fit within a bounding box.
+  /// @param max_x Maximum x (box width).
+  /// @param max_y Maximum y (box height).
+  /// @param min_x Minimum x (default 0).
+  /// @param min_y Minimum y (default 0).
+  /// @return True if segment overlaps box, false if entirely outside.
   inline bool trim2Box(FT max_x, FT max_y, FT min_x = FT(0), FT min_y = FT(0)) {
     // Use tolerance-based comparison for nearly horizontal/vertical lines
     const FT tol = LIMITS<FT>::eps() * FT(100);
@@ -786,8 +870,10 @@ class LineSegment : public Line<FT, PT> {
     return true;
   }
 
-  //! Do two lines overlap? Be aware that, due to projection, one line might overlap with another but not the other way
-  //! around!
+  /// @brief Check if two segments overlap (asymmetric test).
+  /// @param line Other segment.
+  /// @return True if projections overlap.
+  /// @note Due to projection, overlap may not be symmetric.
   inline bool checkOverlap(LineSegment<FT, PT> line) {
     // Check if lines overlap
     FT sP = this->start();
@@ -807,31 +893,32 @@ class LineSegment : public Line<FT, PT> {
             (pLs <= sP && pLs <= eP && pLe >= sP && pLe >= eP) || (pLs >= sP && pLs >= eP && pLe <= sP && pLe <= eP));
   }
 
-  ///// line transformations
+  /// @name Segment transformations
+  /// @{
 
-  //! translate endpoints of line segment (move segment along line)
+  /// @brief Translate segment along line direction.
   inline void translate(FT dist) {
     beg_ += dist;
     end_ += dist;
   }
 
-  //! translate start point of line segment
+  /// @brief Translate start point along line.
   inline void translateStart(FT dist) { beg_ += dist; }
 
-  //! translate end point of line segment
+  /// @brief Translate end point along line.
   inline void translateEnd(FT dist) { end_ += dist; }
 
-  //! rotate line around line point (radian)
+  /// @brief Rotate segment about point at distance pivot along line.
   inline void rotate(FT angle, FT pivot) { this->rotateImpl(angle, pivot); }
 
-  //! scale line at origin (0,0)
+  /// @brief Scale segment about origin.
   virtual void scale(FT s) {
     Line<FT, PT>::scale(s);
     beg_ *= s;
     end_ *= s;
   }
 
-  //! scale line at point on line
+  /// @brief Scale segment about point at distance pivot along line.
   inline void scale(FT s, FT pivot) {
     // scale endpoints
     beg_ -= pivot;
@@ -842,6 +929,7 @@ class LineSegment : public Line<FT, PT> {
     end_ += pivot;
   }
 
+  /// @brief Flip normal direction (reverses segment orientation).
   virtual void normalFlip() {
     Line<FT, PT>::normalFlip();
     beg_ *= FT(-1);
@@ -849,20 +937,26 @@ class LineSegment : public Line<FT, PT> {
     std::swap(beg_, end_);
   }
 
-  //! swap endpoints
+  /// @brief Swap start and end points.
   inline void endPointSwap() { std::swap(beg_, end_); }
+  /// @}
 
+  /// @name Error measurement
+  /// @{
 
-  /**
-   * @brief  Error calculated by Endpoint Distance
-   * @param  other line (ground truth)
-   * @return added Endpoint error distance
-   */
+  /// @brief Calculate endpoint distance error to ground truth line.
+  /// @param gtLine Ground truth line.
+  /// @return Sum of distances from endpoints to ground truth.
   inline FT error(const Line<FT, PT>& gtLine) const {
     FT a, b;
     return error(gtLine, a, b);
   }
 
+  /// @brief Calculate endpoint distance error with individual distances.
+  /// @param gtLine Ground truth line.
+  /// @param[out] a Distance from start point to ground truth.
+  /// @param[out] b Distance from end point to ground truth.
+  /// @return Sum of distances.
   inline FT error(const Line<FT, PT>& gtLine, FT& a, FT& b) const {
     if (this->empty() || gtLine.empty()) return FT(0);
     a = gtLine.distance(this->startPoint());
@@ -873,16 +967,18 @@ class LineSegment : public Line<FT, PT> {
 
     return a + b;
   }
+  /// @}
 
 
  protected:
+  /// @brief Flip orientation (used during construction).
   void flip() {
     Line<FT, PT>::normalFlip();
     beg_ *= FT(-1);
     end_ *= FT(-1);
   }
 
-  //! translate line by vector
+  /// @brief Implementation of translate by vector.
   virtual void translateImpl(const point_type& dist) {
     this->d_ += this->normalProject(dist);
     FT tmp = this->project(dist);
@@ -890,7 +986,7 @@ class LineSegment : public Line<FT, PT> {
     end_ += tmp;
   }
 
-  //! rotate line around point (radian)
+  /// @brief Implementation of rotate about point.
   virtual void rotateImpl(FT angle, const point_type& pivot) {
     FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
@@ -914,7 +1010,7 @@ class LineSegment : public Line<FT, PT> {
     end_ += dif;
   }
 
-  //! rotate line around line point (radian)
+  /// @brief Implementation of rotate about point on line.
   virtual void rotateImpl(FT angle, FT pivot) {
     FT sa = static_cast<FT>(sin(angle)), ca = static_cast<FT>(cos(angle));
 
@@ -935,7 +1031,7 @@ class LineSegment : public Line<FT, PT> {
     end_ += dif;
   }
 
-  //! scale line at point
+  /// @brief Implementation of scale about point.
   virtual void scaleImpl(FT s, const point_type& pivot) {
     // scale distance
     FT dpv = this->normalProject(pivot);
@@ -953,7 +1049,7 @@ class LineSegment : public Line<FT, PT> {
     end_ += dpv;
   }
 
-  //! draw line
+  /// @brief Implementation of draw method.
   virtual void drawImpl(
       cv::Mat& img, cv::Scalar color, int thickness, int lineType, double normalLength, double tipLength) const {
     if (this->empty()) return;
@@ -990,6 +1086,11 @@ class LineSegment : public Line<FT, PT> {
     }
   }
 
+  /// @brief Stream output operator for line segments.
+  /// @tparam U Floating-point type of the friend function.
+  /// @param os Output stream.
+  /// @param ls Line segment to output.
+  /// @return Reference to the output stream.
   template <class U>
   friend std::ostream& operator<<(std::ostream& os, const LineSegment<U>& ls);
 
@@ -998,6 +1099,14 @@ class LineSegment : public Line<FT, PT> {
   virtual ~LineSegment() = default;
 };
 
+/// @brief Stream output operator for LineSegment.
+///
+/// Outputs the line segment in the format: "S: sx, sy  E: ex, ey"
+/// where (sx, sy) is the start point and (ex, ey) is the end point.
+/// @tparam FT Floating-point type for coordinates.
+/// @param os Output stream.
+/// @param ls Line segment to output.
+/// @return Reference to the output stream.
 template <class FT>
 std::ostream& operator<<(std::ostream& os, const LineSegment<FT>& ls) {
   return os << "S: " << ls.startPoint()[0] << ", " << ls.startPoint()[1] << "  E: " << ls.endPoint()[0] << ", "
@@ -1005,20 +1114,43 @@ std::ostream& operator<<(std::ostream& os, const LineSegment<FT>& ls) {
 }
 
 
+/// @brief Alias template for 2D line segment.
+/// @tparam FT Floating-point type.
+/// @tparam PT Point type template (default Vec2).
 template <class FT, template <class> class PT = Vec2>
 using LineSegment2 = LineSegment<FT, PT>;
 
+/// @brief Single-precision 2D line segment.
 typedef LineSegment<float> LineSegment2f;
+
+/// @brief Double-precision 2D line segment.
 typedef LineSegment<double> LineSegment2d;
 
+/// @brief Alias template for vector of 2D line segments.
+/// @tparam FT Floating-point type.
+/// @tparam PT Point type template (default Vec2).
 template <class FT, template <class> class PT = Vec2>
 using LineSegment2Vector = std::vector<LineSegment2<FT, PT>>;
 
+/// @brief Vector of single-precision 2D line segments.
 typedef LineSegment2Vector<float> LineSegment2Vectorf;
+
+/// @brief Vector of double-precision 2D line segments.
 typedef LineSegment2Vector<double> LineSegment2Vectord;
 
-//! trim line to box (default start is 0,0 and max_x is width and max_y is height)
-//! return trimmed line segment (empty segment, if outside box)
+/// @brief Trim an infinite line to a bounding box.
+///
+/// Creates a line segment by trimming the infinite line to fit within
+/// the specified rectangular bounding box. If the line does not intersect
+/// the box, returns an empty line segment.
+/// @tparam FT Floating-point type for coordinates.
+/// @tparam LPT Point type template.
+/// @param l Line to trim.
+/// @param max_x Maximum x coordinate (typically image width).
+/// @param max_y Maximum y coordinate (typically image height).
+/// @param min_x Minimum x coordinate (default 0).
+/// @param min_y Minimum y coordinate (default 0).
+/// @return Line segment trimmed to the bounding box, or empty if outside.
 template <class FT, template <class> class LPT>
 inline LineSegment<FT, LPT> trim2Box(const Line<FT, LPT>& l, FT max_x, FT max_y, FT min_x = FT(0), FT min_y = FT(0)) {
   LineSegment<FT, LPT> ret;
@@ -1031,6 +1163,16 @@ inline LineSegment<FT, LPT> trim2Box(const Line<FT, LPT>& l, FT max_x, FT max_y,
   return ret.trim2Box(max_x, max_y, min_x, min_y) ? ret : LineSegment<FT, LPT>();
 }
 
+/// @brief Implementation of line drawing.
+///
+/// Draws the line by first trimming it to the image bounds using trim2Box(),
+/// then delegating to the line segment's draw method.
+/// @param img Image to draw on.
+/// @param color Drawing color.
+/// @param thickness Line thickness in pixels.
+/// @param lineType OpenCV line type (LINE_8, LINE_4, LINE_AA).
+/// @param normalLength Length of normal vector visualization (0 to disable).
+/// @param tipLength Arrow tip length for normal visualization.
 template <class FT, template <class> class LPT>
 void Line<FT, LPT>::drawImpl(
     cv::Mat& img, cv::Scalar color, int thickness, int lineType, double normalLength, double tipLength) const {

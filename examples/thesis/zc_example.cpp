@@ -1,3 +1,14 @@
+/// @file zc_example.cpp
+/// @brief Zero-crossing detection example for thesis.
+///
+/// Generates zero-crossing edge detection visualizations:
+/// - Laplacian computation and visualization
+/// - Zero-crossing detection with different thresholds
+/// - Color-coded positive/negative regions
+///
+/// @usage ./zc_example [options]
+/// @see EvalApp for command-line options
+
 #include <edge/threshold.hpp>
 #include <edge/zc.hpp>
 #include <eval/eval_app.hpp>

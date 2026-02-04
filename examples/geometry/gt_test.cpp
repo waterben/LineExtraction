@@ -1,3 +1,13 @@
+/// @file gt_test.cpp
+/// @brief Ground truth geometry loading and evaluation.
+///
+/// Demonstrates loading and working with ground truth 3D geometry:
+/// - Stereo camera setup with known parameters
+/// - 3D cube model projection to stereo views
+/// - Ground truth line correspondence computation
+///
+/// @usage ./gt_test
+
 #include <geometry/cameracv.hpp>
 #include <geometry/draw.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

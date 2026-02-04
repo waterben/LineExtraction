@@ -1,3 +1,7 @@
+/// @file measure_task.hpp
+/// @brief Task interface for measurement collection.
+/// Provides base interface for tasks that collect measurements.
+
 #pragma once
 
 #include <eval/input_task.hpp>

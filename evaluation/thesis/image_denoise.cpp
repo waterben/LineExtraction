@@ -1,3 +1,9 @@
+/// @file image_denoise.cpp
+/// @brief Thesis evaluation: Denoising filter evaluation
+///
+/// Evaluates various image denoising methods.
+/// Analyzes edge preservation and noise reduction effectiveness.
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>

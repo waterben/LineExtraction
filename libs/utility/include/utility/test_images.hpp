@@ -4,7 +4,6 @@
 /// This header provides a simple way to locate test images in examples and tests.
 /// It supports both Bazel builds (via runfiles) and CMake builds (relative paths).
 ///
-/// @example
 /// @code
 /// #include <utility/test_images.hpp>
 ///

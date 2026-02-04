@@ -1,3 +1,17 @@
+/// @file threshold.cpp
+/// @brief Threshold algorithm comparison for thesis.
+///
+/// Compares different threshold estimation methods:
+/// - Otsu's method
+/// - Triangle method
+/// - Adaptive thresholding
+/// - Niblack/Sauvola local thresholding
+///
+/// Generates comparison visualizations for thesis.
+///
+/// @usage ./threshold [options]
+/// @see EvalApp for command-line options
+
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
 #include <eval/eval_app.hpp>

@@ -54,9 +54,42 @@
 
 namespace lsfm {
 
-//! Use Non Maxima Supression for burns detector
+/// @brief Flag to enable Non-Maxima Suppression in Burns detector.
 static const int BURNS_NMS = 1;
 
+/// @brief Line Segment Detector using the Burns algorithm.
+/// Implements the classic "Extracting Straight Lines" algorithm by James Burns.
+/// This detector uses gradient-based edge segmentation and connected component analysis.
+///
+/// **Key Features:**
+/// - Gradient magnitude thresholding (hysteresis)
+/// - Directional partitioning of edges
+/// - Connected component labeling
+/// - Line fitting using eigenvalue decomposition
+/// - Optional Non-Maxima Suppression
+///
+/// @tparam FT Floating-point type for line coordinates (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type (default Vec2i)
+/// @tparam GRAD Gradient computation class
+/// @tparam FIT Line fitting class
+///
+/// **Example:**
+/// @example examples/lsd/lsd.cpp
+///
+/// @code{cpp}
+/// #include <lsd/lsd_burns.hpp>
+/// #include <opencv2/imgcodecs.hpp>
+///
+/// cv::Mat image = cv::imread("input.png", cv::IMREAD_GRAYSCALE);
+///
+/// // Create detector with NMS enabled
+/// lsfm::LsdBurns<float> detector(0.004f, 0.012f, 5, 12, lsfm::BURNS_NMS);
+///
+/// // Detect line segments
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
@@ -66,34 +99,38 @@ class LsdBurns : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::endPoints_;
   using LsdBase<FT, LPT>::lineSegments_;
 
-  GRAD grad_{};  // gradient object
+  GRAD grad_{};  ///< Gradient computation object
 
-  // segmentation components
-  cv::Mat partitionMap_{};                    // CV_8U, 0, pixels with partition indicies
-  cv::Mat partitionMapShifted_{};             // CV_8U, 0, pixels with shifted partition indicies
-  std::vector<IndexVector> seeds_{};          // edge points sorted by partition
-  std::vector<IndexVector> seeds_shifted_{};  // edge points sorted by shifted partition
+  // Segmentation components
+  cv::Mat partitionMap_{};                    ///< CV_8U, partition indices for pixels
+  cv::Mat partitionMapShifted_{};             ///< CV_8U, shifted partition indices
+  std::vector<IndexVector> seeds_{};          ///< Edge points sorted by partition
+  std::vector<IndexVector> seeds_shifted_{};  ///< Edge points sorted by shifted partition
 
-  // connected components
+  /// @brief Connected component data structure.
   struct CcData {
+    /// @brief Create connected component data.
+    /// @param part Partition index
+    /// @param sh Whether this is a shifted partition
     CcData(uchar part = 0, bool sh = false) : partition(part), accepted(false), shifted(sh){};
 
-    IndexVector data{};
-    uchar partition{};
-    bool accepted{};
-    bool shifted{};
+    IndexVector data{};  ///< Point indices in this component
+    uchar partition{};   ///< Partition index
+    bool accepted{};     ///< Whether component was accepted as valid
+    bool shifted{};      ///< Whether this is a shifted partition
   };
-  typedef std::vector<CcData> CcDataVector;  // vector of connected components
+  typedef std::vector<CcData> CcDataVector;  ///< Vector of connected components
 
-  CcDataVector ccLists_{}, ccListsShifted_{};
+  CcDataVector ccLists_{}, ccListsShifted_{};  ///< Connected component lists
 
-  cv::Mat voteMap_{};
+  cv::Mat voteMap_{};  ///< Voting map for point extraction
 
-  int pixel_count_{}, rows_{}, cols_{}, min_pix_{}, part_num_{}, flags_{};
-  FT th_low_{}, th_high_{};
+  int pixel_count_{}, rows_{}, cols_{}, min_pix_{}, part_num_{}, flags_{};  ///< Configuration parameters
+  FT th_low_{}, th_high_{};                                                 ///< Threshold values
 
-  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};
+  mutable typename LsdBase<FT, LPT>::ImageData imageData_{};  ///< Auxiliary image data
 
+  /// @brief Initialize the detector and register all parameters.
   void init() {
     this->addManager(grad_);
 
@@ -119,27 +156,33 @@ class LsdBurns : public LsdBase<FT, LPT> {
   }
 
  public:
-  typedef FT float_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
-  typedef typename GRAD::mag_type mag_type;
-  typedef typename GRAD::grad_type grad_type;
-  typedef typename LsdBase<FT, LPT>::Line Line;
-  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
-  typedef std::vector<PT> PointVector;
+  typedef FT float_type;                                                   ///< Floating-point type
+  typedef LPT<FT> line_point;                                              ///< Line point type
+  typedef PT point_type;                                                   ///< Point type
+  typedef typename GRAD::mag_type mag_type;                                ///< Gradient magnitude type
+  typedef typename GRAD::grad_type grad_type;                              ///< Gradient vector type
+  typedef typename LsdBase<FT, LPT>::Line Line;                            ///< Line type
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;                ///< Vector of lines
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;              ///< Line segment type
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;                  ///< Image data type
+  typedef std::vector<PT> PointVector;                                     ///< Vector of points
 
-
-  //! Create a BurnsDetector object.
-  //!
-  //! @param th_high    Higher intensity threshold for magnitude. Range [0..1] (0.004 ~ 1/255).
-  //! @param th_low     Lower intensity threshold for magnitude. Range [0..1] (0.004 ~ 1/255).
-  //! @param min_pix        Minimum number of supporting pixels for line segment. Range [2..X]
-  //! @param part_num       Number of partitions the gradient directions are assigned to. Range [4...255]
-  //! @param flags Flags for line direction estimation
-  //!                   BURNS_NMS - Use Non Maxima Supression for burns detector
+  /// @brief Create a Burns line detector with specified parameters.
+  /// The Burns algorithm uses gradient thresholding and directional partitioning
+  /// to segment edges, then fits lines to connected components.
+  /// @param th_low Lower threshold for gradient magnitude (normalized, range 0-1, e.g., 0.004~1/255)
+  /// @param th_high Higher threshold for gradient magnitude (normalized, range 0-1, e.g., 0.012~3/255)
+  /// @param min_pix Minimum number of pixels to form a valid line segment (typically 5-20)
+  /// @param part_num Number of directional partitions (4-255, typically 12-16)
+  /// @param flags Detection flags: 0 = standard, BURNS_NMS = enable Non-Maxima Suppression
+  /// @code{cpp}
+  /// // Standard Burns detector
+  /// lsfm::LsdBurns<float> detector(0.004f, 0.012f, 5, 12, 0);
+  ///
+  /// // With Non-Maxima Suppression for cleaner results
+  /// lsfm::LsdBurns<float> detector_nms(0.004f, 0.012f, 5, 12, lsfm::BURNS_NMS);
+  /// @endcode
   LsdBurns(FT th_low = 0.004, FT th_high = 0.012, int min_pix = 5, int part_num = 12, int flags = 0)
       : min_pix_(min_pix), part_num_(part_num), flags_(flags), th_low_(th_low), th_high_(th_high) {
     CV_Assert(part_num_ < 256 && part_num_ > 3 && th_low <= 1 && th_low > 0 && th_high <= 1 && th_high > 0 &&
@@ -147,64 +190,107 @@ class LsdBurns : public LsdBase<FT, LPT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter names and values.
+  /// @param options Initializer list with parameter name/value pairs
   LsdBurns(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdBurns(const ValueManager::NameValueVector& options) {
     init();
     this->value(options);
   }
 
+  /// @brief Get/set lower threshold via ValueManager interface.
+  /// @param t New lower threshold value (optional)
+  /// @return Current or updated lower threshold
   Value valueThresholdLow(const Value& t = Value::NAV()) {
     if (t.type()) thresholdLow(t.get<FT>());
     return th_low_;
   }
 
+  /// @brief Get current lower threshold for gradient magnitude.
+  /// @return Lower threshold (normalized, 0-1)
   FT thresholdLow() const { return th_low_; }
 
+  /// @brief Set lower threshold for gradient magnitude.
+  /// @param t New lower threshold value (normalized, 0-1)
   void thresholdLow(FT t) { th_low_ = t; }
 
+  /// @brief Get/set upper threshold via ValueManager interface.
+  /// @param t New upper threshold value (optional)
+  /// @return Current or updated upper threshold
   Value valueThresholdHigh(const Value& t = Value::NAV()) {
     if (t.type()) thresholdHigh(t.get<FT>());
     return th_high_;
   }
 
+  /// @brief Get current upper threshold for gradient magnitude.
+  /// @return Upper threshold (normalized, 0-1)
   FT thresholdHigh() const { return th_high_; }
 
+  /// @brief Set upper threshold for gradient magnitude.
+  /// @param t New upper threshold value (normalized, 0-1)
   void thresholdHigh(FT t) { th_high_ = t; }
 
+  /// @brief Set both lower and upper thresholds at once.
+  /// @param low New lower threshold (normalized, 0-1)
+  /// @param high New upper threshold (normalized, 0-1)
   void threshold(FT low, FT high) {
     th_low_ = low;
     th_high_ = high;
   }
 
+  /// @brief Get/set minimum pixels via ValueManager interface.
+  /// @param mp New minimum pixels value (optional)
+  /// @return Current or updated minimum pixels
   Value valueMinPixel(const Value& mp = Value::NAV()) {
     if (mp.type()) minPixels(mp.getInt());
     return min_pix_;
   }
 
+  /// @brief Get current minimum number of supporting pixels for line segments.
+  /// @return Minimum pixel count
   int minPixels() const { return min_pix_; }
 
+  /// @brief Set minimum number of supporting pixels for line segments.
+  /// @param mp Minimum pixel count (typically 5-20)
   void minPixels(int mp) { min_pix_ = mp; }
 
+  /// @brief Get/set partitions via ValueManager interface.
+  /// @param p New partition count (optional)
+  /// @return Current or updated partition count
   Value valuePartitions(const Value& p = Value::NAV()) {
     if (p.type()) partitions(p.getInt());
     return part_num_;
   }
 
+  /// @brief Get current number of directional partitions.
+  /// @return Number of partitions (4-255)
   int partitions() const { return part_num_; }
 
+  /// @brief Set number of directional partitions for gradient discretization.
+  /// Higher values provide finer directional resolution.
+  /// @param p Number of partitions (4-255, typically 12-16)
   void partitions(int p) { part_num_ = p; }
 
+  /// @brief Get/set flags via ValueManager interface.
+  /// @param f New flags value (optional)
+  /// @return Current or updated flags
   Value valueFlags(const Value& f = Value::NAV()) {
     if (f.type()) flags(f.getInt());
     return flags_;
   }
 
+  /// @brief Get current detection flags.
+  /// @return Flags bitmask (BURNS_NMS, etc.)
   int flags() const { return flags_; }
 
+  /// @brief Set detection flags.
+  /// @param f Flags bitmask (0 = none, BURNS_NMS = enable Non-Maxima Suppression)
   void flags(int f) { flags_ = f; }
 
   using LsdBase<FT, LPT>::detect;
@@ -253,11 +339,17 @@ class LsdBurns : public LsdBase<FT, LPT> {
     computeLines();
   }
 
+  /// @brief Get const reference to the gradient computation object.
+  /// @return Const reference to gradient object
   inline const GRAD& grad() const { return grad_; }
+
+  /// @brief Get mutable reference to the gradient computation object.
+  /// Allows advanced configuration of gradient computation parameters.
+  /// @return Mutable reference to gradient object
   inline GRAD& grad() { return grad_; }
 
-  //! Get image data description. For every layer in image data, a DataDescriptorEntry is defined, giving the name
-  //! and a description for the layer
+  /// @brief Get descriptor information for auxiliary image data.
+  /// @return Data descriptor with name and description for each layer
   virtual const DataDescriptor& imageDataDescriptor() const final {
     static DataDescriptor dsc;
     if (dsc.empty()) {
@@ -270,7 +362,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
     return dsc;
   }
 
-  //! Get image data.
+  /// @brief Get auxiliary image data computed during detection.
+  /// @return Vector of image data layers
   virtual const ImageData& imageData() const final {
     if (imageData_.empty()) {
       imageData_.push_back(grad_.gx());

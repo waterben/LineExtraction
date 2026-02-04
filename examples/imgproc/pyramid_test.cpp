@@ -1,3 +1,15 @@
+/// @file pyramid_test.cpp
+/// @brief Image pyramid construction and processing.
+///
+/// Demonstrates multi-scale image processing:
+/// - Gaussian pyramid construction
+/// - Gradient computation at multiple scales
+/// - NMS edge detection across pyramid levels
+/// - Pyramid visualization utilities
+///
+/// @usage ./pyramid_test [image_path]
+/// @param image_path Optional path to input image (default: windmill.jpg)
+
 #include <edge/nms.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/pyramid.hpp>

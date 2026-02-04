@@ -1,3 +1,14 @@
+/// @file lsd_video.cpp
+/// @brief Real-time LSD on video streams.
+///
+/// Demonstrates real-time line segment detection on video:
+/// - Webcam or video file input
+/// - Frame-by-frame LSD processing
+/// - Real-time visualization of detected lines
+///
+/// @usage ./lsd_video [video_path]
+/// @param video_path Optional path to video file (default: webcam)
+
 #include <geometry/draw.hpp>
 #include <lsd/lsd_el.hpp>
 #include <opencv2/core/core.hpp>

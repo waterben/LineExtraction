@@ -1,3 +1,14 @@
+/// @file pyramid.cpp
+/// @brief Gaussian pyramid and DoG visualization for thesis figures.
+///
+/// Generates difference-of-Gaussian (DoG) images for thesis Chapter 2:
+/// - Gaussian blur at different scales
+/// - DoG = difference between consecutive blur levels
+/// - Writes results to ./results/chapter_02/
+///
+/// @usage ./pyramid
+/// @author Benjamin Wassermann
+
 // C by Benjamin Wassermann
 
 #include <imgproc/image_operator.hpp>

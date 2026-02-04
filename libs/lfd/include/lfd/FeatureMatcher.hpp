@@ -39,6 +39,10 @@
 //
 //M*/
 
+/// @file FeatureMatcher.hpp
+/// @brief Brute force matcher for feature descriptors.
+/// Provides template-based matching with distance computation, k-NN search, and radius search capabilities.
+
 
 #pragma once
 
@@ -51,7 +55,9 @@
 namespace lsfm {
 
 
-//! simple brute force matcher -> compute distances between all candidates
+/// @brief Simple brute force descriptor matcher.
+/// Computes distances between all query and candidate descriptors with support
+/// for k-NN, radius search, and mask-based filtering.
 template <class FT, class DT, class DM = DescriptorMatch<FT>>
 class FmBruteForce : public OptionManager {
  public:
