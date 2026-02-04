@@ -208,5 +208,13 @@ build:tsan --linkopt=-fsanitize=thread
 # Config to bypass disk cache for fresh builds
 build:nocache --disk_cache=""
 
+# =============================================================================
+# GTK3 Support for OpenCV highgui (Linux only)
+# =============================================================================
+# Enable GTK3 support for OpenCV window functions (imshow, waitKey, etc.)
+# Requires: sudo apt install libgtk-3-dev
+build:gtk --@opencv//:with_gtk3=True
+build:gtk --@opencv//:gtk3=@ubuntu_gtk_deps//:gtk3
+
 # Try to import user-specific .bazelrc if it exists
 try-import %workspace%/.bazelrc.user
