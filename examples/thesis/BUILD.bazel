@@ -67,3 +67,14 @@ cc_binary(
         "@opencv",
     ],
 )
+
+# OpenCV feature detection and matching demo (AKAZE, xfeatures2d)
+cc_binary(
+    name = "thesis_opencv_features",
+    srcs = ["opencv_features.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "@opencv",
+        "@opencv_contrib//:xfeatures2d",
+    ],
+)

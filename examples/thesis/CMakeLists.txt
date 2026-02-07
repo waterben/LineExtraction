@@ -17,3 +17,6 @@ if(ENABLE_EVALUATION)
     add_executable(thesis_zc_examples zc_example.cpp)
     target_link_libraries(thesis_zc_examples lib_edge lib_imgproc lib_utility lib_eval lib_imgproc le::opencv)
 endif()
+
+add_executable(thesis_opencv_features opencv_features.cpp)
+target_link_libraries(thesis_opencv_features le::opencv)
