@@ -102,7 +102,7 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
     });
   } else {
     std::for_each(beg, end, [&](const PT& lp) {
-      FT m = static_cast<FT>(data.at<DT>(getY(lp), getX(lp)));
+      FT m = static_cast<FT>(data.at<DT>(static_cast<int>(getY(lp)), static_cast<int>(getX(lp))));
       count += m;
       sum_x += static_cast<FT>(getX(lp)) * m;
       sum_y += static_cast<FT>(getY(lp)) * m;
@@ -112,7 +112,7 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
     cy = static_cast<FT>(sum_y) / count;
 
     std::for_each(beg, end, [&](const PT& lp) {
-      FT m = static_cast<FT>(data.at<DT>(getY(lp), getX(lp)));
+      FT m = static_cast<FT>(data.at<DT>(static_cast<int>(getY(lp)), static_cast<int>(getX(lp))));
 
       FT dx = static_cast<FT>(getX(lp)) - cx;
       FT dy = static_cast<FT>(getY(lp)) - cy;
@@ -167,7 +167,7 @@ class RegressionFit {
 
   static inline void fit(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     fit_unorm(sx, sy, sxy, nx, ny);
-    FT norm = hypot(nx, ny);
+    FT norm = static_cast<FT>(hypot(nx, ny));
     nx /= norm;
     ny /= norm;
   }
@@ -211,18 +211,39 @@ class RegressionFit {
 };
 
 
-//! fit line implementation using eigen value descompsition
+/// @brief Line fitting using eigenvalue decomposition.
+/// Computes the smallest eigenvector of the covariance matrix to find
+/// the best-fit line normal direction.
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
+/// @tparam DT Data/weight element type
 template <class FT, class PT, class DT = FT>
 class EigenFit {
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type used in calculations
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
+
+  /// @typedef data_type
+  /// @brief Data/weight element type
   typedef DT data_type;
 
   EigenFit() {}
 
+  /// @brief Get the name of this fit method.
+  /// @return "Eigen"
   static std::string name() { return "Eigen"; }
 
+  /// @brief Compute eigenvalues from covariance components.
+  /// @param sx X variance
+  /// @param sy Y variance
+  /// @param sxy Covariance
+  /// @param e1 Output largest eigenvalue
+  /// @param e2 Output smallest eigenvalue
   static inline void eigen(FT sx, FT sy, FT sxy, FT& e1, FT& e2) {
     FT lambda = static_cast<FT>(0.5) * std::sqrt((sx - sy) * (sx - sy) + 4 * sxy * sxy);
     FT p = static_cast<FT>(0.5) * (sx + sy);
@@ -236,6 +257,13 @@ class EigenFit {
     fit(sx, sy, sxy, dx, dy);
   }
 
+  /// @brief Fit unnormalized line normal from covariance components.
+  /// Uses eigenvalue decomposition to find the normal direction.
+  /// @param sx X variance
+  /// @param sy Y variance
+  /// @param sxy Covariance
+  /// @param nx Output X component of normal (unnormalized)
+  /// @param ny Output Y component of normal (unnormalized)
   static inline void fit_unorm(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     // Compute smallest eigenvalue
     FT lambda = static_cast<FT>(0.5) * (sx + sy - std::sqrt((sx - sy) * (sx - sy) + 4 * sxy * sxy));
@@ -249,9 +277,15 @@ class EigenFit {
     }
   }
 
+  /// @brief Fit normalized line normal from covariance components.
+  /// @param sx X variance
+  /// @param sy Y variance
+  /// @param sxy Covariance
+  /// @param nx Output X component of unit normal
+  /// @param ny Output Y component of unit normal
   static inline void fit(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     fit_unorm(sx, sy, sxy, nx, ny);
-    FT norm = hypot(nx, ny);
+    FT norm = static_cast<FT>(hypot(nx, ny));
     nx /= norm;
     ny /= norm;
   }
@@ -294,18 +328,38 @@ class EigenFit {
   }
 };
 
-//! fit line implementation using opencv eigen
+/// @brief Line fitting using OpenCV eigenvalue decomposition.
+/// Uses cv::eigen to solve the 2x2 covariance eigenvalue problem.
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
+/// @tparam DT Data/weight element type
 template <class FT, class PT, class DT = FT>
 class EigenCVFit {
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
+
+  /// @typedef data_type
+  /// @brief Data/weight element type
   typedef DT data_type;
 
   EigenCVFit() {}
 
+  /// @brief Get the name of this fit method.
+  /// @return "EigenCV"
   static std::string name() { return "EigenCV"; }
 
+  /// @brief Compute eigenvalues using OpenCV.
+  /// @param sx X variance
+  /// @param sy Y variance
+  /// @param sxy Covariance
+  /// @param e1 Output largest eigenvalue
+  /// @param e2 Output smallest eigenvalue
   static inline void eigen(FT sx, FT sy, FT sxy, FT& e1, FT& e2) {
     cv::Matx<FT, 2, 2> M(sx, sxy, sxy, sy);
 
@@ -336,6 +390,8 @@ class EigenCVFit {
     ny = V.at<FT>(1, 1);
   }
 
+  /// @brief Fit unnormalized line normal from covariance components.
+  /// Since OpenCV eigen returns normalized vectors, this is equivalent to fit().
   static inline void fit_unorm(FT sx, FT sy, FT sxy, FT& nx, FT& ny) { fit(sx, sy, sxy, nx, ny); }
 
   static inline void fit(const PT* beg, const PT* end, FT& cx, FT& cy, FT& nx, FT& ny) {
@@ -373,7 +429,10 @@ class EigenCVFit {
   }
 };
 
-//! fit line base class
+/// @brief Base class for line fitting operations.
+/// Wraps a FIT implementation with various apply() overloads for different
+/// point representations (points, indices, segments).
+/// @tparam FIT Underlying fit implementation type
 template <class FIT>
 class FitLine : public ValueManager {
   FitLine(const FitLine&);
@@ -382,8 +441,16 @@ class FitLine : public ValueManager {
   FIT fit_;
 
  public:
+  /// @typedef fit_type
+  /// @brief Underlying fit type
   typedef FIT fit_type;
+
+  /// @typedef float_type
+  /// @brief Floating-point type
   typedef typename fit_type::float_type float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef typename fit_type::point_type point_type;
 
   FitLine() : fit_() {}
@@ -491,20 +558,31 @@ class FitLine : public ValueManager {
     });
   }
 
-  //! get name of fit line operator
+  /// @brief Get the name of this fit line operator.
+  /// @return Name string from the underlying FIT type
   virtual const std::string name() const { return FIT::name(); }
 };
 
-//! fit line implementation using M-Esitmater of opencv
+/// @brief Line fitting using OpenCV M-Estimator (robust fitting).
+/// Wraps cv::fitLine with configurable distance type and parameters.
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
 template <class FT, class PT>
 class MEstimatorFit {
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
 
   int dist;
   double param, reps, aeps;
 
+  /// @brief Get the name of this fit method.
+  /// @return "M-Estimator"
   static std::string name() { return "M-Estimator"; }
 
   MEstimatorFit(int d = cv::DIST_L2, double p = 0, double r = 0.001, double a = 0.001)
@@ -542,14 +620,21 @@ class MEstimatorFit {
   }
 };
 
-//! M-Esitmater Point specialization
+/// @brief M-Estimator specialization for cv::Point.
+/// Avoids copying by wrapping the point array directly as a cv::Mat.
+/// @tparam FT Floating-point type
 template <class FT>
 class MEstimatorFit<FT, cv::Point> {
  public:
   int dist;
   double param, reps, aeps;
 
+  /// @typedef float_type
+  /// @brief Floating-point type
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type (cv::Point)
   typedef cv::Point point_type;
 
   MEstimatorFit(int d = cv::DIST_L2, double p = 0, double r = 0.001, double a = 0.001)
@@ -585,7 +670,10 @@ class MEstimatorFit<FT, cv::Point> {
   }
 };
 
-//! fit line implementation using M-Esitmater of opencv
+/// @brief FitLine wrapper for M-Estimator with configurable parameters.
+/// Exposes distance type, parameter, reps, and aeps as value-managed options.
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
 template <class FT, class PT>
 class MEstimatorFitLine : public FitLine<MEstimatorFit<FT, PT>> {
   using FitLine<MEstimatorFit<FT, PT>>::fit_;

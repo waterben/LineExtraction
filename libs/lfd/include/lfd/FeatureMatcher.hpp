@@ -22,33 +22,45 @@ namespace lsfm {
 /// @brief Simple brute force descriptor matcher.
 /// Computes distances between all query and candidate descriptors with support
 /// for k-NN, radius search, and mask-based filtering.
+/// @tparam FT Floating-point type used for distance computations.
+/// @tparam DT Descriptor type supporting a `distance()` method.
+/// @tparam DM Match type storing query index, match index, and distance (defaults to DescriptorMatch<FT>).
 template <class FT, class DT, class DM = DescriptorMatch<FT>>
 class FmBruteForce : public OptionManager {
  public:
-  typedef FT float_type;
-  typedef DT descriptor_type;
-  typedef DM match_type;
-  typedef std::vector<match_type> match_vector;
+  typedef FT float_type;                         ///< Floating-point type for distances.
+  typedef DT descriptor_type;                    ///< Descriptor type.
+  typedef DM match_type;                         ///< Match result type.
+  typedef std::vector<match_type> match_vector;  ///< Vector of match results.
 
 
+  /// @brief Distance graph storing match results between query and candidate descriptors.
   struct Graph {
+    /// @brief Construct a new Graph.
+    /// @param r Maximum distance radius (0 means unlimited).
+    /// @param kk Number of nearest neighbors (0 means unlimited).
     Graph(float_type r = 0, int kk = 0) : distances(), relations(), k(kk), radius(r) {}
 
-    match_vector distances;
-    std::vector<size_t> relations;
-    int k;
-    float_type radius;
+    match_vector distances;         ///< Sorted match distances for all query descriptors.
+    std::vector<size_t> relations;  ///< Cumulative index boundaries per query descriptor.
+    int k;                          ///< Maximum number of nearest neighbors stored per query.
+    float_type radius;              ///< Overall maximum distance across all stored matches.
   };
 
-  //! init object with radius (max distance between descriptors) and k (k best matches
-  //! for every query descriptor). If radius or k = 0 (default), all matches are stored
+  /// @brief Construct a brute force matcher.
+  /// @param radius Maximum distance between descriptors (0 means no limit).
+  /// @param k Number of best matches to keep per query descriptor (0 means keep all).
   FmBruteForce(float_type radius = 0, int k = 0) : graph_(), k_(k), radius_(radius) {
     std::string type = (sizeof(float_type) > 4 ? "double" : "float");
     this->options_.push_back(OptionManager::OptionEntry("k", k, "int", "Number of nearest neighbors."));
     this->options_.push_back(OptionManager::OptionEntry("radius", radius, type, "Max distance between descriptors."));
   }
 
-  //! train matcher (e.g. compute distance graph)
+  /// @brief Train the matcher by computing a distance graph between query and match descriptors.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
   template <template <class, class...> class DV, class... DVArgs>
   void train(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc) {
     auto ms = mDsc.size();
@@ -90,8 +102,15 @@ class FmBruteForce : public OptionManager {
     graph_.radius = mdist;
   }
 
-  //! train matcher (e.g. compute distance graph)
-  //! //! using inverted masks (inverted masks, != 0 is not masked, == 0 is masked)
+  /// @brief Train the matcher with inverted masks.
+  /// Inverted masks: non-zero values are included, zero values are masked out.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param qMask Inverted mask for query descriptors.
+  /// @param mMask Inverted mask for match descriptors.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   void train(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const MV& qMask, const MV& mMask) {
     auto ms = mDsc.size();
@@ -135,7 +154,12 @@ class FmBruteForce : public OptionManager {
     graph_.radius = mdist;
   }
 
-  //! train matcher and apply filter
+  /// @brief Train the matcher and apply a feature filter to exclude specific pairs.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
   template <template <class, class...> class DV, class... DVArgs>
   void train(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const FeatureFilter<FT>& ff) {
     auto ms = mDsc.size();
@@ -178,8 +202,16 @@ class FmBruteForce : public OptionManager {
   }
 
 
-  //! train matcher and apply filter
-  //! using inverted masks (inverted masks, != 0 is not masked, == 0 is masked)
+  /// @brief Train the matcher with inverted masks and a feature filter.
+  /// Inverted masks: non-zero values are included, zero values are masked out.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param qMask Inverted mask for query descriptors.
+  /// @param mMask Inverted mask for match descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   void train(const DV<DT, DVArgs...>& qDsc,
              const DV<DT, DVArgs...>& mDsc,
@@ -230,8 +262,15 @@ class FmBruteForce : public OptionManager {
   }
 
 
-  //! train matcher (e.g. compute distance graph)
-  //! using given match structure
+  /// @brief Train the matcher using a pre-existing match structure.
+  /// Optionally sorts matches by query index before training.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Match vector type (must be sortable and indexable).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param matches Pre-existing match structure (will be sorted if needed).
+  /// @param isSorted Whether matches are already sorted by query index.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   void trainMatches(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, MV& matches, bool isSorted) {
     if (!isSorted) {
@@ -241,8 +280,14 @@ class FmBruteForce : public OptionManager {
     trainMatches(qDsc, mDsc, matches);
   }
 
-  //! train matcher (e.g. compute distance graph)
-  //! using given match structure
+  /// @brief Train the matcher using a pre-existing sorted match structure.
+  /// Matches must be pre-sorted by query index in ascending order.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Match vector type (must be indexable, sorted by queryIdx).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param matches Pre-existing match structure sorted by query index.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   void trainMatches(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const MV& matches) {
     graph_.distances.resize(matches.size());
@@ -306,25 +351,56 @@ class FmBruteForce : public OptionManager {
   }
 
 
-  //! get matches
+  /// @brief Train and return all matches between query and candidate descriptors.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @return Reference to the internal match vector.
   template <template <class, class...> class DV, class... DVArgs>
   const match_vector& match(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc) {
     train(qDsc, mDsc);
     return graph_.distances;
   }
 
+  /// @brief Train and return matches with a feature filter applied.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
+  /// @return Reference to the internal match vector.
   template <template <class, class...> class DV, class... DVArgs>
   const match_vector& match(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const FeatureFilter<FT>& ff) {
     train(qDsc, mDsc, ff);
     return graph_.distances;
   }
 
+  /// @brief Train and return matches with inverted masks applied.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param lm Inverted mask for query (left) descriptors.
+  /// @param rm Inverted mask for match (right) descriptors.
+  /// @return Reference to the internal match vector.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   const match_vector& match(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const MV& lm, const MV& rm) {
     train(qDsc, mDsc, lm, rm);
     return graph_.distances;
   }
 
+  /// @brief Train and return matches with inverted masks and a feature filter.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param lm Inverted mask for query (left) descriptors.
+  /// @param rm Inverted mask for match (right) descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
+  /// @return Reference to the internal match vector.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   const match_vector& match(const DV<DT, DVArgs...>& qDsc,
                             const DV<DT, DVArgs...>& mDsc,
@@ -335,12 +411,26 @@ class FmBruteForce : public OptionManager {
     return graph_.distances;
   }
 
+  /// @brief Train using a pre-existing match list and return the distance results.
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Match vector type.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param mv Pre-existing match list.
+  /// @return Reference to the internal match vector.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   const match_vector& matchList(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, const MV& mv) {
     train(qDsc, mDsc, mv);
     return graph_.distances;
   }
 
+  /// @brief Find the single best match for each query descriptor (static version).
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param[out] matches Output vector filled with the best match per query.
   template <template <class, class...> class DV, class... DVArgs>
   static void match(const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, match_vector& matches) {
     auto ms = mDsc.size();
@@ -371,6 +461,13 @@ class FmBruteForce : public OptionManager {
     }
   }
 
+  /// @brief Find the single best match per query descriptor with a feature filter (static version).
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
+  /// @param[out] matches Output vector filled with the best match per query.
   template <template <class, class...> class DV, class... DVArgs>
   static void match(const DV<DT, DVArgs...>& qDsc,
                     const DV<DT, DVArgs...>& mDsc,
@@ -398,6 +495,15 @@ class FmBruteForce : public OptionManager {
     }
   }
 
+  /// @brief Find the single best match per query descriptor with inverted masks (static version).
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param qMask Inverted mask for query descriptors.
+  /// @param mMask Inverted mask for match descriptors.
+  /// @param[out] matches Output vector filled with the best match per query.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   static void match(const DV<DT, DVArgs...>& qDsc,
                     const DV<DT, DVArgs...>& mDsc,
@@ -427,6 +533,16 @@ class FmBruteForce : public OptionManager {
     }
   }
 
+  /// @brief Find the single best match per query descriptor with masks and a filter (static version).
+  /// @tparam DV Container template for descriptor vectors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Mask vector type (indexable, non-zero means included).
+  /// @param qDsc Query descriptors.
+  /// @param mDsc Match (candidate) descriptors.
+  /// @param qMask Inverted mask for query descriptors.
+  /// @param mMask Inverted mask for match descriptors.
+  /// @param ff Feature filter that returns true for pairs to exclude.
+  /// @param[out] matches Output vector filled with the best match per query.
   template <template <class, class...> class DV, class... DVArgs, class MV>
   static void match(const DV<DT, DVArgs...>& qDsc,
                     const DV<DT, DVArgs...>& mDsc,
@@ -458,11 +574,14 @@ class FmBruteForce : public OptionManager {
   }
 
 
-  //! get graph (all distances between all descriptors)
+  /// @brief Get the distance graph containing all computed match distances.
+  /// @return Const reference to the internal distance graph.
   const Graph& graph() const { return graph_; }
 
 
-  //! get k best matches for each query descriptor (in increasing order of distances).
+  /// @brief Get the k best matches for each query descriptor in increasing distance order.
+  /// @param[out] matches Output vector filled with the k-nearest matches per query.
+  /// @param k Number of nearest neighbors to retrieve (must be > 0).
   void knn(match_vector& matches, int k) {
     CV_Assert(k > 0);
     if (k >= graph_.k) {
@@ -482,8 +601,10 @@ class FmBruteForce : public OptionManager {
     }
   }
 
-  //! Find best matches for each query descriptor which have distance less than
-  //! maxDistance (in increasing order of distances).
+  /// @brief Find matches within a maximum distance radius for each query descriptor.
+  /// Results are returned in increasing order of distance.
+  /// @param[out] matches Output vector filled with matches within the radius.
+  /// @param radius Maximum distance threshold (must be > 0).
   void radius(match_vector& matches, float_type radius) {
     CV_Assert(radius > 0);
 
@@ -507,7 +628,8 @@ class FmBruteForce : public OptionManager {
     }
   }
 
-  //! Find best match for each query descriptor
+  /// @brief Find the single best (closest) match for each query descriptor.
+  /// @param[out] matches Output vector filled with the best match per query.
   void best(match_vector& matches) {
     auto iter = graph_.distances.cbegin();
     matches.reserve(graph_.relations.size());
@@ -522,6 +644,9 @@ class FmBruteForce : public OptionManager {
   }
 
  protected:
+  /// @brief Apply an option value by name.
+  /// @param name Option name ("k" or "radius").
+  /// @param value New value for the option.
   void setOptionImpl(const std::string& name, double value) {
     if (name == "k") {
       if (value >= 0 && value <= std::numeric_limits<int>::max()) {
@@ -537,9 +662,9 @@ class FmBruteForce : public OptionManager {
   }
 
  private:
-  Graph graph_;
-  int k_;
-  float_type radius_;
+  Graph graph_;        ///< Internal distance graph storing match results.
+  int k_;              ///< Number of nearest neighbors to keep (0 = all).
+  float_type radius_;  ///< Maximum match distance threshold (0 = no limit).
 };
 
 }  // namespace lsfm

@@ -40,6 +40,23 @@ Research implementations of Line Segment Detection algorithms:
 
 [📄 Full Documentation](lsd_external/README.md)
 
+---
+
+### [`imgproc_external/`](imgproc_external/README.md)
+
+**External Image Processing Algorithms - Various Copyrights**
+
+Core algorithm implementations extracted from research papers:
+
+| Implementation | Authors | License | Notes |
+|----------------|---------|---------|-------|
+| **RCMG** | Adrian N. Evans (U. Bath) | All rights reserved | No open-source license |
+| **SUSAN** | Stephen Smith (FMRIB) | Crown Copyright | Research only, must not be sold |
+
+**Used by:** `libs/imgproc` (edge detection features)
+
+[📄 Full Documentation](imgproc_external/README.md)
+
 ## License Summary
 
 | Component | License | Commercial Use | Source Disclosure | Citation Required |
@@ -133,6 +150,15 @@ target_link_libraries(my_target
    - Typically require citation in publications
    - May restrict commercial use without permission
 
+4. **RCMG** (`imgproc_external/`):
+   - "All rights reserved" — no open-source license granted
+   - Contact Adrian N. Evans (University of Bath) for licensing
+
+5. **SUSAN** (`imgproc_external/`):
+   - Crown Copyright — research purposes only, must not be sold
+   - UK Patent 2272285 (lapsed, but copyright remains)
+   - Contact FMRIB Centre / Stephen Smith for commercial use
+
 **Safe Alternative:** The main LineExtraction codebase (outside `third-party/contrib/`) is MIT-licensed and suitable for commercial use.
 
 ## Contributions
@@ -151,6 +177,7 @@ Prefer MIT-compatible alternatives when possible.
 - Main Project: [LineExtraction README](../../README.md)
 - MATLAB Coder: [matlab_coder/README.md](matlab_coder/README.md)
 - LSD External: [lsd_external/README.md](lsd_external/README.md)
+- Image Processing External: [imgproc_external/README.md](imgproc_external/README.md)
 - License FAQ: <https://choosealicense.com/>
 
 ---

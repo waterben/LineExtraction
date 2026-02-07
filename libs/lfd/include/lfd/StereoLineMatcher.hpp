@@ -17,7 +17,12 @@
 namespace lsfm {
 
 
-//! stereo line Matcher
+/// @brief Stereo line matcher combining geometric filtering and descriptor matching.
+/// Uses StereoLineFilter for candidate generation and FmBruteForce for
+/// descriptor-based matching with left-right consistency check.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (default: std::vector<LineSegment<FT>>)
+/// @tparam DC_Helper Descriptor computation helper (default: GchGradImgInterpolate<FT>)
 template <class FT, class GV = std::vector<LineSegment<FT>>, class DC_Helper = GchGradImgInterpolate<FT>>
 class StereoLineMatcher : public OptionManager {
   // Deleted copy operations due to pointer members
@@ -25,35 +30,43 @@ class StereoLineMatcher : public OptionManager {
   StereoLineMatcher& operator=(const StereoLineMatcher&) = delete;
 
  public:
-  typedef FT float_type;
-
-  typedef GV geometric_vector;
-  typedef typename geometric_vector::value_type geometric_type;
-
-  typedef FdcGenericLR<FT, geometric_type, DC_Helper> descriptor_creator;
-  typedef typename descriptor_creator::descriptor_type descriptor_type;
-  typedef std::vector<descriptor_type> descriptor_vector;
-
-  typedef DescriptorMatch<FT> match_type;
-  typedef std::vector<match_type> match_vector;
+  typedef FT float_type;                                                   ///< Float type used
+  typedef GV geometric_vector;                                             ///< Geometric vector type
+  typedef typename geometric_vector::value_type geometric_type;            ///< Geometric element type
+  typedef FdcGenericLR<FT, geometric_type, DC_Helper> descriptor_creator;  ///< Descriptor creator type
+  typedef typename descriptor_creator::descriptor_type descriptor_type;    ///< Descriptor type
+  typedef std::vector<descriptor_type> descriptor_vector;                  ///< Descriptor vector type
+  typedef DescriptorMatch<FT> match_type;                                  ///< Match result type
+  typedef std::vector<match_type> match_vector;                            ///< Match result vector type
 
 
  private:
-  StereoLineFilter<FT, GV> slf;
-  FmBruteForce<FT, descriptor_type, match_type> bfm;
+  StereoLineFilter<FT, GV> slf;                       ///< Stereo line filter for candidates
+  FmBruteForce<FT, descriptor_type, match_type> bfm;  ///< Brute force matcher
 
-  descriptor_creator *creatorL, *creatorR;
-  typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;
+  descriptor_creator *creatorL, *creatorR;                       ///< Raw descriptor creator pointers
+  typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;  ///< Owned descriptor creator pointers
 
-  descriptor_vector dscLeft_, dscRight_;
-  std::vector<size_t> mLeft_, mRight_;
+  descriptor_vector dscLeft_;   ///< Left descriptors
+  descriptor_vector dscRight_;  ///< Right descriptors
+  std::vector<size_t> mLeft_;   ///< Left match counts
+  std::vector<size_t> mRight_;  ///< Right match counts
 
-  FT distTh_;
+  FT distTh_;  ///< Distance threshold (0 = auto)
 
  public:
-  typedef typename descriptor_creator::FdcPtr FdcPtr;
+  typedef typename descriptor_creator::FdcPtr FdcPtr;  ///< Descriptor creator pointer type
 
-
+  /// @brief Construct with reference descriptor creators.
+  /// @param cL Left descriptor creator (not owned)
+  /// @param cR Right descriptor creator (not owned)
+  /// @param height Image height
+  /// @param maxDist Maximum line distance in pixels
+  /// @param angleTh Maximum angle difference between matching lines
+  /// @param minYOverlap Minimum Y overlap ratio (0-1)
+  /// @param distTh Descriptor distance threshold (0 = auto)
+  /// @param r Radius for radius matching
+  /// @param kk Number of nearest neighbors
   StereoLineMatcher(descriptor_creator& cL,
                     descriptor_creator& cR,
                     int height,
@@ -77,6 +90,16 @@ class StereoLineMatcher : public OptionManager {
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
   }
 
+  /// @brief Construct with shared pointer descriptor creators.
+  /// @param cL Left descriptor creator (shared ownership)
+  /// @param cR Right descriptor creator (shared ownership)
+  /// @param height Image height (default: 0)
+  /// @param maxDist Maximum line distance in pixels (default: 10000)
+  /// @param angleTh Maximum angle difference (default: 5)
+  /// @param minYOverlap Minimum Y overlap ratio (default: 0.5)
+  /// @param distTh Descriptor distance threshold (default: 0)
+  /// @param r Radius for radius matching (default: 0)
+  /// @param kk Number of nearest neighbors (default: 0)
   StereoLineMatcher(const FdcPtr& cL = FdcPtr(),
                     const FdcPtr& cR = FdcPtr(),
                     int height = 0,
@@ -105,6 +128,12 @@ class StereoLineMatcher : public OptionManager {
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
   }
 
+  /// @brief Match with pre-computed descriptors.
+  /// @param left Left line segments
+  /// @param right Right line segments
+  /// @param dscL Left descriptors
+  /// @param dscR Right descriptors
+  /// @param matches Output verified matches
   void match(const geometric_vector& left,
              const geometric_vector& right,
              const descriptor_vector& dscL,
@@ -115,6 +144,11 @@ class StereoLineMatcher : public OptionManager {
     final(left, right, dscL, dscR, candidates, matches);
   }
 
+  /// @brief Match with automatic descriptor creation.
+  /// Creates candidates, computes descriptors, and performs matching.
+  /// @param left Left line segments
+  /// @param right Right line segments
+  /// @param matches Output verified matches
   void match(const geometric_vector& left, const geometric_vector& right, match_vector& matches) {
     CV_Assert(creatorL != nullptr && creatorR != nullptr);
     match_vector candidates;
@@ -124,16 +158,32 @@ class StereoLineMatcher : public OptionManager {
     final(left, right, dscLeft_, dscRight_, candidates, matches);
   }
 
+  /// @brief Get the stereo line filter.
+  /// @return Reference to the internal stereo line filter
   StereoLineFilter<FT, GV>& getFilter() { return slf; }
 
-
+  /// @brief Get the brute force matcher.
+  /// @return Reference to the internal brute force matcher
   FmBruteForce<FT, descriptor_type, std::vector<match_vector>>& getMatcher() { return bfm; }
 
+  /// @brief Get left descriptors.
+  /// @return Copy of the left descriptor vector
   descriptor_vector getDescriptorLeft() { return dscLeft_; }
+
+  /// @brief Get right descriptors.
+  /// @return Copy of the right descriptor vector
   descriptor_vector getDescriptorRight() { return dscRight_; }
 
 
  protected:
+  /// @brief Perform final matching with left-right consistency check.
+  /// Builds distance graph from both directions and applies L-R check.
+  /// @param left Left line segments
+  /// @param right Right line segments
+  /// @param dscL Left descriptors
+  /// @param dscR Right descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
   void final(const geometric_vector& left,
              const geometric_vector& right,
              const descriptor_vector& dscL,
@@ -235,6 +285,9 @@ class StereoLineMatcher : public OptionManager {
     });
   }
 
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     static_cast<void>(name);
     static_cast<void>(value);

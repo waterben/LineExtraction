@@ -95,10 +95,10 @@ class StringTable {
   void saveCSV(const std::string& file) const;
 };
 
-/// @brief Stream output operator for StringTable
-/// @param os Output stream
-/// @param StringTable StringTable to output
-/// @return Reference to output stream
-std::ostream& operator<<(std::ostream& os, const StringTable& StringTable);
+/// @brief Stream output operator for StringTable.
+/// @param os Output stream.
+/// @param table StringTable to output.
+/// @return Reference to output stream.
+std::ostream& operator<<(std::ostream& os, const StringTable& table);
 
 }  // namespace lsfm

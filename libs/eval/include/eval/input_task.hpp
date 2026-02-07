@@ -61,7 +61,10 @@ class InputTask : public Task {
   virtual void prepare(const InputData& source) = 0;
 };
 
-/// @brief Task runner with data providers for input tasks
+/// @brief Task runner that feeds data from providers to input tasks.
+/// Iterates over data providers, feeding each data item to all registered
+/// input tasks in sequence.
+/// @tparam InputTaskT The input task type (must inherit InputTask)
 template <typename InputTaskT>
 class InputTaskRunner : public TaskRunner {
  public:
@@ -72,6 +75,12 @@ class InputTaskRunner : public TaskRunner {
   using InputTaskPtr = std::shared_ptr<InputTaskType>;
   using InputTaskPtrList = std::vector<InputTaskPtr>;
 
+  /// @brief Construct a task runner.
+  /// @param tr_data_provider List of data providers
+  /// @param tr_name Name of this task runner
+  /// @param tr_target_path Output path for visual results
+  /// @param tr_verbose Enable verbose output
+  /// @param tr_visual_results Enable saving visual results
   InputTaskRunner(DataProviderPtrList tr_data_provider,
                   const std::string& tr_name,
                   const std::string& tr_target_path = std::string(),
@@ -86,12 +95,13 @@ class InputTaskRunner : public TaskRunner {
   using TaskRunner::verbose;
   using TaskRunner::visual_results;
 
-  DataProviderPtrList data_provider{};
-  InputTaskPtrList input_tasks{};  ///< Typed tasks (shadows base class tasks)
+  DataProviderPtrList data_provider{};  ///< Data providers for this runner
+  InputTaskPtrList input_tasks{};       ///< Typed tasks to execute
 
-  std::string target_path{};
+  std::string target_path{};  ///< Output path for visual results
 
-  /// @brief Run tasks
+  /// @brief Run all tasks over all data providers.
+  /// @param loops Number of timed iterations per data item
   void run(std::size_t loops) override {
     std::cout << "Starting task sequence: " << name << std::endl;
     int64 start = cv::getTickCount();

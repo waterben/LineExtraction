@@ -21,34 +21,50 @@
 namespace lsfm {
 
 
-//! stereo Point filter -> uses binning and x-axis sorting + constrains to sort
-//! out bad Point match candidates
+/// @brief Motion-based point filter using spatial binning.
+/// Uses 2D spatial binning and movement estimation to filter
+/// out bad temporal point match candidates.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (e.g., std::vector<cv::KeyPoint>)
+/// @tparam GT Geometric element type (default: GV::value_type)
+/// @tparam bins Number of spatial bins per dimension (default: 12)
+/// @tparam DM Descriptor match type (default: DescriptorMatch<FT>)
 template <class FT,
           class GV,
           class GT = typename GV::value_type,
           unsigned int bins = 12,
           class DM = DescriptorMatch<FT>>
 class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
-  int height_, width_;
+  int height_;  ///< Image height
+  int width_;   ///< Image width
 
+  /// @brief Pre-computed point data for efficient filtering.
   struct PointData {
+    /// @brief Construct from a 2D vector.
+    /// @param p Point position
+    /// @param s Scale factor
     PointData(const lsfm::Vec2<FT>& p = lsfm::Vec2<FT>(), FT s = 0) : position(p), scale(s) {}
+
+    /// @brief Construct from an OpenCV point.
+    /// @param p OpenCV 2D point
+    /// @param s Scale factor
     PointData(const cv::Point2f& p, FT s = 0) : position(lsfm::Vec2<FT>(p.x, p.y)), scale(s) {}
 
-    lsfm::Vec2<FT> position;
-    FT scale;
+    lsfm::Vec2<FT> position;  ///< Point position
+    FT scale;                 ///< Scale factor
   };
 
+  std::vector<PointData> newPoints_;  ///< Pre-computed data for new frame points
+  std::vector<PointData> oldPoints_;  ///< Pre-computed data for previous frame points
 
-  std::vector<PointData> newPoints_, oldPoints_;
-
-  // first rotation (4 areas in coordsystem), then number of bins, then variable sized vectors with candidates
+  /// @brief 2D spatial bins for candidate lookup.
+  /// Indexed by [x_bin][y_bin], each containing point indices.
   std::array<std::array<std::vector<int>, bins>, bins> bins_;
 
  public:
-  typedef FT float_type;
-  typedef GV geometric_vector;
-  typedef GT geometric_type;
+  typedef FT float_type;        ///< Float type used
+  typedef GV geometric_vector;  ///< Geometric vector type
+  typedef GT geometric_type;    ///< Geometric element type
 
   /*
           struct Motion {
@@ -57,6 +73,9 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
               FT x, y;
           };
   */
+  /// @brief Construct a motion point filter.
+  /// @param width Image width (must be >= 0)
+  /// @param height Image height (must be >= 0)
   MotionPointFilter(int width = 1, int height = 1) : height_(height), width_(width) {
     CV_Assert(height_ >= 0 && width_ >= 0);
 
@@ -65,12 +84,20 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
     //            distance between two corresponding Points."));
   }
 
+  /// @brief Train the filter with new and old point sets.
+  /// @param newPoints Current frame points
+  /// @param oldPoints Previous frame points
   void train(const GV& newPoints, const GV& oldPoints) {
     trainSide(newPoints, newPoints_);
     trainSide(oldPoints, oldPoints_);
     // motionEstimate_ = motionEstimate;
   }
 
+  /// @brief Filter a match candidate.
+  /// Currently accepts all candidates (filtering done by binning).
+  /// @param nfIdx New frame point index
+  /// @param ofIdx Old frame point index
+  /// @return True if the match should be rejected
   virtual bool filter(int nfIdx, int ofIdx) const {
     // both filters given by binning
     //            return false;
@@ -173,7 +200,17 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
           }
    */
 
-  //! track Points, only with average 2D Image-movement estimation
+  /// @brief Create match candidates using average movement estimation.
+  /// Shifts previous points by estimated movement, bins them spatially,
+  /// and generates candidates from neighboring bins.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Match count vector type
+  /// @param newPoints Current frame points
+  /// @param previousPoints Previous frame points
+  /// @param avgMovement Average 2D movement estimate (dx, dy)
+  /// @param matches Output match candidates
+  /// @param nm Per-point match count for new frame
+  /// @param pm Per-point match count for previous frame
   template <class FMV, class MV>
   void create(const GV& newPoints,
               const GV& previousPoints,
@@ -259,6 +296,9 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  protected:
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
@@ -275,12 +315,18 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  private:
+  /// @brief Pre-compute point data for one side.
+  /// @param points Input points
+  /// @param data Output pre-computed point data
   inline void trainSide(const GV& points, std::vector<PointData>& data) {
     data.clear();
     data.reserve(points.size());
     for_each(points.begin(), points.end(), [&](const geometric_type& point) { data.push_back(PointData(point.pt)); });
   }
 
+  /// @brief Pre-compute point data and populate 2D spatial bins.
+  /// @param points Input points (typically shifted by movement estimate)
+  /// @param data Output pre-computed point data
   inline void trainSideAndBins(const std::vector<geometric_type>& points, std::vector<PointData>& data) {
     // clear point data
     data.clear();

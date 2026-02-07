@@ -19,14 +19,38 @@
 
 namespace lsfm {
 
-
-//! Use Non Maxima Supression for fast lsd detector
+/// @brief Flag: Use Non-Maxima Suppression in FBW detector.
 static const int FBW_NMS = 1;
+/// @brief Flag: Use precise atan2 computation for angle estimation.
 static const int FBW_PATAN = 2;
 
+/// @brief Pixel status: Not used in any line region.
 static const uchar FBW_NOTUSED = 0;
+/// @brief Pixel status: Already assigned to a line region.
 static const uchar FBW_USED = 1;
 
+/// @brief Fast line segment detector using region growing (FBW algorithm).
+/// Detects line segments by growing aligned regions from seed pixels,
+/// then fitting line segments to the accumulated regions.
+///
+/// **Key Features:**
+/// - Gradient-based angle alignment with configurable tolerance
+/// - Region growing from high-gradient seed pixels
+/// - Optional Non-Maxima Suppression for seed filtering
+/// - Width estimation for each detected line
+/// - NFA-inspired minimum pixel threshold
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for support points (default LPT<int>)
+/// @tparam GRAD Gradient computation strategy
+/// @tparam FIT Line fitting strategy
+///
+/// @code{cpp}
+/// lsfm::LsdFBW<float> detector(0.004f, 0.012f, 0, 22.5f, lsfm::FBW_NMS);
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
@@ -82,32 +106,36 @@ class LsdFBW : public LsdBase<FT, LPT> {
   }
 
  public:
-  typedef FT float_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
-  typedef typename GRAD::mag_type mag_type;
-  typedef typename GRAD::grad_type grad_type;
-  typedef typename LsdBase<FT, LPT>::Line Line;
-  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
-  typedef std::vector<PT> PointVector;
+  typedef FT float_type;                                                   ///< Floating-point type
+  typedef LPT<FT> line_point;                                              ///< Line point type
+  typedef PT point_type;                                                   ///< Support point type
+  typedef typename GRAD::mag_type mag_type;                                ///< Gradient magnitude type
+  typedef typename GRAD::grad_type grad_type;                              ///< Gradient vector component type
+  typedef typename LsdBase<FT, LPT>::Line Line;                            ///< Line type
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;                ///< Vector of lines
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;              ///< Line segment type
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;                  ///< Image data type
+  typedef std::vector<PT> PointVector;                                     ///< Vector of points
 
+  /// @brief Sentinel value indicating undefined gradient direction.
   static const FT FBW_NOTDEF;
 
-
+  /// @brief Line data structure storing region-grown segment metadata.
+  /// Includes width, precision, and probability information.
   struct LineData {
     //! @brief Construct line data from point positions.
     //! @param b Starting position in the point vector.
     //! @param e Ending position (past-the-end) in the point vector.
     LineData(size_t b = 0, size_t e = 0) : p_beg(b), p_end(e), wbeg(0), wend(0), prec(0), prob(0) {}
 
-    // start / end position in point list (supporting points)
-    size_t p_beg, p_end;
+    size_t p_beg{};  ///< Start position in the area/point list
+    size_t p_end{};  ///< End position in the area/point list
 
-    FT wbeg, wend;  // width begin and end
-    FT prec, prob;  // precision and probability
+    FT wbeg{};  ///< Width at the beginning of the line
+    FT wend{};  ///< Width at the end of the line
+    FT prec{};  ///< Precision (angle tolerance used during region growing)
+    FT prob{};  ///< Probability (normalized angle tolerance)
 
     //! @brief Get the width of the line (difference between end and begin width).
     //! @return The absolute width value |wend - wbeg|.
@@ -125,20 +153,20 @@ class LsdFBW : public LsdBase<FT, LPT> {
     //! @return The index past the last point in this line data.
     inline size_t endpos() const { return p_end; }
   };
-  typedef std::vector<LineData> LineDataVector;  // vector of LineData structs
+  typedef std::vector<LineData> LineDataVector;  ///< Vector of LineData structures
 
  private:
-  LineDataVector lineData_{};
+  LineDataVector lineData_{};  ///< Storage for detected line region data
 
  public:
-  //! Create a FoodLineSegmentDetector object.
-  //! @param th_low         Lower intensity threshold for magnitude. Range [0..1] (0.004 ~ 1/255).
-  //! @param th_high        Higher intensity threshold for magnitude. Range [0..1] (0.004 ~ 1/255).
-  //! @param min_pix        Minimum number of supporting pixels for line segment. Range (>= 2)
-  //! @param ang_th         Gradient angle tolerance in degrees. (0..90]
-  //! @param flags Flags for line direction estimation
-  //!                   FBW_NMS - Use Non Maxima Supression for flood detector
-  //!                   FBW_PATAN - Use precise atan computation
+  /// @brief Create an FBW (Fast Burns-Wassermann) line segment detector.
+  /// @param th_low Lower intensity threshold for gradient magnitude (normalized, range [0..1])
+  /// @param th_high Upper intensity threshold for gradient magnitude (normalized, range [0..1])
+  /// @param min_pix Minimum supporting pixels per line segment (0 = auto-compute from image size)
+  /// @param ang_th Gradient angle tolerance in degrees (range (0..90])
+  /// @param flags Detection flags bitmask:
+  ///   - FBW_NMS: Use Non-Maxima Suppression for seed filtering
+  ///   - FBW_PATAN: Use precise atan2 computation for angle estimation
   LsdFBW(FT th_low = static_cast<FT>(0.004),
          FT th_high = static_cast<FT>(0.012),
          int min_pix = 0,
@@ -253,6 +281,10 @@ class LsdFBW : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::imageDataDescriptor;
   using LsdBase<FT, LPT>::imageData;
 
+  /// @brief Detect line segments using region growing.
+  /// Processes the image through gradient computation, seed generation,
+  /// and region-growing line detection.
+  /// @param src Input image (8-bit single-channel or color)
   virtual void detect(const cv::Mat& src) final {
     // the image
     img_ = src;
@@ -280,6 +312,8 @@ class LsdFBW : public LsdBase<FT, LPT> {
     findRegions();
   }
 
+  /// @brief Get descriptor information for auxiliary image data.
+  /// @return Data descriptor with name and description for each layer
   virtual const DataDescriptor& imageDataDescriptor() const final {
     static DataDescriptor dsc;
     if (dsc.empty()) {
@@ -291,7 +325,8 @@ class LsdFBW : public LsdBase<FT, LPT> {
     return dsc;
   }
 
-  //! Get image data.
+  /// @brief Get auxiliary image data computed during detection.
+  /// @return Vector of image data layers (gx, gy, mag, th_dir)
   virtual const ImageData& imageData() const final {
     if (imageData_.empty()) {
       imageData_.push_back(grad_.gx());

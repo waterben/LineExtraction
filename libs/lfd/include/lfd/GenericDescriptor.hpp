@@ -73,6 +73,7 @@ struct NoAlign {
 /// @tparam cn Number of descriptor components (compile-time constant)
 template <class FT, int cn>
 struct GenericDescritpor {
+  /// @brief Default constructor.
   GenericDescritpor() {}
   /// @brief Construct from pointer to descriptor data.
   /// @param d Pointer to cn elements
@@ -106,13 +107,25 @@ struct GenericDescritpor {
 };
 
 
-// Creator Helper for intensity images using interpolator
+/// @brief Descriptor creator helper for intensity images using interpolation.
+/// Computes mean and variance of image intensity along bands perpendicular to a line
+/// segment using sub-pixel interpolation.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Interpolator Sub-pixel interpolation strategy
 template <class FT, uint size = 3, uint step = 2, class Interpolator = FastRoundNearestInterpolator<FT, uchar>>
 struct GchImgInterpolate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 2;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 2;                          ///< Descriptor size (mean + variance per band)
 
-
+  /// @brief Create descriptor from image data along a line segment.
+  /// @param data Pointer to input image matrices (data[0] = intensity image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& img = data[0];
@@ -162,6 +175,8 @@ struct GchImgInterpolate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("img"));
@@ -169,13 +184,25 @@ struct GchImgInterpolate {
   }
 };
 
-// Creator Helper for intensity images using interpolator
+/// @brief Descriptor creator helper for intensity images using mean computation.
+/// Computes mean and variance of image intensity along bands perpendicular to a line
+/// segment using mean-based sampling.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Mean Mean computation strategy
 template <class FT, uint size = 3, uint step = 2, class Mean = FastMean<FT, uchar>>
 struct GchImgMean {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 2;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 2;                          ///< Descriptor size (mean + variance per band)
 
-
+  /// @brief Create descriptor from image data along a line segment.
+  /// @param data Pointer to input image matrices (data[0] = intensity image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& img = data[0];
@@ -197,6 +224,8 @@ struct GchImgMean {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("img"));
@@ -205,12 +234,25 @@ struct GchImgMean {
 };
 
 
-// Creator Helper for intensity images using iterator
+/// @brief Descriptor creator helper for intensity images using pixel iteration.
+/// Computes mean and variance of image intensity along bands perpendicular to a line
+/// segment using OpenCV line iterator for pixel access.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam MT Matrix element type of the intensity image
 template <class FT, uint size = 3, uint step = 2, class MT = uchar>
 struct GchImgIterate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 2;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 2;                          ///< Descriptor size (mean + variance per band)
 
+  /// @brief Create descriptor from image data along a line segment.
+  /// @param data Pointer to input image matrices (data[0] = intensity image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& img = data[0];
@@ -244,6 +286,8 @@ struct GchImgIterate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("img"));
@@ -252,16 +296,30 @@ struct GchImgIterate {
 };
 
 
-// Creator Helper for gradient using interpolator
+/// @brief Descriptor creator helper for gradient images using interpolation.
+/// Computes mean and variance of positive/negative gradient components (x, y) along bands
+/// perpendicular to a line segment using sub-pixel interpolation, with optional rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam Interpolator Sub-pixel interpolation strategy for gradient access
 template <class FT,
           uint size = 3,
           uint step = 2,
           class Align = RotationAlign<FT>,
           class Interpolator = FastRoundNearestInterpolator<FT, short>>
 struct GchGradInterpolate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 8;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 8;  ///< Descriptor size (4 means + 4 variances per band)
 
+  /// @brief Create descriptor from gradient data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -327,6 +385,8 @@ struct GchGradInterpolate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -335,12 +395,26 @@ struct GchGradInterpolate {
   }
 };
 
-// Creator Helper for intensity images using interator
+/// @brief Descriptor creator helper for gradient images using mean computation.
+/// Computes mean and variance of positive/negative gradient components (x, y) along bands
+/// perpendicular to a line segment using mean-based sampling, with optional rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam Mean Mean computation strategy for gradient access
 template <class FT, uint size = 3, uint step = 2, class Align = RotationAlign<FT>, class Mean = FastMean<FT, short>>
 struct GchGradMean {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 8;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 8;  ///< Descriptor size (4 means + 4 variances per band)
 
+  /// @brief Create descriptor from gradient data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -393,6 +467,8 @@ struct GchGradMean {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -402,12 +478,26 @@ struct GchGradMean {
 };
 
 
-// Creator Helper for intensity images using interator
+/// @brief Descriptor creator helper for gradient images using pixel iteration.
+/// Computes mean and variance of positive/negative gradient components (x, y) along bands
+/// perpendicular to a line segment using OpenCV line iterator, with optional rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam MT Matrix element type of the gradient images
 template <class FT, uint size = 3, uint step = 2, class Align = RotationAlign<FT>, class MT = short>
 struct GchGradIterate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 8;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 8;  ///< Descriptor size (4 means + 4 variances per band)
 
+  /// @brief Create descriptor from gradient data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -460,6 +550,8 @@ struct GchGradIterate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -468,7 +560,15 @@ struct GchGradIterate {
   }
 };
 
-// Creator Helper for gradient and image using interpolator
+/// @brief Descriptor creator helper for combined gradient and image using interpolation.
+/// Computes mean and variance of positive/negative gradient components (x, y) and image intensity
+/// along bands perpendicular to a line segment using sub-pixel interpolation with rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam InterpolatorG Sub-pixel interpolation strategy for gradient access
+/// @tparam InterpolatorI Sub-pixel interpolation strategy for image access
 template <class FT,
           uint size = 3,
           uint step = 2,
@@ -476,9 +576,16 @@ template <class FT,
           class InterpolatorG = FastRoundNearestInterpolator<FT, short>,
           class InterpolatorI = FastRoundNearestInterpolator<FT, uchar>>
 struct GchGradImgInterpolate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 10;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 10;  ///< Descriptor size (5 means + 5 variances per band)
 
+  /// @brief Create descriptor from gradient and image data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy, data[2] = image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -552,6 +659,8 @@ struct GchGradImgInterpolate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy", "img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -561,7 +670,15 @@ struct GchGradImgInterpolate {
   }
 };
 
-// Creator Helper for intensity images using interator
+/// @brief Descriptor creator helper for combined gradient and image using mean computation.
+/// Computes mean and variance of positive/negative gradient components (x, y) and image intensity
+/// along bands perpendicular to a line segment using mean-based sampling with rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam MeanG Mean computation strategy for gradient access
+/// @tparam MeanI Mean computation strategy for image access
 template <class FT,
           uint size = 3,
           uint step = 2,
@@ -569,9 +686,16 @@ template <class FT,
           class MeanG = FastMean<FT, short>,
           class MeanI = FastMean<FT, uchar>>
 struct GchGradImgMean {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 8;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 8;  ///< Descriptor size (5 means + 5 variances per band)
 
+  /// @brief Create descriptor from gradient and image data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy, data[2] = image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -633,6 +757,8 @@ struct GchGradImgMean {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy", "img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -642,12 +768,27 @@ struct GchGradImgMean {
   }
 };
 
-// Creator Helper for intensity images using interator
+/// @brief Descriptor creator helper for combined gradient and image using pixel iteration.
+/// Computes mean and variance of positive/negative gradient components (x, y) and image intensity
+/// along bands perpendicular to a line segment using OpenCV line iterator with rotation alignment.
+/// @tparam FT Float type
+/// @tparam size Band width in pixels
+/// @tparam step Step size between bands in pixels
+/// @tparam Align Alignment strategy (e.g., RotationAlign or NoAlign)
+/// @tparam MTG Matrix element type of the gradient images
+/// @tparam MTI Matrix element type of the intensity image
 template <class FT, uint size = 3, uint step = 2, class Align = RotationAlign<FT>, class MTG = short, class MTI = uchar>
 struct GchGradImgIterate {
-  static constexpr int numBands = size / step + (size % step ? 1 : 0);
-  static constexpr int dscSize = numBands * 10;
+  static constexpr int numBands = size / step + (size % step ? 1 : 0);  ///< Number of bands across the line
+  static constexpr int dscSize = numBands * 10;  ///< Descriptor size (5 means + 5 variances per band)
 
+  /// @brief Create descriptor from gradient and image data along a line segment.
+  /// @param data Pointer to input matrices (data[0] = dx, data[1] = dy, data[2] = image)
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Output buffer for descriptor values
+  /// @param beg Starting orthogonal offset from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   static void create(
       const cv::Mat* data, const LineSegment<FT>& line, FT* dst, FT beg = -1, FT stepDir = 1, FT lstep = 1) {
     const cv::Mat& dx = data[0];
@@ -709,6 +850,8 @@ struct GchGradImgIterate {
     }
   }
 
+  /// @brief Get the list of required input data names.
+  /// @return Vector of input data name strings ({"gx", "gy", "img"})
   static std::vector<std::string> inputData() {
     std::vector<std::string> ret;
     ret.push_back(std::string("gx"));
@@ -718,21 +861,38 @@ struct GchGradImgIterate {
   }
 };
 
-// Generic Feature Descriptor creator for gradient
+/// @brief Generic feature descriptor creator using a configurable helper strategy.
+/// Creates descriptors from geometric objects (e.g., line segments) using the provided Helper
+/// strategy for data extraction (image, gradient, or combined).
+/// @tparam FT Float type
+/// @tparam GT Geometric object type
+/// @tparam Helper Descriptor creation helper strategy (e.g., GchImgInterpolate, GchGradInterpolate)
 template <class FT, class GT = LineSegment<FT>, class Helper = GchImgInterpolate<FT>>
 class FdcGeneric : public Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>> {
  public:
-  typedef typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr FdcPtr;
-  typedef typename FdcObj<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr CustomFdcPtr;
-  typedef typename FdcMat<FT, GT>::Ptr SimpleFdcPtr;
-  typedef GenericDescritpor<FT, Helper::dscSize> descriptor_type;
+  typedef typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr FdcPtr;  ///< Pointer to base Fdc type
+  typedef typename FdcObj<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr
+      CustomFdcPtr;                                                ///< Pointer to object-based Fdc type
+  typedef typename FdcMat<FT, GT>::Ptr SimpleFdcPtr;               ///< Pointer to matrix-based Fdc type
+  typedef GenericDescritpor<FT, Helper::dscSize> descriptor_type;  ///< The descriptor type produced
 
+  /// @brief Construct a generic descriptor creator.
+  /// @param data Map of named input matrices (e.g., "img", "gx", "gy")
+  /// @param pos Orthogonal offset position from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
   FdcGeneric(const MatMap& data, FT pos = -1, FT stepDir = 1, FT lstep = 1)
       : data_(), pos_(pos), stepDir_(stepDir), lstep_(lstep) {
     data_.resize(Helper::inputData().size());
     this->setData(data);
   }
 
+  /// @brief Factory method to create a shared pointer to a generic descriptor creator.
+  /// @param data Map of named input matrices
+  /// @param pos Orthogonal offset position from line center
+  /// @param stepDir Direction multiplier for perpendicular stepping
+  /// @param lstep Step size along the line direction
+  /// @return Shared pointer to the created FdcGeneric instance
   static FdcPtr createFdc(const MatMap& data, FT pos = -1, FT stepDir = 1, FT lstep = 1) {
     return FdcPtr(new FdcGeneric<FT, GT, Helper>(data, pos, stepDir, lstep));
   }
@@ -741,22 +901,28 @@ class FdcGeneric : public Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>> {
   using FdcObjI<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::create;
 
 
-  //! create single descriptor from single geometric object
+  /// @brief Create a single descriptor from a single geometric object.
+  /// @param input The geometric object (e.g., line segment) to describe
+  /// @param dst Output descriptor object
   virtual void create(const GT& input, descriptor_type& dst) {
     Helper::create(data_.data(), input, dst.data, pos_, stepDir_, lstep_);
   }
 
-  //! create single simple descriptor from geometric object
+  /// @brief Create a single simple descriptor stored in a cv::Mat.
+  /// @param input The geometric object to describe
+  /// @param dst Output matrix (1 x size, FT type)
   virtual void create(const GT& input, cv::Mat& dst) {
     if (dst.empty() || dst.cols != descriptor_type::size())
       dst.create(1, descriptor_type::size(), cv::DataType<FT>::type);
     Helper::create(data_.data(), input, dst.template ptr<FT>(), pos_, stepDir_, lstep_);
   }
 
-  //! get size of single descriptor (cols in cv::Mat)
+  /// @brief Get the size of a single descriptor (number of columns in cv::Mat).
+  /// @return Number of descriptor components
   virtual size_t size() const { return static_cast<size_t>(descriptor_type::size()); }
 
-  //! allow to set internal processing data after init
+  /// @brief Set internal processing data after initialization.
+  /// @param data Map of named input matrices to update from
   virtual void setData(const MatMap& data) {
     MatMap::const_iterator f;
     auto input = Helper::inputData();
@@ -766,15 +932,26 @@ class FdcGeneric : public Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>> {
     }
   }
 
-  // input
-  std::vector<cv::Mat> data_;
-  FT pos_, stepDir_, lstep_;
+  std::vector<cv::Mat> data_;  ///< Input image/gradient data matrices
+  FT pos_, stepDir_, lstep_;   ///< Orthogonal offset, step direction, and step size along the line
 
  protected:
+  /// @brief Create descriptor into a raw float buffer (internal implementation).
+  /// @param input The geometric object to describe
+  /// @param dst Output buffer for descriptor values
   virtual void create(const GT& input, FT* dst) { Helper::create(data_.data(), input, dst, pos_, stepDir_, lstep_); }
 };
 
 
+/// @brief Create a generic feature descriptor creator from an intensity image.
+/// @tparam FT Float type
+/// @tparam GT Geometric object type
+/// @tparam Helper Descriptor creation helper strategy
+/// @param img Input intensity image
+/// @param pos Orthogonal offset position from line center
+/// @param stepDir Direction multiplier for perpendicular stepping
+/// @param lstep Step size along the line direction
+/// @return Shared pointer to the created descriptor creator
 template <class FT, class GT = LineSegment<FT>, class Helper = GchImgInterpolate<FT>>
 typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr createGenericFdc(const cv::Mat& img,
                                                                                    FT pos = -1,
@@ -786,6 +963,16 @@ typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr createGenericF
       new FdcGeneric<FT, GT, Helper>(tmp, pos, stepDir, lstep));
 }
 
+/// @brief Create a generic feature descriptor creator from gradient images.
+/// @tparam FT Float type
+/// @tparam GT Geometric object type
+/// @tparam Helper Descriptor creation helper strategy
+/// @param gx Gradient image in x direction
+/// @param gy Gradient image in y direction
+/// @param pos Orthogonal offset position from line center
+/// @param stepDir Direction multiplier for perpendicular stepping
+/// @param lstep Step size along the line direction
+/// @return Shared pointer to the created descriptor creator
 template <class FT, class GT = LineSegment<FT>, class Helper = GchGradInterpolate<FT>>
 typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr createGenericFdc(
     const cv::Mat& gx, const cv::Mat& gy, FT pos = -1, FT stepDir = 1, FT lstep = 1) {
@@ -796,6 +983,17 @@ typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr createGenericF
       new FdcGeneric<FT, GT, Helper>(tmp, pos, stepDir, lstep));
 }
 
+/// @brief Create a generic feature descriptor creator from gradient and intensity images.
+/// @tparam FT Float type
+/// @tparam GT Geometric object type
+/// @tparam Helper Descriptor creation helper strategy
+/// @param gx Gradient image in x direction
+/// @param gy Gradient image in y direction
+/// @param img Input intensity image
+/// @param pos Orthogonal offset position from line center
+/// @param stepDir Direction multiplier for perpendicular stepping
+/// @param lstep Step size along the line direction
+/// @return Shared pointer to the created descriptor creator
 template <class FT, class GT = LineSegment<FT>, class Helper = GchGradImgInterpolate<FT>>
 typename Fdc<FT, GT, GenericDescritpor<FT, Helper::dscSize>>::Ptr createGenericFdc(
     const cv::Mat& gx, const cv::Mat& gy, const cv::Mat& img, FT pos = -1, FT stepDir = 1, FT lstep = 1) {

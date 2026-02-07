@@ -59,10 +59,6 @@ struct Measure {
         return default_value;
       }
     }
-    /// @file measure.hpp
-    /// @brief Base measurement structure for evaluation framework.
-    /// Provides generic measurement container with metadata support for extensibility.
-
     return default_value;
   }
 

@@ -5,7 +5,9 @@
 // See the LICENSE file at the project root for more information.
 //*****************************************************************************************
 /// @file results.hpp
-/// @brief Evaluation results data structures.
+/// @brief Visualization and serialization helpers for evaluation results.
+/// Provides functions for saving direction maps, edge maps, phase maps,
+/// and filter results to image files.
 
 #pragma once
 
@@ -20,7 +22,11 @@
 
 namespace lsfm {
 
-/// @brief Convert dir value to color vector
+/// @brief Convert direction value to a color for visualization.
+/// Maps a direction angle to a color from a cyclic 8-color palette.
+/// @tparam FT Floating-point type
+/// @param val Direction value in radians
+/// @return BGR color vector
 template <class FT>
 inline cv::Vec3b dirColor(FT val) {
   static FT r = static_cast<FT>(CV_PI / 4);
@@ -33,7 +39,10 @@ inline cv::Vec3b dirColor(FT val) {
   return a + (b - a) * (std::abs(div) - std::abs(divi));
 }
 
-/// @brief Convert mat to mat with FT type
+/// @brief Convert a matrix to the specified floating-point type.
+/// @tparam FT Target floating-point type
+/// @param in Input matrix
+/// @return Converted matrix (or copy if already correct type)
 template <class FT>
 inline cv::Mat convertTo(const cv::Mat& in) {
   cv::Mat out;
@@ -44,22 +53,39 @@ inline cv::Mat convertTo(const cv::Mat& in) {
   return out;
 }
 
-/// @brief Apply border to input mat without copy
+/// @brief Apply border to input matrix in-place.
+/// @param inout Input/output matrix to add border to
+/// @param border Border size in pixels
+/// @param borderType OpenCV border type (default: BORDER_CONSTANT)
+/// @param color Fill color for constant border
+/// @return Reference to the modified matrix
 cv::Mat applyBorder(cv::Mat& inout,
                     int border,
                     int borderType = cv::BORDER_CONSTANT,
                     const cv::Scalar& color = cv::Scalar());
 
-/// @brief Apply border to input mat and return new mat
+/// @brief Apply border to input matrix and return a new matrix.
+/// @param in Input matrix (unchanged)
+/// @param border Border size in pixels
+/// @param borderType OpenCV border type (default: BORDER_CONSTANT)
+/// @param color Fill color for constant border
+/// @return New matrix with border applied
 cv::Mat applyBorderCopy(const cv::Mat& in,
                         int border,
                         int borderType = cv::BORDER_CONSTANT,
                         const cv::Scalar& color = cv::Scalar());
 
-/// @brief Create non-maxima suppression image from edge map
+/// @brief Create non-maxima suppression visualization from an edge map.
+/// @param emap Input edge map
+/// @return Visualization image
 cv::Mat createNMS(const cv::Mat& emap);
 
-/// @brief Save direction map
+/// @brief Save direction map as a color-coded PNG image.
+/// @tparam FT Floating-point type of direction data
+/// @param data Direction matrix
+/// @param name Output filename (without extension)
+/// @param mask Optional mask (non-zero pixels are visualized)
+/// @param border Border size to add around the image
 template <class FT>
 void saveDir(const cv::Mat& data, const std::string& name, const cv::Mat& mask = cv::Mat(), int border = 0) {
   cv::Mat tmp(data.size(), CV_8UC3);
@@ -82,7 +108,12 @@ void saveDir(const cv::Mat& data, const std::string& name, const cv::Mat& mask =
   cv::imwrite(name + ".png", applyBorder(tmp, border));
 }
 
-/// @brief Save phase map
+/// @brief Save phase map as a color-coded PNG weighted by energy.
+/// @tparam FT Floating-point type of phase/energy data
+/// @param data Phase matrix
+/// @param name Output filename (without extension)
+/// @param energy Energy/magnitude matrix for weighting colors
+/// @param border Border size to add around the image
 template <class FT>
 void savePhase(const cv::Mat& data, const std::string& name, const cv::Mat& energy, int border = 0) {
   double vmin, vmax;
@@ -110,13 +141,28 @@ void savePhase(const cv::Mat& data, const std::string& name, const cv::Mat& ener
   cv::imwrite(name + ".png", applyBorder(tmp, border));
 }
 
-/// @brief Save edge map
+/// @brief Save edge map as a PNG image.
+/// @param data Binary or grayscale edge map
+/// @param name Output filename (without extension)
+/// @param border Border size to add around the image
 void saveEdge(const cv::Mat& data, const std::string& name, int border = 0);
 
-/// @brief Save normalized data
+/// @brief Save a matrix as a normalized grayscale PNG image.
+/// @param data Input matrix (any depth)
+/// @param name Output filename (without extension)
+/// @param border Border size to add around the image
 void saveNormalized(const cv::Mat& data, const std::string& name, int border = 0);
 
-/// @brief Save filter results
+/// @brief Save all filter results as individual images.
+/// Processes each filter result (mag, dir, phase, edge, etc.) and saves
+/// color-coded or normalized visualizations, optionally with edge detection.
+/// @tparam FT Floating-point type
+/// @param results Map of filter name to FilterResult
+/// @param name Output filename prefix
+/// @param sqr If true, take square root of magnitude data before saving
+/// @param border Border size to add around images
+/// @param th_low Low hysteresis threshold ratio
+/// @param th_high High hysteresis threshold ratio
 template <class FT>
 void saveFilterResults(const lsfm::FilterResults& results,
                        const std::string& name,

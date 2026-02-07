@@ -7,6 +7,7 @@ its own build configuration and README with licensing information.
 See individual subdirectory READMEs for details:
 - matlab_coder/README.md - MATLAB Coder generated code (Academic License)
 - lsd_external/README.md - External LSD implementations (AGPL and other licenses)
+- imgproc_external/README.md - External image processing algorithms (various copyrights)
 """
 
 package(default_visibility = ["//visibility:public"])
@@ -21,5 +22,11 @@ alias(
 alias(
     name = "lsd_external",
     actual = "//third-party/contrib/lsd_external",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "imgproc_external",
+    actual = "//third-party/contrib/imgproc_external",
     visibility = ["//visibility:public"],
 )

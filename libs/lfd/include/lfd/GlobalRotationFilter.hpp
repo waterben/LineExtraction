@@ -20,24 +20,36 @@
 
 namespace lsfm {
 
-//! simple brute force matcher -> compute distances between all candidates
+/// @brief Global rotation-based feature filter.
+/// Computes an approximate global rotation angle between two image feature sets
+/// using angle and length histograms, then filters matches based on rotation
+/// and length consistency.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type containing line segments
 template <class FT, class GV>
 class GlobalRotationFilter : public FeatureFilter<FT>, public OptionManager {
+  /// @brief Pre-computed line data for filtering.
   struct LineData {
+    /// @brief Construct line data.
+    /// @param a Line angle in radians
+    /// @param l Line length
     LineData(FT a = 0, FT l = 0) : angle(a), length(l) {}
 
-    FT angle, length;
+    FT angle;   ///< Line angle in radians
+    FT length;  ///< Line length in pixels
   };
 
-  std::vector<LineData> ldLeft_, ldRight_;
+  std::vector<LineData> ldLeft_;   ///< Pre-computed data for left image lines
+  std::vector<LineData> ldRight_;  ///< Pre-computed data for right image lines
 
  public:
-  typedef FT float_type;
-  typedef GV geometric_vector;
-  typedef LineSegment<FT> geometric_type;
+  typedef FT float_type;                   ///< Float type used
+  typedef GV geometric_vector;             ///< Geometric vector type
+  typedef LineSegment<FT> geometric_type;  ///< Geometric element type
 
-  static const FT TwoPI;
+  static const FT TwoPI;  ///< Constant for 2 * PI
 
+  /// @brief Construct a global rotation filter with default parameters.
   GlobalRotationFilter()
       : rotUsable_(false),
         rot_(0),
@@ -52,7 +64,11 @@ class GlobalRotationFilter : public FeatureFilter<FT>, public OptionManager {
     // descriptors."));
   }
 
-  //! train filter
+  /// @brief Train the filter by computing the global rotation between two sets.
+  /// Builds angle and length histograms to estimate the approximate global
+  /// rotation angle and determines whether the rotation estimate is reliable.
+  /// @param left Left image line segments
+  /// @param right Right image line segments
   void train(const GV& left, const GV& right) {
     l = &left;
     r = &right;
@@ -174,6 +190,12 @@ class GlobalRotationFilter : public FeatureFilter<FT>, public OptionManager {
     rot_ = rotationAngle;
   }
 
+  /// @brief Filter a match candidate by index.
+  /// Checks angle consistency (accounting for global rotation) and length ratio.
+  /// If no reliable rotation was found, only length is checked.
+  /// @param lfIdx Left feature index
+  /// @param rfIdx Right feature index
+  /// @return True if the match should be rejected
   virtual bool filter(int lfIdx, int rfIdx) const {
     const LineData& l = ldLeft_[lfIdx];
     const LineData& r = ldRight_[rfIdx];
@@ -187,6 +209,9 @@ class GlobalRotationFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  protected:
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
@@ -203,17 +228,17 @@ class GlobalRotationFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  private:
-  FT rot_;
-  bool rotUsable_;
+  FT rot_;          ///< Estimated global rotation angle in radians
+  bool rotUsable_;  ///< Whether the rotation estimate is reliable
 
-  FT resScale_;
-  FT histDiff_;
-  FT lengthDiff_;
+  FT resScale_;    ///< Histogram bin resolution in degrees
+  FT histDiff_;    ///< Max angle histogram difference for usable rotation
+  FT lengthDiff_;  ///< Max length histogram difference for usable rotation
 
-  FT lengthTh_;
-  FT angleTh_;
+  FT lengthTh_;  ///< Length ratio threshold for filtering
+  FT angleTh_;   ///< Angle threshold in radians for filtering
 
-  const GV *l, *r;
+  const GV *l, *r;  ///< Pointers to the training geometry sets
 };
 
 template <class FT, class GV>

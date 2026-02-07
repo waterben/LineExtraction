@@ -69,6 +69,7 @@ struct CVPerformanceMeasure : public PerformanceMeasureBase {
     return PerformanceMeasureBase::computeResult(data, cvTimingStrategy());
   }
 
+  /// @brief Clear all data including dimensions.
   void clear() override {
     PerformanceMeasureBase::clear();
     width = 0.0;

@@ -35,19 +35,19 @@ namespace lsfm {
 /// @tparam PT Point type template (default Vec2).
 template <class FT, template <class> class PT = Vec2>
 class Polygon {
-  PT<FT> piviot_;                  //!< Pivot point (local origin).
-  std::vector<PT<FT>> verticies_;  //!< Vertices in local coordinates.
+  PT<FT> piviot_;                  ///< Pivot point (local origin).
+  std::vector<PT<FT>> verticies_;  ///< Vertices in local coordinates.
 
  public:
-  typedef FT float_type;                         //!< Floating-point type alias.
-  typedef PT<FT> point_type;                     //!< Point type alias.
-  typedef std::vector<point_type> VertexVector;  //!< Vertex container type.
+  typedef FT float_type;                         ///< Floating-point type alias.
+  typedef PT<FT> point_type;                     ///< Point type alias.
+  typedef std::vector<point_type> VertexVector;  ///< Vertex container type.
 
   /// @brief Construct empty polygon with given pivot.
   /// @param piviot Pivot point (default origin).
   Polygon(const point_type& piviot = point_type(0, 0)) : piviot_(piviot), verticies_() {}
 
-  //! Virtual destructor for proper inheritance.
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~Polygon() = default;
 
   /// @brief Construct polygon from line segments.

@@ -19,46 +19,73 @@
 
 namespace lsfm {
 
-//! User defined threshold
+/// @brief User-defined fixed threshold estimator.
+/// Returns a constant threshold value regardless of input magnitude data.
+/// @tparam IT Image element type
 template <class IT>
 class ThresholdUser {
   IT th_{};
   IT max_{std::numeric_limits<IT>::max()};
 
  public:
+  /// @typedef img_type
+  /// @brief Image element type
   typedef IT img_type;
 
+  /// @brief Construct a user-defined threshold.
+  /// @param r_max Maximum possible magnitude value
+  /// @param th Fixed threshold value to use
   explicit ThresholdUser(IT r_max = std::numeric_limits<IT>::max(), IT th = 0) : th_(th), max_(r_max) {}
 
-  //! Compute threshold
+  /// @brief Return the fixed threshold value.
+  /// @param mag Input magnitude map (unused)
+  /// @return The user-defined threshold
   inline IT process(const cv::Mat& mag) const {
     CV_Assert(mag.type() == cv::DataType<IT>::type);
     return th_;
   }
 
+  /// @brief Get the maximum magnitude value.
+  /// @return Maximum value
   IT max() const { return max_; }
 
 
-  //! Get name of threshold method
+  /// @brief Get name of this threshold method.
+  /// @return "user"
   static std::string name() { return "user"; }
 };
 
-//! Compute threshold based on Otsu method
+/// @brief Automatic threshold estimation using Otsu's method.
+/// Computes the optimal threshold by maximizing inter-class variance
+/// of the histogram of magnitude values.
+/// @tparam IT Image element type
+/// @tparam N Number of histogram bins (default: 256)
+/// @tparam FT Floating-point type for internal computation (default: float)
 template <class IT, int N = 256, class FT = float>
 class ThresholdOtsu {
   Range<IT> intensity_range_;
   FT scale_;
 
  public:
+  /// @typedef img_type
+  /// @brief Image element type
   typedef IT img_type;
 
+  /// @brief Construct an Otsu threshold estimator with min/max values.
+  /// @param r_max Maximum magnitude value
+  /// @param r_min Minimum magnitude value
   explicit ThresholdOtsu(IT r_max = std::numeric_limits<IT>::max(), IT r_min = 0)
       : intensity_range_(r_min, r_max), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
+  /// @brief Construct an Otsu threshold estimator from a range.
+  /// @param r Intensity range for histogram computation
   explicit ThresholdOtsu(const Range<IT>& r)
       : intensity_range_(r), scale_(static_cast<FT>(N) / static_cast<FT>(intensity_range_.size())) {}
 
-  //! Compute threshold
+  /// @brief Compute the Otsu threshold from a magnitude map.
+  /// Builds a histogram and finds the threshold that maximizes inter-class variance.
+  /// @param mag Input magnitude map
+  /// @return Computed threshold value
   inline IT process(const cv::Mat& mag) const {
     CV_Assert(mag.type() == cv::DataType<IT>::type);
 
@@ -110,14 +137,17 @@ class ThresholdOtsu {
     return static_cast<IT>(max_val / scale_);
   }
 
+  /// @brief Get the maximum magnitude value.
+  /// @return Maximum value from the intensity range
   IT max() const { return intensity_range_.upper; }
 
 
-  //! Get name of threshold method
+  /// @brief Get the name of this threshold method.
+  /// @return "otsu"
   static std::string name() { return "otsu"; }
 };
 
-//! Compute threshold based on Otsu method
+/// @brief Commented-out specialization for Otsu method with uchar type.
 // template <class FT>
 // class ThresholdOtsu<uchar, 256, FT> {
 //   FT scale_;

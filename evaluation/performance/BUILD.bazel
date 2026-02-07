@@ -8,8 +8,8 @@ cc_binary(
     name = "eval_performance",
     srcs = glob(
         [
-            "*.cpp",
-            "*.hpp",
+            "src/*.cpp",
+            "src/*.hpp",
         ],
         allow_empty = True,
     ),

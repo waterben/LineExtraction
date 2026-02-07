@@ -669,8 +669,8 @@ class LsdBurns : public LsdBase<FT, LPT> {
 
       // correct direction of line
       FT a = static_cast<FT>(ccd.partition * 2 * CV_PI / this->part_num_ + (ccd.shifted ? 0 : CV_PI / this->part_num_));
-      FT epnx = sin(a);
-      FT epny = -cos(a);
+      FT epnx = static_cast<FT>(sin(a));
+      FT epny = -static_cast<FT>(cos(a));
       if (epnx * l.normalX() + epny * l.normalY() < 0) std::swap(first, last);
 
       this->lineSegments_.push_back(LineSegment(l, *first, *last));

@@ -18,12 +18,26 @@
 
 namespace lsfm {
 
-//! @brief Perform a line tracing and point collection
+/// @brief Line-oriented edge tracer for extracting straight edge segments.
+/// Traces edges with a preference for line-like structures, breaking at curves
+/// and emphasizing straight-line segments from binary or magnitude edge maps.
+/// @tparam FT Floating-point type
+/// @tparam LPT Line point template (default: Vec2)
+/// @tparam PT Point type (default: Vec2i)
+/// @tparam DM Direction map quantization (4 or 8, default: 8)
 template <class FT, template <class> class LPT = Vec2, class PT = Vec2i, int DM = 8>
 class LineTracer : public ValueManager {
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
+
+  /// @typedef PointVector
+  /// @brief Vector of points
   typedef std::vector<PT> PointVector;
 
  private:

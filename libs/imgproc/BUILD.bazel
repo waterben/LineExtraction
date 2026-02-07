@@ -31,6 +31,7 @@ cc_library(
     deps = [
         "//libs/geometry:lib_geometry",
         "//libs/utility:lib_utility",
+        "//third-party/contrib:imgproc_external",
         "//third-party/contrib:matlab_coder",
         "@opencv",
         "@opencv//:photo",

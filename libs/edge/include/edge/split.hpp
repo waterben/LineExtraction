@@ -16,10 +16,13 @@
 #include <edge/fit.hpp>
 
 namespace lsfm {
-//! @brief Perform a Ramer or Douglas Peucker split to a given edge segment.
-//!        The merge options allows to apply a postprocessing merge step to
-//!        merge ill formed splits (splitd wrongly made by poorly picked base
-//!        line)
+/// @brief Ramer-Douglas-Peucker line segment splitter.
+/// Recursively splits edge segments at points of maximum deviation from
+/// the baseline. Optionally merges ill-formed splits caused by poorly
+/// chosen baselines.
+/// @tparam FT Floating-point type for distance calculations
+/// @tparam PT Point type (default: Vec2i)
+/// @tparam MERGE Whether to apply post-processing merge step (default: true)
 template <class FT, class PT = Vec2i, bool MERGE = true>
 class RamerSplit : public ValueManager {
   FT dist_;
@@ -33,17 +36,32 @@ class RamerSplit : public ValueManager {
   }
 
  public:
+  /// @typedef float_type
+  /// @brief Floating-point type for calculations
   typedef FT float_type;
+
+  /// @typedef point_type
+  /// @brief Point type
   typedef PT point_type;
+
+  /// @typedef PointVector
+  /// @brief Vector of points
   typedef std::vector<PT> PointVector;
 
+  /// @brief Construct a Ramer-Douglas-Peucker splitter.
+  /// @param dist Error distance threshold for splitting
+  /// @param minp Minimum segment length (number of pixels)
   RamerSplit(FT dist = 2, int minp = 2) : dist_(dist), min_len_(minp) { init(); }
 
+  /// @brief Construct from option name-value pairs.
+  /// @param options Option values for configuration
   RamerSplit(const ValueManager::NameValueVector& options) : dist_(2), min_len_(2) {
     init();
     this->value(options);
   }
 
+  /// @brief Construct from option initializer list.
+  /// @param options Option values for configuration
   RamerSplit(ValueManager::InitializerList options) : dist_(2), min_len_(2) {
     init();
     this->value(options);
@@ -303,7 +321,10 @@ class RamerSplit : public ValueManager {
   }
 };
 
-//! simple split check, without relaxed threshold
+/// @brief Simple split check without relaxed threshold.
+/// Tests whether the maximum deviation exceeds the distance threshold.
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
 template <class FT, class PT = Vec2i>
 struct SimpleSplitCheck {
   typedef FT float_type;
@@ -332,7 +353,12 @@ struct SimpleSplitCheck {
   }
 };
 
-//! extended split check, with relaxed threshold
+/// @brief Extended split check with relaxed threshold based on local magnitude.
+/// Uses a magnitude-dependent relaxation of the split threshold to prevent
+/// splitting in poorly localized (low-contrast) areas.
+/// @tparam FT Floating-point type
+/// @tparam MT Magnitude element type
+/// @tparam PT Point type
 template <class FT, class MT, class PT = Vec2i>
 struct ExtSplitCheck {
   typedef FT float_type;
@@ -374,7 +400,8 @@ struct ExtSplitCheck {
   }
 };
 
-//! no merging after split
+/// @brief No-op merge policy: does not merge after splitting.
+/// @tparam ST Split check type
 template <class ST>
 struct NoMerge {
   typedef ST SplitCheck;
@@ -401,7 +428,9 @@ struct NoMerge {
   }
 };
 
-//! enable merging after split
+/// @brief Simple merge policy: merges adjacent sub-segments when the split
+/// point was not significant.
+/// @tparam ST Split check type
 template <class ST>
 struct SimpleMerge {
   typedef ST SplitCheck;
@@ -473,10 +502,10 @@ struct SimpleMerge {
   }
 };
 
-//! @brief Extended Ramer or Douglas Peucker split version.
-//!        In this version, the merging and splitting can be customized by
-//!        templates. The extended split method allows to choose a relaxed
-//!        threshold to prevent splits withon badly localized areas.
+/// @brief Extended Ramer-Douglas-Peucker split with customizable merge and check.
+/// Allows configuring relaxed thresholds, magnitude-aware split checks, and
+/// post-split merge strategies via template policies.
+/// @tparam MT Merge policy type (e.g., SimpleMerge, NoMerge)
 template <class MT>
 class ExtRamerSplit : public ValueManager {
  public:

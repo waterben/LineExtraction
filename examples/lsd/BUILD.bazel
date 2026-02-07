@@ -19,42 +19,42 @@ _TEST_DATA = [
 
 cc_binary(
     name = "lsd",
-    srcs = ["lsd.cpp"],
+    srcs = ["src/lsd.cpp"],
     data = _TEST_DATA,
     deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_cc_test",
-    srcs = ["lsd_cc_test.cpp"],
+    srcs = ["src/lsd_cc_test.cpp"],
     data = _TEST_DATA,
     deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_edge",
-    srcs = ["lsd_edge.cpp"],
+    srcs = ["src/lsd_edge.cpp"],
     data = _TEST_DATA,
     deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_graph",
-    srcs = ["lsd_graph.cpp"],
+    srcs = ["src/lsd_graph.cpp"],
     data = _TEST_DATA,
     deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_nfa",
-    srcs = ["lsd_nfa.cpp"],
+    srcs = ["src/lsd_nfa.cpp"],
     data = _TEST_DATA,
     deps = _LSD_DEPS,
 )
 
 cc_binary(
     name = "lsd_video",
-    srcs = ["lsd_video.cpp"],
+    srcs = ["src/lsd_video.cpp"],
     deps = [
         "//libs/lsd:lib_lsd",
         "@opencv",

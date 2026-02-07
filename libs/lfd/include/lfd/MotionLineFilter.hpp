@@ -123,7 +123,14 @@ void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& p
   }
 }
 
-//! calculate the neighbouring bins to a set of bins
+/// @brief Calculate the neighbouring bins to a set of bins.
+/// Expands a set of bin coordinates by including all bins within the specified
+/// search range, avoiding duplicates.
+/// @tparam nrBinsX Number of bins along the X axis
+/// @tparam nrBinsY Number of bins along the Y axis (defaults to nrBinsX)
+/// @param pixel Input vector of bin coordinates
+/// @param pixelNeighbours Output vector of neighbouring bin coordinates
+/// @param searchRange Number of bins to expand in each direction
 template <int nrBinsX, int nrBinsY = nrBinsX>
 void getNeighbouringBins(const std::vector<std::pair<int, int>>& pixel,
                          std::vector<std::pair<int, int>>& pixelNeighbours,
@@ -146,31 +153,46 @@ void getNeighbouringBins(const std::vector<std::pair<int, int>>& pixel,
 }
 
 
-//! stereo line filter -> uses binning and x-axis sorting + constrains to sort
-//! out bad line match candidates
+/// @brief Motion-based line filter using spatial binning and angle constraints.
+/// Uses binning and x-axis sorting with constraints to filter out bad line
+/// match candidates for temporal line correspondence.
+/// @tparam FT Floating-point type
+/// @tparam GV Geometric vector type (container of line segments)
+/// @tparam bins Number of spatial bins per axis (default: 12)
+/// @tparam angleBins Number of angular bins (default: 12)
+/// @tparam DM Descriptor match type (default: DescriptorMatch<FT>)
 template <class FT, class GV, unsigned int bins = 12, unsigned int angleBins = 12, class DM = DescriptorMatch<FT>>
 class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
+  /// @brief Maximum pixel distance for correspondence and angle threshold (degrees).
   FT maxPixelDist_, angleTh_;
+  /// @brief Image dimensions (height and width) for bin calculation.
   int height_, width_;
 
+  /// @brief Internal storage for line segment data used during filtering.
   struct LineData {
+    /// @brief Construct a LineData instance.
+    /// @param b Start point of the line segment
+    /// @param e End point of the line segment
+    /// @param a Angle of the line segment in degrees
+    /// @param s Scale factor of the line segment
     LineData(const lsfm::Vec2<FT>& b = lsfm::Vec2<FT>(), const lsfm::Vec2<FT>& e = lsfm::Vec2<FT>(), FT a = 0, FT s = 0)
         : beg(b), end(e), angle(a), scale(s) {}
 
-    lsfm::Vec2<FT> beg, end;
-    FT angle, scale;
+    lsfm::Vec2<FT> beg, end;  ///< Start and end points of the line segment.
+    FT angle, scale;          ///< Angle (degrees) and scale factor.
   };
 
 
+  /// @brief Cached line data for new and old (previous) frames.
   std::vector<LineData> newLines_, oldLines_;
 
-  // first rotation (4 areas in coordsystem), then number of bins, then variable sized vectors with candidates
+  /// @brief 3D bin array indexed by [angleBin][xBin][yBin] storing candidate line indices.
   std::array<std::array<std::array<std::vector<int>, bins>, bins>, angleBins> bins_;
 
  public:
-  typedef FT float_type;
-  typedef GV geometric_vector;
-  typedef LineSegment<FT> geometric_type;
+  typedef FT float_type;                   ///< Floating-point type used for computations.
+  typedef GV geometric_vector;             ///< Container type for geometric line data.
+  typedef LineSegment<FT> geometric_type;  ///< Line segment type used as geometric primitive.
 
   /*
           struct Motion {
@@ -179,6 +201,11 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
               FT x, y;
           };
   */
+  /// @brief Construct a MotionLineFilter with given constraints.
+  /// @param maxPixDist Maximum pixel distance for line correspondence
+  /// @param angleTh Angle threshold in degrees for filtering
+  /// @param width Image width in pixels
+  /// @param height Image height in pixels
   MotionLineFilter(FT maxPixDist = 200, FT angleTh = 5, int width = 0, int height = 0)
       : maxPixelDist_(maxPixDist), angleTh_(angleTh), height_(height), width_(width) {
     CV_Assert(height_ >= 0 && width_ >= 0);
@@ -190,12 +217,19 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
     // two corresponding lines."));
   }
 
+  /// @brief Train the filter with new and old line sets.
+  /// @param newLines Line segments from the current frame
+  /// @param oldLines Line segments from the previous frame
   void train(const GV& newLines, const GV& oldLines) {
     trainSide(newLines, newLines_);
     trainSide(oldLines, oldLines_);
     // motionEstimate_ = motionEstimate;
   }
 
+  /// @brief Filter a candidate match based on angle similarity.
+  /// @param nfIdx Index of the line in the new frame
+  /// @param ofIdx Index of the line in the old frame
+  /// @return True if the match should be rejected, false if accepted
   virtual bool filter(int nfIdx, int ofIdx) const {
     // both filters given by binning
     //            return false;
@@ -228,8 +262,14 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
 
-  //! create match set by filter
-  //! only for lines with existing Model, thus they can be projected
+  /// @brief Create match set by filter using projected 3D models.
+  /// Only for lines with an existing model that can be projected to 2D.
+  /// @tparam FMV Feature match vector type
+  /// @tparam GV3 3D geometric vector type (container of 3D line models)
+  /// @param newLines Current frame line segments
+  /// @param models 3D line models to project
+  /// @param projMat Projection matrix for 3D-to-2D projection
+  /// @param matches Output vector of line matches
   template <class FMV, class GV3>
   void create(const GV& newLines, const GV3& models, cv::Mat* projMat, FMV& matches) {
     matches.clear();
@@ -293,7 +333,15 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
 
-  //! track lines, only with average 2D Image-movement estimation
+  /// @brief Track lines using average 2D image movement estimation.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Match count vector type
+  /// @param newLines Current frame line segments
+  /// @param previousLines Previous frame line segments
+  /// @param avgMovement Average (x, y) movement between frames
+  /// @param matches Output vector of line matches
+  /// @param nm Output match count per new line
+  /// @param pm Output match count per previous line
   template <class FMV, class MV>
   void create(
       const GV& newLines, const GV& previousLines, const std::pair<FT, FT>& avgMovement, FMV& matches, MV& nm, MV& pm) {
@@ -369,6 +417,9 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  protected:
+  /// @brief Set a filter option by name.
+  /// @param name Option name to set
+  /// @param value New value for the option
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
@@ -385,6 +436,9 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  private:
+  /// @brief Extract line data from a set of line segments.
+  /// @param lines Input line segments
+  /// @param data Output vector of extracted LineData
   inline void trainSide(const GV& lines, std::vector<LineData>& data) {
     data.clear();
     data.reserve(lines.size());
@@ -393,6 +447,11 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
     });
   }
 
+  /// @brief Extract line data and populate spatial bins for a set of lines.
+  /// @param lines Input line segments (potentially projected)
+  /// @param data Output vector of extracted LineData
+  /// @param bstep_h Bin step size along the height axis
+  /// @param bstep_w Bin step size along the width axis
   inline void trainSideAndBins(std::vector<LineSegment<FT>>& lines,
                                std::vector<LineData>& data,
                                FT bstep_h,

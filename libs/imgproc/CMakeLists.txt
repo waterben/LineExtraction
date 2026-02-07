@@ -7,6 +7,7 @@ le_add_library(lib_imgproc
         lib_utility
         lib_geometry
         le::opencv
+        contrib_imgproc_external  # RCMG/SUSAN core algorithms (external copyrights)
         contrib_matlab_coder  # MATLAB Coder generated code
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/include

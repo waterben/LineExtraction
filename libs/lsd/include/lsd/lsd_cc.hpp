@@ -14,13 +14,36 @@
 
 
 namespace lsfm {
-// Use complex decision algo to determine near pixels in cc search
+
+/// @brief Flag: Use complex decision algorithm for near-pixel search in CC.
 static const int CC_FIND_NEAR_COMPLEX = 1;
-// Enable corner rule
+/// @brief Flag: Enable corner rule to split at sharp corners.
 static const int CC_CORNER_RULE = 2;
-// Add thickness of lines (only on thick pixels)
+/// @brief Flag: Add thickness pixels (may improve precision but cause more false splits).
 static const int CC_ADD_THICK_PIXELS = 4;
 
+/// @brief Line segment detector using connected component analysis (Version 1.3).
+/// Detects line segments by linking edge pixels into connected components,
+/// then applying recursive splitting and eigenvalue-based line fitting.
+///
+/// **Key Features:**
+/// - Connected component edge linking with 8-directional search
+/// - Optional complex near-pixel search for better fork handling
+/// - Corner rule for splitting at sharp direction changes
+/// - Recursive Ramer-Douglas-Peucker style splitting
+/// - Eigenvalue-based line fitting
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for support points (default LPT<int>)
+/// @tparam GRAD Gradient computation strategy
+/// @tparam FIT Line fitting strategy
+///
+/// @code{cpp}
+/// lsfm::LsdCC<float> detector(0.004f, 0.012f, 10, 0, 2.0f, 0);
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
@@ -61,35 +84,38 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   using LsdCCBase<FT, LPT, PT, GRAD, FIT>::clearData;
 
  public:
-  typedef FT value_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
+  typedef FT value_type;                                                        ///< Floating-point value type
+  typedef LPT<FT> line_point;                                                   ///< Line point type
+  typedef PT point_type;                                                        ///< Support point type
+  typedef typename GRAD::mag_type mag_type;                                     ///< Gradient magnitude type
+  typedef typename GRAD::grad_type grad_type;                                   ///< Gradient vector component type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::Line Line;                ///< Line type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineVector LineVector;    ///< Vector of lines
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegment LineSegment;  ///< Line segment type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::PointVector PointVector;              ///< Vector of points
 
-  typedef typename GRAD::mag_type mag_type;
-  typedef typename GRAD::grad_type grad_type;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::Line Line;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineVector LineVector;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegment LineSegment;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::PointVector PointVector;
-
-
-  // store all parameters of line segement
+  /// @brief Line data structure storing segment metadata and point references.
+  /// Provides iterators and accessors for point ranges belonging to a detected line segment.
   class LineData {
-    const PointVector* points_;
+    const PointVector* points_;  ///< Pointer to the global point vector
 
    public:
+    /// @brief Construct line data referencing a range in a point vector.
+    /// @param i Segment ID
+    /// @param b Start index in the point vector
+    /// @param e End index (past-the-end) in the point vector
+    /// @param r Whether points should be read in reverse order
+    /// @param v Pointer to the global point vector
     LineData(int i = 0, size_t b = 0, size_t e = 0, bool r = false, const PointVector* v = 0)
         : points_(v), id(i), p_beg(b), p_end(e), reverse(r) {}
 
-    // segment id of lsmap
-    int id{};
+    int id{};  ///< Segment ID in the line segment map
 
-    // start / end position in point list (supporting points)
-    size_t p_beg{}, p_end{};
+    size_t p_beg{};  ///< Start position in point list
+    size_t p_end{};  ///< End position in point list
 
-    // order of supporting points
-    bool reverse{};
+    bool reverse{};  ///< Whether supporting points are in reverse order
 
     // number of supporting points
     //! @brief Get the number of points in this line data.
@@ -138,30 +164,27 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
     //! @brief Get a copy of all points in this line data in original order.
     //! @return A new PointVector containing all points from begin() to end().
-    inline PointVector points() const { PointVector(begin(), end()); }
+    inline PointVector points() const { return PointVector(begin(), end()); }
 
-    //! @brief Get a copy of all points in this line data, respecting the reverse flag.
-    //! @return A new PointVector with points in forward or reverse order based on the reverse flag.
+    //! @brief Get a copy of all points, respecting the reverse flag.
+    //! @return A new PointVector with points in forward or reverse order.
     inline PointVector ordered_points() const {
       return reverse ? PointVector(rbegin(), rend()) : PointVector(begin(), end());
     }
   };
 
-  typedef std::vector<LineData> LineDataVector;
+  typedef std::vector<LineData> LineDataVector;  ///< Vector of LineData structures
 
-
-  //!
-  //! Create a LsdCC object.
-  //! @param th_high  Higher intensity threshold for Non Maxima Supression. Range (0..1] (0.004 ~ 1/255).
-  //! @param th_low   Lower intensity threshold for Non Maxima Supression. Range (0..1] (0.004 ~ 1/255).
-  //! @param min_pix      Minimum number of supporting pixels for line segment. Range [2..X]
-  //! @param max_gap      Maximum gap search distance. Range [0..X]
-  //! @param err_dist     Error distance for segment splitting. Distance in Pixels. Range (0..X] (>0)
-  //! @param flags Flags for line detection
-  //!                   CC_FIND_NEAR_COMPLEX - Use complex decision algo to determine near pixels in cc search
-  //!                   CC_CORNER_RULE - Enable corner rule
-  //!                   CC_ADD_THICK_PIXELS - Add pixel of lines makeing them "thick" -> can result in higher
-  //!                                         precision but also in more "false" splits.
+  /// @brief Create a connected component line segment detector.
+  /// @param th_low Lower intensity threshold for NMS (normalized, range (0..1], 0.004 ~ 1/255)
+  /// @param th_high Upper intensity threshold for NMS (normalized, range (0..1], 0.004 ~ 1/255)
+  /// @param min_pix Minimum supporting pixels per segment (range [2..X])
+  /// @param max_gap Maximum gap search distance in pixels (range [0..X])
+  /// @param err_dist Error distance threshold for segment splitting in pixels (range (0..X])
+  /// @param flags Detection flags bitmask:
+  ///   - CC_FIND_NEAR_COMPLEX: Use complex near-pixel decision algorithm
+  ///   - CC_CORNER_RULE: Enable corner rule for sharp edge splitting
+  ///   - CC_ADD_THICK_PIXELS: Add thick line pixels (may improve precision but cause more splits)
   LsdCC(FT th_low = static_cast<FT>(0.004),
         FT th_high = static_cast<FT>(0.012),
         int min_pix = 10,
@@ -181,18 +204,24 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter name/value pairs.
+  /// @param options Initializer list with parameter name/value pairs
   LsdCC(ValueManager::InitializerList options)
       : flags_(0), min_pix_(10), max_gap_(0), err_dist_(2), lineData_(), segments_() {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdCC(const ValueManager::NameValueVector& options)
       : flags_(0), min_pix_(10), max_gap_(0), err_dist_(2), lineData_(), segments_() {
     init();
     this->value(options);
   }
 
+  /// @brief Copy constructor.
+  /// @param rhs Source detector to copy parameters from
   LsdCC(const LsdCC& rhs)
       : LsdCCBase<FT, LPT, PT, GRAD, FIT>(rhs.th_low_, rhs.th_high_),
         flags_(rhs.flags_),
@@ -335,11 +364,10 @@ class LsdCC : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   }
 
  private:
-  // line segment vector
-  LineDataVector lineData_;
-  LineDataVector segments_;
+  LineDataVector lineData_{};  ///< Raw connected component segments
+  LineDataVector segments_{};  ///< Segments after splitting
 
-  // detect connected edges
+  /// @brief Detect connected edge segments from the NMS edge map.
   void computeSeg() {
     lsmap_.create(rows_, cols_, CV_32SC1);
     lsmap_.setTo(0);

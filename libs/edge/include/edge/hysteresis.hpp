@@ -76,13 +76,22 @@ inline void hysteresis_map(cv::Mat& map, const cv::Mat& dmap, IndexVector& edgel
 }
 }  // namespace detail
 
-//! compute hysteresis of seeds and dmap
+/// @brief Perform hysteresis edge linking and return the expanded edgel indices.
+/// Starting from seed edgels, expands to 8-connected neighbors that have valid
+/// direction values (>= 0), adding them to the edgels vector.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Input/output vector of edgel indices; seeds on input, expanded set on output
 inline void hysteresis_edgels(const cv::Mat& dmap, IndexVector& edgels) {
   cv::Mat map;
   detail::hysteresis_map(map, dmap, edgels);
 }
 
-//! compute hysteresis of seeds and dmap
+/// @brief Perform hysteresis edge linking and return direction-encoded map.
+/// Expands seeds via 8-connected neighbors in the direction map, then produces
+/// an output map where only linked edgels retain their direction values.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Input/output vector of seed indices; expanded with linked edgels
+/// @return Direction map with only hysteresis-linked edgels retaining their values
 inline cv::Mat hysteresis(const cv::Mat& dmap, IndexVector& edgels) {
   cv::Mat map;
   detail::hysteresis_map(map, dmap, edgels);
@@ -93,7 +102,13 @@ inline cv::Mat hysteresis(const cv::Mat& dmap, IndexVector& edgels) {
   return map;
 }
 
-//! compute binary hysteresis of seeds and dmap
+/// @brief Perform hysteresis edge linking and return a binary edge map.
+/// Expands seeds via 8-connected neighbors, producing a binary output where
+/// all linked edgels are marked with the specified value.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Input/output vector of seed indices; expanded with linked edgels
+/// @param val Value to mark edge pixels in the output map (default: 1)
+/// @return Binary edge map (CV_8U) with linked edgels marked as val
 inline cv::Mat hysteresis_binary(const cv::Mat& dmap, IndexVector& edgels, uchar val = 1) {
   cv::Mat map;
   dmap.convertTo(map, CV_8U);
@@ -150,25 +165,43 @@ inline cv::Mat hysteresis_binary(const cv::Mat& dmap, IndexVector& edgels, uchar
   return map;
 }
 
-//! compute hysteresis of seeds and dmap
+/// @brief Perform hysteresis edge linking (const edgels overload).
+/// Creates a copy of edgels before performing hysteresis, leaving the input unchanged.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Seed indices (not modified)
+/// @return Direction map with only hysteresis-linked edgels retaining their values
 inline cv::Mat hysteresis(const cv::Mat& dmap, const IndexVector& edgels) {
   IndexVector eg = edgels;
   return hysteresis(dmap, eg);
 }
 
-//! compute binary hysteresis of seeds and dmap
+/// @brief Perform binary hysteresis edge linking (const edgels overload).
+/// Creates a copy of edgels before performing hysteresis, leaving the input unchanged.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Seed indices (not modified)
+/// @param val Value to mark edge pixels in the output map (default: 1)
+/// @return Binary edge map (CV_8U) with linked edgels marked as val
 inline cv::Mat hysteresis_binary(const cv::Mat& dmap, const IndexVector& edgels, uchar val = 1) {
   IndexVector eg = edgels;
   return hysteresis_binary(dmap, eg, val);
 }
 
-//! compute hysteresis of seeds and dmap
+/// @brief Perform hysteresis edge linking (const alias).
+/// Alias for hysteresis() with const edgels to clarify intent.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Seed indices (not modified)
+/// @return Direction map with only hysteresis-linked edgels
 inline cv::Mat hysteresis_const(const cv::Mat& dmap, const IndexVector& edgels) {
   IndexVector eg = edgels;
   return hysteresis(dmap, eg);
 }
 
-//! compute binary hysteresis of seeds and dmap
+/// @brief Perform binary hysteresis edge linking (const alias).
+/// Alias for hysteresis_binary() with const edgels to clarify intent.
+/// @param dmap Direction map (CV_8S) with quantized edge directions
+/// @param edgels Seed indices (not modified)
+/// @param val Value to mark edge pixels (default: 1)
+/// @return Binary edge map (CV_8U)
 inline cv::Mat hysteresis_binary_const(const cv::Mat& dmap, const IndexVector& edgels, uchar val = 1) {
   IndexVector eg = edgels;
   return hysteresis_binary(dmap, eg, val);

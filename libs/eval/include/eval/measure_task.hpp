@@ -54,7 +54,10 @@ class MeasureTask : public InputTask<InputDataT> {
   MeasuresMap measures_{};
 };
 
-/// @brief Task runner that collects measurements from measure tasks
+/// @brief Task runner that collects measurements from measure tasks.
+/// Extends InputTaskRunner to call measure() after each task run and
+/// accumulate results.
+/// @tparam MeasureTaskT The measure task type
 template <typename MeasureTaskT>
 class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
  public:
@@ -65,6 +68,12 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
   using Base = InputTaskRunner<MeasureTaskType>;
   using DataProviderPtrList = typename Base::DataProviderPtrList;
 
+  /// @brief Construct a measure task runner.
+  /// @param tr_data_provider List of data providers
+  /// @param tr_name Name of this task runner
+  /// @param tr_target_path Output path for visual results
+  /// @param tr_verbose Enable verbose output
+  /// @param tr_visual_results Enable saving visual results
   MeasureTaskRunner(DataProviderPtrList tr_data_provider,
                     const std::string& tr_name,
                     const std::string& tr_target_path = std::string(),
@@ -119,6 +128,8 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
               << std::endl;
   }
 
+  /// @brief Collect results from a completed task.
+  /// @param task The task from which to collect measures
   void collect(const Task& task) override {
     const auto& mtask = static_cast<const MeasureTaskType&>(task);
     for (const auto& [source_name, measure] : mtask.measures()) {
@@ -126,14 +137,17 @@ class MeasureTaskRunner : public InputTaskRunner<MeasureTaskT> {
     }
   }
 
+  /// @brief Clear all accumulated results.
   void clear() override { results_.clear(); }
 
  protected:
+  /// @brief Internal structure holding a single measurement result.
   struct DataProviderTaskMeasure {
-    std::string provider{};
-    std::string task{};
-    Measures measures{};
+    std::string provider{};  ///< Data provider source name
+    std::string task{};      ///< Task name that produced the measure
+    Measures measures{};     ///< Collected measurement data
   };
+  /// @brief Accumulated measurement results.
   std::vector<DataProviderTaskMeasure> results_;
 };
 

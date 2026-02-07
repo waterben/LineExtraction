@@ -18,14 +18,28 @@
 
 namespace lsfm {
 
+/// @brief Abstract base class for edge segment point sampling.
+/// Samples representative points from edge segments for further processing
+/// such as line fitting or feature extraction.
+/// @tparam PT Point type for sampled output
 template <class PT>
 class SegmentSampler : public ValueManager {
   SegmentSampler(const SegmentSampler&);
 
  public:
+  /// @typedef point_type
+  /// @brief Sampled point type
   typedef PT point_type;
+
+  /// @typedef PointVector
+  /// @brief Vector of sampled points
   typedef std::vector<PT> PointVector;
 
+  /// @brief Process a point vector with column count for index conversion.
+  /// @tparam PV Point or index vector type
+  /// @tparam COLS Column count type (int or cv::Mat)
+  /// @param v Input point/index vector
+  /// @param cols Number of columns or matrix for index conversion
   template <class PV, class COLS>
   inline void process(const PV& v, const COLS& cols) {
     points_.clear();
@@ -34,6 +48,12 @@ class SegmentSampler : public ValueManager {
     processSingle(v, cols);
   }
 
+  /// @brief Process a range of points/indices.
+  /// @tparam ITER Iterator type
+  /// @tparam COLS Column count type
+  /// @param beg Begin iterator
+  /// @param end End iterator
+  /// @param cols Number of columns or matrix
   template <class ITER, class COLS>
   inline void process(const ITER& beg, const ITER& end, const COLS& cols) {
     points_.clear();
@@ -42,6 +62,11 @@ class SegmentSampler : public ValueManager {
     processImpl(&(*beg), &(*(end - 1)) + 1, cols);
   }
 
+  /// @brief Process multiple point vectors.
+  /// @tparam PVV Vector of point vectors type
+  /// @tparam COLS Column count type
+  /// @param vv Vector of point/index vectors
+  /// @param cols Number of columns or matrix
   template <class PVV, class COLS>
   inline void processV(const PVV& vv, const COLS& cols) {
     points_.clear();
@@ -50,6 +75,10 @@ class SegmentSampler : public ValueManager {
     for_each(vv.begin(), vv.end(), [&](const typename PVV::value_type& v) { processSingle(v, cols); });
   }
 
+  /// @brief Process edge segments with their shared point index vector.
+  /// @param s Vector of edge segments
+  /// @param points Shared index vector for all segments
+  /// @param cols Number of columns or matrix for index conversion
   template <class COLS>
   inline void process(const EdgeSegmentVector& s, const IndexVector& points, const COLS& cols) {
     points_.clear();
@@ -61,10 +90,16 @@ class SegmentSampler : public ValueManager {
     });
   }
 
+  /// @brief Get the sampled points.
+  /// @return Const reference to sampled point vector
   const PointVector& points() const { return points_; }
 
+  /// @brief Get the output edge segments referencing the sampled points.
+  /// @return Const reference to edge segment vector
   const EdgeSegmentVector& segments() const { return segments_; }
 
+  /// @brief Get the name of this sampler.
+  /// @return Name string
   virtual std::string name() const = 0;
 
  protected:
@@ -86,6 +121,9 @@ class SegmentSampler : public ValueManager {
 };
 
 
+/// @brief Uniform segment sampler with fixed spacing.
+/// Samples points at regular intervals along each edge segment.
+/// @tparam PT Point type for sampled output
 template <class PT>
 class UniformSegmentSampler : public SegmentSampler<PT> {
   int dist_, min_points_;
@@ -93,6 +131,9 @@ class UniformSegmentSampler : public SegmentSampler<PT> {
   using SegmentSampler<PT>::segments_;
 
  public:
+  /// @brief Construct uniform sampler with spacing and minimum point count.
+  /// @param dist Sampling distance (pixels between samples)
+  /// @param mp Minimum number of points for a valid segment
   UniformSegmentSampler(int dist = 10, int mp = 15) : dist_(dist), min_points_(mp) {
     this->add("distance", std::bind(&UniformSegmentSampler<PT>::valueDistance, this, std::placeholders::_1),
               "Sampling distance.");
@@ -150,6 +191,10 @@ class UniformSegmentSampler : public SegmentSampler<PT> {
   }
 };
 
+/// @brief Adaptive segment sampler using recursive splitting.
+/// Recursively splits segments at points of maximum deviation from
+/// the line between endpoints, similar to Douglas-Peucker simplification.
+/// @tparam PT Point type for sampled output
 template <class PT>
 class AdaptiveSegmentSampler : public SegmentSampler<PT> {
   const index_type* data_;
@@ -163,6 +208,10 @@ class AdaptiveSegmentSampler : public SegmentSampler<PT> {
   std::vector<cv::Point> tmpPoints_;
 
  public:
+  /// @brief Construct adaptive sampler with distance and error parameters.
+  /// @param md Maximum sampling distance between adjacent sample points
+  /// @param mp Minimum number of points for a valid segment
+  /// @param err Error distance threshold for recursive splitting
   AdaptiveSegmentSampler(int md = 100, int mp = 15, float err = 2) : err_dist_(err), max_dist_(md), min_points_(mp) {
     this->add("max_dist", std::bind(&AdaptiveSegmentSampler<PT>::valueMaxDistance, this, std::placeholders::_1),
               "Maximal sampling distance.");

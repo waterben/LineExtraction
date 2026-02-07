@@ -45,26 +45,38 @@ struct MotionDescritpor {
   std::string name() const { return "Motion"; }
 };
 
-// Generic Feature Descriptor creator for gradient
+/// @brief Feature descriptor creator for motion-based descriptors.
+/// Creates MotionDescritpor instances from geometric objects using midpoint position.
+/// @tparam FT Float type for computations
+/// @tparam GT Geometric type (default: LineSegment<FT>)
 template <class FT, class GT = LineSegment<FT>>
 class FdcMotion : public FdcObj<FT, GT, MotionDescritpor<FT>> {
  public:
-  typedef typename FdcObj<FT, GT, MotionDescritpor<FT>>::Ptr FdcPtr;
-  typedef MotionDescritpor<FT> descriptor_type;
+  typedef typename FdcObj<FT, GT, MotionDescritpor<FT>>::Ptr FdcPtr;  ///< Shared pointer type for this creator
+  typedef MotionDescritpor<FT> descriptor_type;                       ///< Descriptor type produced
 
+  /// @brief Construct a motion descriptor creator.
+  /// @param data Optional input data map (unused for motion descriptors)
   FdcMotion(const MatMap& data = MatMap()) { this->setData(data); }
 
+  /// @brief Factory method to create a shared pointer instance.
+  /// @return Shared pointer to a new FdcMotion
   static FdcPtr createFdc() { return FdcPtr(new FdcMotion<FT, GT>()); }
 
   using FdcObjI<FT, GT, descriptor_type>::create;
 
-  //! create single descriptor from single geometric object
+  /// @brief Create a single descriptor from a geometric object.
+  /// Extracts the center point of the geometric object as the descriptor midpoint.
+  /// @param input Source geometric object
+  /// @param dst Output descriptor to populate
   virtual void create(const GT& input, descriptor_type& dst) { dst.midPoint = input.centerPoint(); }
 
-  //! get size of single descriptor (cols in cv::Mat)
+  /// @brief Get the size of a single descriptor in bytes.
+  /// @return Size of one descriptor
   virtual size_t size() const { return static_cast<size_t>(descriptor_type::size()); }
 
-  //! allow to set internal processing data after init
+  /// @brief Set internal processing data.
+  /// @param data Input data map (unused for motion descriptors)
   virtual void setData(const MatMap& data) {}
 };
 }  // namespace lsfm

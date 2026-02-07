@@ -42,15 +42,15 @@ void StringTable::saveCSV(const std::string& file) const {
   ofs.close();
 }
 
-std::ostream& operator<<(std::ostream& os, const StringTable& StringTable) {
+std::ostream& operator<<(std::ostream& os, const StringTable& table) {
   size_t col = 0;
-  for_each(StringTable.data().begin(), StringTable.data().end(), [&](std::string cell) {
+  for_each(table.data().begin(), table.data().end(), [&](std::string cell) {
     ++col;
     if (col < 8) {
       if (cell.size() > 15) cell = cell.substr(0, 15);
       std::cout << cell << (cell.size() < 8 ? "\t\t" : "\t");
     }
-    if (col == StringTable.cols()) {
+    if (col == table.cols()) {
       col = 0;
       std::cout << "#" << std::endl;
     }

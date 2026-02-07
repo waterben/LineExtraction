@@ -20,9 +20,34 @@
 namespace lsfm {
 
 // TODO adapt nfa for patterns and add to lsdep
-//! Use precise direction map for sub pixel esitmation
+/// @brief Flag: Use precise direction map for sub-pixel estimation.
 static const int EP_USE_PRECISE_SPE = 2;
 
+/// @brief Line segment detector using edge patterns and sub-pixel estimation.
+/// Combines edge pattern detection with configurable splitting and fitting strategies.
+/// Detects edge segments using directional patterns, then splits them at curvature
+/// changes and fits line segments.
+///
+/// **Key Features:**
+/// - Pattern-based edge detection with configurable corner rules
+/// - Sub-pixel position estimation (standard or direction-map based)
+/// - Ramer-Douglas-Peucker style line splitting
+/// - Eigenvalue-based line fitting
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam CORNER_RULE Whether to enable corner detection during pattern matching
+/// @tparam PT Point type for support points (default LPT<int>)
+/// @tparam ESOURCE Edge source with gradient and NMS
+/// @tparam SPE Sub-pixel position estimator
+/// @tparam SPLIT Line splitting algorithm
+/// @tparam FIT Line fitting method
+///
+/// @code{cpp}
+/// lsfm::LsdEP<float> detector(0.004f, 0.012f, 10, 2.0f, 5, 2, 3, 3.0f, 5.0f, 0);
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class FT,
           template <class> class LPT = Vec2,
           bool CORNER_RULE = true,
@@ -68,18 +93,29 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
   }
 
  public:
-  typedef FT float_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
-  typedef EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, CORNER_RULE> Edge;
+  typedef FT float_type;                                                                 ///< Floating-point type
+  typedef LPT<FT> line_point;                                                            ///< Line point type
+  typedef PT point_type;                                                                 ///< Support point type
+  typedef EsdPattern<typename ESOURCE::EdgeResponseFilter::mag_type, CORNER_RULE> Edge;  ///< Edge pattern type
 
-  typedef typename LsdBase<FT, LPT>::Line Line;
-  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
-  typedef typename LsdExt<FT, LPT, PT>::PointVector PointVector;
+  typedef typename LsdBase<FT, LPT>::Line Line;                            ///< Line type
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;                ///< Vector of lines
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;              ///< Line segment type
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;                  ///< Image data type
+  typedef typename LsdExt<FT, LPT, PT>::PointVector PointVector;           ///< Vector of points
 
+  /// @brief Create an edge pattern line segment detector.
+  /// @param th_low Lower gradient threshold (normalized, 0-1)
+  /// @param th_high Upper gradient threshold (normalized, 0-1)
+  /// @param min_pix Minimum supporting pixels per edge segment
+  /// @param dist Line splitting distance threshold in pixels
+  /// @param min_len Minimum resulting line segment length
+  /// @param pat_tol Pattern tolerance for primitive matching
+  /// @param maxGap Maximum gap between consecutive edge pixels
+  /// @param magMul Magnitude multiplier for pattern detection
+  /// @param magTh Magnitude threshold for pattern detection
+  /// @param flags Detection flags (EP_USE_PRECISE_SPE)
   LsdEP(FT th_low = static_cast<FT>(0.004),
         FT th_high = static_cast<FT>(0.012),
         int min_pix = 10,
@@ -97,11 +133,15 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter name/value pairs.
+  /// @param options Initializer list with parameter name/value pairs
   LsdEP(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdEP(ValueManager::NameValueVector options) {
     init();
     this->value(options);
@@ -132,6 +172,10 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
   using LsdBase<FT, LPT>::imageDataDescriptor;
   using LsdBase<FT, LPT>::imageData;
 
+  /// @brief Detect line segments using edge pattern analysis.
+  /// Processes the image through edge source, pattern detection, sub-pixel estimation,
+  /// splitting, and line fitting.
+  /// @param image Input image (8-bit single-channel or color)
   virtual void detect(const cv::Mat& image) final {
     clearData();
 
@@ -166,6 +210,8 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
     });
   }
 
+  /// @brief Get descriptor information for auxiliary image data layers.
+  /// @return Data descriptor with name and description for each layer
   virtual const DataDescriptor& imageDataDescriptor() const final {
     static DataDescriptor dsc;
     if (dsc.empty()) {
@@ -179,6 +225,8 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
     return dsc;
   }
 
+  /// @brief Get auxiliary image data computed during detection.
+  /// @return Vector of image data layers (gx, gy, dir, mag, edge_map)
   virtual const ImageData& imageData() const final {
     if (imageData_.empty()) {
       imageData_.push_back(esource_.gx());
@@ -198,10 +246,16 @@ class LsdEP : public LsdExt<FT, LPT, PT> {
   //! @return Constant reference to vector of edge segments.
   const EdgeSegmentVector& segments() const { return edge_.segments(); }
 
+  /// @brief Get line support segments (edge segments supporting each detected line).
+  /// @return Const reference to line support edge segments
   virtual const EdgeSegmentVector& lineSupportSegments() const final { return segments_; }
 
+  /// @brief Get all support points used in line detection.
+  /// @return Const reference to support point vector
   virtual const PointVector& points() const final { return points_; }
 
+  /// @brief Get point indices for edge segments.
+  /// @return Const reference to index vector
   virtual const IndexVector& indexes() const final { return edge_.points(); }
 
   //! @brief Get access to the edge source containing gradient information.

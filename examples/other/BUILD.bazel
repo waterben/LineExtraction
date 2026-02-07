@@ -1,7 +1,7 @@
-"""other examples (dlib, opencv features, etc.)"""
+"""other examples (houghlines)"""
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load("//tools/bazel:copts.bzl", "ARPACKPP_COPTS", "LE_COPTS_COMPAT")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,55 +12,12 @@ _TEST_DATA = [
 
 cc_binary(
     name = "test_other_houghlines",
-    srcs = ["houghlines.cpp"],
+    srcs = ["src/houghlines.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = [
         "//libs/geometry:lib_geometry",
         "//libs/utility:lib_utility",
         "@opencv",
-    ],
-)
-
-cc_binary(
-    name = "test_other_dlib",
-    srcs = ["test_dlib.cpp"],
-    copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/geometry:lib_geometry",
-        "@dlib",
-    ],
-)
-
-# arpack++ test using SuperLU for sparse eigenvalue problems
-# arpack++ is legacy C++98 code with unavoidable warnings in its headers
-# We suppress only the specific warnings triggered by arpack++ headers
-cc_binary(
-    name = "test_arpack",
-    srcs = [
-        "arpack_test.cpp",
-        "lsmatrxa.h",
-        "lsymsol.h",
-    ],
-    copts = LE_COPTS_COMPAT + ARPACKPP_COPTS,
-    deps = [
-        "@arpackpp",
-        "@superlu",
-    ],
-)
-
-# opencv_features uses opencv_contrib xfeatures2d module
-cc_binary(
-    name = "test_opencv_features",
-    srcs = [
-        "opencv_features.cpp",
-        "stats.h",
-        "utils.h",
-    ],
-    copts = LE_COPTS_COMPAT,
-    deps = [
-        "//libs/geometry:lib_geometry",
-        "@opencv",
-        "@opencv_contrib//:xfeatures2d",
     ],
 )

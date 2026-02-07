@@ -19,6 +19,13 @@
 namespace lsfm {
 
 // Draw functions for edge-specific types
+
+/// @brief Draw a single edge segment onto an image.
+/// Converts single-channel images to RGB. Colors each pixel in the segment.
+/// @param img Image to draw on (modified in place; converted to RGB if grayscale)
+/// @param seg Edge segment to draw
+/// @param points Point index vector containing pixel locations
+/// @param color Drawing color (default: red)
 inline void drawSegment(cv::Mat& img,
                         const EdgeSegment& seg,
                         const IndexVector& points,
@@ -30,6 +37,12 @@ inline void drawSegment(cv::Mat& img,
   }
 }
 
+/// @brief Draw multiple edge segments onto an image.
+/// Converts single-channel images to RGB. Draws all segments with the same color.
+/// @param img Image to draw on (modified in place; converted to RGB if grayscale)
+/// @param segs Vector of edge segments to draw
+/// @param points Point index vector containing pixel locations
+/// @param color Drawing color (default: red)
 inline void drawSegment(cv::Mat& img,
                         const EdgeSegmentVector& segs,
                         const IndexVector& points,

@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 
 cc_binary(
     name = "eval_color_test_sobel",
-    srcs = ["color_test_sobel.cpp"],
+    srcs = ["src/color_test_sobel.cpp"],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
@@ -15,7 +15,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_color_test_rcmg",
-    srcs = ["color_test_rcmg.cpp"],
+    srcs = ["src/color_test_rcmg.cpp"],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
@@ -25,7 +25,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_even_parameter",
-    srcs = ["even_parameter_test.cpp"],
+    srcs = ["src/even_parameter_test.cpp"],
     deps = [
         "//libs/imgproc:lib_imgproc",
         "@dlib",
@@ -35,7 +35,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_filter_results",
-    srcs = ["filter_results.cpp"],
+    srcs = ["src/filter_results.cpp"],
     deps = [
         "//libs/imgproc:lib_imgproc",
         "@opencv",
@@ -44,7 +44,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_gradient_noise",
-    srcs = ["gradient_noise.cpp"],
+    srcs = ["src/gradient_noise.cpp"],
     deps = [
         "//libs/imgproc:lib_imgproc",
         "@opencv",
@@ -53,7 +53,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_gradient_orientation",
-    srcs = ["gradient_orientation.cpp"],
+    srcs = ["src/gradient_orientation.cpp"],
     deps = [
         "//libs/edge:lib_edge",
         "//libs/geometry:lib_geometry",
@@ -64,7 +64,7 @@ cc_binary(
 
 cc_binary(
     name = "eval_image_denoise",
-    srcs = ["image_denoise.cpp"],
+    srcs = ["src/image_denoise.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
@@ -77,9 +77,23 @@ cc_binary(
 
 cc_binary(
     name = "eval_phase_dc",
-    srcs = ["phase_dc.cpp"],
+    srcs = ["src/phase_dc.cpp"],
     deps = [
         "//libs/imgproc:lib_imgproc",
         "@opencv",
+    ],
+)
+
+cc_binary(
+    name = "eval_spe_precision",
+    srcs = ["src/spe_precision.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+        "@opencv_contrib//:ximgproc",
     ],
 )

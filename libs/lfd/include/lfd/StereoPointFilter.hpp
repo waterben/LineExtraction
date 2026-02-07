@@ -20,32 +20,50 @@
 
 namespace lsfm {
 
-//! stereo Point filter -> uses binning and x-axis sorting + constrains to sort
-//! out bad line match candidates
+/// @brief Stereo point filter using binning and x-axis constraints.
+/// Uses spatial binning and stereo constraints (left x >= right x)
+/// to filter out bad point match candidates.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (e.g., std::vector<cv::KeyPoint>)
+/// @tparam GT Geometric element type (default: GV::value_type)
+/// @tparam DM Descriptor match type (default: DescriptorMatch<FT>)
 template <class FT, class GV, class GT = typename GV::value_type, class DM = DescriptorMatch<FT>>
 class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
-  int height_;
+  int height_;  ///< Image height for binning
 
+  /// @brief Pre-computed point data for efficient filtering.
   struct PointData {
+    /// @brief Construct point data from a 2D vector.
+    /// @param p Point position
+    /// @param s Scale factor
     PointData(const lsfm::Vec2<FT>& p = lsfm::Vec2<FT>(), FT s = 0) : position(p), scale(s) {}
+
+    /// @brief Construct point data from an OpenCV point.
+    /// @param p OpenCV 2D point
+    /// @param s Scale factor
     PointData(const cv::Point2f& p, FT s = 0) : position(lsfm::Vec2<FT>(p.x, p.y)), scale(s) {}
 
-    lsfm::Vec2<FT> position;
-    FT scale;
+    lsfm::Vec2<FT> position;  ///< Point position
+    FT scale;                 ///< Scale factor
   };
 
-  std::vector<PointData> pdLeft_, pdRight_;
-  int bins;
+  std::vector<PointData> pdLeft_;   ///< Pre-computed data for left points
+  std::vector<PointData> pdRight_;  ///< Pre-computed data for right points
+  int bins;                         ///< Number of vertical bins
 
-  // first rotation (4 areas in coordsystem), then number of bins, then variable sized vectors with candidates
+  /// @brief Spatial bins for efficient candidate lookup.
+  /// Indexed by vertical bin, each containing point indices.
   std::vector<std::vector<int>> bins_;
 
  public:
-  typedef FT float_type;
-  typedef GV geometric_vector;
-  typedef GT geometric_type;
+  typedef FT float_type;        ///< Float type used
+  typedef GV geometric_vector;  ///< Geometric vector type
+  typedef GT geometric_type;    ///< Geometric element type
 
 
+  /// @brief Construct a stereo point filter.
+  /// @param height Image height (must be > 0)
+  /// @param binNum Number of vertical bins for spatial partitioning
   StereoPointFilter(int height = 1, int binNum = 12) : height_(height), bins(binNum) {
     CV_Assert(height > 0);
     if (bins > height_) bins = height_;
@@ -56,11 +74,19 @@ class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
     this->options_.push_back(OptionManager::OptionEntry("height", height, "int", "Image height."));
   }
 
+  /// @brief Train the filter with left and right point sets.
+  /// @param left Left image points
+  /// @param right Right image points
   void train(const GV& left, const GV& right) {
     trainSide(left, pdLeft_);
     trainSide(right, pdRight_);
   }
 
+  /// @brief Filter a match candidate by checking stereo constraints.
+  /// Rejects matches where left point x-coordinate is less than right.
+  /// @param lfIdx Left feature index
+  /// @param rfIdx Right feature index
+  /// @return True if the match should be rejected
   virtual bool filter(int lfIdx, int rfIdx) const {
     const PointData& ld = pdLeft_[lfIdx];
     const PointData& rd = pdRight_[rfIdx];
@@ -71,8 +97,12 @@ class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
     return false;
   }
 
+  /// @brief Get pre-computed left point data.
+  /// @return Const reference to left point data vector
   inline const std::vector<PointData>& ldLeft() const { return pdLeft_; }
 
+  /// @brief Get pre-computed right point data.
+  /// @return Const reference to right point data vector
   inline const std::vector<PointData>& ldRight() const { return pdRight_; }
 
   using FeatureFilter<FT>::create;
@@ -127,6 +157,16 @@ class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
               }
           }
   */
+  /// @brief Create match candidates using spatial binning and stereo constraints.
+  /// Generates match candidates filtered by bin proximity and stereo consistency,
+  /// and tracks per-point match counts.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Match count vector type
+  /// @param left Left image points
+  /// @param right Right image points
+  /// @param matches Output match candidates
+  /// @param lm Per-point match count for left set
+  /// @param rm Per-point match count for right set
   template <class FMV, class MV>
   void create(const GV& left, const GV& right, FMV& matches, MV& lm, MV& rm) {
     matches.clear();
@@ -171,6 +211,9 @@ class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  protected:
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {
@@ -187,12 +230,18 @@ class StereoPointFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  private:
+  /// @brief Pre-compute point data for one side.
+  /// @param points Input points
+  /// @param data Output pre-computed point data
   inline void trainSide(const GV& points, std::vector<PointData>& data) {
     data.clear();
     data.reserve(points.size());
     for_each(points.begin(), points.end(), [&](const geometric_type& point) { data.push_back(PointData(point.pt)); });
   }
 
+  /// @brief Pre-compute point data and populate spatial bins.
+  /// @param points Input points
+  /// @param data Output pre-computed point data
   inline void trainSideAndBins(const std::vector<geometric_type>& points, std::vector<PointData>& data) {
     // clear line data
     data.clear();

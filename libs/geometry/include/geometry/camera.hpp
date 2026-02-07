@@ -477,7 +477,6 @@ class Camera : public Pose<FT> {
     rot = rodrigues(rTmp);
   }
 
-  //! decompose camera projection matrix
   /// @brief Decompose projection matrix to focal, offset, and pose.
   /// @param proj 3x4 projection matrix.
   /// @param[out] focal Focal vector.

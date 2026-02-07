@@ -18,31 +18,56 @@
 
 namespace lsfm {
 
+/// @brief Pairwise line matcher using spectral techniques for stereo or temporal line correspondence.
+///
+/// Matches line segments between two images by building a symmetric adjacency matrix
+/// encoding pairwise geometric constraints and solving for its principal eigenvector.
+/// Based on the spectral technique by M. Leordeanu for correspondence problems using
+/// pairwise constraints.
+/// @tparam FT Floating-point type used for geometric computations.
+/// @tparam DT Descriptor type used for line appearance matching.
 template <class FT, class DT>
 class PairwiseLineMatcher {
+  /// @brief Comparator for descending order in the eigen-value map.
   struct CompareL {
+    /// @brief Compare two values in descending order.
+    /// @param lhs Left-hand side value.
+    /// @param rhs Right-hand side value.
+    /// @return True if lhs is greater than rhs.
     bool operator()(const FT& lhs, const FT& rhs) const { return lhs > rhs; }
   };
 
+  /// @brief Multimap storing eigenvalues (descending) mapped to their indices.
   typedef std::multimap<FT, unsigned int, CompareL> EigenMAP;
 
+  /// @brief Precomputed geometric data for a single line segment.
   struct LineData {
+    /// @brief Default constructor.
     LineData(){};
+
+    /// @brief Construct LineData from angle and endpoints.
+    /// @param a Angle of the line segment.
+    /// @param s Start point of the line segment.
+    /// @param e End point of the line segment.
     LineData(FT a, const Vec2<FT>& s, const Vec2<FT>& e) : angle(a), start(s), end(e){};
 
-    FT angle;
-    Vec2<FT> start, end;
+    FT angle;        ///< Angle of the line segment.
+    Vec2<FT> start;  ///< Start point of the line segment.
+    Vec2<FT> end;    ///< End point of the line segment.
   };
 
+  /// @brief Precomputed geometric data for left image lines.
   std::vector<LineData> lineDataLeft_;
+  /// @brief Precomputed geometric data for right image lines.
   std::vector<LineData> lineDataRight_;
 
  public:
-  typedef FT float_type;
-  typedef DT descriptor_type;
-  typedef LineSegment<FT> geometric_type;
+  typedef FT float_type;                   ///< Floating-point type.
+  typedef DT descriptor_type;              ///< Descriptor type for line appearance.
+  typedef LineSegment<FT> geometric_type;  ///< Geometric primitive type (line segment).
 
 
+  /// @brief Construct a PairwiseLineMatcher with default thresholds.
   PairwiseLineMatcher()
       : relativeAngleDifferenceThreshold_(static_cast<FT>(0.7854)),
         intersectionRationDifThreshold_(1),
@@ -51,6 +76,20 @@ class PairwiseLineMatcher {
         weightOfMeanEigenVec_(static_cast<FT>(0.1)),
         minOfEigenVec_(0){};
 
+  /// @brief Match lines using a 1D candidate list.
+  ///
+  /// Builds the adjacency matrix from the candidate matches and extracts the
+  /// final correspondences from its principal eigenvector.
+  /// @tparam GV Container type for geometric line segments.
+  /// @tparam DV Container template for descriptors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Container type for match results.
+  /// @param left Line segments from the left (query) image.
+  /// @param right Line segments from the right (match) image.
+  /// @param qDsc Descriptors for the left (query) lines.
+  /// @param mDsc Descriptors for the right (match) lines.
+  /// @param cm Candidate matches (input); distances may be updated in place.
+  /// @param ret Output container for the final match results.
   template <class GV, template <class, class...> class DV, class... DVArgs, class MV>
   void match1D(
       const GV& left, const GV& right, const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, MV& cm, MV& ret) {
@@ -58,6 +97,21 @@ class PairwiseLineMatcher {
     matchingResultFromPrincipalEigenvector_(left, right, cm, ret);
   }
 
+  /// @brief Match lines using a 2D candidate matrix (multiple match lists).
+  ///
+  /// Flattens the 2D candidate structure into a single list and delegates
+  /// to match1D for adjacency matrix construction and eigenvector extraction.
+  /// @tparam GV Container type for geometric line segments.
+  /// @tparam DV Container template for descriptors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MVV Container-of-containers type for 2D candidate matches.
+  /// @tparam MV Container type for match results.
+  /// @param left Line segments from the left (query) image.
+  /// @param right Line segments from the right (match) image.
+  /// @param qDsc Descriptors for the left (query) lines.
+  /// @param mDsc Descriptors for the right (match) lines.
+  /// @param cm 2D candidate match structure to flatten and process.
+  /// @param ret Output container for the final match results.
   template <class GV, template <class, class...> class DV, class... DVArgs, class MVV, class MV>
   void match2D(const GV& left,
                const GV& right,
@@ -75,15 +129,28 @@ class PairwiseLineMatcher {
     match1D(left, right, qDsc, mDsc, mv, ret);
   }
 
-  static const FT TwoPI;
-  static const FT PI;
-  static const FT Inf;
+  static const FT TwoPI;  ///< Constant: 2 * pi.
+  static const FT PI;     ///< Constant: pi.
+  static const FT Inf;    ///< Constant: infinity (numeric max of FT).
 
  private:
-  //! Build the symmetric non-negative adjacency matrix M, whose nodes are the potential assignments a = (i_l, j_r)
-  //! and whose weights on edges measure the agreements between pairs of potential assignments. That is where the
-  //! pairwise constraints are applied(c.f. A spectral technique for correspondence problems using pairwise constraints,
-  //! M.Leordeanu).
+  /// @brief Build the symmetric non-negative adjacency matrix.
+  ///
+  /// Constructs matrix M whose nodes are potential assignments a = (i_l, j_r)
+  /// and whose edge weights measure pairwise agreement between assignments.
+  /// Applies geometric constraints (angle, intersection ratio, projection ratio)
+  /// and descriptor distance filtering.
+  /// @see "A spectral technique for correspondence problems using pairwise
+  ///       constraints" by M. Leordeanu.
+  /// @tparam GV Container type for geometric line segments.
+  /// @tparam DV Container template for descriptors.
+  /// @tparam DVArgs Additional template arguments for the descriptor container.
+  /// @tparam MV Container type for candidate matches.
+  /// @param left Line segments from the left (query) image.
+  /// @param right Line segments from the right (match) image.
+  /// @param qDsc Descriptors for the left (query) lines.
+  /// @param mDsc Descriptors for the right (match) lines.
+  /// @param cm Candidate matches; distances may be lazily computed and updated.
   template <class GV, template <class, class...> class DV, class... DVArgs, class MV>
   void buildAdjacencyMatrix_(
       const GV& left, const GV& right, const DV<DT, DVArgs...>& qDsc, const DV<DT, DVArgs...>& mDsc, MV& cm) {
@@ -331,7 +398,17 @@ class PairwiseLineMatcher {
   }
 
 
-  //! Get the final matching from the principal eigenvector.
+  /// @brief Extract final line matches from the principal eigenvector.
+  ///
+  /// Iteratively selects the highest-scoring assignment from the eigenvector map,
+  /// enforces one-to-one constraints and sidedness/angle consistency, and removes
+  /// conflicting candidates.
+  /// @tparam GV Container type for geometric line segments.
+  /// @tparam MV Container type for match results.
+  /// @param left Line segments from the left (query) image.
+  /// @param right Line segments from the right (match) image.
+  /// @param cm Candidate matches used to build the adjacency matrix.
+  /// @param matchResult Output container for the accepted match correspondences.
   template <class GV, class MV>
   void matchingResultFromPrincipalEigenvector_(const GV& left, const GV& right, const MV& cm, MV& matchResult) {
     matchResult.clear();
@@ -442,18 +519,18 @@ class PairwiseLineMatcher {
   }
 
  private:
-  FT relativeAngleDifferenceThreshold_;
-  FT intersectionRationDifThreshold_;
-  FT projectionRationDifThreshold_;
-  FT descriptorDifThreshold_;
-  FT weightOfMeanEigenVec_;
-  FT minOfEigenVec_;  // the acceptable minimal value in the principal eigen vector;
+  FT relativeAngleDifferenceThreshold_;  ///< Max allowed relative angle difference between line pairs.
+  FT intersectionRationDifThreshold_;    ///< Max allowed intersection ratio difference.
+  FT projectionRationDifThreshold_;      ///< Max allowed projection ratio difference.
+  FT descriptorDifThreshold_;            ///< Max allowed descriptor distance for a valid match.
+  FT weightOfMeanEigenVec_;              ///< Weight factor applied to mean eigenvector for threshold.
+  FT minOfEigenVec_;                     ///< Minimum acceptable value in the principal eigenvector.
 
-  //! construct a map to store the principal eigenvector and its index.
-  //! each pair in the map is in this form (eigenvalue, index);
-  //! Note that, we use eigenvalue as key in the map and index as their value.
-  //! This is because the map need be sorted by the eigenvalue rather than index
-  //! for our purpose.
+  /// @brief Map storing the principal eigenvector entries and their indices.
+  ///
+  /// Each entry is (eigenvalue, index). The eigenvalue is used as the key so
+  /// that the map is sorted by eigenvalue in descending order, enabling
+  /// greedy extraction of the best assignments.
   EigenMAP eigenMap_;
 };
 

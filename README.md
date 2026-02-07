@@ -6,7 +6,7 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 
 - **`libs/`** - Core library components:
   - [`edge/`](libs/edge/README.md) - Edge detection algorithms (NMS, gradient computation, edge drawing)
-  - [`geometry/`](libs/geometry/README.md) - Geometric primitives, transformations, and OpenGL rendering
+  - [`geometry/`](libs/geometry/README.md) - Geometric primitives and transformations
   - [`imgproc/`](libs/imgproc/README.md) - Image processing utilities and filters
   - [`lfd/`](libs/lfd/README.md) - Line Feature Detector implementation
   - [`lsd/`](libs/lsd/README.md) - Line Segment Detector implementation
@@ -19,9 +19,23 @@ A comprehensive C++ library for line detection and analysis in digital images, f
 - **`apps/`** - [Applications](apps/README.md):
   - [`line_analyzer/`](apps/line_analyzer/README.md) - Qt-based interactive GUI for line analysis
 
-- **`examples/`** - [Usage examples](examples/README.md) demonstrating library functionality
-- **`evaluation/`** - [Performance evaluation](evaluation/README.md) and thesis benchmarks
-- **`tools/`** - Build tools and utilities
+- **`examples/`** - [Usage examples](examples/README.md) demonstrating library functionality:
+  - [`edge/`](examples/edge/README.md) - Edge detection, NMS, zero-crossing, edge linking
+  - [`geometry/`](examples/geometry/README.md) - Geometric primitives, cameras, stereo vision
+  - [`imgproc/`](examples/imgproc/README.md) - Gradient operators, FFT, steerable filters, pyramids
+  - [`lfd/`](examples/lfd/README.md) - Line feature descriptor matching (stereo, video, motion)
+  - [`lsd/`](examples/lsd/README.md) - Line Segment Detection algorithm variants
+  - [`thesis/`](examples/thesis/README.md) - Thesis figure generation
+  - [`other/`](examples/other/README.md) - Miscellaneous demos (Hough transform)
+
+- **`evaluation/`** - [Performance evaluation](evaluation/README.md) and thesis benchmarks:
+  - [`performance/`](evaluation/performance/README.md) - Computational benchmarks (gradient, NMS, LSD, GPU)
+  - [`thesis/`](evaluation/thesis/README.md) - Precision evaluations (gradient accuracy, noise robustness, SPE)
+  - [`python/`](evaluation/python/README.md) - Python tools for result analysis (charts, CSV tables)
+
+- **`third-party/`** - [Third-party libraries](third-party/README.md) (QCustomPlot, external LSD implementations)
+- **`tools/`** - Build tools, scripts, and toolchains
+- **`docker/`** - [Docker/DevContainer](docs/DOCKER.md) configuration files
 
 ## Quick Start
 
@@ -109,6 +123,42 @@ bazel run //apps/line_analyzer:app_line_analyzer
 
 See the [apps documentation](apps/README.md) for details.
 
+## Examples
+
+The [`examples/`](examples/README.md) directory contains standalone programs demonstrating each library module:
+
+| Category | Library | Key Demos |
+|----------|---------|----------|
+| [edge](examples/edge/README.md) | `libs/edge` | NMS variants, zero-crossing, edge linking, NFA validation |
+| [geometry](examples/geometry/README.md) | `libs/geometry` | 2D/3D primitives, stereo vision, Plücker coordinates |
+| [imgproc](examples/imgproc/README.md) | `libs/imgproc` | Gradient operators, FFT, steerable filters, pyramids |
+| [lfd](examples/lfd/README.md) | `libs/lfd` | LBD descriptors, stereo/motion matching, video tracking |
+| [lsd](examples/lsd/README.md) | `libs/lsd` | All LSD variants (EDLines, FGioi, Burns, EL, EP) |
+| [thesis](examples/thesis/README.md) | `libs/eval` | Publication-quality figure generation |
+
+```bash
+# Build and run an example
+bazel run //examples/lsd:lsd
+bazel run //examples/edge:edge_test -- /path/to/image.jpg
+```
+
+## Evaluation & Benchmarking
+
+The [`evaluation/`](evaluation/README.md) directory contains performance benchmarks and precision evaluations:
+
+- **[Performance Benchmarks](evaluation/performance/README.md)**: Computational efficiency of all core algorithms (gradient, NMS, LSD, GPU convolution/FFT). Uses a task registry with auto-discovery.
+- **[Thesis Evaluations](evaluation/thesis/README.md)**: Precision and accuracy evaluations for gradient orientation, noise robustness, sub-pixel estimation, and color processing.
+- **[Python Tools](evaluation/python/README.md)**: Chart plotting, CSV table generation, and LaTeX utilities for result processing.
+
+```bash
+# Run all performance benchmarks
+bazel run //evaluation/performance:eval_performance
+
+# Run specific precision evaluations
+bazel run //evaluation/thesis:eval_gradient_orientation
+bazel run //evaluation/thesis:eval_spe_precision
+```
+
 ## Dependencies
 
 All dependencies are automatically managed by both build systems:
@@ -179,6 +229,10 @@ The core LineExtraction library and tools are licensed under MIT. However, the p
   - EDLines Zero: BSD-style with citation requirement
   - KHT: Academic license with citation requirement
 
+- **`third-party/contrib/imgproc_external/`** - External image processing implementations ([Various Licenses](third-party/contrib/imgproc_external/README.md))
+  - RCMG: All rights reserved (no open-source license granted)
+  - SUSAN: Crown Copyright (research only, must not be sold)
+
 ### GUI Components (Qt-based)
 
 - **`third-party/qplot/`** - QCustomPlot plotting library ([GPL v3](third-party/qplot/README.md))
@@ -214,6 +268,8 @@ The Line Analyzer application uses Qt5, which offers multiple licensing options:
 | `contrib/lsd_external/lsd_fgioi` | **AGPL v3** | ⚠️ Complex | ✅ Yes | Strong copyleft |
 | `contrib/lsd_external/edlines` | BSD-style | ✅ Yes | ❌ No | Citation required |
 | `contrib/lsd_external/kht` | Academic | ⚠️ Check terms | ❌ No | Citation required |
+| `contrib/imgproc_external/rcmg` | All rights reserved | ❌ No | ❌ No | No open-source license |
+| `contrib/imgproc_external/susan` | Crown Copyright | ❌ No | ❌ No | Research only |
 | `qplot` / `qplot3d` | **GPL v3** | ⚠️ No* | ✅ Yes | *Unless commercial license |
 | `apps/line_analyzer` | **GPL v3** | ⚠️ No* | ✅ Yes | Due to QCustomPlot |
 | Qt5 Framework | LGPL v3 / GPL / Commercial | ✅ Yes* | ⚠️ LGPL: Dynamic only | *Depends on license chosen |

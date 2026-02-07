@@ -336,6 +336,11 @@ void processEdges(const cv::Mat& dir, const cv::Mat& mag, Detector& detector) {
 - [lsd](../lsd/README.md) - Line Segment Detection algorithms
 - [eval](../eval/README.md) - Evaluation and benchmarking framework
 
+## Evaluation & Benchmarks
+
+- [Performance Benchmarks](../../evaluation/performance/README.md) - NMS, edge segmentation, and sub-pixel timing
+- [Thesis Evaluations](../../evaluation/thesis/README.md) - SPE precision, gradient orientation accuracy
+
 ## Author & License
 
 Implementation and enhancements by Benjamin Wassermann. Licensed under BSD license (see header comments in source files).

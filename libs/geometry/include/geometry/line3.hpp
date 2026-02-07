@@ -37,13 +37,13 @@ namespace lsfm {
 template <class FT>
 class Line3 {
  protected:
-  Vec3<FT> p_;  //!< Origin point on the line.
-  Vec3<FT> v_;  //!< Normalized direction vector.
+  Vec3<FT> p_;  ///< Origin point on the line.
+  Vec3<FT> v_;  ///< Normalized direction vector.
 
  public:
-  typedef FT float_type;  //!< Floating-point type alias.
+  typedef FT float_type;  ///< Floating-point type alias.
 
-  //! Virtual destructor for proper inheritance.
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~Line3() = default;
 
   /// @brief Default constructor creating an empty line.
@@ -529,8 +529,8 @@ class LineSegment3 : public Line3<FT> {
   using Line3<FT>::p_;
   using Line3<FT>::v_;
 
-  FT beg_;  //!< Start distance from origin along direction.
-  FT end_;  //!< End distance from origin along direction.
+  FT beg_;  ///< Start distance from origin along direction.
+  FT end_;  ///< End distance from origin along direction.
 
   /// @brief Swap direction and adjust distances.
   ///
@@ -542,7 +542,7 @@ class LineSegment3 : public Line3<FT> {
   }
 
  public:
-  typedef FT float_type;  //!< Floating-point type alias.
+  typedef FT float_type;  ///< Floating-point type alias.
 
   /// @brief Default constructor creating an empty segment.
   LineSegment3() : Line3<FT>(), beg_(0), end_(0) {}

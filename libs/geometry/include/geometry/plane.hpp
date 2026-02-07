@@ -31,13 +31,13 @@ namespace lsfm {
 template <class FT>
 class Plane {
  protected:
-  Vec3<FT> n_;  //!< Unit normal vector.
-  FT d_;        //!< Signed distance from origin to plane.
+  Vec3<FT> n_;  ///< Unit normal vector.
+  FT d_;        ///< Signed distance from origin to plane.
 
  public:
-  typedef FT value_type;  //!< Value type alias.
+  typedef FT value_type;  ///< Value type alias.
 
-  //! Virtual destructor for proper inheritance.
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~Plane() = default;
 
   /// @brief Default constructor creating an invalid plane.

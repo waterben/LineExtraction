@@ -277,9 +277,6 @@ class PCMatlab : public PhaseCongruency<IT, double, double, double, double>, pub
   /// @brief Get or set noise threshold multiplier.
   /// @param kv Optional new value.
   /// @return Current k value.
-  /// @brief Get or set noise threshold multiplier.
-  /// @param kv Optional new value.
-  /// @return Current k value.
   Value k(const Value& kv = Value::NAV()) {
     if (kv.type()) k_ = kv;
     return k_;

@@ -50,5 +50,8 @@ Use Bazel (primary build system):
 - [lsd](../lsd/README.md) - Line Segment Detection algorithms
 - [lfd](../lfd/README.md) - Line Feature Descriptors
 - [edge](../edge/README.md) - Edge detection algorithms
+- [imgproc](../imgproc/README.md) - Image processing and gradient computation
+- [utility](../utility/README.md) - Core utilities
 - [Geometry Examples](../../examples/geometry/README.md) - Demonstration programs
+- [Thesis Evaluations](../../evaluation/thesis/README.md) - Precision evaluations using geometric primitives
 - [Main README](../../README.md) - Project overview

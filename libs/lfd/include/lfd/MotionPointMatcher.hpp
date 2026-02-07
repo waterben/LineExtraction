@@ -17,46 +17,40 @@
 namespace lsfm {
 
 
-//! motion Point Matcher
+/// @brief Motion-based point matcher combining filtering and descriptor matching.
+/// Uses spatial filtering, brute force matching, and left-right consistency
+/// check for temporal point correspondence.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (e.g., std::vector<cv::KeyPoint>)
+/// @tparam descriptor_type Descriptor type (default: FdMat<FT>)
 template <class FT, class GV, class descriptor_type = lsfm::FdMat<FT>>
 class MotionPointMatcher : public OptionManager {
  public:
-  typedef FT float_type;
-
-  typedef GV geometric_vector;
-  typedef typename geometric_vector::value_type geometric_type;
-
-  //        typedef DC descriptor_creator;
-  //        typedef typename descriptor_creator::descriptor_type descriptor_type;
-  typedef std::vector<descriptor_type> descriptor_vector;
-
-  typedef DescriptorMatch<FT> match_type;
-  typedef std::vector<match_type> match_vector;
+  typedef FT float_type;                                         ///< Float type used
+  typedef GV geometric_vector;                                   ///< Geometric vector type
+  typedef typename geometric_vector::value_type geometric_type;  ///< Geometric element type
+  typedef std::vector<descriptor_type> descriptor_vector;        ///< Descriptor vector type
+  typedef DescriptorMatch<FT> match_type;                        ///< Match result type
+  typedef std::vector<match_type> match_vector;                  ///< Match result vector type
 
 
  private:
-  MotionLineFilter<FT, GV> mlf;
-  FmBruteForce<FT, descriptor_type, match_type> bfm;
-
-  //        descriptor_creator *creatorL, *creatorR;
-  //        typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;
-
-  descriptor_vector dscLeft_, dscRight_;
-  std::vector<size_t> mLeft_, mRight_;
-
-  FT distTh_;
+  MotionLineFilter<FT, GV> mlf;                       ///< Motion line filter for candidates
+  FmBruteForce<FT, descriptor_type, match_type> bfm;  ///< Brute force matcher
+  descriptor_vector dscLeft_;                         ///< New frame descriptors
+  descriptor_vector dscRight_;                        ///< Previous frame descriptors
+  std::vector<size_t> mLeft_;                         ///< New frame match counts
+  std::vector<size_t> mRight_;                        ///< Previous frame match counts
+  FT distTh_;                                         ///< Distance threshold
 
  public:
-  //        typedef typename descriptor_creator::FdcPtr FdcPtr;
-
-  /*
-          MotionPointMatcher(descriptor_creator& cL, descriptor_creator& cR, int width = 0, int height = 0, FT angleTh =
-     5, FT distTh = 1000, FT r = 0, int kk = 0) : mlf(distTh, angleTh, width, height), bfm(r,kk), creatorL(&cL),
-     creatorR(&cR), distTh_(distTh)  { CV_Assert(distTh_ >= 0); std::string type = (sizeof(float_type) > 4 ? "double" :
-     "float"); this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 =
-     auto)."));
-          }
-  */
+  /// @brief Construct a motion point matcher.
+  /// @param width Image width
+  /// @param height Image height
+  /// @param angleTh Angle threshold in degrees
+  /// @param distTh Distance threshold (0 = auto)
+  /// @param r Radius for radius matching
+  /// @param kk Number of nearest neighbors
   MotionPointMatcher(int width = 0, int height = 0, FT angleTh = 5, FT distTh = 1000, FT r = 0, int kk = 0)
       : mlf(distTh, angleTh, width, height), bfm(r, kk), distTh_(distTh) {
     /*
@@ -79,6 +73,13 @@ class MotionPointMatcher : public OptionManager {
               final(newLines, previousLines, dscL, dscR, candidates, matches);
           }
           */
+  /// @brief Match with pre-computed candidates and descriptors.
+  /// @param newGeometry Current frame features
+  /// @param previousGeometry Previous frame features
+  /// @param candidates Pre-computed candidate matches
+  /// @param dscL Current frame descriptors
+  /// @param dscR Previous frame descriptors
+  /// @param matches Output verified matches
   void match(const geometric_vector& newGeometry,
              const geometric_vector& previousGeometry,
              match_vector candidates,
@@ -90,7 +91,19 @@ class MotionPointMatcher : public OptionManager {
     final(newGeometry, previousGeometry, dscL, dscR, candidates, matches);
   }
 
-  template <class MPF = lsfm::MotionPointFilter<FT, std::vector<cv::KeyPoint>>>  // TODO: Add predicions by projection
+  /// @brief Match with automatic filtering using movement estimation.
+  /// Creates candidates via MotionPointFilter with average movement,
+  /// then performs descriptor matching.
+  /// @tparam MPF Motion point filter type
+  /// @param newGeometry Current frame features
+  /// @param previousGeometry Previous frame features
+  /// @param dscL Current frame descriptors
+  /// @param dscR Previous frame descriptors
+  /// @param avgMovement Average 2D movement estimate (dx, dy)
+  /// @param width Image width
+  /// @param height Image height
+  /// @param matches Output verified matches
+  template <class MPF = lsfm::MotionPointFilter<FT, std::vector<cv::KeyPoint>>>
   void match(const geometric_vector& newGeometry,
              const geometric_vector& previousGeometry,
              const descriptor_vector& dscL,
@@ -120,17 +133,32 @@ class MotionPointMatcher : public OptionManager {
               final(newGeomerty, previousGeometry, dscLeft_, dscRight_, candidates, matches);
           }
   */
+  /// @brief Get the motion line filter.
+  /// @return Reference to the internal filter
   MotionLineFilter<FT, GV>& getFilter() { return mlf; }
 
-
+  /// @brief Get the brute force matcher.
+  /// @return Reference to the internal matcher
   FmBruteForce<FT, descriptor_type, std::vector<match_vector>>& getMatcher() { return bfm; }
 
+  /// @brief Get current frame descriptors.
+  /// @return Const reference to new frame descriptors
   const descriptor_vector& getDscNew() const { return dscLeft_; }
 
+  /// @brief Get previous frame descriptors.
+  /// @return Const reference to previous frame descriptors
   const descriptor_vector& getDscPrev() const { return dscRight_; }
 
 
  protected:
+  /// @brief Perform final matching with left-right consistency check.
+  /// Uses statistical thresholding (mean distance) for validation.
+  /// @param newLines Current frame features
+  /// @param previousLines Previous frame features
+  /// @param dscN Current frame descriptors
+  /// @param dscP Previous frame descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
   void final(const geometric_vector& newLines,
              const geometric_vector& previousLines,
              const descriptor_vector& dscN,
@@ -245,6 +273,14 @@ class MotionPointMatcher : public OptionManager {
     });
   }
 
+  /// @brief Legacy matching with stricter length similarity check.
+  /// @param newLines Current frame features
+  /// @param previousLines Previous frame features
+  /// @param dscN Current frame descriptors
+  /// @param dscP Previous frame descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
+  /// @deprecated Use final() instead
   void oldFinal(const geometric_vector& newLines,
                 const geometric_vector& previousLines,
                 const descriptor_vector& dscN,
@@ -351,6 +387,9 @@ class MotionPointMatcher : public OptionManager {
     //            });
   }
 
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {

@@ -61,7 +61,19 @@ void getBestKeypointsInBins(std::vector<std::vector<GT>>& kpBins,
   });
 }
 
-//! get the "best" keypoints of each bin, returns a vector, number of bins, width first
+/// @brief Get best keypoints from spatial bins as a flat vector.
+/// Distributes keypoints into a grid of bins and returns the highest-response
+/// keypoints concatenated into a single output vector.
+/// @tparam FT Float type
+/// @tparam GT Geometric type (e.g., cv::KeyPoint)
+/// @param kps Output vector containing the best keypoints from all bins
+/// @param keypoints Input keypoints to distribute into bins
+/// @param width Image width
+/// @param height Image height
+/// @param wBins Number of horizontal bins
+/// @param hBins Number of vertical bins
+/// @param ptsPerBin Maximum keypoints per bin
+/// @param sorted Whether input keypoints are pre-sorted by response (default: true)
 template <class FT, class GT>
 void getBestKeypointsInBins(std::vector<GT>& kps,
                             std::vector<GT>& keypoints,
@@ -79,7 +91,17 @@ void getBestKeypointsInBins(std::vector<GT>& kps,
 }
 
 
-//! filter out keypoints, which have no candidates for matching - to save time on descriptor creation afterwards
+/// @brief Filter out keypoints that have no matching candidates.
+/// Removes keypoints without match candidates and remaps candidate indices,
+/// reducing the number of descriptors that need to be created.
+/// @tparam GV Geometric vector type
+/// @tparam FMV Feature match vector type
+/// @tparam MV Match count vector type
+/// @param keypoints0 Left keypoints (modified in-place to contain only matched)
+/// @param keypoints1 Right keypoints (modified in-place to contain only matched)
+/// @param candidates Match candidates (indices are remapped in-place)
+/// @param mLeft_ Per-keypoint match count for left set
+/// @param mRight_ Per-keypoint match count for right set
 template <class GV, class FMV, class MV>
 void filterCandidateKeypoints(GV& keypoints0, GV& keypoints1, FMV& candidates, const MV& mLeft_, const MV& mRight_) {
   std::vector<int> map1, map2;

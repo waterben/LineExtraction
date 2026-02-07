@@ -353,65 +353,155 @@ struct RoundNearestInterpolator {
   static constexpr int BorderStart = 0;  ///< Extra border needed at start
   static constexpr int BorderEnd = 0;    ///< Extra border needed at end
 
+  /// @brief 1D interpolation along X without bounds checking.
+  /// @param src Pointer to row data.
+  /// @param fx Floating-point X coordinate.
+  /// @return Value at rounded nearest position.
   static inline RT getXNB(const MT* src, FT fx) { return src[static_cast<int>(round(fx))]; }
 
+  /// @brief 1D interpolation along Y without bounds checking.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns (row stride).
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at rounded nearest position.
   static inline RT getYNB(const MT* src, int cols, FT fy) { return src[static_cast<int>(round(fy)) * cols]; }
 
+  /// @brief 1D interpolation along X with reflect border.
+  /// @param src Pointer to row data.
+  /// @param cols Number of columns.
+  /// @param fx Floating-point X coordinate.
+  /// @return Value at rounded nearest position with border handling.
   static inline RT getX(const MT* src, int cols, FT fx) { return readValX<MT>(src, cols, static_cast<int>(round(fx))); }
 
+  /// @brief 1D interpolation along Y with reflect border.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns.
+  /// @param rows Number of rows.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at rounded nearest position with border handling.
   static inline RT getY(const MT* src, int cols, int rows, FT fy) {
     return readValY<MT>(src, rows, cols, static_cast<int>(round(fy)));
   }
 
+  /// @brief 1D interpolation along X with custom border handling.
+  /// @param src Pointer to row data.
+  /// @param cols Number of columns.
+  /// @param fx Floating-point X coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at rounded nearest position.
   static inline RT getX(const MT* src, int cols, FT fx, int border_type, MT border_val = 0) {
     return readValX<MT>(src, cols, static_cast<int>(round(fx)), border_type, border_val);
   }
 
+  /// @brief 1D interpolation along Y with custom border handling.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns.
+  /// @param rows Number of rows.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at rounded nearest position.
   static inline RT getY(const MT* src, int cols, int rows, FT fy, int border_type, MT border_val = 0) {
     return readValY<MT>(src, rows, cols, static_cast<int>(round(fy)), border_type, border_val);
   }
 
+  /// @brief 2D interpolation with reflect border.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src, FT fx, FT fy) {
     return readVal<MT>(src, static_cast<int>(round(fy)), static_cast<int>(round(fx)));
   }
 
+  /// @brief 2D interpolation at point with reflect border.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src, const FT* p) {
     return RoundNearestInterpolator<FT, MT>::get(src, p[0], p[1]);
   }
 
+  /// @brief 2D interpolation at point with reflect border.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @return Value at rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src, const PT& p) {
     return RoundNearestInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p));
   }
 
-
+  /// @brief 2D interpolation without bounds checking.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at rounded nearest position.
   static inline RT getNB(const cv::Mat& src, FT fx, FT fy) {
     return src.at<MT>(static_cast<int>(round(fy)), static_cast<int>(round(fx)));
   }
 
+  /// @brief 2D interpolation at point without bounds checking.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @return Value at rounded nearest position.
   static inline RT getNB(const cv::Mat& src, const FT* p) {
     return RoundNearestInterpolator<FT, MT>::getNB(src, p[0], p[1]);
   }
 
+  /// @brief 2D interpolation at point without bounds checking.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @return Value at rounded nearest position.
   template <class PT>
   static inline RT getNB(const cv::Mat& src, const PT& p) {
     return RoundNearestInterpolator<FT, MT>::getNB(src, lsfm::getX(p), lsfm::getY(p));
   }
 
-
+  /// @brief 2D interpolation with custom boundary handling.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src, FT fx, FT fy, int border_type, MT border_val = 0) {
     return readVal<MT>(src, static_cast<int>(round(fy)), static_cast<int>(round(fx)), border_type, border_val);
   }
 
+  /// @brief 2D interpolation at point with custom boundary handling.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @param border_type OpenCV border type.
+  /// @param border_val Border value.
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src, const FT* p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return RoundNearestInterpolator<FT, MT>::get(src, p[0], p[1], border_type, border_val);
   }
 
+  /// @brief 2D interpolation at point with custom boundary handling.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Border value.
+  /// @return Value at rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src, const PT& p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return RoundNearestInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p), border_type, border_val);
   }
 
+  /// @brief 2D interpolation with separate x/y boundary handling.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src,
                        FT fx,
                        FT fy,
@@ -423,6 +513,14 @@ struct RoundNearestInterpolator {
                                        border_type_y, border_val_x, border_val_y));
   }
 
+  /// @brief 2D interpolation at point with separate x/y boundary handling.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at rounded nearest position.
   static inline RT get(const cv::Mat& src,
                        const FT* p,
                        int border_type_x,
@@ -433,6 +531,15 @@ struct RoundNearestInterpolator {
                                                  border_val_y);
   }
 
+  /// @brief 2D interpolation at point with separate x/y boundary handling.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src,
                        const PT& p,
@@ -460,63 +567,155 @@ struct FastRoundNearestInterpolator {
   static constexpr int BorderStart = 0;  ///< Extra border needed at start
   static constexpr int BorderEnd = 0;    ///< Extra border needed at end
 
+  /// @brief 1D interpolation along X without bounds checking.
+  /// @param src Pointer to row data.
+  /// @param fx Floating-point X coordinate.
+  /// @return Value at fast-rounded nearest position.
   static inline RT getXNB(const MT* src, FT fx) { return src[static_cast<int>(fx + 0.5)]; }
 
+  /// @brief 1D interpolation along Y without bounds checking.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns (row stride).
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at fast-rounded nearest position.
   static inline RT getYNB(const MT* src, int cols, FT fy) { return src[static_cast<int>(fy + 0.5) * cols]; }
 
+  /// @brief 1D interpolation along X with reflect border.
+  /// @param src Pointer to row data.
+  /// @param cols Number of columns.
+  /// @param fx Floating-point X coordinate.
+  /// @return Value at fast-rounded nearest position with border handling.
   static inline RT getX(const MT* src, int cols, FT fx) { return readValX<MT>(src, cols, static_cast<int>(fx + 0.5)); }
 
+  /// @brief 1D interpolation along Y with reflect border.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns.
+  /// @param rows Number of rows.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at fast-rounded nearest position with border handling.
   static inline RT getY(const MT* src, int cols, int rows, FT fy) {
     return readValY<MT>(src, rows, cols, static_cast<int>(fy + 0.5));
   }
 
+  /// @brief 1D interpolation along X with custom border handling.
+  /// @param src Pointer to row data.
+  /// @param cols Number of columns.
+  /// @param fx Floating-point X coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at fast-rounded nearest position.
   static inline RT getX(const MT* src, int cols, FT fx, int border_type, MT border_val = 0) {
     return readValX<MT>(src, cols, static_cast<int>(fx + 0.5), border_type, border_val);
   }
 
+  /// @brief 1D interpolation along Y with custom border handling.
+  /// @param src Pointer to data.
+  /// @param cols Number of columns.
+  /// @param rows Number of rows.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at fast-rounded nearest position.
   static inline RT getY(const MT* src, int cols, int rows, FT fy, int border_type, MT border_val = 0) {
     return readValY<MT>(src, rows, cols, static_cast<int>(fy + 0.5), border_type, border_val);
   }
 
+  /// @brief 2D interpolation with reflect border.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src, FT fx, FT fy) {
     return readVal<MT>(src, static_cast<int>(fy + 0.5), static_cast<int>(fx + 0.5));
   }
 
+  /// @brief 2D interpolation at point with reflect border.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src, const FT* p) {
     return FastRoundNearestInterpolator<FT, MT>::get(src, p[0], p[1]);
   }
 
+  /// @brief 2D interpolation at point with reflect border.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @return Value at fast-rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src, const PT& p) {
     return FastRoundNearestInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief 2D interpolation without bounds checking.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @return Value at fast-rounded nearest position.
   static inline RT getNB(const cv::Mat& src, FT fx, FT fy) {
     return src.at<MT>(static_cast<int>(fy + 0.5), static_cast<int>(fx + 0.5));
   }
 
+  /// @brief 2D interpolation at point without bounds checking.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @return Value at fast-rounded nearest position.
   static inline RT getNB(const cv::Mat& src, const FT* p) {
     return FastRoundNearestInterpolator<FT, MT>::getNB(src, p[0], p[1]);
   }
 
+  /// @brief 2D interpolation at point without bounds checking.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @return Value at fast-rounded nearest position.
   template <class PT>
   static inline RT getNB(const cv::Mat& src, const PT& p) {
     return FastRoundNearestInterpolator<FT, MT>::getNB(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief 2D interpolation with custom boundary handling.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Value for BORDER_CONSTANT.
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src, FT fx, FT fy, int border_type, MT border_val = 0) {
     return readVal<MT>(src, static_cast<int>(fy + 0.5), static_cast<int>(fx + 0.5), border_type, border_val);
   }
 
+  /// @brief 2D interpolation at point with custom boundary handling.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @param border_type OpenCV border type.
+  /// @param border_val Border value.
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src, const FT* p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return FastRoundNearestInterpolator<FT, MT>::get(src, p[0], p[1], border_type, border_val);
   }
 
+  /// @brief 2D interpolation at point with custom boundary handling.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @param border_type OpenCV border type.
+  /// @param border_val Border value.
+  /// @return Value at fast-rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src, const PT& p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return FastRoundNearestInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p), border_type, border_val);
   }
 
+  /// @brief 2D interpolation with separate x/y boundary handling.
+  /// @param src Source matrix.
+  /// @param fx Floating-point X coordinate.
+  /// @param fy Floating-point Y coordinate.
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src,
                        FT fx,
                        FT fy,
@@ -528,6 +727,14 @@ struct FastRoundNearestInterpolator {
                        border_val_x, border_val_y);
   }
 
+  /// @brief 2D interpolation at point with separate x/y boundary handling.
+  /// @param src Source matrix.
+  /// @param p Point as array [x, y].
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at fast-rounded nearest position.
   static inline RT get(const cv::Mat& src,
                        const FT* p,
                        int border_type_x,
@@ -538,6 +745,15 @@ struct FastRoundNearestInterpolator {
                                                      border_val_y);
   }
 
+  /// @brief 2D interpolation at point with separate x/y boundary handling.
+  /// @tparam PT Point type with x, y accessors.
+  /// @param src Source matrix.
+  /// @param p Point.
+  /// @param border_type_x X boundary type.
+  /// @param border_type_y Y boundary type.
+  /// @param border_val_x X border value.
+  /// @param border_val_y Y border value.
+  /// @return Value at fast-rounded nearest position.
   template <class PT>
   static inline RT get(const cv::Mat& src,
                        const PT& p,
@@ -599,38 +815,78 @@ struct LinearInterpolator {
   static constexpr int BorderStart = 0;  ///< Extra border needed at start
   static constexpr int BorderEnd = 1;    ///< Extra border needed at end
 
+  /// @brief Linearly interpolate along x without bounds checking.
+  /// @param src Pointer to row data
+  /// @param fx Sub-pixel x coordinate
+  /// @return Linearly interpolated value
   static inline FT getXNB(const MT* src, FT fx) {
     int xi = static_cast<int>(fx);
     return interpolate_linear<FT, MT>(src + xi, fx - xi);
   }
 
+  /// @brief Linearly interpolate along y without bounds checking.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param fy Sub-pixel y coordinate
+  /// @return Linearly interpolated value
   static inline FT getYNB(const MT* src, int cols, FT fy) {
     int yi = static_cast<int>(fy) * cols;
     return interpolate_linear<FT, MT>(src[yi], src[yi + cols], fy - static_cast<int>(fy));
   }
 
+  /// @brief Linearly interpolate along x with reflect border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @return Linearly interpolated value
   static inline FT getX(const MT* src, int cols, FT fx) {
     int xi = static_cast<int>(fx);
     return interpolate_linear<FT, MT>(readValX(src, cols, xi), readValX(src, cols, xi + 1), fx - xi);
   }
 
+  /// @brief Linearly interpolate along y with reflect border handling.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @return Linearly interpolated value
   static inline FT getY(const MT* src, int cols, int rows, FT fy) {
     int yi = static_cast<int>(fy);
     return interpolate_linear<FT, MT>(readValY(src, rows, cols, yi), readValY(src, rows, cols, yi + 1), fy - yi);
   }
 
+  /// @brief Linearly interpolate along x with configurable border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @param border_type OpenCV border type
+  /// @param border_val Value used for constant border padding
+  /// @return Linearly interpolated value
   static inline FT getX(const MT* src, int cols, FT fx, int border_type, MT border_val = 0) {
     int xi = static_cast<int>(fx);
     return interpolate_linear<FT, MT>(readValX(src, cols, xi, border_type, border_val),
                                       readVal(src, cols, xi + 1, border_type, border_val), fx - xi);
   }
 
+  /// @brief Linearly interpolate along y with configurable border handling.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type OpenCV border type
+  /// @param border_val Value used for constant border padding
+  /// @return Linearly interpolated value
   static inline FT getY(const MT* src, int cols, int rows, FT fy, int border_type, MT border_val = 0) {
     int yi = static_cast<int>(fy);
     return interpolate_linear<FT, MT>(readValY(src, rows, cols, yi, border_type, border_val),
                                       readVal(src, rows, cols, yi + 1, border_type, border_val), fy - yi);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with reflect border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src, FT fx, FT fy) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -663,13 +919,27 @@ struct LinearInterpolator {
         fy);
   }
 
+  /// @brief Bilinearly interpolate a 2D value from a coordinate array.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src, const FT* p) { return LinearInterpolator<FT, MT>::get(src, p[0], p[1]); }
 
+  /// @brief Bilinearly interpolate a 2D value from a point type.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Bilinearly interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src, const PT& p) {
     return LinearInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief Bilinearly interpolate a 2D value without bounds checking.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Bilinearly interpolated value
   static inline FT getNB(const cv::Mat& src, FT fx, FT fy) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -692,13 +962,29 @@ struct LinearInterpolator {
                                       interpolate_linear<FT, MT>(&src.at<MT>(yi + 1, xi), fx), fy);
   }
 
+  /// @brief Bilinearly interpolate a 2D value without bounds checking.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Bilinearly interpolated value
   static inline FT getNB(const cv::Mat& src, const FT* p) { return LinearInterpolator<FT, MT>::getNB(src, p[0], p[1]); }
 
+  /// @brief Bilinearly interpolate a 2D value without bounds checking.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Bilinearly interpolated value
   template <class PT>
   static inline FT getNB(const cv::Mat& src, const PT& p) {
     return LinearInterpolator<FT, MT>::getNB(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief Bilinearly interpolate a 2D value with configurable border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type OpenCV border type for both axes
+  /// @param border_val Value used for constant border padding
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src, FT fx, FT fy, int border_type, MT border_val = 0) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -741,15 +1027,37 @@ struct LinearInterpolator {
         fy);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with configurable border handling.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @param border_type OpenCV border type
+  /// @param border_val Border value as cv::Scalar
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src, const FT* p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return LinearInterpolator<FT, MT>::get(src, p[0], p[1], border_type, border_val);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with configurable border handling.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @param border_type OpenCV border type
+  /// @param border_val Border value as cv::Scalar
+  /// @return Bilinearly interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src, const PT& p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return LinearInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p), border_type, border_val);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with separate x/y border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Value used for constant border padding along x
+  /// @param border_val_y Value used for constant border padding along y
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src,
                        FT fx,
                        FT fy,
@@ -801,6 +1109,14 @@ struct LinearInterpolator {
         fy);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with separate x/y border handling.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Border value as cv::Scalar for x axis
+  /// @param border_val_y Border value as cv::Scalar for y axis
+  /// @return Bilinearly interpolated value
   static inline FT get(const cv::Mat& src,
                        const FT* p,
                        int border_type_x,
@@ -810,6 +1126,15 @@ struct LinearInterpolator {
     return LinearInterpolator<FT, MT>::get(src, p[0], p[1], border_type_x, border_type_y, border_val_x, border_val_y);
   }
 
+  /// @brief Bilinearly interpolate a 2D value with separate x/y border handling.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Border value as cv::Scalar for x axis
+  /// @param border_val_y Border value as cv::Scalar for y axis
+  /// @return Bilinearly interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src,
                        const PT& p,
@@ -879,17 +1204,31 @@ struct CubicInterpolator {
   static constexpr int BorderStart = 1;  ///< Extra border needed at start (1 pixel)
   static constexpr int BorderEnd = 2;    ///< Extra border needed at end (2 pixels)
 
+  /// @brief Cubic interpolate along x without bounds checking.
+  /// @param src Pointer to row data (needs access to [-1..+2] around position)
+  /// @param fx Sub-pixel x coordinate
+  /// @return Cubic interpolated value
   static inline FT getXNB(const MT* src, FT fx) {
     int xi = static_cast<int>(fx);
     return interpolate_cubic<FT, MT>(src + xi - 1, fx - xi);
   }
 
+  /// @brief Cubic interpolate along y without bounds checking.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param fy Sub-pixel y coordinate
+  /// @return Cubic interpolated value
   static inline FT getYNB(const MT* src, int cols, FT fy) {
     int yi = static_cast<int>(fy);
     src += yi * cols;
     return interpolate_cubic<FT, MT>(src[-cols], src[0], src[cols], src[2 * cols], fy - yi);
   }
 
+  /// @brief Cubic interpolate along x with reflect border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @return Cubic interpolated value
   static inline FT getX(const MT* src, int cols, FT fx) {
     int xi = static_cast<int>(fx);
 
@@ -901,6 +1240,12 @@ struct CubicInterpolator {
     return interpolate_cubic<FT, MT>(src + xi - 1, fx - xi);
   }
 
+  /// @brief Cubic interpolate along y with reflect border handling.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @return Cubic interpolated value
   static inline FT getY(const MT* src, int cols, int rows, FT fy) {
     int yi = static_cast<int>(fy);
     fy -= yi;
@@ -915,6 +1260,13 @@ struct CubicInterpolator {
   }
 
 
+  /// @brief Cubic interpolate along x with configurable border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @param border_type OpenCV border type
+  /// @param border_val Value used for constant border padding
+  /// @return Cubic interpolated value
   static inline FT getX(const MT* src, int cols, FT fx, int border_type, MT border_val = 0) {
     int xi = static_cast<int>(fx);
     fx -= static_cast<FT>(xi);
@@ -932,6 +1284,14 @@ struct CubicInterpolator {
     return interpolate_cubic<FT, MT>(src + xi - 1, fx);
   }
 
+  /// @brief Cubic interpolate along y with configurable border handling.
+  /// @param src Pointer to image data
+  /// @param cols Number of columns (row stride)
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type OpenCV border type
+  /// @param border_val Value used for constant border padding
+  /// @return Cubic interpolated value
   static inline FT getY(const MT* src, int cols, int rows, FT fy, int border_type, MT border_val = 0) {
     int yi = static_cast<int>(fy);
     fy -= yi;
@@ -950,6 +1310,11 @@ struct CubicInterpolator {
     return interpolate_cubic<FT, MT>(src[-cols], src[0], src[cols], src[2 * cols], fy);
   }
 
+  /// @brief Bicubic interpolate a 2D value with reflect border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src, FT fx, FT fy) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -998,13 +1363,27 @@ struct CubicInterpolator {
                                      interpolate_cubic<FT, MT>(&src.at<MT>(yi + 2, xi - 1), fx), fy);
   }
 
+  /// @brief Bicubic interpolate a 2D value from a coordinate array.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src, const FT* p) { return CubicInterpolator<FT, MT>::get(src, p[0], p[1]); }
 
+  /// @brief Bicubic interpolate a 2D value from a point type.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Bicubic interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src, const PT& p) {
     return CubicInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief Bicubic interpolate a 2D value without bounds checking.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Bicubic interpolated value
   static inline FT getNB(const cv::Mat& src, FT fx, FT fy) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -1029,13 +1408,29 @@ struct CubicInterpolator {
                                      interpolate_cubic<FT, MT>(&src.at<MT>(yi + 2, xi - 1), fx), fy);
   }
 
+  /// @brief Bicubic interpolate a 2D value without bounds checking.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Bicubic interpolated value
   static inline FT getNB(const cv::Mat& src, const FT* p) { return CubicInterpolator<FT, MT>::getNB(src, p[0], p[1]); }
 
+  /// @brief Bicubic interpolate a 2D value without bounds checking.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Bicubic interpolated value
   template <class PT>
   static inline FT getNB(const cv::Mat& src, const PT& p) {
     return CubicInterpolator<FT, MT>::getNB(src, lsfm::getX(p), lsfm::getY(p));
   }
 
+  /// @brief Bicubic interpolate a 2D value with configurable border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type OpenCV border type for both axes
+  /// @param border_val Value used for constant border padding
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src, FT fx, FT fy, int border_type, MT border_val = 0) {
     int xi = static_cast<int>(fx);
     int yi = static_cast<int>(fy);
@@ -1096,15 +1491,37 @@ struct CubicInterpolator {
                                      interpolate_cubic<FT, MT>(&src.at<MT>(yi + 2, xi - 1), fx), fy);
   }
 
+  /// @brief Bicubic interpolate a 2D value with configurable border handling.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @param border_type OpenCV border type
+  /// @param border_val Border value as cv::Scalar
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src, const FT* p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return CubicInterpolator<FT, MT>::get(src, p[0], p[1], border_type, border_val);
   }
 
+  /// @brief Bicubic interpolate a 2D value with configurable border handling.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @param border_type OpenCV border type
+  /// @param border_val Border value as cv::Scalar
+  /// @return Bicubic interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src, const PT& p, int border_type, cv::Scalar border_val = cv::Scalar()) {
     return CubicInterpolator<FT, MT>::get(src, lsfm::getX(p), lsfm::getY(p), border_type, border_val);
   }
 
+  /// @brief Bicubic interpolate a 2D value with separate x/y border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Value used for constant border padding along x
+  /// @param border_val_y Value used for constant border padding along y
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src,
                        FT fx,
                        FT fy,
@@ -1175,6 +1592,14 @@ struct CubicInterpolator {
                                      interpolate_cubic<FT, MT>(&src.at<MT>(yi + 2, xi - 1), fx), fy);
   }
 
+  /// @brief Bicubic interpolate a 2D value with separate x/y border handling.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Border value as cv::Scalar for x axis
+  /// @param border_val_y Border value as cv::Scalar for y axis
+  /// @return Bicubic interpolated value
   static inline FT get(const cv::Mat& src,
                        const FT* p,
                        int border_type_x,
@@ -1184,6 +1609,15 @@ struct CubicInterpolator {
     return CubicInterpolator<FT, MT>::get(src, p[0], p[1], border_type_x, border_type_y, border_val_x, border_val_y);
   }
 
+  /// @brief Bicubic interpolate a 2D value with separate x/y border handling.
+  /// @tparam PT Point type with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @param border_type_x OpenCV border type for x axis
+  /// @param border_type_y OpenCV border type for y axis
+  /// @param border_val_x Border value as cv::Scalar for x axis
+  /// @param border_val_y Border value as cv::Scalar for y axis
+  /// @return Bicubic interpolated value
   template <class PT>
   static inline FT get(const cv::Mat& src,
                        const PT& p,
@@ -1209,22 +1643,46 @@ struct FixedBorderInterpolator {
   typedef typename Interpolator::mat_type mat_type;      ///< Matrix type from base
 
 
+  /// @brief Interpolate along x with fixed border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @return Interpolated value
   static inline float_type getX(const mat_type* src, int cols, float_type fx) {
     return Interpolator::getX(src, cols, fx, BorderType, BorderValue);
   }
 
+  /// @brief Interpolate along y with fixed border handling.
+  /// @param src Pointer to image data
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @return Interpolated value
   static inline float_type getY(const mat_type* src, int rows, float_type fy) {
     return Interpolator::getY(src, rows, fy, BorderType, BorderValue);
   }
 
+  /// @brief Interpolate a 2D value with fixed border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Interpolated value
   static inline float_type get(const cv::Mat& src, float_type fx, float_type fy) {
     return Interpolator::get(src, fx, fy, BorderType, BorderValue);
   }
 
+  /// @brief Interpolate a 2D value from a coordinate array with fixed border.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Interpolated value
   static inline float_type get(const cv::Mat& src, const float_type* p) {
     return Interpolator::get(src, p, BorderType, BorderValue);
   }
 
+  /// @brief Interpolate a 2D value from a point type with fixed border.
+  /// @tparam PT Point template with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Interpolated value
   template <template <class> class PT>
   static inline float_type get(const cv::Mat& src, const PT<float_type>& p) {
     return Interpolator::get(src, p, BorderType, BorderValue);
@@ -1249,22 +1707,46 @@ struct Fixed2BorderInterpolator {
   typedef typename Interpolator::float_type float_type;
   typedef typename Interpolator::mat_type mat_type;
 
+  /// @brief Interpolate along x with fixed x-axis border handling.
+  /// @param src Pointer to row data
+  /// @param cols Number of columns
+  /// @param fx Sub-pixel x coordinate
+  /// @return Interpolated value
   static inline float_type getX(const mat_type* src, int cols, float_type fx) {
     return Interpolator::getX(src, cols, fx, BorderTypeX, BorderValueX);
   }
 
+  /// @brief Interpolate along y with fixed x-axis border handling.
+  /// @param src Pointer to image data
+  /// @param rows Number of rows
+  /// @param fy Sub-pixel y coordinate
+  /// @return Interpolated value
   static inline float_type getY(const mat_type* src, int rows, float_type fy) {
     return Interpolator::getY(src, rows, fy, BorderTypeX, BorderValueX);
   }
 
+  /// @brief Interpolate a 2D value with separate fixed x/y border handling.
+  /// @param src Source image
+  /// @param fx Sub-pixel x coordinate
+  /// @param fy Sub-pixel y coordinate
+  /// @return Interpolated value
   static inline float_type get(const cv::Mat& src, float_type fx, float_type fy) {
     return Interpolator::get(src, fx, fy, BorderTypeX, BorderTypeY, BorderValueX, BorderValueY);
   }
 
+  /// @brief Interpolate a 2D value from a coordinate array with fixed x/y border.
+  /// @param src Source image
+  /// @param p Pointer to coordinate array [x, y]
+  /// @return Interpolated value
   static inline float_type get(const cv::Mat& src, const float_type* p) {
     return Interpolator::get(src, p, BorderTypeX, BorderTypeY, BorderValueX, BorderValueY);
   }
 
+  /// @brief Interpolate a 2D value from a point type with fixed x/y border.
+  /// @tparam PT Point template with accessible x/y components
+  /// @param src Source image
+  /// @param p Point with sub-pixel coordinates
+  /// @return Interpolated value
   template <template <class> class PT>
   static inline float_type get(const cv::Mat& src, const PT<float_type>& p) {
     return Interpolator::get(src, p, BorderTypeX, BorderTypeY, BorderValueX, BorderValueY);

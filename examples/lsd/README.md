@@ -6,49 +6,52 @@ Examples demonstrating various Line Segment Detection (LSD) algorithms and their
 
 ## Examples
 
-| Example | Description | Usage |
-|---------|-------------|-------|
-| [lsd.cpp](lsd.cpp) | Comprehensive LSD algorithm comparison | `./lsd [image_path]` |
-| [lsd_cc_test.cpp](lsd_cc_test.cpp) | Connected component-based LSD | `./lsd_cc_test [image_path]` |
-| [lsd_edge.cpp](lsd_edge.cpp) | Edge-based LSD with pattern detection | `./lsd_edge [image_path]` |
-| [lsd_graph.cpp](lsd_graph.cpp) | Graph-based line segment detection | `./lsd_graph [image_path]` |
-| [lsd_nfa.cpp](lsd_nfa.cpp) | NFA-validated line detection | `./lsd_nfa [image_path]` |
-| [lsd_video.cpp](lsd_video.cpp) | Real-time LSD on video | `./lsd_video [video_path]` |
+| Bazel Target | Source | Description |
+|---|---|---|
+| `lsd` | [lsd.cpp](src/lsd.cpp) | Comprehensive comparison of all LSD algorithm variants (see below) |
+| `lsd_cc_test` | [lsd_cc_test.cpp](src/lsd_cc_test.cpp) | Connected component-based LSD with edge map analysis |
+| `lsd_edge` | [lsd_edge.cpp](src/lsd_edge.cpp) | Edge-based LSD using edge linking (EL) and edge pattern (EP) strategies |
+| `lsd_graph` | [lsd_graph.cpp](src/lsd_graph.cpp) | Graph-based line segment detection with junction handling |
+| `lsd_nfa` | [lsd_nfa.cpp](src/lsd_nfa.cpp) | NFA-validated line detection — a contrario false positive rejection |
+| `lsd_video` | [lsd_video.cpp](src/lsd_video.cpp) | Real-time LSD on webcam or video file |
 
-### Algorithm Variants in lsd.cpp
+### Algorithm Variants (in `lsd.cpp`)
 
-- **LsdCC:** Connected component-based
-- **LsdCP:** Control point-based
-- **LsdEL:** Edge linking
-- **LsdEP:** Edge pattern
-- **LsdBurns:** Burns' algorithm
-- **LsdFGIOI:** Fast LSD (a contrario)
-- **LsdHCV:** Hierarchical chaining validation
+| Variant | Approach |
+|---------|----------|
+| **LsdCC** | Connected component labeling on edge maps |
+| **LsdCP** | Control point-based line fitting |
+| **LsdEL** | Edge linking — chain edge pixels into segments |
+| **LsdEP** | Edge pattern — pattern-based segment grouping |
+| **LsdBurns** | Burns' algorithm — hierarchical line fitting |
+| **LsdFGIOI** | Grompone's fast LSD with a contrario validation |
+| **LsdHCV** | Hierarchical chaining with validation |
 
-## Building
+## Building & Running
 
-**Bazel:**
 ```bash
+# Build all LSD examples
 bazel build //examples/lsd:all
+
+# Run algorithm comparison on an image
+bazel run //examples/lsd:lsd
+
+# Run with custom image
 bazel run //examples/lsd:lsd -- /path/to/image.jpg
-bazel run //examples/lsd:lsd_video  # uses webcam
+
+# Real-time video (webcam by default)
+bazel run //examples/lsd:lsd_video
 ```
 
-**CMake:**
-```bash
-make  # from build directory
-```
+## Key Concepts
 
-## Key Algorithms
-
-- **LSD (Line Segment Detector):** Fast line segment detection
-- **NFA Validation:** Statistical significance testing via a contrario framework
-- **Connected Components:** Region-based line detection
-- **Edge Linking:** Chaining edge pixels into line segments
-- **Graph-based:** Network of connected line segments
-- **Burns' Algorithm:** Hierarchical line fitting
+- **Line Segment Detection:** Extracting straight line segments from images
+- **NFA Validation:** Statistical test based on the Helmholtz principle — reject segments that could arise by chance
+- **Connected Components:** Group co-directional edge pixels into line support regions
+- **Edge Linking:** Chain edge pixels along consistent gradient directions
+- **Edge Patterns:** Robust grouping strategy that handles junctions and corners
 
 ## Related Libraries
 
-- [libs/lsd](../../libs/lsd/) - Line Segment Detection library
-- [libs/edge](../../libs/edge/) - Edge detection library
+- [libs/lsd](../../libs/lsd/) — Line Segment Detection implementations
+- [libs/edge](../../libs/edge/) — Edge detection, NMS, and linking (used as input stage)

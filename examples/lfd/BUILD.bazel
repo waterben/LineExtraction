@@ -21,7 +21,7 @@ _TEST_DATA = [
 
 cc_binary(
     name = "test_lfd_dsc",
-    srcs = ["dsc_test.cpp"],
+    srcs = ["src/dsc_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS,
@@ -29,7 +29,7 @@ cc_binary(
 
 cc_binary(
     name = "test_lfd_stereo_match",
-    srcs = ["stereo_match_test.cpp"],
+    srcs = ["src/stereo_match_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS,
@@ -37,7 +37,7 @@ cc_binary(
 
 cc_binary(
     name = "test_lfd_generic",
-    srcs = ["generic_test.cpp"],
+    srcs = ["src/generic_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS,
@@ -46,7 +46,7 @@ cc_binary(
 # Examples using PairwiseLineMatcher (requires arpack++ AND SuperLU)
 cc_binary(
     name = "test_lfd_pair",
-    srcs = ["pair_test.cpp"],
+    srcs = ["src/pair_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + ["@superlu"],
@@ -55,7 +55,7 @@ cc_binary(
 # match_test.cpp uses opencv_contrib line_descriptor module
 cc_binary(
     name = "test_lfd_match",
-    srcs = ["match_test.cpp"],
+    srcs = ["src/match_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + [
@@ -66,7 +66,7 @@ cc_binary(
 
 cc_binary(
     name = "test_lfd_motion_match",
-    srcs = ["motion_match_test.cpp"],
+    srcs = ["src/motion_match_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + ["@superlu"],
@@ -74,7 +74,7 @@ cc_binary(
 
 cc_binary(
     name = "test_lfd_video_match",
-    srcs = ["video_match_test.cpp"],
+    srcs = ["src/video_match_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + ["@superlu"],
@@ -83,7 +83,7 @@ cc_binary(
 # video_cv_matching_test.cpp uses opencv_contrib line_descriptor module
 cc_binary(
     name = "test_lfd_video_cv_matching",
-    srcs = ["video_cv_matching_test.cpp"],
+    srcs = ["src/video_cv_matching_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + [
@@ -95,7 +95,7 @@ cc_binary(
 # cv3_linematching_test.cpp uses opencv_contrib line_descriptor module
 cc_binary(
     name = "test_lfd_cv3_linematching",
-    srcs = ["cv3_linematching_test.cpp"],
+    srcs = ["src/cv3_linematching_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _LFD_DEPS + [
