@@ -21,7 +21,7 @@ _TEST_DATA = [
 
 cc_binary(
     name = "test_imgproc_steer",
-    srcs = ["steer_test.cpp"],
+    srcs = ["src/steer_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _IMGPROC_DEPS,
@@ -29,7 +29,7 @@ cc_binary(
 
 cc_binary(
     name = "test_imgproc_grad_ops",
-    srcs = ["grad_test.cpp"],
+    srcs = ["src/grad_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _IMGPROC_DEPS,
@@ -37,7 +37,7 @@ cc_binary(
 
 cc_binary(
     name = "test_imgproc_step_line",
-    srcs = ["step_line_test.cpp"],
+    srcs = ["src/step_line_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _IMGPROC_DEPS,
@@ -45,7 +45,7 @@ cc_binary(
 
 cc_binary(
     name = "test_imgproc_fft",
-    srcs = ["fft_test.cpp"],
+    srcs = ["src/fft_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = [
@@ -57,7 +57,7 @@ cc_binary(
 
 cc_binary(
     name = "test_imgproc_pyramid",
-    srcs = ["pyramid_test.cpp"],
+    srcs = ["src/pyramid_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = _IMGPROC_DEPS,
@@ -65,7 +65,7 @@ cc_binary(
 
 cc_binary(
     name = "test_imgproc_noise",
-    srcs = ["noise_test.cpp"],
+    srcs = ["src/noise_test.cpp"],
     copts = LE_COPTS_COMPAT,
     data = _TEST_DATA,
     deps = [

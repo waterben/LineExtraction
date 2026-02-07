@@ -7,7 +7,7 @@ package(default_visibility = ["//visibility:public"])
 
 cc_binary(
     name = "derivative",
-    srcs = ["derivative_filters.cpp"],
+    srcs = ["src/derivative_filters.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/imgproc:lib_imgproc",
@@ -17,7 +17,7 @@ cc_binary(
 
 cc_binary(
     name = "pyramid",
-    srcs = ["pyramid.cpp"],
+    srcs = ["src/pyramid.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/imgproc:lib_imgproc",
@@ -29,7 +29,7 @@ cc_binary(
 # threshold.cpp uses ximgproc for structured edge detection
 cc_binary(
     name = "thesis_imgproc_threshold_examples",
-    srcs = ["threshold.cpp"],
+    srcs = ["src/threshold.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
@@ -43,7 +43,7 @@ cc_binary(
 
 cc_binary(
     name = "thesis_edge_segment_examples",
-    srcs = ["edge_seg.cpp"],
+    srcs = ["src/edge_seg.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
@@ -57,7 +57,7 @@ cc_binary(
 
 cc_binary(
     name = "thesis_zc_examples",
-    srcs = ["zc_example.cpp"],
+    srcs = ["src/zc_example.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/edge:lib_edge",
@@ -71,7 +71,7 @@ cc_binary(
 # OpenCV feature detection and matching demo (AKAZE, xfeatures2d)
 cc_binary(
     name = "thesis_opencv_features",
-    srcs = ["opencv_features.cpp"],
+    srcs = ["src/opencv_features.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "@opencv",

@@ -1,23 +1,21 @@
 # LineExtraction Examples
 
-Demonstration programs showcasing the capabilities of the LineExtraction library. Each example demonstrates specific features and algorithms from the core libraries.
+Demonstration programs showcasing the capabilities of the LineExtraction library. Each subdirectory focuses on a specific library module and contains standalone example binaries.
 
 ## Directory Structure
 
-| Directory | Description |
-|-----------|-------------|
-| [edge/](edge/) | Edge detection, NMS, and edge linking algorithms |
-| [geometry/](geometry/) | Geometric primitives, camera models, stereo vision |
-| [imgproc/](imgproc/) | Image processing filters and transforms |
-| [lfd/](lfd/) | Line Feature Descriptor matching |
-| [lsd/](lsd/) | Line Segment Detection algorithms |
-| [other/](other/) | Miscellaneous utilities and external library demos |
-| [qt/](qt/) | Qt-based visualization examples |
-| [thesis/](thesis/) | Examples for thesis figure generation |
+| Directory | Library | Description |
+|-----------|---------|-------------|
+| [edge/](edge/) | `libs/edge` | Edge detection, NMS, zero-crossing, and edge linking |
+| [geometry/](geometry/) | `libs/geometry` | Geometric primitives, camera models, stereo vision |
+| [imgproc/](imgproc/) | `libs/imgproc` | Gradient operators, FFT, steerable filters, pyramids |
+| [lfd/](lfd/) | `libs/lfd` | Line feature descriptor matching (stereo, video, motion) |
+| [lsd/](lsd/) | `libs/lsd` | Line Segment Detection algorithm variants |
+| [other/](other/) | — | Miscellaneous demos (Hough transform) |
+| [qt/](qt/) | — | Qt-based visualization (currently empty) |
+| [thesis/](thesis/) | `libs/eval` | Figure generation for thesis chapters |
 
-See the README.md in each subdirectory for detailed information about specific examples.
-
-## Building Examples
+## Building
 
 ### Bazel (Recommended)
 
@@ -25,52 +23,49 @@ See the README.md in each subdirectory for detailed information about specific e
 # Build all examples
 bazel build //examples/...
 
-# Build specific category
+# Build a specific category
 bazel build //examples/edge:all
 bazel build //examples/lsd:all
 
-# Run specific example
-bazel run //examples/lsd:lsd -- /path/to/image.jpg
+# Run a specific example
+bazel run //examples/lsd:lsd
+bazel run //examples/edge:edge_test
 ```
 
 ### CMake (Legacy)
 
 ```bash
-mkdir build && cd build
-cmake ..
-make
-./bin/lsd /path/to/image.jpg
+cd build && cmake .. && cmake --build . -j$(nproc)
 ```
 
 ## Usage
 
-Most examples accept command-line arguments:
+Most examples accept an optional image path as command-line argument. Without arguments, the built-in test image (`windmill.jpg`) is used:
 
 ```bash
-./example_name                    # Run with default test image
-./example_name /path/to/image.jpg # Run with custom image
+bazel run //examples/edge:nms_test              # default test image
+bazel run //examples/edge:nms_test -- image.jpg # custom image
 ```
 
-Test images are provided in `resources/datasets/`. The `TestImages` utility class provides access to standard test images:
+Test images are resolved via the `TestImages` utility:
 
 ```cpp
 #include <utility/test_images.hpp>
 
 int main(int argc, char** argv) {
     lsfm::TestImages::init(argv[0]);
-    std::string filename = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
-    // ...
+    std::string file = argc >= 2 ? argv[1] : lsfm::TestImages::windmill();
 }
 ```
 
-## Quick Links
+## Project Layout
 
-- **Full Documentation:** See main [README.md](../README.md) for complete documentation
-- **Edge Examples:** [edge/README.md](edge/README.md)
-- **Geometry Examples:** [geometry/README.md](geometry/README.md)
-- **Image Processing Examples:** [imgproc/README.md](imgproc/README.md)
-- **Line Feature Descriptors:** [lfd/README.md](lfd/README.md)
-- **Line Segment Detection:** [lsd/README.md](lsd/README.md)
-- **Other Examples:** [other/README.md](other/README.md)
-- **Qt Examples:** [qt/README.md](qt/README.md)
-- **Thesis Examples:** [thesis/README.md](thesis/README.md)
+Each example subdirectory follows the same layout:
+
+```
+<category>/
+  BUILD.bazel       # Bazel build targets
+  CMakeLists.txt    # Legacy CMake build
+  README.md         # Documentation
+  src/              # Source files (.cpp)
+```

@@ -20,56 +20,56 @@ _TEST_DATA = [
 
 cc_binary(
     name = "edge_precision",
-    srcs = ["edge_precision.cpp"],
+    srcs = ["src/edge_precision.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "edge_test",
-    srcs = ["edge_test.cpp"],
+    srcs = ["src/edge_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nfa_test",
-    srcs = ["nfa_test.cpp"],
+    srcs = ["src/nfa_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nms_test",
-    srcs = ["nms_test.cpp"],
+    srcs = ["src/nms_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "nms_variant_test",
-    srcs = ["nms_variant_test.cpp"],
+    srcs = ["src/nms_variant_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "pattern_test",
-    srcs = ["pattern_test.cpp"],
+    srcs = ["src/pattern_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )
 
 cc_binary(
     name = "zc_test",
-    srcs = ["zc_test.cpp"],
+    srcs = ["src/zc_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS + ["//libs/utility:lib_utility_gui"],  # For showMat()
 )
 
 cc_binary(
     name = "zc_variant_test",
-    srcs = ["zc_variant_test.cpp"],
+    srcs = ["src/zc_variant_test.cpp"],
     data = _TEST_DATA,
     deps = _EDGE_DEPS,
 )

@@ -7,7 +7,7 @@ package(default_visibility = ["//visibility:public"])
 
 cc_binary(
     name = "test_geometry_stereo_pluecker",
-    srcs = ["stereo_pluecker_test.cpp"],
+    srcs = ["src/stereo_pluecker_test.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/geometry:lib_geometry",
@@ -17,7 +17,7 @@ cc_binary(
 
 cc_binary(
     name = "test_geometry_gt",
-    srcs = ["gt_test.cpp"],
+    srcs = ["src/gt_test.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/geometry:lib_geometry",
@@ -27,7 +27,7 @@ cc_binary(
 
 cc_binary(
     name = "test_geometry_line",
-    srcs = ["line_test.cpp"],
+    srcs = ["src/line_test.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/geometry:lib_geometry",
@@ -38,7 +38,7 @@ cc_binary(
 
 cc_binary(
     name = "test_geometry_poly",
-    srcs = ["poly_test.cpp"],
+    srcs = ["src/poly_test.cpp"],
     copts = LE_COPTS_COMPAT,
     deps = [
         "//libs/geometry:lib_geometry",
@@ -50,7 +50,7 @@ cc_binary(
 # OpenGL-dependent examples
 cc_binary(
     name = "test_geometry_obj",
-    srcs = ["obj_test.cpp"],
+    srcs = ["src/obj_test.cpp"],
     copts = LE_COPTS_COMPAT + [
         "-Wno-unused-parameter",  # obj_test has unused main args
     ],

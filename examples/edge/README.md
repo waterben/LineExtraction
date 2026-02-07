@@ -6,38 +6,39 @@ Examples demonstrating edge detection, Non-Maximum Suppression (NMS), zero-cross
 
 ## Examples
 
-| Example | Description | Usage |
-|---------|-------------|-------|
-| [edge_test.cpp](edge_test.cpp) | Comprehensive edge detection pipeline with various linking strategies | `./edge_test [image_path]` |
-| [edge_precision.cpp](edge_precision.cpp) | Sub-pixel edge localization precision evaluation | `./edge_precision` |
-| [nfa_test.cpp](nfa_test.cpp) | NFA validation for edge segments | `./nfa_test [image_path]` |
-| [nms_test.cpp](nms_test.cpp) | NMS benchmarking with multiple gradient operators | `./nms_test [image_path]` |
-| [nms_variant_test.cpp](nms_variant_test.cpp) | Comparison of NMS variants (4/8-directional) | `./nms_variant_test [image_path]` |
-| [pattern_test.cpp](pattern_test.cpp) | Pattern-based edge segment detection | `./pattern_test [image_path]` |
-| [zc_test.cpp](zc_test.cpp) | Zero-crossing edge detection | `./zc_test [image_path]` |
-| [zc_variant_test.cpp](zc_variant_test.cpp) | Zero-crossing detection variants | `./zc_variant_test [image_path]` |
+| Bazel Target | Source | Description |
+|---|---|---|
+| `edge_test` | [edge_test.cpp](src/edge_test.cpp) | Full edge detection pipeline: gradient → NMS → linking (EsdSimple, EsdLinking, EsdPattern) |
+| `edge_precision` | [edge_precision.cpp](src/edge_precision.cpp) | Sub-pixel edge localization precision on synthetic hexagon ground truth |
+| `nfa_test` | [nfa_test.cpp](src/nfa_test.cpp) | NFA (Number of False Alarms) statistical validation of edge segments |
+| `nms_test` | [nms_test.cpp](src/nms_test.cpp) | NMS benchmarking with Sobel, Scharr, RCMG, SUSAN, quadrature, and phase congruency gradients |
+| `nms_variant_test` | [nms_variant_test.cpp](src/nms_variant_test.cpp) | Comparison of 4-directional vs 8-directional NMS with color-coded direction visualization |
+| `pattern_test` | [pattern_test.cpp](src/pattern_test.cpp) | Pattern-based edge segment detection (EsdPattern) — robust at junctions and corners |
+| `zc_test` | [zc_test.cpp](src/zc_test.cpp) | Zero-crossing edge detection with Laplacian, LoG, and quadrature filter operators |
+| `zc_variant_test` | [zc_variant_test.cpp](src/zc_variant_test.cpp) | Zero-crossing variants with different direction encodings and threshold strategies |
 
-## Building
+## Building & Running
 
-**Bazel:**
 ```bash
+# Build all edge examples
 bazel build //examples/edge:all
-bazel run //examples/edge:edge_test -- /path/to/image.jpg
-```
 
-**CMake:**
-```bash
-make  # from build directory
+# Run with default test image (windmill.jpg)
+bazel run //examples/edge:edge_test
+
+# Run with custom image
+bazel run //examples/edge:nms_test -- /path/to/image.jpg
 ```
 
 ## Key Algorithms
 
-- **NMS (Non-Maximum Suppression):** Thinning edge responses to single-pixel width
-- **Zero-Crossing:** Detecting edges at Laplacian zero-crossings
-- **Edge Linking:** Connecting edge pixels into continuous segments
-- **NFA Validation:** Statistical validation of detected edges using a contrario framework
+- **NMS (Non-Maximum Suppression):** Thinning edge responses to single-pixel width using gradient direction
+- **Zero-Crossing Detection:** Edges located at Laplacian sign changes
+- **Edge Linking:** Connecting edge pixels into continuous segments (simple, continuity-optimized, pattern-based)
+- **NFA Validation:** A contrario statistical test rejecting edges that could arise by chance
+- **Sub-Pixel Estimation:** Linear, quadratic, and Gaussian interpolation for sub-pixel edge positions
 
 ## Related Libraries
 
-- [libs/edge](../../libs/edge/) - Edge detection library implementation
-- [libs/imgproc](../../libs/imgproc/) - Image processing and gradient operators
+- [libs/edge](../../libs/edge/) — Edge detection, NMS, zero-crossing, linking
+- [libs/imgproc](../../libs/imgproc/) — Gradient operators, quadrature filters, phase congruency
