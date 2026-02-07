@@ -1,5 +1,6 @@
 /// @file segment.cpp
 /// @brief Edge segment detection performance tests
+
 #include "performance_test.hpp"
 #include <edge/edge_drawing.hpp>
 #include <edge/edge_linking.hpp>

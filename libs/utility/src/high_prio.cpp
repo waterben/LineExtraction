@@ -1,3 +1,12 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file high_prio.cpp
+/// @brief System-level process priority control implementation.
+
 #include <utility/high_prio.hpp>
 
 #include <iostream>

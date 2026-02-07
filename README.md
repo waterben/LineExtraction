@@ -161,6 +161,12 @@ Output: `build/doc/html/index.html`
 
 The core LineExtraction library and tools are licensed under MIT. However, the project includes third-party code and GUI components under **different licenses**:
 
+### Library Dependencies
+
+- **OpenCV** ([BSD 3-Clause License](https://opencv.org/license/)) - Image processing library
+  - Used throughout libs/ for image operations
+  - License terms acknowledged in project dependencies
+
 ### Third-Party Algorithm Implementations
 
 - **`third-party/contrib/matlab_coder/`** - MATLAB Coder generated code ([Academic License](third-party/contrib/matlab_coder/README.md))

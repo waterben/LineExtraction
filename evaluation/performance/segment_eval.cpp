@@ -1,5 +1,6 @@
 /// @file segment_eval.cpp
 /// @brief Edge segment evaluation (NFA) performance tests
+
 #include "performance_test.hpp"
 #include <edge/edge_linking.hpp>
 #include <edge/nfa.hpp>

@@ -1,5 +1,6 @@
 /// @file nms.cpp
 /// @brief Non-Maximum Suppression and Zero-Crossing performance tests
+
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/zc.hpp>

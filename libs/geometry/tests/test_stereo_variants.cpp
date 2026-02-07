@@ -1,4 +1,13 @@
-// Verify triangulation via StereoCV, StereoPlane, and Stereo (2P) agree
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_stereo_variants.cpp
+/// @brief Unit tests for stereo model variants.
+/// Verify triangulation via StereoCV, StereoPlane, and Stereo (2P) agree
+
 #include <geometry/camera.hpp>
 #include <geometry/cameracv.hpp>
 #include <geometry/stereocv.hpp>

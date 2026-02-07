@@ -1,3 +1,12 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_quadrature_pc.cpp
+/// @brief Unit tests for quadrature phase congruency.
+
 #include <imgproc/gradient_adapter.hpp>
 #include <imgproc/pc_sqf.hpp>
 #include <imgproc/quadratureG2.hpp>

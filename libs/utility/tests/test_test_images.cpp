@@ -1,10 +1,12 @@
-/**
- * @file test_test_images.cpp
- * @brief Unit tests for TestImages path resolution utility.
- *
- * Tests the TestImages class which resolves test image paths
- * across Bazel and CMake build systems.
- */
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_test_images.cpp
+/// @brief Unit tests for test image utilities.
+
 
 #include <utility/test_images.hpp>
 
@@ -14,29 +16,24 @@
 
 using namespace lsfm;
 
-/**
- * @brief Test fixture for TestImages tests.
- */
+/// @brief Test fixture for TestImages tests.
 class TestImagesTest : public ::testing::Test {
  protected:
+  /// @brief Initialize the TestImages utility for the test binary.
   void SetUp() override {
     // Initialize TestImages with dummy argv[0]
     TestImages::init("test_binary");
   }
 };
 
-/**
- * @brief Test basic initialization without crash.
- */
+/// @brief Test basic initialization without crash.
 TEST_F(TestImagesTest, Initialization) {
   // Should not crash
   EXPECT_NO_THROW(TestImages::init("dummy_path"));
   EXPECT_NO_THROW(TestImages::init(nullptr));
 }
 
-/**
- * @brief Test isBazelRun detection.
- */
+/// @brief Test isBazelRun detection.
 TEST_F(TestImagesTest, BazelDetection) {
   // Should return false in normal test environment (unless actually run under Bazel)
   // We just test that it doesn't crash
@@ -44,9 +41,7 @@ TEST_F(TestImagesTest, BazelDetection) {
   EXPECT_TRUE(is_bazel || !is_bazel);  // Always true, just exercises the function
 }
 
-/**
- * @brief Test get() returns non-empty for non-existent files.
- */
+/// @brief Test get() returns non-empty for non-existent files.
 TEST_F(TestImagesTest, GetNonExistentFile) {
   // Should return the path (even if file doesn't exist) as fallback
   std::string path = TestImages::get("nonexistent_image.jpg");
@@ -54,9 +49,7 @@ TEST_F(TestImagesTest, GetNonExistentFile) {
   EXPECT_EQ(path, "nonexistent_image.jpg");  // Fallback behavior
 }
 
-/**
- * @brief Test windmill() convenience method.
- */
+/// @brief Test windmill() convenience method.
 TEST_F(TestImagesTest, WindmillConvenience) {
   std::string path = TestImages::windmill();
   EXPECT_FALSE(path.empty());
@@ -64,9 +57,7 @@ TEST_F(TestImagesTest, WindmillConvenience) {
   EXPECT_NE(path.find("windmill.jpg"), std::string::npos);
 }
 
-/**
- * @brief Test noise() convenience method.
- */
+/// @brief Test noise() convenience method.
 TEST_F(TestImagesTest, NoiseConvenience) {
   std::string path = TestImages::noise("bike.png");
   EXPECT_FALSE(path.empty());
@@ -75,9 +66,7 @@ TEST_F(TestImagesTest, NoiseConvenience) {
   EXPECT_NE(path.find("bike.png"), std::string::npos);
 }
 
-/**
- * @brief Test bsds500() method without split.
- */
+/// @brief Test bsds500() method without split.
 TEST_F(TestImagesTest, BSDS500NoSplit) {
   std::string path = TestImages::bsds500("100007.jpg");
   EXPECT_FALSE(path.empty());
@@ -85,9 +74,7 @@ TEST_F(TestImagesTest, BSDS500NoSplit) {
   EXPECT_NE(path.find("100007.jpg"), std::string::npos);
 }
 
-/**
- * @brief Test bsds500() method with split.
- */
+/// @brief Test bsds500() method with split.
 TEST_F(TestImagesTest, BSDS500WithSplit) {
   std::string path = TestImages::bsds500("100007.jpg", "train");
   EXPECT_FALSE(path.empty());
@@ -96,9 +83,7 @@ TEST_F(TestImagesTest, BSDS500WithSplit) {
   EXPECT_NE(path.find("100007.jpg"), std::string::npos);
 }
 
-/**
- * @brief Test stereoPair() method.
- */
+/// @brief Test stereoPair() method.
 TEST_F(TestImagesTest, StereoPair) {
   auto [left, right] = TestImages::stereoPair("Adirondack", "H");
 
@@ -116,9 +101,7 @@ TEST_F(TestImagesTest, StereoPair) {
   EXPECT_NE(right.find("mdb_H"), std::string::npos);
 }
 
-/**
- * @brief Test stereoLeft() convenience method.
- */
+/// @brief Test stereoLeft() convenience method.
 TEST_F(TestImagesTest, StereoLeft) {
   std::string path = TestImages::stereoLeft("Adirondack");
   EXPECT_FALSE(path.empty());
@@ -126,9 +109,7 @@ TEST_F(TestImagesTest, StereoLeft) {
   EXPECT_NE(path.find("im0.png"), std::string::npos);
 }
 
-/**
- * @brief Test stereoRight() convenience method.
- */
+/// @brief Test stereoRight() convenience method.
 TEST_F(TestImagesTest, StereoRight) {
   std::string path = TestImages::stereoRight("Adirondack");
   EXPECT_FALSE(path.empty());
@@ -136,9 +117,7 @@ TEST_F(TestImagesTest, StereoRight) {
   EXPECT_NE(path.find("im1.png"), std::string::npos);
 }
 
-/**
- * @brief Test different resolution parameters.
- */
+/// @brief Test different resolution parameters.
 TEST_F(TestImagesTest, DifferentResolutions) {
   // Test Quarter resolution
   auto [left_q, right_q] = TestImages::stereoPair("Adirondack", "Q");
@@ -151,9 +130,7 @@ TEST_F(TestImagesTest, DifferentResolutions) {
   EXPECT_NE(right_f.find("mdb_F"), std::string::npos);
 }
 
-/**
- * @brief Test multiple initialization calls (should not crash).
- */
+/// @brief Test multiple initialization calls (should not crash).
 TEST_F(TestImagesTest, MultipleInitCalls) {
   EXPECT_NO_THROW(TestImages::init("path1"));
   EXPECT_NO_THROW(TestImages::init("path2"));
@@ -164,9 +141,7 @@ TEST_F(TestImagesTest, MultipleInitCalls) {
   EXPECT_FALSE(path.empty());
 }
 
-/**
- * @brief Test get() with subdirectory paths.
- */
+/// @brief Test get() with subdirectory paths.
 TEST_F(TestImagesTest, SubdirectoryPaths) {
   std::string path = TestImages::get("some/nested/path/image.png");
   EXPECT_FALSE(path.empty());

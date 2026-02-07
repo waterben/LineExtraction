@@ -1,5 +1,6 @@
 /// @file spe.cpp
 /// @brief Sub-Pixel Estimation performance tests
+
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/spe.hpp>

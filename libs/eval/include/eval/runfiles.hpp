@@ -1,3 +1,9 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file runfiles.hpp
 /// @brief Bazel Runfiles helper for locating data files at runtime.
 ///
@@ -10,6 +16,7 @@
 /// auto runfiles = lsfm::Runfiles::Create(argv[0]);
 /// std::string path = runfiles->Rlocation("line_extraction/resources/datasets/BSDS500");
 /// @endcode
+
 #pragma once
 
 #include <cstdlib>

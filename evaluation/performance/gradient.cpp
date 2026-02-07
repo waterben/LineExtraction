@@ -1,5 +1,6 @@
 /// @file gradient.cpp
 /// @brief Gradient operator performance tests
+
 #include "performance_test.hpp"
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/gradient_adapter.hpp>

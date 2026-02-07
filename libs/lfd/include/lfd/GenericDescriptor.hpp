@@ -1,11 +1,13 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Manuel Lange & Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file GenericDescriptor.hpp
 /// @brief Generic descriptor creation helpers and classes.
 /// Provides template-based descriptor creators for various image properties like intensity,
 /// gradients, and combined features, with support for rotation alignment and interpolation.
-
-// C by Benjamin Wassermann
-//
-
 
 #pragma once
 

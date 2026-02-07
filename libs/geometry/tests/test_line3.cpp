@@ -1,4 +1,12 @@
-// 3D line tests
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_line3.cpp
+/// @brief Unit tests for 3D line geometry.
+
 #include <geometry/line3.hpp>
 
 #include <gtest/gtest.h>

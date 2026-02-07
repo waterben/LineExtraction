@@ -1,10 +1,14 @@
-/**
- * @file test_hough_angle.cpp
- * @brief Test to verify Hough line angle conversion
- *
- * This test verifies that OpenCV HoughLines theta values are correctly
- * converted to Line objects in the lsfm library.
- */
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_hough_angle.cpp
+/// @brief Test to verify Hough line angle conversion
+///
+/// This test verifies that OpenCV HoughLines theta values are correctly
+/// converted to Line objects in the lsfm library.
 
 #include <geometry/line.hpp>
 #include <lsd/lsd_hcv.hpp>
