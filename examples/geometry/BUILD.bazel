@@ -46,17 +46,3 @@ cc_binary(
         "@opencv",
     ],
 )
-
-# OpenGL-dependent examples
-cc_binary(
-    name = "test_geometry_obj",
-    srcs = ["src/obj_test.cpp"],
-    copts = LE_COPTS_COMPAT + [
-        "-Wno-unused-parameter",  # obj_test has unused main args
-    ],
-    tags = ["opengl"],
-    deps = [
-        "//libs/geometry:lib_geometry",
-        "@opencv",
-    ],
-)

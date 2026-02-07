@@ -336,3 +336,8 @@ cmake --build build --target lib_imgproc
 - [utility](../utility/README.md) - Core utilities
 - [Image Processing Examples](../../examples/imgproc/README.md) - Usage examples
 - [Main README](../../README.md) - Project overview
+
+## Evaluation & Benchmarks
+
+- [Performance Benchmarks](../../evaluation/performance/README.md) - Gradient operator and FFT timing
+- [Thesis Evaluations](../../evaluation/thesis/README.md) - Gradient orientation, noise robustness, filter analysis, color processing

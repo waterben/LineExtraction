@@ -69,3 +69,9 @@ Each example subdirectory follows the same layout:
   README.md         # Documentation
   src/              # Source files (.cpp)
 ```
+
+## See Also
+
+- [Evaluation](../evaluation/README.md) — Performance benchmarks and precision evaluations
+- [Apps](../apps/README.md) — Interactive applications (Line Analyzer)
+- [Main README](../README.md) — Project overview and setup

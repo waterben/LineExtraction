@@ -202,6 +202,10 @@ cmake --build build --target lib_utility
 
 ## See Also
 
-- [Examples](../../examples/README.md) - Usage examples
+- [edge](../edge/README.md) - Edge detection algorithms
+- [imgproc](../imgproc/README.md) - Image processing and gradient computation
+- [lsd](../lsd/README.md) - Line Segment Detection algorithms
 - [eval](../eval/README.md) - Uses TestImages for evaluation
+- [Examples](../../examples/README.md) - Usage examples (all categories use TestImages)
+- [Evaluation](../../evaluation/README.md) - Performance benchmarks and precision evaluations
 - [Main README](../../README.md) - Project overview

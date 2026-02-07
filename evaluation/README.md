@@ -8,7 +8,7 @@ Performance benchmarking and precision evaluation suite for line detection and i
 |-----------|-------------|
 | [performance/](performance/) | Computational benchmarks: gradient, NMS, LSD, FFT, GPU, sub-pixel estimation |
 | [thesis/](thesis/) | Precision evaluations: gradient accuracy, noise robustness, color processing, SPE |
-| [python/](python/) | Python tools for result analysis (chart plotting, CSV tables) |
+| [python/](python/) | Python tools for result analysis (chart plotting, CSV tables, LaTeX utilities) |
 
 Each subdirectory follows the same layout:
 
@@ -49,3 +49,9 @@ bazel run //evaluation/thesis:eval_spe_precision
 - [libs/imgproc](../libs/imgproc/) — Gradient operators, filters
 - [libs/lsd](../libs/lsd/) — Line Segment Detection
 - [libs/geometry](../libs/geometry/) — Geometric primitives
+
+## See Also
+
+- [Examples](../examples/README.md) — Standalone example programs
+- [Apps](../apps/README.md) — Interactive applications
+- [Main README](../README.md) — Project overview
