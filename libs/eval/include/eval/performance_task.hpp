@@ -57,11 +57,10 @@ class PerformanceTask : public MeasureTask<InputDataT, CVPerformanceMeasure> {
   }
 };
 
-/// @brief Full performance test runner based on performance tasks and data providers
-/// @file performance_task.hpp
-/// @brief Performance measurement task interface and implementations.
-/// Base class for tasks that measure algorithmic performance.
-
+/// @brief Full performance test runner.
+/// Runs performance tasks over data providers, collects timing results, and
+/// formats them as a result table.
+/// @tparam PerformanceTaskT The performance task type
 template <typename PerformanceTaskT>
 class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
  public:
@@ -84,10 +83,10 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
   using Base::name;
   using Base::run;
 
-  bool show_total{false};
-  bool show_mean{true};
-  bool show_std_dev{true};
-  bool show_mega_pixel{false};
+  bool show_total{false};       ///< Show total time in result table
+  bool show_mean{true};         ///< Show mean time in result table
+  bool show_std_dev{true};      ///< Show standard deviation in result table
+  bool show_mega_pixel{false};  ///< Show mega-pixel count alongside source name
 
   /// @brief Generate result table from collected measures
   StringTable resultTable(bool /*fullReport*/ = false) override {
@@ -132,6 +131,11 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
   }
 
  protected:
+  /// @brief Write measure rows for a single source into the result table.
+  /// @param source Source name
+  /// @param table Output string table
+  /// @param row Starting row index
+  /// @param rows_per_source Number of rows per source (total/mean/stddev)
   void writeMeasureRow(const std::string& source, StringTable& table, std::size_t row, std::size_t rows_per_source) {
     for (std::size_t t = 0; t < this->input_tasks.size(); ++t) {
       const auto& measures_map = this->input_tasks[t]->measures();
@@ -158,6 +162,10 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
     if (show_std_dev) table(r, 0) = "sdev:" + label;
   }
 
+  /// @brief Write accumulated total row into the result table.
+  /// @param table Output string table
+  /// @param row Starting row index
+  /// @param rows_per_source Number of rows per source
   void writeTotalRow(StringTable& table, std::size_t row, std::size_t rows_per_source) {
     for (std::size_t t = 0; t < this->input_tasks.size(); ++t) {
       CVPerformanceMeasure acc = this->input_tasks[t]->accumulatedMeasure("Total");
@@ -169,6 +177,12 @@ class PerformanceTest : public MeasureTaskRunner<PerformanceTaskT> {
     if (show_std_dev) table(r, 0) = "sdev:TOTAL";
   }
 
+  /// @brief Write a single measure's values into the table.
+  /// @param pm Performance measure to write
+  /// @param table Output string table
+  /// @param col Column index for this task
+  /// @param row Starting row index
+  /// @param rows_per_source Number of rows per source
   void writeMeasure(const CVPerformanceMeasure& pm,
                     StringTable& table,
                     std::size_t col,

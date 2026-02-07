@@ -36,13 +36,13 @@ class EvalApp : public ConsoleApp {
   virtual void terminateEval() {};
 
   // Flags and options
-  std::string input_{};
-  std::string output_{};
-  bool recursive_{false};
-  bool run_high_prio_{false};
-  bool no_results_{false};
-  bool write_visuals_{false};
-  bool show_visuals_{false};
+  std::string input_{};        ///< Input path (file or directory)
+  std::string output_{};       ///< Output path for results
+  bool recursive_{false};      ///< Scan input directories recursively
+  bool run_high_prio_{false};  ///< Run with elevated process priority
+  bool no_results_{false};     ///< Suppress result output
+  bool write_visuals_{false};  ///< Write visual results to disk
+  bool show_visuals_{false};   ///< Display visual results interactively
 };
 
 }  // namespace lsfm

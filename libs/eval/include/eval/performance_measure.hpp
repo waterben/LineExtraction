@@ -20,17 +20,17 @@
 
 namespace lsfm {
 
-/// @brief Performance results in milliseconds
+/// @brief Performance results in milliseconds.
 struct PerformanceResult {
-  double total{};
-  double mean{};
-  double stddev{};
+  double total{};   ///< Total time across all iterations
+  double mean{};    ///< Mean time per iteration
+  double stddev{};  ///< Standard deviation of iteration times
 };
 
-/// @brief Timing strategy interface (for dependency injection)
+/// @brief Timing strategy interface for dependency injection.
 ///
 /// Abstracts the timing mechanism, allowing different backends:
-/// @file performance_measure.hpp
+/// - std::chrono (default, portable)
 /// - OpenCV cv::getTickCount() (for CV applications)
 /// - Custom high-resolution timers
 struct TimingStrategy {
@@ -43,14 +43,20 @@ struct TimingStrategy {
   virtual double to_milliseconds(std::uint64_t ticks) const = 0;
 };
 
-/// @brief Standard chrono-based timing strategy
+/// @brief Standard chrono-based timing strategy.
+/// Uses std::chrono::high_resolution_clock for portable nanosecond resolution.
 struct ChronoTimingStrategy : public TimingStrategy {
+  /// @brief Get current timestamp in nanoseconds.
+  /// @return Nanoseconds since epoch
   std::uint64_t now() const override {
     return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                           std::chrono::high_resolution_clock::now().time_since_epoch())
                                           .count());
   }
 
+  /// @brief Convert nanosecond ticks to milliseconds.
+  /// @param ticks Duration in nanoseconds
+  /// @return Duration in milliseconds
   double to_milliseconds(std::uint64_t ticks) const override {
     return static_cast<double>(ticks) / 1'000'000.0;  // ns to ms
   }

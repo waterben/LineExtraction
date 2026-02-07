@@ -20,9 +20,15 @@
 
 namespace lsfm {
 
-/// @brief Extended CV data with grayscale conversion
+/// @brief Extended CV data with grayscale conversion.
+/// Wraps source image together with its grayscale variant for evaluation tasks.
 struct CVPerformanceData : public GenericInputData {
+  /// @brief Default constructor.
   CVPerformanceData() = default;
+
+  /// @brief Construct from a name and source image.
+  /// @param n Name of the data source (e.g. filename)
+  /// @param s Source image (BGR or grayscale)
   CVPerformanceData(const std::string& n, const cv::Mat& s) : GenericInputData{n}, src(s) {
     if (src.channels() == 3) {
       cv::cvtColor(src, src_gray, cv::COLOR_BGR2GRAY);
@@ -32,23 +38,35 @@ struct CVPerformanceData : public GenericInputData {
     }
   }
 
-  cv::Mat src{};
-  cv::Mat src_gray{};
+  cv::Mat src{};       ///< Source image (BGR)
+  cv::Mat src_gray{};  ///< Grayscale version of source image
 };
 
 /// @brief Data provider for CV performance data
 using CVPerformanceDataProvider = DataProvider<CVPerformanceData>;
 
-/// @brief File-based CV performance data provider
+/// @brief File-based CV performance data provider.
+/// Scans directories for image files and provides them as CVPerformanceData
+/// with automatic grayscale conversion.
 class FileCVPerformanceDataProvider : public CVPerformanceDataProvider {
  public:
-  FileCVPerformanceDataProvider(const std::string& provider_name) : CVPerformanceDataProvider(provider_name) {}
+  /// @brief Construct with a provider name only.
+  /// @param provider_name Name identifying this data provider
+  FileCVPerformanceDataProvider(const std::string& provider_name)
+      : CVPerformanceDataProvider(provider_name){}
 
-  FileCVPerformanceDataProvider(const std::filesystem::path& p, const std::string& provider_name, bool recursive = true)
+      /// @brief Construct and parse a single directory for images.
+      /// @param p Path to the directory to scan
+      /// @param provider_name Name identifying this data provider
+      /// @param recursive If true, scan subdirectories recursively
       : CVPerformanceDataProvider(provider_name) {
     parse(p, recursive);
   }
 
+  /// @brief Construct and parse multiple directories for images.
+  /// @param f Vector of directory paths to scan
+  /// @param provider_name Name identifying this data provider
+  /// @param recursive If true, scan subdirectories recursively
   FileCVPerformanceDataProvider(const std::vector<std::filesystem::path>& f,
                                 const std::string& provider_name,
                                 bool recursive = true)
@@ -58,12 +76,18 @@ class FileCVPerformanceDataProvider : public CVPerformanceDataProvider {
 
   virtual ~FileCVPerformanceDataProvider() = default;
 
+  /// @brief Parse multiple directories for image files.
+  /// @param folders Vector of directory paths to scan
+  /// @param recursive If true, scan subdirectories recursively
   void parse(const std::vector<std::filesystem::path>& folders, bool recursive = true) {
     for (const auto& f : folders) {
       parse(f, recursive);
     }
   }
 
+  /// @brief Parse a single directory for supported image files.
+  /// @param folder Path to the directory to scan
+  /// @param recursive If true, scan subdirectories recursively
   void parse(const std::filesystem::path& folder, bool recursive = true) {
     if (!std::filesystem::exists(folder)) return;
 
@@ -90,6 +114,9 @@ class FileCVPerformanceDataProvider : public CVPerformanceDataProvider {
     }
   }
 
+  /// @brief Get next performance data item.
+  /// @param data Output CVPerformanceData with loaded image and grayscale conversion
+  /// @return False if source is depleted
   bool get(CVPerformanceData& data) override {
     if (pos_ >= files_.size()) {
       return false;
@@ -104,22 +131,29 @@ class FileCVPerformanceDataProvider : public CVPerformanceDataProvider {
     return true;
   }
 
+  /// @brief Rewind provider to the first image.
   void rewind() override { pos_ = 0; }
 
+  /// @brief Clear all loaded file paths and reset position.
   void clear() override {
     files_.clear();
     pos_ = 0;
   }
 
  private:
+  /// @brief Current read position in the file list.
   std::size_t pos_{0};
+  /// @brief List of discovered image file paths.
   std::vector<std::filesystem::path> files_{};
 };
 
-/// @brief Task flags for performance tasks
+/// @brief Task flag: use squared magnitude.
 constexpr int TASK_SQR = 1;
+/// @brief Task flag: use RGB input instead of grayscale.
 constexpr int TASK_RGB = 2;
+/// @brief Task flag: exclude 3x3 kernel border.
 constexpr int TASK_NO_3 = 4;
+/// @brief Task flag: exclude 5x5 kernel border.
 constexpr int TASK_NO_5 = 8;
 
 /// @brief CV Performance task base class - provides clean interface for performance measurements
@@ -138,6 +172,10 @@ class CVPerformanceTaskBase : public PerformanceTask<CVPerformanceData> {
   using Base = PerformanceTask<CVPerformanceData>;
   using InputData = CVPerformanceData;
 
+  /// @brief Construct a CV performance task.
+  /// @param task_name Name identifying this task
+  /// @param flags Combination of TASK_SQR, TASK_RGB, TASK_NO_3, TASK_NO_5
+  /// @param verbose_flag Enable verbose timing output
   CVPerformanceTaskBase(const std::string& task_name, int flags = 0, bool verbose_flag = false)
       : Base(task_name, verbose_flag), flags_(flags) {}
   ~CVPerformanceTaskBase() override = default;
@@ -173,13 +211,16 @@ class CVPerformanceTaskBase : public PerformanceTask<CVPerformanceData> {
   // Bring base class prepare overloads into scope to avoid hiding
   using InputTask<InputData>::prepare;
 
-  // Public interface for TaskRunner
+  /// @brief Prepare task with input data.
+  /// @param data CV performance data with source image
   void prepare(const InputData& data) override {
     current_data_ = data;
     current_measure_ = CVPerformanceMeasure{data.name, this->name, static_cast<double>(data.src.cols),
                                             static_cast<double>(data.src.rows)};
   }
 
+  /// @brief Run the task for the specified number of loops.
+  /// @param loops Number of timed iterations
   void run(std::size_t loops) override {
     const cv::Mat& src = rgb() ? current_data_.src : current_data_.src_gray;
 
@@ -187,6 +228,7 @@ class CVPerformanceTaskBase : public PerformanceTask<CVPerformanceData> {
     run(current_data_.name, src, static_cast<int>(loops), this->verbose);
   }
 
+  /// @brief Collect measures after the run and sync to the measures map.
   void measure() override {
     // Legacy code may have written to perf_measure vector directly
     // Sync it to the measures_ map
