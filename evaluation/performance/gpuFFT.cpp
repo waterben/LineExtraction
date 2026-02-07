@@ -1,5 +1,6 @@
 /// @file gpuFFT.cpp
 /// @brief GPU FFT performance tests comparing CPU, OpenCL and CUDA implementations
+
 #include "performance_test.hpp"
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

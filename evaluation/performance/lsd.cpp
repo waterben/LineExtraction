@@ -1,5 +1,6 @@
 /// @file lsd.cpp
 /// @brief Line Segment Detector performance tests
+
 #include "performance_test.hpp"
 #include <lsd/lsd_burns.hpp>
 #include <lsd/lsd_cc.hpp>

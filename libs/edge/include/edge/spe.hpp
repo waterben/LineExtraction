@@ -1,3 +1,9 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file spe.hpp
 /// @brief Sub-pixel edge localization estimators.
 /// Provides various sub-pixel edge localization methods (Linear, Quadratic, CoG, Sobel)

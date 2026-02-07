@@ -1,3 +1,12 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_pyramid.cpp
+/// @brief Unit tests for pyramid processing.
+
 #include <imgproc/pyramid.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 

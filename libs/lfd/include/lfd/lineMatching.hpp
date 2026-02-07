@@ -1,9 +1,14 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Manuel Lange & Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file lineMatching.hpp
 /// @brief Free functions for line matching and filtering operations.
 /// Provides standalone utilities for processing line matches and features.
 
 #pragma once
-
 
 #include <opencv2/highgui/highgui.hpp>
 

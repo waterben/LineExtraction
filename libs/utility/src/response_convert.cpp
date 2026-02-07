@@ -1,3 +1,11 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file response_convert.cpp
+/// @brief Response conversion utilities implementation.
 
 #include <utility/response_convert.hpp>
 

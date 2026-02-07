@@ -1,3 +1,9 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann & Manuel Lange
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file camera_utilities.hpp
 /// @brief Stereo camera calibration and rectification utilities.
 

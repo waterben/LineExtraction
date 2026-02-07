@@ -1,3 +1,11 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file render_gl.cpp
+/// @brief OpenGL rendering helpers implementation.
 
 
 #include <geometry/render_gl.hpp>

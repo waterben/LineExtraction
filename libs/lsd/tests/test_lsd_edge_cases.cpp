@@ -1,10 +1,14 @@
-/**
- * @file test_lsd_edge_cases.cpp
- * @brief Edge case tests for LSD algorithms
- *
- * Tests various LSD implementations with edge cases like empty images,
- * noise, extreme geometries, and boundary conditions.
- */
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_lsd_edge_cases.cpp
+/// @brief Edge case tests for LSD algorithms
+///
+/// Tests various LSD implementations with edge cases like empty images,
+/// noise, extreme geometries, and boundary conditions.
 
 #include <lsd/lsd_burns.hpp>
 #include <lsd/lsd_cc.hpp>
@@ -15,9 +19,10 @@
 #include <lsd/lsd_fbw.hpp>
 #include <lsd/lsd_fgioi.hpp>
 #include <opencv2/opencv.hpp>
-#include <cmath>
 
 #include <gtest/gtest.h>
+
+#include <cmath>
 
 using namespace lsfm;
 using namespace cv;

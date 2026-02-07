@@ -1,4 +1,12 @@
-// Stereo helpers tests: pixel/line conversions and ray
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_stereo_helpers.cpp
+/// @brief Unit tests for stereo helper utilities.
+
 #include <geometry/stereo.hpp>
 
 #include <gtest/gtest.h>

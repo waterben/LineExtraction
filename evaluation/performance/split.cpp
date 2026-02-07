@@ -1,5 +1,6 @@
 /// @file split.cpp
 /// @brief Edge segment splitting performance tests
+
 #include "performance_test.hpp"
 #include <edge/edge_pattern.hpp>
 #include <edge/nms.hpp>

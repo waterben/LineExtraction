@@ -1,5 +1,6 @@
 /// @file main.cpp
 /// @brief Performance test main executable
+
 #include "performance_test.hpp"
 #include <eval/runfiles.hpp>
 #include <utility/high_prio.hpp>

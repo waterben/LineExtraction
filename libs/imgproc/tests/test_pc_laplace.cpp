@@ -1,3 +1,12 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_pc_laplace.cpp
+/// @brief Unit tests for phase congruency Laplace variants.
+
 #include <imgproc/pc_sqf.hpp>
 
 #include <gtest/gtest.h>

@@ -1,5 +1,6 @@
 /// @file line_fit.cpp
 /// @brief Line fitting performance tests
+
 #include "performance_test.hpp"
 #include <edge/edge_linking.hpp>
 #include <edge/fit.hpp>

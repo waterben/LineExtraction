@@ -1,4 +1,13 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_eigen2cv.cpp
+/// @brief Unit tests for Eigen-to-OpenCV conversions.
 // eigen2cv adapter tests: euler, quaternion, homogeneous, matxMul
+
 #include <geometry/eigen2cv.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 

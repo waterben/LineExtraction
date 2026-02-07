@@ -1,5 +1,6 @@
 /// @file performance_test.hpp
 /// @brief Common header for performance test executables
+
 #pragma once
 
 #include <eval/cv_performance_task.hpp>

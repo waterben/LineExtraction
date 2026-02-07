@@ -1,3 +1,12 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_options.cpp
+/// @brief Unit tests for options utilities.
+
 #include <utility/options.hpp>
 
 #include <gtest/gtest.h>

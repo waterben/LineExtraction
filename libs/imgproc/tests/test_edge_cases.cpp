@@ -1,17 +1,22 @@
-/**
- * @file test_edge_cases.cpp
- * @brief Edge case tests for image processing operations
- *
- * Tests imgproc functions with edge cases like empty images, noise,
- * extreme values, and boundary conditions.
- */
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_edge_cases.cpp
+/// @brief Edge case tests for image processing operations
+///
+/// Tests imgproc functions with edge cases like empty images, noise,
+/// extreme values, and boundary conditions.
 
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/opencv.hpp>
 
-#include <cmath>
 #include <gtest/gtest.h>
+
+#include <cmath>
 
 using namespace lsfm;
 using namespace cv;

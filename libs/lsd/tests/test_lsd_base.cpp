@@ -1,19 +1,24 @@
-/**
- * @file test_lsd_base.cpp
- * @brief Unit tests for LsdBase class interface
- *
- * Tests the base class API methods including:
- * - lineSegments() getter
- * - endPoints() conversion and getter
- * - lines() conversion from segments
- * - Various detect() overloads
- */
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file test_lsd_base.cpp
+/// @brief Unit tests for LsdBase class interface
+///
+/// Tests the base class API methods including:
+/// - lineSegments() getter
+/// - endPoints() conversion and getter
+/// - lines() conversion from segments
+/// - Various detect() overloads
 
 #include <lsd/lsd_cc.hpp>
 #include <opencv2/opencv.hpp>
-#include <cmath>
 
 #include <gtest/gtest.h>
+
+#include <cmath>
 
 using namespace lsfm;
 using namespace cv;

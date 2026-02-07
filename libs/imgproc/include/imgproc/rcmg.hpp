@@ -1,3 +1,11 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file rcmg.hpp
+/// @brief Robust Colour Morphological Gradient (RCMG) utilities.
 /***************************************************************************
  * The Robust Colour Morphological Gradient (RCMG) for edge detection      *
  * in multichannel images                                                  *

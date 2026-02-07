@@ -1,3 +1,11 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
+/// @file tr.h
+/// @brief OpenGL translation helpers.
 /* $Id: tr.h,v 1.5 1997/07/21 17:34:07 brianp Exp $ */
 
 /*

@@ -1,3 +1,9 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file quadratureG2.hpp
 /// @brief Second-order Gaussian quadrature filter (G2/H2) for edge detection.
 ///

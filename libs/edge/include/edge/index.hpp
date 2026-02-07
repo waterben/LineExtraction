@@ -1,3 +1,9 @@
+//*****************************************************************************************
+/// \copyright (c) 2016-2026 Benjamin Wassermann
+// ---------------------------------------------------------------------------------------
+// This file is part of LineExtraction and is licensed under the MIT License.
+// See the LICENSE file at the project root for more information.
+//*****************************************************************************************
 /// @file index.hpp
 /// @brief Index and coordinate conversion utilities for edge detection.
 /// Provides utilities for converting between linear indices, 2D points, and coordinates

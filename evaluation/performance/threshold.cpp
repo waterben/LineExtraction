@@ -1,5 +1,6 @@
 /// @file threshold.cpp
 /// @brief Threshold performance tests for various thresholding methods
+
 #include "performance_test.hpp"
 #include <edge/nms.hpp>
 #include <edge/threshold.hpp>
