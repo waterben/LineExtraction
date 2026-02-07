@@ -1,0 +1,36 @@
+"""External image processing algorithm implementations - Various licenses
+
+Core algorithm implementations extracted from research papers under their
+original copyrights. Used by libs/imgproc through thin wrapper classes.
+
+- rcmg_core.hpp: RCMG edge detector (Evans, 2005-2007, All rights reserved)
+- susan_core.hpp: SUSAN edge detector (Crown Copyright 1995-1999, research only)
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "imgproc_external",
+    hdrs = glob(
+        [
+            "include/*.h",
+            "include/*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    copts = [
+        "-Wno-old-style-cast",
+        "-Wno-conversion",
+        "-Wno-sign-conversion",
+        "-Wno-effc++",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@opencv",
+    ],
+)
