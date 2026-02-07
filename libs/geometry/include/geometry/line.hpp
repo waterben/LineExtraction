@@ -1059,7 +1059,7 @@ class LineSegment : public Line<FT, PT> {
   friend std::ostream& operator<<(std::ostream& os, const LineSegment<U>& ls);
 
  public:
-  //! Virtual destructor for proper inheritance
+  /// @brief Virtual destructor for proper inheritance.
   virtual ~LineSegment() = default;
 };
 

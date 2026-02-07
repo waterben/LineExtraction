@@ -1,7 +1,6 @@
 """geometry examples"""
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
-load("//bazel:features.bzl", "if_opengl_enabled")
 load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 
 package(default_visibility = ["//visibility:public"])
@@ -49,23 +48,15 @@ cc_binary(
 )
 
 # OpenGL-dependent examples
-[
-    cc_binary(
-        name = name,
-        srcs = [src],
-        copts = LE_COPTS_COMPAT + [
-            "-Wno-unused-parameter",  # obj_test has unused main args
-        ],
-        tags = ["opengl"],
-        deps = [
-            "//libs/geometry:lib_geometry",
-            "@opencv",
-        ] + if_opengl_enabled([
-            "//libs/geometry:lib_geometry_gl",
-        ]),
-    )
-    for name, src in [
-        ("test_geometry_obj", "obj_test.cpp"),
-        ("test_render_gl_tr", "render_gl_tr_test.cpp"),
-    ]
-]
+cc_binary(
+    name = "test_geometry_obj",
+    srcs = ["obj_test.cpp"],
+    copts = LE_COPTS_COMPAT + [
+        "-Wno-unused-parameter",  # obj_test has unused main args
+    ],
+    tags = ["opengl"],
+    deps = [
+        "//libs/geometry:lib_geometry",
+        "@opencv",
+    ],
+)

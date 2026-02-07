@@ -21,11 +21,6 @@ if(OPENGL_FOUND)
     add_executable(test_geometry_obj obj_test.cpp)
     target_link_libraries(test_geometry_obj lib_geometry ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} le::opencv)
 
-    add_executable(test_render_gl_tr render_gl_tr_test.cpp)
-    target_link_libraries(test_render_gl_tr lib_geometry ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} le::opencv)
-    if(UNIX)
-    target_link_libraries(test_render_gl_tr pthread)
-    endif(UNIX)
 endif()
 
 add_executable(test_geometry_poly poly_test.cpp)

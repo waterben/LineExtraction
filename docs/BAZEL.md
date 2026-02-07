@@ -232,8 +232,6 @@ The following opencv_contrib modules are available for use:
 |--------|--------|-------|
 | `//libs/utility` | ✅ | Core utilities |
 | `//libs/geometry:lib_geometry_core` | ✅ | Geometry primitives |
-| `//libs/geometry:lib_geometry_gl` | ✅ | Requires `--//bazel:enable_opengl=true` |
-| `//libs/geometry:lib_geometry_tr` | ✅ | Requires `--//bazel:enable_opengl=true` |
 | `//libs/imgproc` | ✅ | Image processing |
 | `//libs/edge` | ✅ | Edge detection |
 | `//libs/lsd` | ✅ | Line Segment Detector |
