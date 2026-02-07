@@ -43,14 +43,22 @@ class ValueManager {
   };
 
   typedef std::map<std::string, ValueEntry> ValueMap;
-  ValueMap values_{};
+  ValueMap values_{};  ///< Map of registered parameter names to entries.
 
+  /// @brief Default constructor.
   ValueManager() {}
 
+  /// @brief Copy constructor.
+  /// @param om ValueManager to copy parameters from.
   ValueManager(const ValueManager& om) : values_(om.values_) {}
 
+  /// @brief Move constructor.
+  /// @param om ValueManager to move parameters from.
   ValueManager(ValueManager&& om) noexcept : values_(std::move(om.values_)) {}
 
+  /// @brief Copy assignment operator.
+  /// @param om ValueManager to copy parameters from.
+  /// @return Reference to this.
   ValueManager& operator=(const ValueManager& om) {
     if (this != &om) {
       values_ = om.values_;
@@ -58,6 +66,9 @@ class ValueManager {
     return *this;
   }
 
+  /// @brief Move assignment operator.
+  /// @param om ValueManager to move parameters from.
+  /// @return Reference to this.
   ValueManager& operator=(ValueManager&& om) noexcept {
     if (this != &om) {
       values_ = std::move(om.values_);

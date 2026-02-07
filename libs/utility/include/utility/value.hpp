@@ -134,6 +134,9 @@ class Value {
     }
   }
 
+  /// @brief Assign from double (sets FLOAT type).
+  /// @param fval Double value.
+  /// @return Reference to this.
   Value& operator=(double fval) {
     if (type_ == STRING) release();
     type_ = FLOAT;
@@ -141,6 +144,9 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from float (sets FLOAT type).
+  /// @param fval Float value.
+  /// @return Reference to this.
   Value& operator=(float fval) {
     if (type_ == STRING) release();
     type_ = FLOAT;
@@ -148,6 +154,9 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from 64-bit integer (sets INT type).
+  /// @param ival Integer value.
+  /// @return Reference to this.
   Value& operator=(int64_t ival) {
     if (type_ == STRING) release();
     type_ = INT;
@@ -155,6 +164,9 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from int (sets INT type).
+  /// @param ival Integer value.
+  /// @return Reference to this.
   Value& operator=(int ival) {
     if (type_ == STRING) release();
     type_ = INT;
@@ -162,12 +174,19 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from unsigned int (sets INT type).
+  /// @param ival Unsigned integer value.
+  /// @return Reference to this.
   Value& operator=(unsigned int ival) {
     if (type_ == STRING) release();
     type_ = INT;
     data_.ival = static_cast<int64_t>(ival);
     return *this;
   }
+
+  /// @brief Assign from short (sets INT type).
+  /// @param ival Short integer value.
+  /// @return Reference to this.
   Value& operator=(short ival) {
     if (type_ == STRING) release();
     type_ = INT;
@@ -175,6 +194,9 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from unsigned short (sets INT type).
+  /// @param ival Unsigned short integer value.
+  /// @return Reference to this.
   Value& operator=(unsigned short ival) {
     if (type_ == STRING) release();
     type_ = INT;
@@ -182,6 +204,9 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from bool (sets BOOL type).
+  /// @param ival Boolean value.
+  /// @return Reference to this.
   Value& operator=(bool ival) {
     if (type_ == STRING) release();
     type_ = INT;
@@ -189,16 +214,25 @@ class Value {
     return *this;
   }
 
+  /// @brief Assign from std::string (sets STRING type).
+  /// @param str String value.
+  /// @return Reference to this.
   Value& operator=(const std::string& str) {
     create(str.c_str());
     return *this;
   }
 
+  /// @brief Assign from C-string (sets STRING type).
+  /// @param str C-string value.
+  /// @return Reference to this.
   Value& operator=(const char* str) {
     create(str);
     return *this;
   }
 
+  /// @brief Copy assignment operator.
+  /// @param val Value to copy.
+  /// @return Reference to this.
   Value& operator=(const Value& val) {
     if (val.type_ == STRING) {
       create(val.data_.str);
@@ -210,7 +244,7 @@ class Value {
     return *this;
   }
 
-
+  /// @brief Destructor. Releases string storage if applicable.
   ~Value() {
     if (type_ == STRING) release();
   }
