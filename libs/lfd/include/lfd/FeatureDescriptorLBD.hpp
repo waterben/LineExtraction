@@ -51,22 +51,32 @@ struct FdLBD {
 };
 
 
-// Feature Descriptor creator for the LBD from Lilian Zhang
+/// @brief Feature descriptor creator for the LBD (Line Band Descriptor).
+/// Computes LBD descriptors for line segments by projecting image gradients
+/// onto a line support region divided into bands, applying Gaussian weighting,
+/// and constructing a normalized descriptor vector. Adapted from Lilian Zhang's work.
+/// @tparam FT Float type for computations
+/// @tparam GT Geometric type representing line segments
+/// @tparam MT Matrix element type for gradient images
+/// @tparam Interpolator Interpolation strategy for sub-pixel gradient access
 template <class FT, class GT = LineSegment<FT>, class MT = short, class Interpolator = RoundNearestInterpolator<FT, MT>>
 class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
-  // input
-  cv::Mat dx, dy;
-  int numBand, widthBand;
+  cv::Mat dx, dy;          ///< Gradient images in x and y direction
+  int numBand, widthBand;  ///< Number of bands and width of each band
 
-  // autocreate with init
-  std::vector<FT> coefLocal, coefGlobal;
-  cv::Mat_<FT> bands;
-  FT *pgdLBandSum, *ngdLBandSum, *pgdL2BandSum, *ngdL2BandSum, *pgdOBandSum, *ngdOBandSum, *pgdO2BandSum, *ngdO2BandSum;
+  std::vector<FT> coefLocal, coefGlobal;  ///< Local and global Gaussian smoothing coefficients
+  cv::Mat_<FT> bands;                     ///< Band accumulation matrix (8 rows x numBand cols)
+  FT *pgdLBandSum, *ngdLBandSum, *pgdL2BandSum, *ngdL2BandSum, *pgdOBandSum, *ngdOBandSum, *pgdO2BandSum,
+      *ngdO2BandSum;  ///< Pointers into band rows for positive/negative gradient sums
 
-  int heightOfLSP, imageWidth, imageHeight, descriptorSize;
+  int heightOfLSP, imageWidth, imageHeight,
+      descriptorSize;  ///< Line support region height, image dimensions, and descriptor size
 
-  FT invN2, invN3;
+  FT invN2, invN3;  ///< Inverse normalization factors for boundary and interior bands
 
+  /// @brief Initialize internal coefficients and data structures.
+  /// Computes local/global Gaussian smoothing coefficients, sets up band
+  /// accumulation matrix, and caches image dimensions and normalization factors.
   void init() {
     // compute local and global band smoothing coefficients
     ushort size = widthBand * 3;
@@ -116,6 +126,11 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   }
 
  protected:
+  /// @brief Compute LBD descriptor for a single line segment into a raw buffer.
+  /// Projects image gradients onto the line support region, accumulates
+  /// band statistics with Gaussian weighting, and normalizes the result.
+  /// @param line The line segment to compute the descriptor for
+  /// @param dst Pointer to output buffer (must hold at least descriptorSize elements)
   virtual void create(const GT& line, FT* dst) {
     // the summation of {g_dL |g_dL>0 } etc. for each row of the region;
     FT pgdLRowSum, ngdLRowSum, pgdL2RowSum, ngdL2RowSum, pgdORowSum, ngdORowSum, pgdO2RowSum, ngdO2RowSum;
@@ -292,11 +307,16 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   }
 
  public:
-  typedef typename Fdc<FT, GT, FdLBD<FT>>::Ptr FdcPtr;
-  typedef typename FdcObj<FT, GT, FdLBD<FT>>::Ptr CustomFdcPtr;
-  typedef typename FdcMat<FT, GT>::Ptr SimpleFdcPtr;
-  typedef FdLBD<FT> descriptor_type;
+  typedef typename Fdc<FT, GT, FdLBD<FT>>::Ptr FdcPtr;           ///< Shared pointer to base descriptor creator
+  typedef typename FdcObj<FT, GT, FdLBD<FT>>::Ptr CustomFdcPtr;  ///< Shared pointer to object-based descriptor creator
+  typedef typename FdcMat<FT, GT>::Ptr SimpleFdcPtr;             ///< Shared pointer to matrix-based descriptor creator
+  typedef FdLBD<FT> descriptor_type;                             ///< The descriptor type produced by this creator
 
+  /// @brief Construct from gradient images.
+  /// @param dxImg Gradient image in x direction
+  /// @param dyImg Gradient image in y direction
+  /// @param nBand Number of bands in the line support region (default 9)
+  /// @param wBand Width of each band in pixels (default 7)
   FdcLBD(const cv::Mat& dxImg, const cv::Mat& dyImg, ushort nBand = 9, ushort wBand = 7)
       : dx(dxImg), dy(dyImg), numBand(nBand), widthBand(wBand) {
     this->options_.push_back(OptionManager::OptionEntry("num_band", nBand, "ushort", "Number of bands."));
@@ -305,6 +325,11 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
     init();
   }
 
+  /// @brief Construct from a named matrix map.
+  /// Looks for "dx"/"gx" and "dy"/"gy" keys in the map.
+  /// @param data Map of named matrices containing gradient data
+  /// @param nBand Number of bands in the line support region (default 9)
+  /// @param wBand Width of each band in pixels (default 7)
   FdcLBD(const MatMap& data, ushort nBand = 9, ushort wBand = 7) : numBand(nBand), widthBand(wBand) {
     this->options_.push_back(OptionManager::OptionEntry("num_band", nBand, "ushort", "Number of bands."));
     this->options_.push_back(OptionManager::OptionEntry("width_band", wBand, "ushort", "Width of band."));
@@ -312,10 +337,21 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
     setData(data);
   }
 
+  /// @brief Factory method to create a shared FdcLBD from gradient images.
+  /// @param dxImg Gradient image in x direction
+  /// @param dyImg Gradient image in y direction
+  /// @param nBand Number of bands (default 9)
+  /// @param wBand Width of each band (default 7)
+  /// @return Shared pointer to the created FdcLBD instance
   static FdcPtr createFdc(const cv::Mat& dxImg, const cv::Mat& dyImg, ushort nBand = 9, ushort wBand = 7) {
     return FdcPtr(new FdcLBD<FT, GT, MT, Interpolator>(dxImg, dyImg, nBand, wBand));
   }
 
+  /// @brief Factory method to create a shared FdcLBD from a named matrix map.
+  /// @param data Map of named matrices containing gradient data
+  /// @param nBand Number of bands (default 9)
+  /// @param wBand Width of each band (default 7)
+  /// @return Shared pointer to the created FdcLBD instance
   static FdcPtr createFdc(const MatMap& data, ushort nBand = 9, ushort wBand = 7) {
     return FdcPtr(new FdcLBD<FT, GT, MT, Interpolator>(data, nBand, wBand));
   }
@@ -323,22 +359,29 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   using FdcMatI<FT, GT>::create;
   using FdcObjI<FT, GT, FdLBD<FT>>::create;
 
-  //! create single descriptor from single geometric object
+  /// @brief Create a single LBD descriptor from a geometric object.
+  /// @param input The geometric object (line segment) to describe
+  /// @param dst Output descriptor object
   virtual void create(const GT& input, FdLBD<FT>& dst) {
     if (dst.data.empty() || dst.data.cols != descriptorSize) dst.data.create(1, descriptorSize, cv::DataType<FT>::type);
     this->create(input, dst.data.template ptr<FT>());
   }
 
-  //! create single simple descriptor from geometric object
+  /// @brief Create a single LBD descriptor as a cv::Mat from a geometric object.
+  /// @param input The geometric object (line segment) to describe
+  /// @param dst Output matrix (1 x descriptorSize)
   virtual void create(const GT& input, cv::Mat& dst) {
     if (dst.empty() || dst.cols != descriptorSize) dst.create(1, descriptorSize, cv::DataType<FT>::type);
     this->create(input, dst.template ptr<FT>());
   }
 
-  //! get size of single descriptor (cols in cv::Mat)
+  /// @brief Get the size of a single descriptor.
+  /// @return Number of elements (columns in cv::Mat) per descriptor
   virtual size_t size() const { return static_cast<size_t>(descriptorSize); }
 
-  //! allow to set internal processing data after init
+  /// @brief Set internal gradient data after construction.
+  /// Accepts "dx"/"gx" and "dy"/"gy" keys from the matrix map and re-initializes.
+  /// @param data Map of named matrices containing gradient data
   virtual void setData(const MatMap& data) {
     bool doInit = false;
 
@@ -370,6 +413,10 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   }
 
  protected:
+  /// @brief Apply a runtime option change.
+  /// Supports "num_band" (1-100) and "width_band" (1-100).
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, double value) {
     if (name == "num_band") {
       if (value >= 1 && value <= 100) {

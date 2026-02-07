@@ -17,41 +17,50 @@
 namespace lsfm {
 
 
-//! motion line Matcher
+/// @brief Motion-based line matcher combining filtering and descriptor matching.
+/// Uses MotionLineFilter for candidate generation and FmBruteForce for
+/// descriptor-based matching with left-right consistency check.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (default: std::vector<LineSegment<FT>>)
+/// @tparam DC Descriptor creator type (default: FdcGenericLR with GchGradImgInterpolate)
 template <class FT,
           class GV = std::vector<LineSegment<FT>>,
           class DC = FdcGenericLR<FT, typename GV::geometric_type, GchGradImgInterpolate<FT>>>
 class MotionLineMatcher : public OptionManager {
  public:
-  typedef FT float_type;
-
-  typedef GV geometric_vector;
-  typedef typename geometric_vector::value_type geometric_type;
-
-  typedef DC descriptor_creator;
-  typedef typename descriptor_creator::descriptor_type descriptor_type;
-  typedef std::vector<descriptor_type> descriptor_vector;
-
-  typedef DescriptorMatch<FT> match_type;
-  typedef std::vector<match_type> match_vector;
+  typedef FT float_type;                                                 ///< Float type used
+  typedef GV geometric_vector;                                           ///< Geometric vector type
+  typedef typename geometric_vector::value_type geometric_type;          ///< Geometric element type
+  typedef DC descriptor_creator;                                         ///< Descriptor creator type
+  typedef typename descriptor_creator::descriptor_type descriptor_type;  ///< Descriptor type
+  typedef std::vector<descriptor_type> descriptor_vector;                ///< Descriptor vector type
+  typedef DescriptorMatch<FT> match_type;                                ///< Match result type
+  typedef std::vector<match_type> match_vector;                          ///< Match result vector type
 
 
  private:
-  MotionLineFilter<FT, GV> mlf;
-  FmBruteForce<FT, descriptor_type, match_type> bfm;
-
-  descriptor_creator *creatorL, *creatorR;
-  typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;
-
-  descriptor_vector dscLeft_, dscRight_;
-  std::vector<size_t> mLeft_, mRight_;
-
-  FT distTh_;
+  MotionLineFilter<FT, GV> mlf;                                  ///< Motion line filter for candidates
+  FmBruteForce<FT, descriptor_type, match_type> bfm;             ///< Brute force matcher
+  descriptor_creator *creatorL, *creatorR;                       ///< Raw descriptor creator pointers
+  typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;  ///< Owned descriptor creator pointers
+  descriptor_vector dscLeft_;                                    ///< New frame descriptors
+  descriptor_vector dscRight_;                                   ///< Previous frame descriptors
+  std::vector<size_t> mLeft_;                                    ///< New frame match counts
+  std::vector<size_t> mRight_;                                   ///< Previous frame match counts
+  FT distTh_;                                                    ///< Distance threshold
 
  public:
-  typedef typename descriptor_creator::FdcPtr FdcPtr;
+  typedef typename descriptor_creator::FdcPtr FdcPtr;  ///< Descriptor creator pointer type
 
-
+  /// @brief Construct with reference descriptor creators.
+  /// @param cL New frame descriptor creator (not owned)
+  /// @param cR Previous frame descriptor creator (not owned)
+  /// @param width Image width
+  /// @param height Image height
+  /// @param angleTh Angle threshold in degrees
+  /// @param distTh Distance threshold (0 = auto)
+  /// @param r Radius for radius matching
+  /// @param kk Number of nearest neighbors
   MotionLineMatcher(descriptor_creator& cL,
                     descriptor_creator& cR,
                     int width = 0,
@@ -66,6 +75,15 @@ class MotionLineMatcher : public OptionManager {
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
   }
 
+  /// @brief Construct with shared pointer descriptor creators.
+  /// @param cL New frame descriptor creator (shared ownership)
+  /// @param cR Previous frame descriptor creator (shared ownership)
+  /// @param width Image width
+  /// @param height Image height
+  /// @param angleTh Angle threshold in degrees
+  /// @param distTh Distance threshold (0 = auto)
+  /// @param r Radius for radius matching
+  /// @param kk Number of nearest neighbors
   MotionLineMatcher(const FdcPtr& cL = FdcPtr(),
                     const FdcPtr& cR = FdcPtr(),
                     int width = 0,
@@ -99,6 +117,13 @@ class MotionLineMatcher : public OptionManager {
               final(newLines, previousLines, dscL, dscR, candidates, matches);
           }
           */
+  /// @brief Match with pre-computed descriptors and average motion estimate.
+  /// @param newLines Current frame lines
+  /// @param previousLines Previous frame lines
+  /// @param avgMotion Average 2D motion estimate (dx, dy)
+  /// @param dscL Current frame descriptors
+  /// @param dscR Previous frame descriptors
+  /// @param matches Output verified matches
   void match(const geometric_vector& newLines,
              const geometric_vector& previousLines,
              std::pair<FT, FT> avgMotion,
@@ -110,6 +135,12 @@ class MotionLineMatcher : public OptionManager {
     final(newLines, previousLines, dscL, dscR, candidates, matches);
   }
 
+  /// @brief Match with automatic descriptor creation.
+  /// Creates candidates, computes descriptors, and performs matching.
+  /// @param newLines Current frame lines
+  /// @param previousLines Previous frame lines
+  /// @param avgMotion Average 2D motion estimate (dx, dy)
+  /// @param matches Output verified matches
   void match(const geometric_vector& newLines,
              const geometric_vector& previousLines,
              std::pair<FT, FT> avgMotion,
@@ -123,17 +154,32 @@ class MotionLineMatcher : public OptionManager {
     final(newLines, previousLines, dscLeft_, dscRight_, candidates, matches);
   }
 
+  /// @brief Get the motion line filter.
+  /// @return Reference to the internal filter
   MotionLineFilter<FT, GV>& getFilter() { return mlf; }
 
-
+  /// @brief Get the brute force matcher.
+  /// @return Reference to the internal matcher
   FmBruteForce<FT, descriptor_type, std::vector<match_vector>>& getMatcher() { return bfm; }
 
+  /// @brief Get current frame descriptors.
+  /// @return Const reference to new frame descriptors
   const descriptor_vector& getDscNew() const { return dscLeft_; }
 
+  /// @brief Get previous frame descriptors.
+  /// @return Const reference to previous frame descriptors
   const descriptor_vector& getDscPrev() const { return dscRight_; }
 
 
  protected:
+  /// @brief Perform final matching with left-right consistency check.
+  /// Uses statistical thresholding (mean distance) for validation.
+  /// @param newLines Current frame lines
+  /// @param previousLines Previous frame lines
+  /// @param dscN Current frame descriptors
+  /// @param dscP Previous frame descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
   void final(const geometric_vector& newLines,
              const geometric_vector& previousLines,
              const descriptor_vector& dscN,
@@ -247,6 +293,14 @@ class MotionLineMatcher : public OptionManager {
     });
   }
 
+  /// @brief Legacy matching with stricter length similarity check.
+  /// @param newLines Current frame lines
+  /// @param previousLines Previous frame lines
+  /// @param dscN Current frame descriptors
+  /// @param dscP Previous frame descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
+  /// @deprecated Use final() instead
   void oldFinal(const geometric_vector& newLines,
                 const geometric_vector& previousLines,
                 const descriptor_vector& dscN,
@@ -353,6 +407,9 @@ class MotionLineMatcher : public OptionManager {
     //            });
   }
 
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {

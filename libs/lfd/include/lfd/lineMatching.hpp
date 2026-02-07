@@ -31,6 +31,12 @@ using namespace cv::line_descriptor;
 
 namespace lsfm {
 
+/// @brief Convert a vector of LineSegment objects to a vector of KeyLine objects.
+/// @tparam FT Floating-point type for line segment coordinates
+/// @param lines0 Input vector of line segments to convert
+/// @param cam0grey Grayscale image used for determining image dimensions
+/// @param octave Octave level for the KeyLine (default: 0)
+/// @return Vector of KeyLine objects corresponding to the input line segments
 template <class FT>
 std::vector<KeyLine> lineSegment2KeyLine(const std::vector<LineSegment<FT>>& lines0, cv::Mat cam0grey, int octave = 0) {
   std::vector<KeyLine> klV0;
@@ -41,13 +47,27 @@ std::vector<KeyLine> lineSegment2KeyLine(const std::vector<LineSegment<FT>>& lin
   return klV0;
 }
 
+/// @brief Convert a single LineSegment to a KeyLine using image dimensions.
+/// @tparam FT Floating-point type for line segment coordinates
+/// @param ls Input line segment to convert
+/// @param img Image used to determine the maximum dimension
+/// @param classId Class identifier for the KeyLine (default: 0)
+/// @param octave Octave level for the KeyLine (default: 0)
+/// @return KeyLine representation of the input line segment
 template <class FT>
 KeyLine lineSegment2KeyLine(const LineSegment<FT>& ls, cv::Mat img, int classId = 0, int octave = 0) {
   int imgMaxSize = std::max(img.size().width, img.size().height);
   return lineSegment2KeyLine(ls, imgMaxSize, classId, octave);
 }
 
-/** Converts a LineSegment2 into a KeyLine, be careful the sign of the angle is sometimes wrong */
+/// @brief Convert a LineSegment to a KeyLine using a precomputed maximum image dimension.
+/// @warning The sign of the angle may sometimes be incorrect.
+/// @tparam FT Floating-point type for line segment coordinates
+/// @param ls Input line segment to convert
+/// @param imgMaxSize Maximum dimension (width or height) of the source image
+/// @param classId Class identifier for the KeyLine (default: 0)
+/// @param octave Octave level for the KeyLine (default: 0)
+/// @return KeyLine representation of the input line segment
 template <class FT>
 KeyLine lineSegment2KeyLine(const LineSegment<FT>& ls, const int& imgMaxSize, int classId = 0, int octave = 0) {
   KeyLine kl;
@@ -75,12 +95,20 @@ KeyLine lineSegment2KeyLine(const LineSegment<FT>& ls, const int& imgMaxSize, in
   return kl;
 }
 
+/// @brief Convert a single KeyLine to a LineSegment.
+/// @tparam FType Floating-point type for the output line segment coordinates
+/// @param kl Input KeyLine to convert
+/// @return LineSegment representation of the input KeyLine
 template <class FType>
 LineSegment<FType> keyLine2LineSegment(const KeyLine& kl) {
   return LineSegment<FType>(kl.getStartPoint(), kl.getEndPoint(), kl.octave);
 }
 
 
+/// @brief Convert a vector of KeyLine objects to a vector of LineSegment objects.
+/// @tparam FType Floating-point type for the output line segment coordinates
+/// @param klV Input vector of KeyLine objects to convert
+/// @return Vector of LineSegment objects corresponding to the input KeyLines
 template <class FType>
 std::vector<LineSegment<FType>> keyLine2LineSegment(const std::vector<KeyLine>& klV) {
   std::vector<LineSegment<FType>> lsV;
@@ -90,7 +118,14 @@ std::vector<LineSegment<FType>> keyLine2LineSegment(const std::vector<KeyLine>& 
   return lsV;
 }
 
-//! Only keep Matches that are in the matches and in the filter vector
+/// @brief Filter stereo matches by keeping only those present in both matches and filter vectors.
+/// @tparam FeatureTypeA Match type with queryIdx and trainIdx members
+/// @tparam FeatureTypeB Filter type with queryIdx and matchIdx members
+/// @param matches Input vector of matches to filter
+/// @param filter Vector of filter entries defining valid match pairs
+/// @param size1 Number of features in the first (query) set
+/// @param size2 Number of features in the second (train) set
+/// @return Filtered vector containing only matches that also appear in the filter
 template <class FeatureTypeA, class FeatureTypeB>
 std::vector<FeatureTypeA> postfilterStereoMatches(std::vector<FeatureTypeA> matches,
                                                   std::vector<FeatureTypeB> filter,
@@ -111,7 +146,15 @@ std::vector<FeatureTypeA> postfilterStereoMatches(std::vector<FeatureTypeA> matc
   return result;
 }
 
-//! Filter mached lines by geometry checks
+/// @brief Filter matched lines using geometric consistency checks.
+/// @tparam FeatureTypeA Match type with queryIdx and trainIdx members
+/// @tparam GeoFilter Geometric filter type providing a filter() method
+/// @tparam GV Line vector type supporting indexing
+/// @param matches Input vector of matches to filter
+/// @param filter Geometric filter object applied to each match pair
+/// @param l1 Line features from the first (query) image
+/// @param l2 Line features from the second (train) image
+/// @return Vector of matches that pass the geometric filter
 template <class FeatureTypeA, class GeoFilter, class GV>
 std::vector<FeatureTypeA> postfilterStereoMatches(std::vector<FeatureTypeA> matches, GeoFilter filter, GV l1, GV l2) {
   std::vector<FeatureTypeA> result;
@@ -125,7 +168,17 @@ std::vector<FeatureTypeA> postfilterStereoMatches(std::vector<FeatureTypeA> matc
 }
 
 
-//! Delete me (because I show the filtered results, which is only for debugging.)
+/// @brief Filter matched lines using geometric checks, collecting rejected matches.
+/// @note Debug variant that also outputs the filtered-out (rejected) matches.
+/// @tparam FeatureTypeA Match type with queryIdx and trainIdx members
+/// @tparam GeoFilter Geometric filter type providing a filter() method
+/// @tparam GV Line vector type supporting indexing
+/// @param matches Input vector of matches to filter
+/// @param filter Geometric filter object applied to each match pair
+/// @param l1 Line features from the first (query) image
+/// @param l2 Line features from the second (train) image
+/// @param filtered Output vector receiving matches that were rejected by the filter
+/// @return Vector of matches that pass the geometric filter
 template <class FeatureTypeA, class GeoFilter, class GV>
 std::vector<FeatureTypeA> postfilterStereoMatches(
     std::vector<FeatureTypeA> matches, GeoFilter filter, GV l1, GV l2, std::vector<FeatureTypeA>& filtered) {
@@ -143,6 +196,18 @@ std::vector<FeatureTypeA> postfilterStereoMatches(
   return result;
 }
 
+/// @brief Draw matched line segments side by side on a combined output image.
+/// @tparam FT Floating-point type for line segment coordinates
+/// @tparam DM Descriptor match type (unused in template body, kept for interface compatibility)
+/// @tparam GV Line vector type supporting indexing with getStartPoint/getEndPoint
+/// @param img1 First (left/query) image
+/// @param l1 Line features from the first image
+/// @param img2 Second (right/train) image
+/// @param l2 Line features from the second image
+/// @param matches Vector of DMatch objects defining correspondences
+/// @param lineNumber Optional line number labels; if empty, sequential indices are used
+/// @param connect If true, draw connecting lines between matched endpoints across images
+/// @return Combined image with matched lines drawn in random colors
 template <class FT, class DM, class GV>
 cv::Mat drawKeyLineMatches(const cv::Mat& img1,
                            const GV& l1,
@@ -300,6 +365,12 @@ cv::Mat drawKeyLineMatches(const cv::Mat& img1,
 
 //    }
 
+/// @brief Match line descriptors using OpenCV's BinaryDescriptorMatcher.
+/// Matches are filtered by MATCHES_DIST_THRESHOLD_LM distance threshold.
+/// @param lsd_descr0 Descriptor matrix for the first (query) set of lines
+/// @param lsd_descr1 Descriptor matrix for the second (train) set of lines
+/// @param mask Optional mask restricting which descriptor pairs to compare
+/// @return Vector of good DMatch objects passing the distance threshold
 inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
                                                 cv::Mat lsd_descr1,
                                                 cv::Mat mask = cv::Mat::ones(0, 0, CV_8UC1)) {
@@ -323,6 +394,15 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
   return good_matches;
 }
 
+/// @brief Detect, describe, and match line segments between two images.
+/// Converts line segments to KeyLines, computes LBD descriptors, then matches them.
+/// @tparam LSV Line segment vector type convertible via lineSegment2KeyLine
+/// @param cam0grey Grayscale image for the first (query) view
+/// @param cam1grey Grayscale image for the second (train) view
+/// @param lines0 Line segments detected in the first image
+/// @param lines1 Line segments detected in the second image
+/// @param mask Optional mask restricting which descriptor pairs to compare
+/// @return Vector of good DMatch objects passing the distance threshold
 template <class LSV>
 inline std::vector<DMatch> lineMatchingLsdAndCV(
     cv::Mat cam0grey, cv::Mat cam1grey, LSV lines0, LSV lines1, cv::Mat mask = cv::Mat::ones(0, 0, CV_8UC1)) {
@@ -343,6 +423,12 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(
   return lineMatchingLsdAndCV(lsd_descr0, lsd_descr1);
 }
 
+/// @brief Perform left-right consistency check on two sets of matches.
+/// Keeps only matches from mVec1 whose inverse (swapped queryIdx/trainIdx) exists in mVec2.
+/// @tparam MATCH Match type with queryIdx and trainIdx members
+/// @param mVec1 Forward matches (query -> train)
+/// @param mVec2 Reverse matches (train -> query)
+/// @return Vector of matches from mVec1 that are confirmed by a corresponding reverse match
 template <class MATCH>
 inline std::vector<MATCH> leftRightCheck(std::vector<MATCH> mVec1, std::vector<MATCH> mVec2) {
   std::vector<MATCH> lrMatches;
@@ -357,6 +443,11 @@ inline std::vector<MATCH> leftRightCheck(std::vector<MATCH> mVec1, std::vector<M
   return lrMatches;
 }
 
+/// @brief Compute LBD (Line Band Descriptor) descriptors for a set of KeyLines.
+/// @param cam0grey Grayscale image containing the lines
+/// @param klV Vector of KeyLine objects to compute descriptors for
+/// @param bd BinaryDescriptor instance to use (default: newly created)
+/// @return Descriptor matrix where each row is the LBD descriptor for the corresponding KeyLine
 inline cv::Mat createLBD(cv::Mat cam0grey,
                          std::vector<KeyLine> klV,
                          Ptr<BinaryDescriptor> bd = BinaryDescriptor::createBinaryDescriptor()) {
@@ -364,7 +455,13 @@ inline cv::Mat createLBD(cv::Mat cam0grey,
   bd->compute(cam0grey, klV, lsd_descr);
   return lsd_descr;
 }
-/// Overloading
+/// @brief Compute LBD descriptors for a set of LineSegment objects.
+/// Converts line segments to KeyLines internally before computing descriptors.
+/// @tparam FT Floating-point type for line segment coordinates
+/// @param cam0grey Grayscale image containing the lines
+/// @param lineVec Vector of LineSegment objects to compute descriptors for
+/// @param bd BinaryDescriptor instance to use (default: newly created)
+/// @return Descriptor matrix where each row is the LBD descriptor for the corresponding line segment
 template <class FT>
 inline cv::Mat createLBD(cv::Mat cam0grey,
                          std::vector<LineSegment<FT>> lineVec,
@@ -373,12 +470,25 @@ inline cv::Mat createLBD(cv::Mat cam0grey,
   return createLBD(cam0grey, klV, bd);
 }
 
+/// @brief Match line descriptors with left-right consistency check.
+/// Performs bidirectional matching and keeps only mutually consistent matches.
+/// @param l_descr0 Descriptor matrix for the first (query) set of lines
+/// @param l_descr1 Descriptor matrix for the second (train) set of lines
+/// @return Vector of DMatch objects that pass both matching and left-right consistency
 inline std::vector<DMatch> matchingLRcheck(cv::Mat l_descr0, cv::Mat l_descr1) {
   std::vector<DMatch> matches01 = lineMatchingLsdAndCV(l_descr0, l_descr1);
   std::vector<DMatch> matches10 = lineMatchingLsdAndCV(l_descr1, l_descr0);
   return leftRightCheck(matches01, matches10);
 }
 
+/// @brief Match line segments between two images with left-right consistency check.
+/// Computes LBD descriptors from line segments, then performs bidirectional matching.
+/// @tparam LSV Line segment vector type convertible via createLBD
+/// @param cam0grey Grayscale image for the first (query) view
+/// @param cam1grey Grayscale image for the second (train) view
+/// @param lines0 Line segments detected in the first image
+/// @param lines1 Line segments detected in the second image
+/// @return Vector of DMatch objects that pass both matching and left-right consistency
 template <class LSV>
 inline std::vector<DMatch> matchingLRcheck(cv::Mat cam0grey, cv::Mat cam1grey, LSV lines0, LSV lines1) {
   cv::Mat l_descr0, l_descr1;

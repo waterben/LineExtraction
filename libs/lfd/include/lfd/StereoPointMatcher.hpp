@@ -17,49 +17,42 @@
 namespace lsfm {
 
 
-//! stereo Point Matcher
+/// @brief Stereo point matcher combining filtering and descriptor matching.
+/// Uses brute force matching with left-right consistency check
+/// for stereo point correspondence.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (e.g., std::vector<cv::KeyPoint>)
+/// @tparam descriptor_type Descriptor type (default: FdMat<FT>)
 template <class FT, class GV, class descriptor_type = lsfm::FdMat<FT>>
 class StereoPointMatcher : public OptionManager {
  public:
-  typedef FT float_type;
-
-  typedef GV geometric_vector;
-  typedef typename geometric_vector::value_type geometric_type;
-
-  //        typedef FdcGenericLR<FT,geometric_type> descriptor_creator;
-  //        typedef typename descriptor_creator::descriptor_type descriptor_type;
-  typedef std::vector<descriptor_type> descriptor_vector;
-
-  typedef DescriptorMatch<FT> match_type;
-  typedef std::vector<match_type> match_vector;
+  typedef FT float_type;                                         ///< Float type used
+  typedef GV geometric_vector;                                   ///< Geometric vector type
+  typedef typename geometric_vector::value_type geometric_type;  ///< Geometric element type
+  typedef std::vector<descriptor_type> descriptor_vector;        ///< Descriptor vector type
+  typedef DescriptorMatch<FT> match_type;                        ///< Match result type
+  typedef std::vector<match_type> match_vector;                  ///< Match result vector type
 
 
  private:
-  //        StereoPointFilter<FT,GV> slf;
-  FmBruteForce<FT, descriptor_type, match_type> bfm;
+  FmBruteForce<FT, descriptor_type, match_type> bfm;  ///< Brute force matcher
 
-  //        descriptor_creator *creatorL, *creatorR;
-  //        typename descriptor_creator::FdcPtr creatorLPtr, creatorRPtr;
+  descriptor_vector dscLeft_;   ///< Left descriptors
+  descriptor_vector dscRight_;  ///< Right descriptors
+  std::vector<size_t> mLeft_;   ///< Left match counts
+  std::vector<size_t> mRight_;  ///< Right match counts
 
-  descriptor_vector dscLeft_, dscRight_;
-  std::vector<size_t> mLeft_, mRight_;
-
-  FT distTh_;
+  FT distTh_;  ///< Distance threshold (0 = auto)
 
  public:
-  //        typedef typename descriptor_creator::FdcPtr FdcPtr;
-
-  /*
-          StereoPointMatcher(int height = 1, FT maxDist = 10000, FT angleTh = 5, FT minYOverlap = 0.5, FT distTh = 0, FT
-  r = 0, int kk = 0)
-  //           : slf(height, maxDist, angleTh, minYOverlap), bfm(r,kk), creatorL(&cL), creatorR(&cR), distTh_(distTh)
-          {
-              CV_Assert(distTh_ >= 0);
-              std::string type = (sizeof(float_type) > 4 ? "double" : "float");
-              this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 =
-  auto)."));
-          }
-  */
+  /// @brief Construct a stereo point matcher.
+  /// @param height Image height (default: 1)
+  /// @param maxDist Maximum distance in pixels (default: 10000)
+  /// @param angleTh Angle threshold in degrees (default: 5)
+  /// @param minYOverlap Minimum Y overlap ratio (default: 0.5)
+  /// @param distTh Descriptor distance threshold, 0 = auto (default: 0)
+  /// @param r Radius for radius matching (default: 0)
+  /// @param kk Number of nearest neighbors (default: 0)
   StereoPointMatcher(
       int height = 1, FT maxDist = 10000, FT angleTh = 5, FT minYOverlap = 0.5, FT distTh = 0, FT r = 0, int kk = 0)
   //           : slf(height, maxDist, angleTh, minYOverlap), bfm(r,kk), creatorL(0), creatorR(0), creatorLPtr(cL),
@@ -76,6 +69,13 @@ class StereoPointMatcher : public OptionManager {
     this->options_.push_back(OptionManager::OptionEntry("distTh", distTh, type, "Distance threshold (0 = auto)."));
   }
 
+  /// @brief Match with pre-computed candidates and descriptors.
+  /// @param left Left geometric features
+  /// @param right Right geometric features
+  /// @param candidates Pre-computed candidate matches
+  /// @param dscL Left descriptors
+  /// @param dscR Right descriptors
+  /// @param matches Output verified matches
   void match(const geometric_vector& left,
              const geometric_vector& right,
              const match_vector candidates,
@@ -87,6 +87,15 @@ class StereoPointMatcher : public OptionManager {
     final(left, right, dscL, dscR, candidates, matches);
   }
 
+  /// @brief Match with automatic stereo point filtering.
+  /// Creates candidates using StereoPointFilter, then matches descriptors.
+  /// @tparam SPF Stereo point filter type
+  /// @param newGeometry Left/new geometric features
+  /// @param previousGeometry Right/previous geometric features
+  /// @param dscL Left descriptors
+  /// @param dscR Right descriptors
+  /// @param height Image height for filter
+  /// @param matches Output verified matches
   template <class SPF = lsfm::StereoPointFilter<FT, std::vector<cv::KeyPoint>>>
   void match(const geometric_vector& newGeometry,
              const geometric_vector& previousGeometry,
@@ -120,13 +129,28 @@ class StereoPointMatcher : public OptionManager {
          }
  */
 
+  /// @brief Get the brute force matcher.
+  /// @return Reference to the internal brute force matcher
   FmBruteForce<FT, descriptor_type, std::vector<match_vector>>& getMatcher() { return bfm; }
 
+  /// @brief Get left descriptors.
+  /// @return Copy of the left descriptor vector
   descriptor_vector getDescriptorLeft() { return dscLeft_; }
+
+  /// @brief Get right descriptors.
+  /// @return Copy of the right descriptor vector
   descriptor_vector getDescriptorRight() { return dscRight_; }
 
 
  protected:
+  /// @brief Perform final matching with left-right consistency check.
+  /// Builds distance graph, sorts by match index, and applies L-R check.
+  /// @param left Left geometric features
+  /// @param right Right geometric features
+  /// @param dscL Left descriptors
+  /// @param dscR Right descriptors
+  /// @param candidates Pre-filtered candidate matches
+  /// @param matches Output verified matches
   void final(const geometric_vector& left,
              const geometric_vector& right,
              const descriptor_vector& dscL,
@@ -230,6 +254,9 @@ class StereoPointMatcher : public OptionManager {
     });
   }
 
+  /// @brief Handle option value changes.
+  /// @param name Option name
+  /// @param value New option value
   void setOptionImpl(const std::string& name, FT value) {
     /*if (name == "k") {
         if (value >= 0 && value <= std::numeric_limits<int>::max()) {

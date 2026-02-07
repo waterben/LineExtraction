@@ -22,35 +22,57 @@
 namespace lsfm {
 
 
-//! stereo line filter -> uses binning and x-axis sorting + constrains to sort
-//! out bad line match candidates
+/// @brief Stereo line filter using binning and geometric constraints.
+/// Uses spatial binning, x-axis sorting, angle consistency, and Y overlap
+/// constraints to filter out bad stereo line match candidates.
+/// @tparam FT Float type for computations
+/// @tparam GV Geometric vector type (e.g., std::vector<LineSegment<FT>>)
+/// @tparam bins Number of vertical spatial bins (default: 12)
+/// @tparam DM Descriptor match type (default: DescriptorMatch<FT>)
 template <class FT, class GV, unsigned int bins = 12, class DM = DescriptorMatch<FT> >
 class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
-  FT maxDisPx_, angleTh_, minYOverlap_;
-  int height_;
+  FT maxDisPx_;     ///< Maximum line endpoint distance in pixels
+  FT angleTh_;      ///< Maximum angle difference between matching lines
+  FT minYOverlap_;  ///< Minimum Y overlap ratio (0-1)
+  int height_;      ///< Image height for binning
 
+  /// @brief Pre-computed line data for efficient filtering.
   struct LineData {
+    /// @brief Construct line data.
+    /// @param b Start point of the line
+    /// @param e End point of the line
+    /// @param a Angle in degrees (0-360)
+    /// @param s Scale factor (inverse of normal X component)
     LineData(const lsfm::Vec2<FT>& b = lsfm::Vec2<FT>(), const lsfm::Vec2<FT>& e = lsfm::Vec2<FT>(), FT a = 0, FT s = 0)
         : beg(b), end(e), angle(a), scale(s) {}
 
-    lsfm::Vec2<FT> beg, end;
-    FT angle, scale;
+    lsfm::Vec2<FT> beg;  ///< Start point
+    lsfm::Vec2<FT> end;  ///< End point
+    FT angle;            ///< Line angle in degrees
+    FT scale;            ///< Scale factor
   };
 
-  std::vector<LineData> ldLeft_, ldRight_;
+  std::vector<LineData> ldLeft_;   ///< Pre-computed data for left lines
+  std::vector<LineData> ldRight_;  ///< Pre-computed data for right lines
 
-  // first rotation (4 areas in coordsystem), then number of bins, then variable sized vectors with candidates
+  /// @brief Spatial bins for candidate lookup.
+  /// First index: quadrant (4 angle regions), second: vertical bin.
   std::array<std::array<std::vector<int>, bins>, 4> bins_;
 
-  static constexpr FT H_LINE_TOL = static_cast<FT>(20);  // Angle in Degree
-  static constexpr FT MIN_VERTICAL_LENGTH = static_cast<FT>(6);
+  static constexpr FT H_LINE_TOL = static_cast<FT>(20);          ///< Horizontal line angle tolerance in degrees
+  static constexpr FT MIN_VERTICAL_LENGTH = static_cast<FT>(6);  ///< Minimum vertical projection length
 
  public:
-  typedef FT float_type;
-  typedef GV geometric_vector;
-  typedef LineSegment<FT> geometric_type;
+  typedef FT float_type;                   ///< Float type used
+  typedef GV geometric_vector;             ///< Geometric vector type
+  typedef LineSegment<FT> geometric_type;  ///< Geometric element type
 
 
+  /// @brief Construct a stereo line filter.
+  /// @param height Image height (must be >= 0)
+  /// @param maxDisPx Maximum distance between endpoints in pixels
+  /// @param angleTh Maximum angle difference between matching lines in degrees
+  /// @param minYOverlap Minimum Y overlap ratio (0-1)
   StereoLineFilter(int height, FT maxDisPx = 10000, FT angleTh = 45, FT minYOverlap = 0.5)
       : maxDisPx_(maxDisPx),
         angleTh_(angleTh),
@@ -71,12 +93,21 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
         "minYOverlap", minYOverlap, type, "Minimal Y overlap between two corresponding lines (Range 0-1)"));
   }
 
+  /// @brief Train the filter with left and right line sets.
+  /// @param left Left image line segments
+  /// @param right Right image line segments
   void train(const GV& left, const GV& right) {
     if (height_ <= 0) std::cout << "SLF: Height must not be zero!" << std::endl;
     trainSide(left, ldLeft_);
     trainSide(right, ldRight_);
   }
 
+  /// @brief Filter a match candidate using geometric constraints.
+  /// Checks stereo disparity direction, maximum distance, angle similarity,
+  /// and Y overlap between the line pair.
+  /// @param ld Left line data
+  /// @param rd Right line data
+  /// @return True if the match should be rejected
   virtual bool filter(const LineData& ld, const LineData& rd) const {
     // if(height_ <= 0) std::cout << "SLF: Height must not be zero!" << std::endl;
     assert(height_ > 0);
@@ -156,24 +187,42 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     return false;
   }
 
+  /// @brief Filter a match candidate by index.
+  /// @param lfIdx Left feature index
+  /// @param rfIdx Right feature index
+  /// @return True if the match should be rejected
   virtual bool filter(int lfIdx, int rfIdx) const {
     const LineData& ld = ldLeft_[static_cast<size_t>(lfIdx)];
     const LineData& rd = ldRight_[static_cast<size_t>(rfIdx)];
     return filter(ld, rd);
   }
 
+  /// @brief Filter a match candidate from line segment objects.
+  /// @param l Left line segment
+  /// @param r Right line segment
+  /// @return True if the match should be rejected
   virtual bool filter(geometric_type l, geometric_type r) const {
     const LineData& ld = LineData(l.startPoint(), l.endPoint(), l.anglef(), std::abs(1 / l.normalX()));
     const LineData& rd = LineData(r.startPoint(), r.endPoint(), r.anglef(), std::abs(1 / r.normalX()));
     return filter(ld, rd);
   }
 
+  /// @brief Get pre-computed left line data.
+  /// @return Const reference to left line data vector
   inline const std::vector<LineData>& ldLeft() const { return ldLeft_; }
 
+  /// @brief Get pre-computed right line data.
+  /// @return Const reference to right line data vector
   inline const std::vector<LineData>& ldRight() const { return ldRight_; }
 
   using FeatureFilter<FT>::create;
 
+  /// @brief Create match candidates using spatial binning.
+  /// Generates candidates filtered by bin proximity and stereo constraints.
+  /// @tparam FMV Feature match vector type
+  /// @param left Left line segments
+  /// @param right Right line segments
+  /// @param matches Output match candidates
   template <class FMV>
   void create(const GV& left, const GV& right, FMV& matches) {
     if (height_ <= 0) std::cout << "SLF: Height must not be zero!" << std::endl;
@@ -222,6 +271,15 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     }
   }
 
+  /// @brief Create match candidates with per-feature match counts.
+  /// Generates candidates and tracks how many matches each feature has.
+  /// @tparam FMV Feature match vector type
+  /// @tparam MV Match count vector type
+  /// @param left Left line segments
+  /// @param right Right line segments
+  /// @param matches Output match candidates
+  /// @param lm Per-feature match count for left set
+  /// @param rm Per-feature match count for right set
   template <class FMV, class MV>
   void create(const GV& left, const GV& right, FMV& matches, MV& lm, MV& rm) {
     if (height_ <= 0) std::cout << "SLF: Height must not be zero!" << std::endl;
@@ -276,6 +334,9 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
   }
 
  private:
+  /// @brief Pre-compute line data for one side.
+  /// @param lines Input line segments
+  /// @param data Output pre-computed line data
   inline void trainSide(const GV& lines, std::vector<LineData>& data) {
     data.clear();
     data.reserve(lines.size());
@@ -284,6 +345,10 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     });
   }
 
+  /// @brief Pre-compute line data and populate spatial bins.
+  /// @param lines Input line segments
+  /// @param bstep Bin step size in pixels
+  /// @param data Output pre-computed line data
   inline void trainSideAndBins(const GV& lines, FT bstep, std::vector<LineData>& data) {
     // clear line data
     data.clear();
