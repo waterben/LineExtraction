@@ -14,6 +14,8 @@
 #include <eval/eval_app.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/laplace.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include <ctime>
 #include <filesystem>

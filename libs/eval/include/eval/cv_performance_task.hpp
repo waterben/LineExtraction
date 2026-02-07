@@ -52,13 +52,13 @@ class FileCVPerformanceDataProvider : public CVPerformanceDataProvider {
  public:
   /// @brief Construct with a provider name only.
   /// @param provider_name Name identifying this data provider
-  FileCVPerformanceDataProvider(const std::string& provider_name)
-      : CVPerformanceDataProvider(provider_name){}
+  FileCVPerformanceDataProvider(const std::string& provider_name) : CVPerformanceDataProvider(provider_name) {}
 
-      /// @brief Construct and parse a single directory for images.
-      /// @param p Path to the directory to scan
-      /// @param provider_name Name identifying this data provider
-      /// @param recursive If true, scan subdirectories recursively
+  /// @brief Construct and parse a single directory for images.
+  /// @param p Path to the directory to scan
+  /// @param provider_name Name identifying this data provider
+  /// @param recursive If true, scan subdirectories recursively
+  FileCVPerformanceDataProvider(const std::filesystem::path& p, const std::string& provider_name, bool recursive = true)
       : CVPerformanceDataProvider(provider_name) {
     parse(p, recursive);
   }

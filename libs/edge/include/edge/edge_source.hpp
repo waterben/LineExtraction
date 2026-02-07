@@ -479,6 +479,10 @@ class EdgeSourceQUAD : public EdgeSourceNMS<QUAD, NMS> {
   /// Computes quadrature filter response and applies NMS with appropriate thresholds.
   /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
+    erf_.process(img);
+    double low = 0, high = 0;
+    epe_.threshold(low, high);
+    low = magnitudeThreshold(low);
     high = magnitudeThreshold(high);
 
     if (low < 0) low = 0;
@@ -852,6 +856,10 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
   /// Computes phase congruency Laplacian and applies direction-filtered ZC detection.
   /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
+    magMax_ = -1;
+    erf_.process(img);
+
+    double low = 0, high = 0;
     epe_.threshold(low, high);
 
     low = erf_.pcLaplaceThreshold(low);
