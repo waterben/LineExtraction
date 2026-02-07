@@ -20,6 +20,15 @@
 
 namespace lsfm {
 
+/// @brief Base class for line segment detectors using connected component analysis.
+/// Provides gradient computation, Non-Maxima Suppression (NMS), line fitting,
+/// and edge/segment map generation as shared infrastructure for derived CC detectors.
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for support points (default LPT<int>)
+/// @tparam GRAD Gradient computation strategy
+/// @tparam FIT Line fitting strategy
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
@@ -27,17 +36,17 @@ template <class FT,
           class FIT = FitLine<EigenFit<FT, PT>>>
 class LsdCCBase : public LsdBase<FT, LPT> {
  public:
-  typedef FT value_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
-  typedef typename GRAD::mag_type mag_type;
-  typedef typename GRAD::grad_type grad_type;
-  typedef typename LsdBase<FT, LPT>::ImageData ImageData;
-  typedef typename LsdBase<FT, LPT>::Line Line;
-  typedef typename LsdBase<FT, LPT>::LineVector LineVector;
-  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;
-  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;
-  typedef std::vector<PT> PointVector;
+  typedef FT value_type;                                                   ///< Floating-point value type
+  typedef LPT<FT> line_point;                                              ///< Line point type
+  typedef PT point_type;                                                   ///< Support point type
+  typedef typename GRAD::mag_type mag_type;                                ///< Gradient magnitude type
+  typedef typename GRAD::grad_type grad_type;                              ///< Gradient vector component type
+  typedef typename LsdBase<FT, LPT>::ImageData ImageData;                  ///< Image data type
+  typedef typename LsdBase<FT, LPT>::Line Line;                            ///< Line type
+  typedef typename LsdBase<FT, LPT>::LineVector LineVector;                ///< Vector of lines
+  typedef typename LsdBase<FT, LPT>::LineSegment LineSegment;              ///< Line segment type
+  typedef typename LsdBase<FT, LPT>::LineSegmentVector LineSegmentVector;  ///< Vector of line segments
+  typedef std::vector<PT> PointVector;                                     ///< Vector of support points
 
   using LsdBase<FT, LPT>::detect;
   using LsdBase<FT, LPT>::lines;
@@ -91,18 +100,22 @@ class LsdCCBase : public LsdBase<FT, LPT> {
   using LsdBase<FT, LPT>::imageData;
 
  protected:
-  cv::Mat img_{},  // image data
-      emap_{},     // edge map, indicating if pixel is on edge or not (also giving direction 0-7)
-      lsmap_{};    // line segment map, indicating which pixel corresponds to which segment
+  cv::Mat img_{};    ///< Input image data
+  cv::Mat emap_{};   ///< Edge map (direction 0-7, -1 = no edge)
+  cv::Mat lsmap_{};  ///< Line segment map (pixel-to-segment assignment)
 
-  int rows_{},  // number of image rows
-      cols_{},  // number of image cols
-      size_{};  // image size (cols*rows)
+  int rows_{};  ///< Number of image rows
+  int cols_{};  ///< Number of image columns
+  int size_{};  ///< Total image size (cols * rows)
 
-  mutable ImageData imageData_{};
+  mutable ImageData imageData_{};  ///< Cached auxiliary image data
 
-  FT th_low_{}, th_high_{};
+  FT th_low_{};   ///< Lower NMS threshold (normalized, 0-1)
+  FT th_high_{};  ///< Upper NMS threshold (normalized, 0-1)
 
+  /// @brief Construct the base CC detector with NMS thresholds.
+  /// @param th_low Lower gradient threshold (normalized, range 0-1, e.g., 0.004 ~ 1/255)
+  /// @param th_high Upper gradient threshold (normalized, range 0-1, e.g., 0.012 ~ 3/255)
   LsdCCBase(FT th_low = 0.004, FT th_high = 0.012) : th_low_(th_low), th_high_(th_high) {
     this->addManager(grad_);
     this->addManager(fit_);
@@ -156,29 +169,29 @@ class LsdCCBase : public LsdBase<FT, LPT> {
   }
 
 
-  // index list of edge pixels from NonMaximaSupression
-  std::vector<PT> seeds_{};
+  std::vector<PT> seeds_{};  ///< Seed edge pixels from Non-Maxima Suppression
 
-  // list of all line points sorted by segments
-  PointVector points_{};
+  PointVector points_{};  ///< All line support points sorted by segment
 
-  GRAD grad_{};
-  FIT fit_{};
+  GRAD grad_{};  ///< Gradient computation object
+  FIT fit_{};    ///< Line fitting object
 
-
-  // compute gradient, magnitude and nms
+  /// @brief Preprocess the image by computing gradient, magnitude, and NMS.
   void preprocess() {
     grad_.process(img_);
     computeNMS();
   }
 
+  /// @brief Clear all internal detection data.
   virtual void clearData() final {
     LsdBase<FT, LPT>::clearData();
     imageData_.clear();
   }
 
  private:
-  // compute non maxima supression
+  /// @brief Compute Non-Maxima Suppression on gradient magnitude.
+  /// Produces an edge map with direction labels and collects seed pixels
+  /// that exceed the upper threshold.
   inline void computeNMS() {
     static const int TG22 = static_cast<int>(0.4142135623730950488016887242097 * (1 << 15) + 0.5);
 

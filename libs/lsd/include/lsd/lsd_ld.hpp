@@ -20,14 +20,30 @@
 
 namespace lsfm {
 
-//! No ld flags set
+/// @brief No flags set for Ld-based detection.
 static const int LD_NONE = 0;
-//! Enable to use tracer with direction map
+/// @brief Enable line tracer to use direction map instead of binary edge map.
 static const int LD_TRACER_DIRMAP = 1;
-//! Use precise direction map for sub pixel esitmation
+/// @brief Use precise direction-based sub-pixel estimation for endpoints.
 static const int LD_USE_PRECISE_SPE = 2;
 
-//! line detector to line segment detector adapter class
+/// @brief Line detector to line segment detector adapter.
+/// Wraps an infinite-line detector (LD) and converts its output into finite
+/// line segments by tracing edges along each detected line and fitting
+/// segments to the traced pixel support.
+///
+/// @tparam LD Underlying line detector type (must provide lines() and edgeSource())
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for pixel coordinates (default Vec2i)
+/// @tparam TRACER Edge-tracing algorithm type
+/// @tparam SPE Sub-pixel estimator for endpoint refinement
+/// @tparam FIT Line fitting algorithm type
+///
+/// @code{cpp}
+/// lsfm::LsdLd<lsfm::LdHough<float>> detector(0.004f, 0.012f, 10, 3);
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class LD,
           template <class> class LPT = Vec2,
           class PT = Vec2i,
@@ -38,26 +54,26 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
   typedef LsdExt<typename LD::float_type, LPT, PT> MyLsdBase;
 
  public:
-  typedef typename MyLsdBase::float_type float_type;
-  typedef typename MyLsdBase::line_point line_point;
-  typedef typename MyLsdBase::point_type point_type;
-  typedef typename MyLsdBase::PointVector PointVector;
-  typedef typename MyLsdBase::Line Line;
-  typedef typename MyLsdBase::LineVector LineVector;
-  typedef typename MyLsdBase::LineSegment LineSegment;
-  typedef typename MyLsdBase::LineSegmentVector LineSegmentVector;
-  typedef typename MyLsdBase::ImageData ImageData;
-  typedef LD LineDetector;
-  typedef typename LD::EdgeSource EdgeSource;
+  typedef typename MyLsdBase::float_type float_type;                ///< Floating-point type
+  typedef typename MyLsdBase::line_point line_point;                ///< Line point type
+  typedef typename MyLsdBase::point_type point_type;                ///< Point type for pixel coordinates
+  typedef typename MyLsdBase::PointVector PointVector;              ///< Vector of sub-pixel points
+  typedef typename MyLsdBase::Line Line;                            ///< Line type
+  typedef typename MyLsdBase::LineVector LineVector;                ///< Vector of lines
+  typedef typename MyLsdBase::LineSegment LineSegment;              ///< Line segment type
+  typedef typename MyLsdBase::LineSegmentVector LineSegmentVector;  ///< Vector of line segments
+  typedef typename MyLsdBase::ImageData ImageData;                  ///< Image data type
+  typedef LD LineDetector;                                          ///< Underlying line detector type
+  typedef typename LD::EdgeSource EdgeSource;                       ///< Edge source type from line detector
 
  protected:
   using MyLsdBase::lineSegments_;
 
-  LD lineDetector_{};
-  FIT fit_{};
-  TRACER tracer_{};
+  LD lineDetector_{};  ///< Underlying line detector instance
+  FIT fit_{};          ///< Line fitting algorithm
+  TRACER tracer_{};    ///< Edge pixel tracer
 
-  int flags_{};
+  int flags_{};  ///< Detection flags (LD_NONE, LD_TRACER_DIRMAP, LD_USE_PRECISE_SPE)
 
   void init() {
     this->addManager(lineDetector_);
@@ -76,6 +92,12 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
   }
 
  public:
+  /// @brief Create an Ld-based line segment detector with explicit parameters.
+  /// @param th_low Lower gradient threshold for edge detection (normalized)
+  /// @param th_high Upper gradient threshold for edge detection (normalized)
+  /// @param minPix Minimum number of edge pixels to form a segment
+  /// @param maxGap Maximum gap allowed between edge pixels when tracing
+  /// @param flags Detection flags (LD_NONE, LD_TRACER_DIRMAP, LD_USE_PRECISE_SPE)
   LsdLd(float_type th_low = static_cast<float_type>(0.004),
         float_type th_high = static_cast<float_type>(0.012),
         int minPix = 10,
@@ -85,11 +107,15 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter name/value pairs.
+  /// @param options Initializer list with parameter name/value pairs
   LsdLd(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdLd(ValueManager::NameValueVector options) {
     init();
     this->value(options);
@@ -120,6 +146,9 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
   //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
+  /// @brief Detect line segments by running the line detector, tracing edges,
+  /// and fitting line segments to the traced pixel support.
+  /// @param image Input image (8-bit single-channel or color)
   virtual void detect(const cv::Mat& image) override {
     clearData();
     lineDetector_.detect(image);
@@ -163,14 +192,24 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
     });
   }
 
+  /// @brief Get descriptor information for auxiliary image data.
+  /// @return Data descriptor from the underlying line detector
   virtual const DataDescriptor& imageDataDescriptor() const final { return lineDetector_.imageDataDescriptor(); }
 
+  /// @brief Get auxiliary image data computed during detection.
+  /// @return Image data layers from the underlying line detector
   virtual const ImageData& imageData() const final { return lineDetector_.imageData(); }
 
+  /// @brief Get the edge support segments traced along detected lines.
+  /// @return Vector of edge segments defining pixel support for each line
   virtual const EdgeSegmentVector& lineSupportSegments() const final { return tracer_.segments(); }
 
+  /// @brief Get the sub-pixel edge points used for line fitting.
+  /// @return Vector of sub-pixel edge points
   virtual const PointVector& points() const final { return points_; }
 
+  /// @brief Get the pixel-level edge indexes from the tracer.
+  /// @return Vector of integer pixel indexes
   virtual const IndexVector& indexes() const final { return tracer_.indexes(); }
 
   //! @brief Get access to the underlying line detector object.
@@ -190,7 +229,17 @@ class LsdLd : public LsdExt<typename LD::float_type, LPT, PT> {
   const EdgeSource& edgeSource() const { return lineDetector_.edgeSource(); }
 };
 
-//! line detector to line segment detector adapter class
+/// @brief Line detector to line segment detector adapter with separate edge source.
+/// Like LsdLd, but uses its own edge source (ESOURCE) for gradient computation
+/// rather than relying on the line detector's built-in edge source.
+///
+/// @tparam LD Underlying line detector type (must provide lines() and process())
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for pixel coordinates (default Vec2i)
+/// @tparam TRACER Edge-tracing algorithm type
+/// @tparam SPE Sub-pixel estimator for endpoint refinement
+/// @tparam FIT Line fitting algorithm type
+/// @tparam ESOURCE Edge source providing independent gradient computation and NMS
 template <class LD,
           template <class> class LPT = Vec2,
           class PT = Vec2i,
@@ -204,29 +253,29 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
   typedef LsdExt<typename LD::float_type, LPT, PT> MyLsdBase;
 
  public:
-  typedef typename MyLsdBase::float_type float_type;
-  typedef typename MyLsdBase::line_point line_point;
-  typedef typename MyLsdBase::point_type point_type;
-  typedef typename MyLsdBase::PointVector PointVector;
-  typedef typename MyLsdBase::Line Line;
-  typedef typename MyLsdBase::LineVector LineVector;
-  typedef typename MyLsdBase::LineSegment LineSegment;
-  typedef typename MyLsdBase::LineSegmentVector LineSegmentVector;
-  typedef typename MyLsdBase::ImageData ImageData;
-  typedef LD LineDetector;
-  typedef ESOURCE EdgeSource;
+  typedef typename MyLsdBase::float_type float_type;                ///< Floating-point type
+  typedef typename MyLsdBase::line_point line_point;                ///< Line point type
+  typedef typename MyLsdBase::point_type point_type;                ///< Point type for pixel coordinates
+  typedef typename MyLsdBase::PointVector PointVector;              ///< Vector of sub-pixel points
+  typedef typename MyLsdBase::Line Line;                            ///< Line type
+  typedef typename MyLsdBase::LineVector LineVector;                ///< Vector of lines
+  typedef typename MyLsdBase::LineSegment LineSegment;              ///< Line segment type
+  typedef typename MyLsdBase::LineSegmentVector LineSegmentVector;  ///< Vector of line segments
+  typedef typename MyLsdBase::ImageData ImageData;                  ///< Image data type
+  typedef LD LineDetector;                                          ///< Underlying line detector type
+  typedef ESOURCE EdgeSource;                                       ///< Edge source type
 
 
   using MyLsdBase::lineSegments_;
 
-  ESOURCE esource_{};
-  LD lineDetector_{};
-  FIT fit_{};
-  TRACER tracer_{};
+  ESOURCE esource_{};  ///< Edge source for gradient and NMS
+  LD lineDetector_{};  ///< Underlying line detector instance
+  FIT fit_{};          ///< Line fitting algorithm
+  TRACER tracer_{};    ///< Edge pixel tracer
 
-  cv::Mat binaryEdgeMap_{};
+  cv::Mat binaryEdgeMap_{};  ///< Binary edge map from hysteresis thresholding
 
-  int flags_{};
+  int flags_{};  ///< Detection flags (LD_NONE, LD_TRACER_DIRMAP, LD_USE_PRECISE_SPE)
 
   void init() {
     this->addManager(lineDetector_);
@@ -238,9 +287,9 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
               "Flags for line detector: 0 - none, 1 - use tracer with dirmap, 2 - use precise sub pixel estimation.");
   }
 
-  typename MyLsdBase::ImageData imageData_{};
+  typename MyLsdBase::ImageData imageData_{};  ///< Cached auxiliary image data
 
-  PointVector points_{};
+  PointVector points_{};  ///< Sub-pixel edge points used for fitting
 
 
   virtual void clearData() override {
@@ -250,6 +299,12 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
   }
 
  public:
+  /// @brief Create an LdES-based line segment detector with explicit parameters.
+  /// @param th_low Lower gradient threshold for edge detection (normalized)
+  /// @param th_high Upper gradient threshold for edge detection (normalized)
+  /// @param minPix Minimum number of edge pixels to form a segment
+  /// @param maxGap Maximum gap allowed between edge pixels when tracing
+  /// @param flags Detection flags (LD_NONE, LD_TRACER_DIRMAP, LD_USE_PRECISE_SPE)
   LsdLdES(float_type th_low = static_cast<float_type>(0.004),
           float_type th_high = static_cast<float_type>(0.012),
           int minPix = 10,
@@ -259,11 +314,15 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter name/value pairs.
+  /// @param options Initializer list with parameter name/value pairs
   LsdLdES(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdLdES(ValueManager::NameValueVector options) {
     init();
     this->value(options);
@@ -294,6 +353,10 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
   //! @param f The new flags value. See valueFlags() documentation for flag meanings.
   void flags(int f) { flags_ = f; }
 
+  /// @brief Detect line segments using a separate edge source.
+  /// Runs the line detector and edge source independently, then traces
+  /// edges and fits line segments to the traced pixel support.
+  /// @param image Input image (8-bit single-channel or color)
   virtual void detect(const cv::Mat& image) override {
     clearData();
     lineDetector_.process(image);
@@ -331,6 +394,10 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
     });
   }
 
+  /// @brief Get descriptor information for auxiliary image data.
+  /// Merges descriptors from the line detector with gradient data from the
+  /// edge source, adding any missing layers.
+  /// @return Data descriptor with name and description for each layer
   virtual const DataDescriptor& imageDataDescriptor() const final {
     static DataDescriptor dsc;
     if (dsc.empty()) {
@@ -361,6 +428,10 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
     return dsc;
   }
 
+  /// @brief Get auxiliary image data computed during detection.
+  /// Combines image data from the line detector with gradient layers from
+  /// the edge source, adding any missing layers.
+  /// @return Vector of image data layers
   virtual const ImageData& imageData() const final {
     if (imageData_.empty()) {
       imageData_ = lineDetector_.imageData();
@@ -388,10 +459,16 @@ class LsdLdES : public LsdExt<typename LD::float_type, LPT, PT> {
     return imageData_;
   }
 
+  /// @brief Get the edge support segments traced along detected lines.
+  /// @return Vector of edge segments defining pixel support for each line
   virtual const EdgeSegmentVector& lineSupportSegments() const final { return tracer_.segments(); }
 
+  /// @brief Get the sub-pixel edge points used for line fitting.
+  /// @return Vector of sub-pixel edge points
   virtual const PointVector& points() const final { return points_; }
 
+  /// @brief Get the pixel-level edge indexes from the tracer.
+  /// @return Vector of integer pixel indexes
   virtual const IndexVector& indexes() const final { return tracer_.indexes(); }
 
   //! @brief Get access to the underlying line detector object.

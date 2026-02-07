@@ -12,18 +12,42 @@
 #include <lsd/lsd_cc_base.hpp>
 
 namespace lsfm {
-// Use complex decision algo to determine near pixels in cc search
+
+/// @brief Flag: Use complex decision algorithm for near-pixel search in CP.
 static const int CP_FIND_NEAR_COMPLEX = 1;
-// Enable corner rule
+/// @brief Flag: Enable corner rule for detecting sharp corners.
 static const int CP_CORNER_RULE = 2;
-// Use merge instead of split (faster but less precise)
+/// @brief Flag: Use merge mode instead of split mode (faster but less precise).
 static const int CP_MERGE = 4;
 
-// constants
+/// @brief Control flag: Pattern is in reverse order.
 static const char CP_PATTERN_REVERSE = 1;
+/// @brief Control flag: Pattern terminates a line segment.
 static const char CP_PATTERN_TERMINATE = 2;
+/// @brief Control flag: Pattern should be ignored during processing.
 static const char CP_PATTERN_IGNORE = 4;
 
+/// @brief Line segment detector using connected component analysis with pattern detection.
+/// Extends the CC approach by detecting directional patterns (primitives) during
+/// edge linking, enabling pattern-based merge/split strategies.
+///
+/// **Key Features:**
+/// - Pattern-based edge characterization using directional primitives
+/// - Pattern merge mode (fast) or split mode (precise)
+/// - Configurable pattern tolerance for primitive matching
+/// - Corner rule for sharp edge splitting
+///
+/// @tparam FT Floating-point type (float, double)
+/// @tparam LPT Line point template (default Vec2)
+/// @tparam PT Point type for support points (default LPT<int>)
+/// @tparam GRAD Gradient computation strategy
+/// @tparam FIT Line fitting strategy
+///
+/// @code{cpp}
+/// lsfm::LsdCP<float> detector(0.004f, 0.012f, 10, 0, 2.0f, 2, 0);
+/// detector.detect(image);
+/// const auto& segments = detector.lineSegments();
+/// @endcode
 template <class FT,
           template <class> class LPT = Vec2,
           class PT = LPT<int>,
@@ -67,83 +91,121 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
 
 
  public:
+  /// @brief Soft corner threshold constant.
   static const int CP_SOFT_CORNER;
 
-  typedef FT value_type;
-  typedef LPT<FT> line_point;
-  typedef PT point_type;
-  typedef typename GRAD::mag_type mag_type;
-  typedef typename GRAD::grad_type grad_type;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::Line Line;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineVector LineVector;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegment LineSegment;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegmentVector LineSegmentVector;
-  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::PointVector PointVector;
+  typedef FT value_type;                                                        ///< Floating-point value type
+  typedef LPT<FT> line_point;                                                   ///< Line point type
+  typedef PT point_type;                                                        ///< Support point type
+  typedef typename GRAD::mag_type mag_type;                                     ///< Gradient magnitude type
+  typedef typename GRAD::grad_type grad_type;                                   ///< Gradient vector component type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::Line Line;                ///< Line type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineVector LineVector;    ///< Vector of lines
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegment LineSegment;  ///< Line segment type
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::LineSegmentVector LineSegmentVector;  ///< Vector of segments
+  typedef typename LsdCCBase<FT, LPT, PT, GRAD, FIT>::PointVector PointVector;              ///< Vector of points
 
-
+  /// @brief Directional primitive for pattern-based edge characterization.
+  /// Represents a run of pixels in a single chain code direction.
   struct PatternPrimitive {
+    /// @brief Construct a pattern primitive.
+    /// @param s Pixel count in this primitive run
+    /// @param d Chain code direction (0-7)
+    /// @param dn Direction change to next primitive
     PatternPrimitive(ushort s = 0, char d = -1, char dn = -1) : size(s), dir(d), dir_next(dn) {}
 
-    // primitive size
-    ushort size{};
-    // primitive direction
-    char dir{};
-    // direction change to next primitive
-    char dir_next{};
+    ushort size{};    ///< Number of pixels in the primitive run
+    char dir{};       ///< Chain code direction (0-7)
+    char dir_next{};  ///< Direction change to the next primitive
 
-    //! match PatternPrimitive by tolerance
+    //! @brief Check if this primitive matches another within tolerance.
+    //! @param rhs Primitive to compare against
+    //! @param tol Allowed pixel count difference
+    //! @return True if directions match and sizes are within tolerance
     inline bool match(const PatternPrimitive& rhs, int tol) const {
       return dir == rhs.dir && (size == rhs.size || std::abs(size - rhs.size) <= tol);
     }
 
-    //! compare operator
+    //! @brief Equality comparison operator.
+    //! @param rhs Primitive to compare against
+    //! @return True if all fields match exactly
     inline bool operator==(const PatternPrimitive& rhs) const {
       return size == rhs.size && dir == rhs.dir && dir_next == rhs.dir_next;
     }
 
+    //! @brief Inequality comparison operator.
+    //! @param rhs Primitive to compare against
+    //! @return True if any field differs
     inline bool operator!=(const PatternPrimitive& rhs) const { return !operator==(rhs); }
 
-    //! convert direction d to x,y steps
+    //! @brief Convert chain code direction to (x, y) step offsets.
+    //! @param d Direction value (0-8)
+    //! @return Pointer to array of 2 shorts: {dx, dy}
     static const short* dir_step(char d) {
       static short steps[9][2] = {{0, 0}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
       return steps[static_cast<int>(d)];
     }
 
-    //! convert direction difference to cyclic difference (e.g. 0 - 7 is not -7 but same as 0 - -1 = 1)
+    //! @brief Convert direction difference to cyclic difference.
+    //! Maps out-of-range differences (e.g., 0 - 7 = -7) to the shortest cyclic path.
+    //! @param diff Raw direction difference
+    //! @return Cyclic difference in range [-4, 4]
     static char dir_diff(char diff) {
       static char diffmap[] = {1, 2, 3, -4, -3, -2, -1, 0, 1, 2, 3, 4, -3, -2, -1};
       return diffmap[static_cast<int>(diff) + 7];
     }
 
-    //! convert direction difference to cyclic difference
+    //! @brief Convert two directions to their cyclic difference.
+    //! @param a First direction
+    //! @param b Second direction
+    //! @return Cyclic difference a - b in range [-4, 4]
     static char dir_diff(char a, char b) { return dir_diff(static_cast<char>(a - b)); }
 
-    //! convert direction difference to cyclic absolute difference
+    //! @brief Convert direction difference to absolute cyclic difference.
+    //! @param diff Raw direction difference
+    //! @return Absolute cyclic difference in range [0, 4]
     static char dir_abs_diff(char diff) {
       static char diffmap[] = {1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1};
       return diffmap[static_cast<int>(diff) + 7];
     }
 
-    //! convert direction difference to cyclic absolute difference
+    //! @brief Convert two directions to their absolute cyclic difference.
+    //! @param a First direction
+    //! @param b Second direction
+    //! @return Absolute cyclic difference |a - b| in range [0, 4]
     static char dir_abs_diff(char a, char b) { return dir_abs_diff(static_cast<char>(a - b)); }
   };
 
+  /// @brief Pattern structure representing a contiguous run of primitives.
+  /// Groups a sequence of edge points sharing the same directional primitive.
   struct Pattern {
+    /// @brief Construct an empty pattern.
+    /// @param b Start position in the point list
+    /// @param s Number of points in the pattern
+    /// @param f Control flags (CP_PATTERN_REVERSE, CP_PATTERN_TERMINATE, CP_PATTERN_IGNORE)
     Pattern(size_t b = 0, ushort s = 0, uchar f = 0) : beg(b), size(s), flags(f) {}
 
+    /// @brief Construct a pattern with primitive data.
+    /// @param b Start position in the point list
+    /// @param s Number of points
+    /// @param f Control flags
+    /// @param sp Primitive pixel count
+    /// @param d Primitive direction
+    /// @param dn Direction change to next primitive
     Pattern(size_t b, ushort s, uchar f, ushort sp, char d = -1, char dn = -1)
         : beg(b), primitive(sp, d, dn), size(s), flags(f) {}
 
+    /// @brief Construct a pattern from an existing primitive.
+    /// @param b Start position in the point list
+    /// @param s Number of points
+    /// @param f Control flags
+    /// @param pp Pattern primitive to copy
     Pattern(size_t b, ushort s, uchar f, const PatternPrimitive& pp) : beg(b), primitive(pp), size(s), flags(f) {}
 
-    // start position in point list
-    size_t beg{};
-    // pattern primitive data
-    PatternPrimitive primitive{};
-    // number of points
-    ushort size{};
-    // pattern control flags
-    uchar flags{};
+    size_t beg{};                  ///< Start position in the global point list
+    PatternPrimitive primitive{};  ///< Primitive characterizing this pattern
+    ushort size{};                 ///< Number of points in this pattern
+    uchar flags{};                 ///< Control flags (reverse, terminate, ignore)
 
     //! @brief Get the starting position in the global point vector.
     //! @return The index of the first point in this pattern.
@@ -166,12 +228,13 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     inline bool ignore() const { return (flags & CP_PATTERN_IGNORE) != 0; }
   };
 
-  typedef std::vector<Pattern> PatternVector;
+  typedef std::vector<Pattern> PatternVector;  ///< Vector of Pattern structures
 
-  // store all parameters of line segement
+  /// @brief Line data structure storing pattern ranges and point references.
+  /// Groups patterns into logical line segments with iteration and point access.
   class LineData {
-    const PointVector* points_;
-    const PatternVector* patterns_;
+    const PointVector* points_;      ///< Pointer to the global point vector
+    const PatternVector* patterns_;  ///< Pointer to the global pattern vector
 
    public:
     //! @brief Construct line data from pattern positions and point vector.
@@ -183,9 +246,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         : points_(po), patterns_(pa), pat_beg(b), pat_size(s) {}
 
     // start position in pattern list
-    size_t pat_beg{};
+    size_t pat_beg{};  ///< Start index in the global pattern vector
     // number of patterns
-    unsigned int pat_size{};
+    unsigned int pat_size{};  ///< Number of patterns in this line data
 
     //! @brief Get the starting position in the global pattern vector.
     //! @return The index of the first pattern in this line.
@@ -301,20 +364,19 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     }
   };
 
-  typedef std::vector<LineData> LineDataVector;
+  typedef std::vector<LineData> LineDataVector;  ///< Vector of LineData structures
 
-  //! Create a CPLineSegmentDetector object.
-  //! @param th_high  Higher intensity threshold for Non Maxima Supression. Range (0..1] (0.004 ~ 1/255).
-  //! @param th_low   Lower intensity threshold for Non Maxima Supression. Range (0..1] (0.004 ~ 1/255).
-  //! @param min_pix      Minimum number of supporting pixels for line region. Range [2..X]
-  //! @param max_gap      Maximum gap search distance. Range [0...X]
-  //! @param err_dist     Error distance for pattern merge/split. Distance in Pixels. Range (0..X] (>0)
-  //! @param pat_tol      Pattern tolerance: amount of allowed pixel number changes for primitives. Range [0..X]
-  //! @param flags Flags for line detection
-  //!                   CP_FIND_NEAR_COMPLEX - Use complex decision algo to determine near pixels in cc search
-  //!                   CP_CORNER_RULE - Enable corner rule
-  //!                   CP_MERGE - Use merge instead of split (faster but less precise)
-
+  /// @brief Create a pattern-based connected component line segment detector.
+  /// @param th_low Lower intensity threshold for NMS (normalized, range (0..1], 0.004 ~ 1/255)
+  /// @param th_high Upper intensity threshold for NMS (normalized, range (0..1], 0.004 ~ 1/255)
+  /// @param min_pix Minimum supporting pixels per line region (range [2..X])
+  /// @param max_gap Maximum gap search distance in pixels (range [0..X])
+  /// @param err_dist Error distance for pattern merge/split in pixels (range (0..X])
+  /// @param pat_tol Pattern tolerance: allowed pixel count change in primitives (range [0..X])
+  /// @param flags Detection flags bitmask:
+  ///   - CP_FIND_NEAR_COMPLEX: Use complex near-pixel decision algorithm
+  ///   - CP_CORNER_RULE: Enable corner rule
+  ///   - CP_MERGE: Use merge instead of split mode
   LsdCP(FT th_low = 0.004,
         FT th_high = 0.012,
         int min_pix = 10,
@@ -333,11 +395,15 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     init();
   }
 
+  /// @brief Create detector from an initializer list of parameter name/value pairs.
+  /// @param options Initializer list with parameter name/value pairs
   LsdCP(ValueManager::InitializerList options) {
     init();
     this->value(options);
   }
 
+  /// @brief Create detector from a vector of parameter name/value pairs.
+  /// @param options Vector with parameter name/value pairs
   LsdCP(const ValueManager::NameValueVector& options) {
     init();
     this->value(options);
@@ -484,6 +550,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     return ret;
   }
 
+  /// @brief Detect line segments using pattern-based connected component analysis.
+  /// @param image Input image (single-channel grayscale or color)
   virtual void detect(const cv::Mat& image) final {
     img_ = image;
     CV_Assert(!img_.empty());
@@ -506,15 +574,17 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     computeLines();
   }
 
+  /// @brief Get access to the gradient computation object.
+  /// @return Mutable reference to gradient object
   GRAD& grad() { return grad_; }
 
+  /// @brief Get const access to the gradient computation object.
+  /// @return Const reference to gradient object
   const GRAD& grad() const { return grad_; }
 
  private:
-  // list of all patterns in segments
-  PatternVector patterns_{};
-  // line data vector
-  LineDataVector lineData_{};
+  PatternVector patterns_{};   ///< All detected edge patterns
+  LineDataVector lineData_{};  ///< Line data after merge/split
 
   // LsdCP& operator= (const LsdCP&); // to quiet MSVC
 
