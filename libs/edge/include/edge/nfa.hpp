@@ -103,7 +103,7 @@ class NfaContrast : public ValueManager {
 
   FT epsilon() const { return std::pow(static_cast<FT>(10), -log_e_); }
 
-  void epsilon(FT e) { log_e_ = -log10(e); }
+  void epsilon(FT e) { log_e_ = -std::log10(e); }
 
   void update(const cv::Mat& E) { E_ = E; }
 
@@ -299,7 +299,7 @@ class NfaContrast : public ValueManager {
 
   static inline FT nfa(size_t l, FT Hu, int Nl) { return static_cast<FT>(Nl * std::pow(Hu, l)); }
 
-  static inline FT log_nfa(size_t l, FT Hu, int Nl) { return -log10(nfa(l, Hu, Nl)); }
+  static inline FT log_nfa(size_t l, FT Hu, int Nl) { return -std::log10(nfa(l, Hu, Nl)); }
 };
 
 /// @brief NFA validation using binomial test on aligned gradient orientations.
@@ -458,13 +458,13 @@ class NfaBinom : public ValueManager {
   NfaBinom(const cv::Mat& dir, FT r, FT log_e = 0, FT p = static_cast<FT>(1.0 / 8))
       : matx_(dir), range_(r), logNT_(0), log_e_(log_e), th_(0), p_(p) {
     init();
-    logNT_ = 2.0 * (log10(static_cast<FT>(dir.cols)) + log10(static_cast<FT>(dir.rows)));
+    logNT_ = static_cast<FT>(2.0) * (std::log10(static_cast<FT>(dir.cols)) + std::log10(static_cast<FT>(dir.rows)));
   }
 
   NfaBinom(const cv::Mat& gx, const cv::Mat& gy, FT log_e = 0, FT p = static_cast<FT>(1.0 / 8))
       : matx_(gx), maty_(gy), range_(0), logNT_(0), log_e_(log_e), th_(0), p_(p) {
     init();
-    logNT_ = 2.0 * (log10(static_cast<FT>(gx.cols)) + log10(static_cast<FT>(gx.rows)));
+    logNT_ = static_cast<FT>(2.0) * (std::log10(static_cast<FT>(gx.cols)) + std::log10(static_cast<FT>(gx.rows)));
   }
 
   Value valueLogEps(const Value& e = Value::NAV()) {
@@ -478,7 +478,7 @@ class NfaBinom : public ValueManager {
 
   FT epsilon() const { return std::pow(static_cast<FT>(10), -log_e_); }
 
-  void epsilon(FT e) { log_e_ = -log10(e); }
+  void epsilon(FT e) { log_e_ = -std::log10(e); }
 
   Value valuePrecision(const Value& p = Value::NAV()) {
     if (p.type()) precision(p.get<FT>());
@@ -497,7 +497,7 @@ class NfaBinom : public ValueManager {
   void update(const cv::Mat& dir, FT range) {
     matx_ = dir;
     range_ = range;
-    logNT_ = 2 * (log10(static_cast<FT>(dir.cols)) + log10(static_cast<FT>(dir.rows)));
+    logNT_ = static_cast<FT>(2) * (std::log10(static_cast<FT>(dir.cols)) + std::log10(static_cast<FT>(dir.rows)));
     th_ = range * p_;
   }
 
@@ -505,7 +505,7 @@ class NfaBinom : public ValueManager {
     matx_ = gx;
     maty_ = gy;
     range_ = 0;
-    logNT_ = 2 * (log10(static_cast<FT>(gx.cols)) + log10(static_cast<FT>(gx.rows)));
+    logNT_ = static_cast<FT>(2) * (std::log10(static_cast<FT>(gx.cols)) + std::log10(static_cast<FT>(gx.rows)));
     th_ = 360 * p_;
   }
 
@@ -795,7 +795,7 @@ class NfaBinom : public ValueManager {
     We use this to compute the first term. Actually the log of it.
     */
     log1term = log_gamma(static_cast<FT>(n + 1)) - log_gamma(static_cast<FT>(k + 1)) -
-               log_gamma(static_cast<FT>(n - k + 1)) + static_cast<FT>(k) * log(p) +
+               log_gamma(static_cast<FT>(n - k + 1)) + static_cast<FT>(k) * std::log(p) +
                static_cast<FT>(n - k) * std::log(1 - p);
     term = std::exp(log1term);
 
@@ -838,10 +838,10 @@ class NfaBinom : public ValueManager {
         tolerance * abs(-log10(bin_tail)-logNT) / (1/bin_tail)
         Finally, we truncate the tail if the error is less than:
         tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
-        if (err < tolerance * std::abs(-log10(bin_tail) - logNT) * bin_tail) break;
+        if (err < tolerance * std::abs(-std::log10(bin_tail) - logNT) * bin_tail) break;
       }
     }
-    return -log10(bin_tail) - logNT;
+    return -std::log10(bin_tail) - logNT;
   }
 
   static inline FT log_nfa(int n, int k, FT p, int N) { return log_nfaNT(n, k, p, std::log10(static_cast<FT>(N))); }
@@ -960,7 +960,7 @@ class NfaBinom2 : public ValueManager {
 
   FT epsilon() const { return std::pow(static_cast<FT>(10), -log_e_); }
 
-  void epsilon(FT e) { log_e_ = -log10(e); }
+  void epsilon(FT e) { log_e_ = -std::log10(e); }
 
   Value valuePrecision(const Value& p = Value::NAV()) {
     if (p.type()) precision(p.get<FT>());

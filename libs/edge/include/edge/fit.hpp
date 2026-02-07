@@ -102,7 +102,7 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
     });
   } else {
     std::for_each(beg, end, [&](const PT& lp) {
-      FT m = static_cast<FT>(data.at<DT>(getY(lp), getX(lp)));
+      FT m = static_cast<FT>(data.at<DT>(static_cast<int>(getY(lp)), static_cast<int>(getX(lp))));
       count += m;
       sum_x += static_cast<FT>(getX(lp)) * m;
       sum_y += static_cast<FT>(getY(lp)) * m;
@@ -112,7 +112,7 @@ inline void covariance(const PT* beg, const PT* end, FT& sx, FT& sy, FT& sxy, FT
     cy = static_cast<FT>(sum_y) / count;
 
     std::for_each(beg, end, [&](const PT& lp) {
-      FT m = static_cast<FT>(data.at<DT>(getY(lp), getX(lp)));
+      FT m = static_cast<FT>(data.at<DT>(static_cast<int>(getY(lp)), static_cast<int>(getX(lp))));
 
       FT dx = static_cast<FT>(getX(lp)) - cx;
       FT dy = static_cast<FT>(getY(lp)) - cy;
@@ -167,7 +167,7 @@ class RegressionFit {
 
   static inline void fit(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     fit_unorm(sx, sy, sxy, nx, ny);
-    FT norm = hypot(nx, ny);
+    FT norm = static_cast<FT>(hypot(nx, ny));
     nx /= norm;
     ny /= norm;
   }
@@ -285,7 +285,7 @@ class EigenFit {
   /// @param ny Output Y component of unit normal
   static inline void fit(FT sx, FT sy, FT sxy, FT& nx, FT& ny) {
     fit_unorm(sx, sy, sxy, nx, ny);
-    FT norm = hypot(nx, ny);
+    FT norm = static_cast<FT>(hypot(nx, ny));
     nx /= norm;
     ny /= norm;
   }

@@ -39,7 +39,9 @@ struct LinearEstimate {
   /// @param p_m Magnitude of pixel in negative direction
   /// @param p_p Magnitude of pixel in positive direction
   /// @return Sub-pixel displacement offset (typically in range [-0.5, 0.5])
-  static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (2 * (p - std::min(p_m, p_p))); }
+  static inline FT estimate(MT p, MT p_m, MT p_p) {
+    return static_cast<FT>(p_p - p_m) / static_cast<FT>(2 * (p - std::min(p_m, p_p)));
+  }
 };
 
 /// @brief Quadratic (parabolic) sub-pixel edge localization estimator.
@@ -85,7 +87,9 @@ struct CoGEstimate {
   /// @param p_m Magnitude of pixel in negative direction
   /// @param p_p Magnitude of pixel in positive direction
   /// @return Sub-pixel displacement offset
-  static inline FT estimate(MT p, MT p_m, MT p_p) { return (p_p - p_m) / (p + p_p + p_m - 3 * std::min(p_m, p_p)); }
+  static inline FT estimate(MT p, MT p_m, MT p_p) {
+    return static_cast<FT>(p_p - p_m) / static_cast<FT>(p + p_p + p_m - 3 * std::min(p_m, p_p));
+  }
 };
 
 /// @brief Sobel-based sub-pixel edge localization estimator.

@@ -55,6 +55,17 @@ namespace rcmg_impl {
 template <class IT, int channels, class GT, class MT>
 class RCMGCore {
  public:
+  /// @brief Default constructor.
+  RCMGCore()
+      : locations_(),
+        not_removed_(),
+        window_(),
+        max_dist_(0),
+        max_dist2_(0),
+        max_dists_(),
+        copyof_max_dists_(),
+        dists_() {}
+
   /// @brief Compute RCMG gradient on the given image.
   ///
   /// Computes magnitude and directional gradients (gx, gy) for the input
@@ -274,6 +285,17 @@ class RCMGCore {
 template <class IT, class GT, class MT>
 class RCMGCore<IT, 1, GT, MT> {
  public:
+  /// @brief Default constructor.
+  RCMGCore()
+      : locations_(),
+        not_removed_(),
+        window_(),
+        max_dist_(0),
+        max_dist2_(0),
+        max_dists_(),
+        copyof_max_dists_(),
+        dists_() {}
+
   /// @brief Compute single-channel RCMG gradient.
   /// @param[in] img Input single-channel image.
   /// @param[out] mag Output magnitude image.

@@ -59,32 +59,32 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   /// @brief G2 basis function 2 (Gaussian).
   /// @param x Input coordinate.
   /// @return Function value: exp(-x²).
-  static FT G22(FT x) { return exp(-x * x); }
+  static FT G22(FT x) { return static_cast<FT>(exp(-x * x)); }
 
   /// @brief G2 basis function 3.
   /// @param x Input coordinate.
   /// @return Function value: √1.843 * x * exp(-x²).
-  static FT G23(FT x) { return sqrt(static_cast<FT>(1.8430)) * x * exp(-x * x); }
+  static FT G23(FT x) { return static_cast<FT>(sqrt(static_cast<FT>(1.8430)) * x * exp(-x * x)); }
 
   /// @brief H2 basis function 1.
   /// @param x Input coordinate.
   /// @return Function value: 0.9780 * (-2.254x + x³) * exp(-x²).
-  static FT H21(FT x) { return static_cast<FT>(0.9780 * (-2.254 * x + x * x * x)) * exp(-x * x); }
+  static FT H21(FT x) { return static_cast<FT>(static_cast<FT>(0.9780 * (-2.254 * x + x * x * x)) * exp(-x * x)); }
 
   /// @brief H2 basis function 2 (Gaussian).
   /// @param x Input coordinate.
   /// @return Function value: exp(-x²).
-  static FT H22(FT x) { return exp(-x * x); }
+  static FT H22(FT x) { return static_cast<FT>(exp(-x * x)); }
 
   /// @brief H2 basis function 3.
   /// @param x Input coordinate.
   /// @return Function value: x * exp(-x²).
-  static FT H23(FT x) { return x * exp(-x * x); }
+  static FT H23(FT x) { return static_cast<FT>(x * exp(-x * x)); }
 
   /// @brief H2 basis function 4.
   /// @param x Input coordinate.
   /// @return Function value: 0.9780 * (-0.7515 + x²) * exp(-x²).
-  static FT H24(FT x) { return static_cast<FT>(0.9780 * (-0.7515 + x * x)) * exp(-x * x); }
+  static FT H24(FT x) { return static_cast<FT>(static_cast<FT>(0.9780 * (-0.7515 + x * x)) * exp(-x * x)); }
 
   /// Function pointer type for kernel generation.
   typedef FT (*KernelType)(FT x);

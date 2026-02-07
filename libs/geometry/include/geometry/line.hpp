@@ -59,8 +59,8 @@ class Line {
   /// @param normal_ang Normal angle in radians (line angle + PI/2).
   /// @param distance Signed distance to origin.
   Line(FT normal_ang, FT distance) : nx_(0), ny_(0), d_(distance) {
-    nx_ = cos(normal_ang);
-    ny_ = sin(normal_ang);
+    nx_ = static_cast<FT>(cos(normal_ang));
+    ny_ = static_cast<FT>(sin(normal_ang));
   }
 
 

@@ -83,3 +83,17 @@ cc_binary(
         "@opencv",
     ],
 )
+
+cc_binary(
+    name = "eval_spe_precision",
+    srcs = ["src/spe_precision.cpp"],
+    copts = LE_COPTS_COMPAT,
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/eval:lib_eval",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/utility:lib_utility",
+        "@opencv",
+        "@opencv_contrib//:ximgproc",
+    ],
+)
