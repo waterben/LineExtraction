@@ -76,13 +76,17 @@ inline bool eps_zero(float v) { return std::abs(v) < 0.001f; }
 
 inline bool eps_zero(double v) { return std::abs(v) < 0.001; }
 
+/// @brief No-op nearest crossing check (does nothing).
+/// @tparam LT Laplacian element type
 template <class LT>
 struct NCC_NONE {
+  /// @brief No-op test (never swaps indices).
   static inline void test(size_t& idx1, size_t& idx2, LT l1, LT l2) {}
 };
 
 
-// get index closer to zero
+/// @brief Basic nearest crossing check: selects the index closer to zero.
+/// @tparam LT Laplacian element type
 template <class LT>
 struct NCC_BASIC {
   static inline void test(size_t& idx1, size_t& idx2, LT l1, LT l2) {
@@ -91,6 +95,11 @@ struct NCC_BASIC {
 };
 
 
+/// @brief 8-direction edge zero-crossing map.
+/// Maps gradient orientations to one of 8 quantized directions for
+/// zero-crossing detection.
+/// @tparam LT Laplacian element type
+/// @tparam DT Direction/gradient element type
 template <class LT, class DT>
 struct EZCMap8 {
   static constexpr int NUM_DIR = 8;
@@ -141,6 +150,11 @@ struct EZCMap8 {
   static inline char type() { return '8'; }
 };
 
+/// @brief 4-direction edge zero-crossing map.
+/// Maps gradient orientations to one of 4 quantized directions for
+/// zero-crossing detection.
+/// @tparam LT Laplacian element type
+/// @tparam DT Direction/gradient element type
 template <class LT, class DT>
 struct EZCMap4 {
   static constexpr int NUM_DIR = 4;
@@ -305,6 +319,16 @@ void zc_base(
   }
 }
 
+/// @brief Precise zero-crossing detection with sub-pixel interpolation.
+/// Computes zero-crossings in the Laplacian using gradient-based direction
+/// estimation and optional sub-pixel interpolation for refined edge positions.
+/// @tparam GT Gradient element type
+/// @tparam LT Laplacian element type
+/// @tparam FT Floating-point type (default: float)
+/// @tparam NCC Nearest crossing check policy (default: NCC_BASIC)
+/// @tparam EM Edge map direction quantizer (default: EZCMap8)
+/// @tparam Interpolate Interpolation method (default: LinearInterpolator)
+/// @tparam P Polar coordinate converter (default: Polar)
 template <class GT,
           class LT,
           class FT = float,
@@ -570,6 +594,15 @@ struct PreciseZC {
   static inline std::string name() { return std::string("PreciseZC") + EM<LT, FT>::type(); }
 };
 
+/// @brief Fast zero-crossing detection without sub-pixel interpolation.
+/// Computes zero-crossings in the Laplacian using gradient-based direction
+/// estimation with integer-precision edge positions.
+/// @tparam GT Gradient element type
+/// @tparam LT Laplacian element type
+/// @tparam FT Floating-point type (default: float)
+/// @tparam NCC Nearest crossing check policy (default: NCC_BASIC)
+/// @tparam EM Edge map direction quantizer (default: EZCMap8)
+/// @tparam P Polar coordinate converter (default: Polar)
 template <class GT,
           class LT,
           class FT = float,
@@ -834,6 +867,13 @@ struct FastZC {
 };
 
 
+/// @brief High-level zero-crossing edge detector with hysteresis thresholding.
+/// Wraps a ZC implementation (PreciseZC or FastZC) with threshold management,
+/// direction map storage, and hysteresis support.
+/// @tparam GT Gradient element type
+/// @tparam LT Laplacian element type
+/// @tparam DT Direction/floating-point type (default: float)
+/// @tparam ZC Zero-crossing implementation (default: FastZC)
 template <class GT, class LT, class DT = float, class ZC = FastZC<GT, LT, DT>>
 class ZeroCrossing : public ValueManager {
   cv::Mat dmap_;       // direction map, storing direction 0-X for each value that is above lower
@@ -1036,20 +1076,25 @@ class ZeroCrossing : public ValueManager {
                 high.isContinuous() ? high : high.clone(), seeds_, dmap_, border_);
   }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Compute hysteresis thresholding on edge map.
+  /// @return Thresholded edge map
   cv::Mat hysteresis() const { return lsfm::hysteresis(dmap_, seeds_); }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Compute binary hysteresis thresholding on edge map.
+  /// @param val Value to assign to edge pixels (default: 255)
+  /// @return Binary edge map
   cv::Mat hysteresisBinary(uchar val = 255) const { return lsfm::hysteresis_binary(dmap_, seeds_, val); }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Get all edge pixels after hysteresis thresholding.
+  /// @return Vector of edge pixel indices
   IndexVector hysteresis_edgels() const {
     IndexVector edgels = seeds_;
     lsfm::hysteresis_edgels(dmap_, edgels);
     return edgels;
   }
 
-  //! get name
+  /// @brief Get the name of this zero-crossing operator.
+  /// @return Name string
   inline std::string name() const { return ZC::name(); }
 };
 }  // namespace lsfm

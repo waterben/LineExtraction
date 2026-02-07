@@ -171,6 +171,10 @@ inline void point2Index(const PT* beg, const PT* end, index_type* data, int cols
   }
 }
 
+/// @brief Utility for converting between linear indices and 2D points.
+/// Provides static methods for bidirectional conversion between
+/// index_type linear indices and PT point types.
+/// @tparam PT Point type (cv::Point, Vec2, etc.)
 template <class PT>
 struct IndexConvert {
   static inline void toPoint(index_type idx, PT& p, int cols) { index2Point(idx, p, cols); }
@@ -293,7 +297,8 @@ struct IndexConvert {
   }
 };
 
-// specialization for index to index
+/// @brief IndexConvert specialization for identity index-to-index conversion.
+/// Performs pass-through operations when PT is index_type itself.
 template <>
 struct IndexConvert<index_type> {
   static inline void toPoint(index_type idx, index_type& p, int /*cols*/) { p = idx; }

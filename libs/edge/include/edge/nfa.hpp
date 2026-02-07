@@ -21,6 +21,13 @@
 
 namespace lsfm {
 
+/// @brief NFA (Number of False Alarms) validation using contrast criterion.
+/// Validates edge segments by comparing their minimum magnitude contrast
+/// against a statistical model to filter false alarms.
+/// @tparam MT Magnitude element type
+/// @tparam FT Floating-point type for NFA computation
+/// @tparam PT Point type
+/// @tparam MAP Histogram map type (default: std::map)
 template <class MT, class FT, class PT, class MAP = std::map<MT, FT> >
 class NfaContrast : public ValueManager {
   cv::Mat E_;
@@ -295,6 +302,12 @@ class NfaContrast : public ValueManager {
   static inline FT log_nfa(size_t l, FT Hu, int Nl) { return -log10(nfa(l, Hu, Nl)); }
 };
 
+/// @brief NFA validation using binomial test on aligned gradient orientations.
+/// Validates edge segments by testing whether the number of aligned gradient
+/// directions exceeds what would be expected by chance under binomial statistics.
+/// @tparam GT Gradient element type
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
 template <class GT, class FT, class PT>
 class NfaBinom : public ValueManager {
   static constexpr FT RELATIVE_ERROR_FACTOR_NFA = static_cast<FT>(100);
@@ -838,6 +851,12 @@ class NfaBinom : public ValueManager {
   }
 };
 
+/// @brief Alternative NFA validation using binomial test with different
+/// segment counting.
+/// Like NfaBinom but uses a different normalization for the number of tests.
+/// @tparam GT Gradient element type
+/// @tparam FT Floating-point type
+/// @tparam PT Point type
 template <class GT, class FT, class PT>
 class NfaBinom2 : public ValueManager {
   cv::Mat matx_, maty_;

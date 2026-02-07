@@ -18,10 +18,10 @@
 
 namespace lsfm {
 
-//! Edge source interface
-//! Edge source can be used to combine arbitrary edge response
-//! methods (sobel, laplace, qudarature, etc.) with different edgel
-//! extraction methods (nms, zc) or even more complex combinations.
+/// @brief Abstract interface for edge source computation.
+/// Provides a unified interface for combining arbitrary edge response methods
+/// (Sobel, Laplace, quadrature, etc.) with different edgel extraction methods
+/// (NMS, zero-crossing) and more complex combinations.
 class EdgeSourceI : public ValueManager {
   EdgeSourceI(const EdgeSourceI&);
 
@@ -31,49 +31,65 @@ class EdgeSourceI : public ValueManager {
  public:
   virtual ~EdgeSourceI() {}
 
-  //! process edge source from image
+  /// @brief Process an input image to compute edge responses.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) = 0;
 
-  //! generic interface to get processed data
+  /// @brief Get all processed filter results.
+  /// @return Map of named filter result matrices
   virtual FilterResults results() const = 0;
 
-  //! get gradient in x dir for edge processing
+  /// @brief Get the gradient in the X direction.
+  /// @return Gradient matrix in X direction
   virtual cv::Mat gx() const = 0;
 
-  //! get gradient in y dir for edge processing
+  /// @brief Get the gradient in the Y direction.
+  /// @return Gradient matrix in Y direction
   virtual cv::Mat gy() const = 0;
 
-  //! get magnitude for edge processing
+  /// @brief Get the edge magnitude map.
+  /// @return Magnitude matrix
   virtual cv::Mat magnitude() const = 0;
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert a relative threshold value to an absolute magnitude threshold.
+  /// @param val Relative threshold value (0-1 range or domain-specific)
+  /// @return Absolute magnitude threshold
   virtual double magnitudeThreshold(double val) const = 0;
 
-  //! get magnitude max for edge processing
+  /// @brief Get the maximum magnitude value.
+  /// @return Maximum magnitude found in the processed image
   virtual double magnitudeMax() const = 0;
 
-  //! get direction
+  /// @brief Get the edge direction map.
+  /// @return Direction matrix (continuous angles)
   virtual cv::Mat direction() const = 0;
 
-  //! get direction range
+  /// @brief Get the valid range of direction values.
+  /// @return Range with lower and upper bounds for direction values
   virtual Range<double> directionRange() const = 0;
 
-  //! get direction map for edge processing
+  /// @brief Get the quantized direction map for edge processing.
+  /// @return Direction map (CV_8S) with discrete direction indices
   virtual cv::Mat directionMap() const = 0;
 
-  //! get seeds for edge processing
+  /// @brief Get seed pixel indices for edge processing.
+  /// @return Const reference to vector of seed edgel indices
   virtual const IndexVector& seeds() const = 0;
 
-  //! get edge source name
+  /// @brief Get the name of this edge source.
+  /// @return Descriptive string identifier
   virtual std::string name() const = 0;
 
-  //! compute hysteresis map with directions of seeds and direction map
+  /// @brief Compute hysteresis-linked direction map from seeds and direction map.
+  /// @return Direction map with only hysteresis-linked edgels retaining their values
   cv::Mat hysteresis() const { return lsfm::hysteresis(directionMap(), seeds()); }
 
-  //! compute binary hysteresis map of seeds and direction map
+  /// @brief Compute binary hysteresis map from seeds and direction map.
+  /// @return Binary edge map marking all hysteresis-linked edgels
   cv::Mat hysteresis_binary() const { return lsfm::hysteresis_binary(directionMap(), seeds()); }
 
-  //! compute hysteresis indexes of seeds and direction map
+  /// @brief Compute hysteresis-linked edgel indices from seeds and direction map.
+  /// @return Vector of all edgel indices after hysteresis linking
   IndexVector hysteresis_edgels() const {
     IndexVector edgels = seeds();
     lsfm::hysteresis_edgels(directionMap(), edgels);
@@ -81,7 +97,11 @@ class EdgeSourceI : public ValueManager {
   }
 };
 
-//! Edge source interface
+/// @brief Templated edge source combining an edge response filter with a pixel extractor.
+/// Connects an edge response filter (ERF) producing gradients with a pixel extraction
+/// method (EPE) such as NMS or zero-crossing detection.
+/// @tparam ERF Edge response filter type (e.g., Gradient, Quadrature)
+/// @tparam EPE Edge pixel extractor type (e.g., NMS, ZC)
 template <class ERF, class EPE>
 class EdgeSourceT : public EdgeSourceI {
   EdgeSourceT(const EdgeSourceT&);
@@ -108,9 +128,15 @@ class EdgeSourceT : public EdgeSourceI {
   EPE epe_;
 
  public:
+  /// @typedef EdgeResponseFilter
+  /// @brief Type alias for the edge response filter
   typedef ERF EdgeResponseFilter;
+
+  /// @typedef EdgePixelExtractor
+  /// @brief Type alias for the edge pixel extractor
   typedef EPE EdgePixelExtractor;
 
+  /// @brief Number of quantized directions supported by the pixel extractor.
   static constexpr int NUM_DIR = EPE::NUM_DIR;
 
   using EdgeSourceI::hysteresis;
@@ -118,12 +144,20 @@ class EdgeSourceT : public EdgeSourceI {
 
   virtual ~EdgeSourceT() {}
 
+  /// @brief Get const reference to the edge response filter.
+  /// @return Const reference to the filter
   const ERF& responseFilter() const { return erf_; }
 
+  /// @brief Get mutable reference to the edge response filter.
+  /// @return Mutable reference to the filter
   ERF& responseFilter() { return erf_; }
 
+  /// @brief Get const reference to the pixel extractor.
+  /// @return Const reference to the extractor
   const EPE& pixelExtractor() const { return epe_; }
 
+  /// @brief Get mutable reference to the pixel extractor.
+  /// @return Mutable reference to the extractor
   EPE& pixelExtractor() { return epe_; }
 
   virtual FilterResults results() const override { return erf_.results(); }
@@ -138,7 +172,10 @@ class EdgeSourceT : public EdgeSourceI {
   virtual std::string name() const override { return "es_" + erf_.name() + "_" + epe_.name(); }
 };
 
-//! Baisc edge source expecting NMS/ZC object as template arg
+/// @brief Edge source base for NMS and ZC pixel extraction.
+/// Intermediate class providing direction map and seed accessors from the pixel extractor.
+/// @tparam ERF Edge response filter type
+/// @tparam NMS_ZC NMS or zero-crossing pixel extractor type
 template <class ERF, class NMS_ZC>
 class EdgeSourceNMS_ZC : public EdgeSourceT<ERF, NMS_ZC> {
   EdgeSourceNMS_ZC(const EdgeSourceNMS_ZC&);
@@ -152,14 +189,19 @@ class EdgeSourceNMS_ZC : public EdgeSourceT<ERF, NMS_ZC> {
   EdgeSourceNMS_ZC(ValueManager::InitializerList& options) : EdgeSourceT<ERF, NMS_ZC>(options) {}
 
  public:
-  //! get direction map for edge processing
+  /// @brief Get the quantized direction map from the pixel extractor.
+  /// @return Direction map (CV_8S)
   virtual cv::Mat directionMap() const override { return epe_.directionMap(); }
 
-  //! get seeds for edge processing
+  /// @brief Get seed indices from the pixel extractor.
+  /// @return Const reference to seed index vector
   virtual const IndexVector& seeds() const override { return epe_.seeds(); }
 };
 
-//! Baisc edge source expecting NMS object as template arg
+/// @brief Edge source base for NMS pixel extraction.
+/// Provides magnitude max accessor from the NMS extractor.
+/// @tparam ERF Edge response filter type
+/// @tparam NMS Non-maximum suppression pixel extractor type
 template <class ERF, class NMS>
 class EdgeSourceNMS : public EdgeSourceNMS_ZC<ERF, NMS> {
   EdgeSourceNMS(const EdgeSourceNMS&);
@@ -173,11 +215,15 @@ class EdgeSourceNMS : public EdgeSourceNMS_ZC<ERF, NMS> {
   EdgeSourceNMS(ValueManager::InitializerList& options) : EdgeSourceNMS_ZC<ERF, NMS>(options) {}
 
  public:
-  //! get magnitude max for edge processing
+  /// @brief Get the maximum magnitude value from the NMS extractor.
+  /// @return Maximum magnitude as double
   virtual double magnitudeMax() const override { return static_cast<double>(epe_.magMax()); }
 };
 
-//! Baisc edge source expecting ZC object as template arg
+/// @brief Edge source base for zero-crossing pixel extraction.
+/// Provides lazy-computed magnitude max via cv::minMaxLoc.
+/// @tparam ERF Edge response filter type
+/// @tparam ZC Zero-crossing pixel extractor type
 template <class ERF, class ZC>
 class EdgeSourceZC : public EdgeSourceNMS_ZC<ERF, ZC> {
   EdgeSourceZC(const EdgeSourceZC&);
@@ -185,14 +231,15 @@ class EdgeSourceZC : public EdgeSourceNMS_ZC<ERF, ZC> {
  protected:
   using EdgeSourceT<ERF, ZC>::erf_;
   using EdgeSourceT<ERF, ZC>::epe_;
-  mutable double magMax_;
+  mutable double magMax_;  ///< Cached maximum magnitude (-1 = not yet computed)
 
   EdgeSourceZC() : magMax_(-1) {}
   EdgeSourceZC(const ValueManager::NameValueVector& options) : EdgeSourceNMS_ZC<ERF, ZC>(options), magMax_(-1) {}
   EdgeSourceZC(ValueManager::InitializerList& options) : EdgeSourceNMS_ZC<ERF, ZC>(options), magMax_(-1) {}
 
  public:
-  //! get magnitude max for edge processing
+  /// @brief Get the maximum magnitude value, computing it lazily if needed.
+  /// @return Maximum magnitude as double
   virtual double magnitudeMax() const override {
     if (magMax_ < 0) {
       double vmin;
@@ -202,7 +249,11 @@ class EdgeSourceZC : public EdgeSourceNMS_ZC<ERF, ZC> {
   }
 };
 
-//! Gradient edge source
+/// @brief Gradient-based edge source using NMS for edgel extraction.
+/// Combines a gradient filter (Sobel, Scharr, etc.) with non-maximum suppression.
+/// Optionally uses direction instead of gx/gy for NMS computation.
+/// @tparam GRAD Gradient filter type
+/// @tparam NMS Non-maximum suppression type
 template <class GRAD, class NMS>
 class EdgeSourceGRAD : public EdgeSourceNMS<GRAD, NMS> {
   EdgeSourceGRAD(const EdgeSourceGRAD&);
@@ -237,28 +288,46 @@ class EdgeSourceGRAD : public EdgeSourceNMS<GRAD, NMS> {
   using EdgeSourceI::hysteresis;
   using EdgeSourceI::hysteresis_edgels;
 
-  //! process edge source from image
+  /// @brief Process edge source from input image.
+  /// Computes gradient response and applies NMS to extract edge pixels.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
     erf_.process(img);
     epe_.process(erf_, useDir_);
   }
 
+  /// @brief Get gradient in X direction.
+  /// @return Gradient X matrix
   virtual cv::Mat gx() const override { return erf_.gx(); }
 
+  /// @brief Get gradient in Y direction.
+  /// @return Gradient Y matrix
   virtual cv::Mat gy() const override { return erf_.gy(); }
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude map.
+  /// @return Magnitude matrix
   virtual cv::Mat magnitude() const override { return erf_.magnitude(); }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute magnitude threshold
   virtual double magnitudeThreshold(double val) const override {
     return static_cast<double>(erf_.magnitudeThreshold(val));
   }
 };
 
-enum ESDirectionOptions { ESDO_NONE = 0, ESDO_GXGY, ESDO_DIR };
+/// @brief Direction options for edge sources supporting multiple direction modes.
+enum ESDirectionOptions {
+  ESDO_NONE = 0,  ///< No direction enrichment
+  ESDO_GXGY,      ///< Use gradient components (gx, gy) for direction
+  ESDO_DIR        ///< Use pre-computed direction map
+};
 
-//! Laplace edge source
+/// @brief Laplace-based edge source using zero-crossing for edgel extraction.
+/// Combines a Laplacian filter with gradient computation and zero-crossing detection.
+/// @tparam LAPLACE Laplacian filter type
+/// @tparam GRAD Gradient filter type
+/// @tparam ZC Zero-crossing detector type
 template <class LAPLACE, class GRAD, class ZC>
 class EdgeSourceLAPLACE : public EdgeSourceZC<GRAD, ZC> {
   EdgeSourceLAPLACE(const EdgeSourceLAPLACE&);
@@ -308,7 +377,9 @@ class EdgeSourceLAPLACE : public EdgeSourceZC<GRAD, ZC> {
     return fresults_;
   }
 
-  //! process edge source from image
+  /// @brief Process edge source from input image.
+  /// Computes quadrature filter and Laplace response, then extracts edges.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
     fresults_.clear();
     magMax_ = -1;
@@ -327,26 +398,38 @@ class EdgeSourceLAPLACE : public EdgeSourceZC<GRAD, ZC> {
     }
   }
 
+  /// @brief Get gradient in X direction.
+  /// @return Gradient X matrix
   virtual cv::Mat gx() const override { return erf_.gx(); }
 
+  /// @brief Get gradient in Y direction.
+  /// @return Gradient Y matrix
   virtual cv::Mat gy() const override { return erf_.gy(); }
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude map.
+  /// @return Magnitude matrix from gradient filter
   virtual cv::Mat magnitude() const override { return erf_.magnitude(); }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute magnitude threshold
   virtual double magnitudeThreshold(double val) const override {
     return static_cast<double>(erf_.magnitudeThreshold(val));
   }
 };
 
+/// @brief Quadrature magnitude options for quadrature-based edge sources.
 enum ESQuadratureOptions {
-  ESQO_MAG = 0,
-  ESQO_ENERGY,
-  ESQO_PC,
+  ESQO_MAG = 0,  ///< Use odd response magnitude
+  ESQO_ENERGY,   ///< Use energy response
+  ESQO_PC,       ///< Use phase congruency
 };
 
-//! Quadrature edge source (odd response)
+/// @brief Quadrature-based edge source using odd response and NMS.
+/// Combines quadrature filter with non-maximum suppression for edge detection.
+/// Supports multiple magnitude modes (odd, energy, phase congruency).
+/// @tparam QUAD Quadrature filter type
+/// @tparam NMS Non-maximum suppression type
 template <class QUAD, class NMS>
 class EdgeSourceQUAD : public EdgeSourceNMS<QUAD, NMS> {
   EdgeSourceQUAD(const EdgeSourceQUAD&);
@@ -392,12 +475,10 @@ class EdgeSourceQUAD : public EdgeSourceNMS<QUAD, NMS> {
   using EdgeSourceI::hysteresis;
   using EdgeSourceI::hysteresis_edgels;
 
-  //! process edge source from image
+  /// @brief Process edge source from input image.
+  /// Computes quadrature filter response and applies NMS with appropriate thresholds.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
-    erf_.process(img);
-    double low = 0, high = 0;
-    epe_.threshold(low, high);
-    low = magnitudeThreshold(low);
     high = magnitudeThreshold(high);
 
     if (low < 0) low = 0;
@@ -413,24 +494,35 @@ class EdgeSourceQUAD : public EdgeSourceNMS<QUAD, NMS> {
     }
   }
 
+  /// @brief Get gradient in X direction (odd X component).
+  /// @return Odd X response matrix
   virtual cv::Mat gx() const override { return erf_.oddx(); }
 
+  /// @brief Get gradient in Y direction (odd Y component).
+  /// @return Odd Y response matrix
   virtual cv::Mat gy() const override { return erf_.oddy(); }
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude map based on quadrature options.
+  /// Returns energy response if ESQO_ENERGY, otherwise odd response magnitude.
+  /// @return Magnitude matrix
   virtual cv::Mat magnitude() const override {
     if (quadOps_ == ESQO_ENERGY) return erf_.energy();
     return erf_.odd();
   }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute magnitude threshold
   virtual double magnitudeThreshold(double val) const override {
     if (quadOps_ == ESQO_ENERGY) return static_cast<double>(erf_.energyThreshold(val));
     return static_cast<double>(erf_.oddThreshold(val));
   }
 };
 
-//! Phase congruency edge source (odd response)
+/// @brief Phase congruency edge source using odd response and NMS.
+/// Extends EdgeSourceQUAD with phase congruency magnitude support.
+/// @tparam PC Phase congruency filter type
+/// @tparam NMS Non-maximum suppression type
 template <class PC, class NMS>
 class EdgeSourcePC : public EdgeSourceQUAD<PC, NMS> {
   EdgeSourcePC(const EdgeSourcePC&);
@@ -457,7 +549,9 @@ class EdgeSourcePC : public EdgeSourceQUAD<PC, NMS> {
   using EdgeSourceI::hysteresis_edgels;
 
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude map based on quadrature options.
+  /// Returns odd magnitude, energy, or phase congruency depending on quadOps_.
+  /// @return Magnitude matrix
   virtual cv::Mat magnitude() const override {
     switch (quadOps_) {
       case ESQO_MAG:
@@ -470,7 +564,9 @@ class EdgeSourcePC : public EdgeSourceQUAD<PC, NMS> {
     return erf_.phaseCongruency();
   }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute magnitude threshold based on selected mode
   virtual double magnitudeThreshold(double val) const override {
     switch (quadOps_) {
       case ESQO_MAG:
@@ -484,7 +580,10 @@ class EdgeSourcePC : public EdgeSourceQUAD<PC, NMS> {
   }
 };
 
-//! Quadrature edge source (even response)
+/// @brief Quadrature-based edge source using even response and zero-crossing.
+/// Combines quadrature filter with zero-crossing detection for edge extraction.
+/// @tparam QUAD Quadrature filter type
+/// @tparam ZC Zero-crossing detector type
 template <class QUAD, class ZC>
 class EdgeSourceQUADZC : public EdgeSourceZC<QUAD, ZC> {
   EdgeSourceQUADZC(const EdgeSourceQUADZC&);
@@ -531,7 +630,9 @@ class EdgeSourceQUADZC : public EdgeSourceZC<QUAD, ZC> {
   using EdgeSourceI::hysteresis;
   using EdgeSourceI::hysteresis_edgels;
 
-  //! process edge source from image
+  /// @brief Process edge source from input image.
+  /// Computes quadrature filter response and applies zero-crossing detection.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
     magMax_ = -1;
     erf_.process(img);
@@ -548,24 +649,34 @@ class EdgeSourceQUADZC : public EdgeSourceZC<QUAD, ZC> {
     }
   }
 
+  /// @brief Get gradient in X direction (odd X component).
+  /// @return Odd X response matrix
   virtual cv::Mat gx() const override { return erf_.oddx(); }
 
+  /// @brief Get gradient in Y direction (odd Y component).
+  /// @return Odd Y response matrix
   virtual cv::Mat gy() const override { return erf_.oddy(); }
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude map based on quadrature options.
+  /// @return Magnitude matrix (energy or odd response)
   virtual cv::Mat magnitude() const override {
     if (quadOps_ == ESQO_ENERGY) return erf_.energy();
     return erf_.odd();
   }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute magnitude threshold
   virtual double magnitudeThreshold(double val) const override {
     if (quadOps_ == ESQO_ENERGY) return static_cast<double>(erf_.energyThreshold(val));
     return static_cast<double>(erf_.oddThreshold(val));
   }
 };
 
-//! Phase congruency edge source (even response)
+/// @brief Phase congruency edge source using even response and zero-crossing.
+/// Extends EdgeSourceQUADZC with phase congruency magnitude support.
+/// @tparam PC Phase congruency filter type
+/// @tparam ZC Zero-crossing detector type
 template <class PC, class ZC>
 class EdgeSourcePCZC : public EdgeSourceQUADZC<PC, ZC> {
   EdgeSourcePCZC(const EdgeSourcePCZC&);
@@ -586,7 +697,8 @@ class EdgeSourcePCZC : public EdgeSourceQUADZC<PC, ZC> {
   using EdgeSourceI::hysteresis;
   using EdgeSourceI::hysteresis_edgels;
 
-  //! get magnitude for edge processing
+  /// @brief Get edge magnitude based on quadrature options.
+  /// @return Magnitude matrix (odd, energy, or phase congruency)
   virtual cv::Mat magnitude() const override {
     switch (quadOps_) {
       case ESQO_MAG:
@@ -599,7 +711,9 @@ class EdgeSourcePCZC : public EdgeSourceQUADZC<PC, ZC> {
     return erf_.phaseCongruency();
   }
 
-  //! get magnitude threshold for edge processing
+  /// @brief Convert relative threshold to absolute magnitude threshold.
+  /// @param val Relative threshold value
+  /// @return Absolute threshold based on selected mode
   virtual double magnitudeThreshold(double val) const override {
     switch (quadOps_) {
       case ESQO_MAG:
@@ -614,7 +728,11 @@ class EdgeSourcePCZC : public EdgeSourceQUADZC<PC, ZC> {
 };
 
 
-//! Phase congruency laplace edge source (even response)
+/// @brief Phase congruency Laplace edge source using even response and zero-crossing.
+/// Combines phase congruency Laplacian with zero-crossing detection,
+/// supporting direction-based filtering for X and Y components.
+/// @tparam PCL Phase congruency Laplace filter type
+/// @tparam ZC Zero-crossing detector type
 template <class PCL, class ZC>
 class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
   EdgeSourcePCLZC(const EdgeSourcePCLZC&);
@@ -730,12 +848,10 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
     }
   }
 
-  //! process edge source from image
+  /// @brief Process edge source from input image.
+  /// Computes phase congruency Laplacian and applies direction-filtered ZC detection.
+  /// @param img Input grayscale image
   virtual void process(const cv::Mat& img) override {
-    magMax_ = -1;
-    erf_.process(img);
-
-    double low = 0, high = 0;
     epe_.threshold(low, high);
 
     low = erf_.pcLaplaceThreshold(low);
@@ -773,10 +889,12 @@ class EdgeSourcePCLZC : public EdgeSourceQUADZC<PCL, ZC> {
     }
   }
 
-  //! get direction map for edge processing
+  /// @brief Get the quantized direction map.
+  /// @return Direction map (CV_8S)
   virtual cv::Mat directionMap() const override { return dirMap_; }
 
-  //! get seeds for edge processing
+  /// @brief Get seed indices.
+  /// @return Const reference to seed index vector
   virtual const IndexVector& seeds() const override { return seeds_; }
 };
 }  // namespace lsfm

@@ -445,9 +445,16 @@ struct PreciseNMS {
   }
 };
 
+/// @brief Fast 8-direction non-maximum suppression.
+/// Performs NMS using integer approximation of gradient orientations
+/// quantized to 8 directions for high performance.
+/// @tparam GT Gradient element type
+/// @tparam MT Magnitude element type
+/// @tparam DT Direction/floating-point type (default: float)
 template <class GT, class MT, class DT = float>
 struct FastNMS8 {
   static constexpr int NUM_DIR = 8;
+  /// @brief Compute non-maximum suppression from gradient and magnitude maps.
   // compute non maxima supression by given derivative maps and magnitude map
   static MT process(const cv::Mat& gx,
                     const cv::Mat& gy,
@@ -905,9 +912,16 @@ struct FastNMS8 {
   }
 };
 
+/// @brief Fast 4-direction non-maximum suppression.
+/// Performs NMS using integer approximation of gradient orientations
+/// quantized to 4 directions for high performance.
+/// @tparam GT Gradient element type
+/// @tparam MT Magnitude element type
+/// @tparam DT Direction/floating-point type (default: float)
 template <class GT, class MT, class DT = float>
 struct FastNMS4 {
   static constexpr int NUM_DIR = 4;
+  /// @brief Compute non-maximum suppression from gradient and magnitude maps.
   // compute non maxima supression by given derivative maps and magnitude map
   static MT process(const cv::Mat& gx,
                     const cv::Mat& gy,
@@ -1353,6 +1367,13 @@ struct FastNMS4 {
   }
 };
 
+/// @brief High-level non-maximum suppression edge detector with hysteresis.
+/// Wraps an NMS implementation (PreciseNMS, FastNMS8, FastNMS4) with threshold
+/// management, direction map storage, and hysteresis support.
+/// @tparam GT Gradient element type
+/// @tparam MT Magnitude element type
+/// @tparam DT Direction/floating-point type (default: float)
+/// @tparam NMS NMS implementation (default: FastNMS8)
 template <class GT, class MT, class DT = float, class NMS = FastNMS8<GT, MT, DT>>
 class NonMaximaSuppression : public ValueManager {
   cv::Mat dmap_;       // direction map, storing direction 0-X for each value that is above lower
@@ -1569,20 +1590,25 @@ class NonMaximaSuppression : public ValueManager {
     return mag_max_;
   }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Compute hysteresis thresholding on edge map.
+  /// @return Thresholded edge map
   cv::Mat hysteresis() const { return lsfm::hysteresis(dmap_, seeds_); }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Compute binary hysteresis thresholding on edge map.
+  /// @param val Value to assign to edge pixels (default: 255)
+  /// @return Binary edge map
   cv::Mat hysteresisBinary(uchar val = 255) const { return lsfm::hysteresis_binary(dmap_, seeds_, val); }
 
-  //! compute hysteresis of seeds and dmap_
+  /// @brief Get all edge pixels after hysteresis thresholding.
+  /// @return Vector of edge pixel indices
   IndexVector hysteresis_edgels() const {
     IndexVector edgels = seeds_;
     lsfm::hysteresis_edgels(dmap_, edgels);
     return edgels;
   }
 
-  //! get name of direction operator
+  /// @brief Get the name of this NMS operator.
+  /// @return Name string
   inline std::string name() const { return NMS::name(); }
 };
 }  // namespace lsfm
