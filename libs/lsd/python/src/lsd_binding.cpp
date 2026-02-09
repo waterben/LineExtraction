@@ -28,8 +28,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <cmath>
-#include <sstream>
 #include <string>
 
 namespace py = pybind11;
@@ -75,126 +73,6 @@ void bind_lsd_core_types(py::module_& m) {
 
   // EP flags
   m.attr("EP_USE_PRECISE_SPE") = static_cast<int>(EP_USE_PRECISE_SPE);
-}
-
-// ============================================================================
-// Line<FT> binding
-// ============================================================================
-
-template <class FT>
-void bind_line(py::module_& m, const std::string& suffix) {
-  using LineT = Line<FT, Vec2>;
-  const std::string cls = "Line" + suffix;
-
-  py::class_<LineT>(m, cls.c_str(),
-                    ("2D line in Hesse normal form (n·p = d)" + suffix +
-                     ".\n\n"
-                     "Attributes:\n"
-                     "    normal_x: X-component of unit normal\n"
-                     "    normal_y: Y-component of unit normal\n"
-                     "    origin_dist: Signed perpendicular distance to origin\n\n"
-                     "The normal direction corresponds to the gradient direction\n"
-                     "(dark to bright).")
-                        .c_str())
-      .def(py::init<>(), "Construct a zero (degenerate) line.")
-      .def(py::init<FT, FT, FT>(), py::arg("normal_x"), py::arg("normal_y"), py::arg("distance"),
-           "Construct from normal components (nx, ny) and signed distance.")
-      .def_property_readonly(
-          "normal_x", [](const LineT& l) { return l.normalX(); }, "X-component of the unit normal.")
-      .def_property_readonly(
-          "normal_y", [](const LineT& l) { return l.normalY(); }, "Y-component of the unit normal.")
-      .def_property_readonly(
-          "origin_dist", [](const LineT& l) { return l.originDist(); }, "Signed perpendicular distance to origin.")
-      .def_property_readonly(
-          "normal_angle", [](const LineT& l) { return l.normalAngle(); },
-          "Angle of the normal vector in radians [-PI, PI).")
-      .def_property_readonly(
-          "angle", [](const LineT& l) { return l.angle(); }, "Precise line angle to x-axis in radians [-PI, PI).")
-      .def_property_readonly(
-          "origin_x", [](const LineT& l) { return l.originX(); }, "X-coordinate of closest point to origin.")
-      .def_property_readonly(
-          "origin_y", [](const LineT& l) { return l.originY(); }, "Y-coordinate of closest point to origin.")
-      .def_property_readonly(
-          "direction_x", [](const LineT& l) { return l.directionX(); }, "X-component of line direction.")
-      .def_property_readonly(
-          "direction_y", [](const LineT& l) { return l.directionY(); }, "Y-component of line direction.")
-      .def("valid", &LineT::valid, "True if the normal is unit length (non-degenerate).")
-      .def("empty", &LineT::empty, "True if the normal is zero (degenerate line).")
-      .def(
-          "distance", [](const LineT& l, FT x, FT y) { return l.distance(x, y); }, py::arg("x"), py::arg("y"),
-          "Signed perpendicular distance from point (x, y) to this line.")
-      .def("__repr__", [](const LineT& l) {
-        std::ostringstream os;
-        os << "Line(nx=" << l.normalX() << ", ny=" << l.normalY() << ", d=" << l.originDist() << ")";
-        return os.str();
-      });
-}
-
-// ============================================================================
-// LineSegment<FT> binding
-// ============================================================================
-
-template <class FT>
-void bind_line_segment(py::module_& m, const std::string& suffix) {
-  using LineT = Line<FT, Vec2>;
-  using LST = LineSegment<FT, Vec2>;
-  const std::string cls = "LineSegment" + suffix;
-
-  py::class_<LST, LineT>(m, cls.c_str(),
-                         ("2D line segment" + suffix +
-                          ".\n\n"
-                          "Extends Line with start/end distances along the line\n"
-                          "direction, defining a finite segment. Provides endpoint\n"
-                          "coordinates, length, and center point.")
-                             .c_str())
-      .def(py::init<>(), "Construct a zero (degenerate) segment.")
-      .def(py::init<FT, FT, FT, FT, FT, int>(), py::arg("normal_x"), py::arg("normal_y"), py::arg("distance"),
-           py::arg("line_beg"), py::arg("line_end"), py::arg("octave") = 0,
-           "Construct from normal, distance, and line extents.")
-      .def_property_readonly(
-          "start", [](const LST& ls) { return ls.start(); }, "Start distance along line direction.")
-      .def_property_readonly(
-          "end", [](const LST& ls) { return ls.end(); }, "End distance along line direction.")
-      .def_property_readonly(
-          "length", [](const LST& ls) { return ls.length(); }, "Length of the segment.")
-      .def_property_readonly(
-          "octave", [](const LST& ls) { return ls.octave(); }, "Detection octave level.")
-      .def(
-          "start_point",
-          [](const LST& ls) {
-            auto p = ls.startPoint();
-            return py::make_tuple(getX(p), getY(p));
-          },
-          "Get start point as (x, y) tuple.")
-      .def(
-          "end_point",
-          [](const LST& ls) {
-            auto p = ls.endPoint();
-            return py::make_tuple(getX(p), getY(p));
-          },
-          "Get end point as (x, y) tuple.")
-      .def(
-          "center_point",
-          [](const LST& ls) {
-            auto p = ls.centerPoint();
-            return py::make_tuple(getX(p), getY(p));
-          },
-          "Get center point as (x, y) tuple.")
-      .def(
-          "end_points",
-          [](const LST& ls) {
-            auto ep = ls.endPoints();
-            return py::make_tuple(ep[0], ep[1], ep[2], ep[3]);
-          },
-          "Get endpoints as (x1, y1, x2, y2) tuple.")
-      .def("__repr__", [](const LST& ls) {
-        auto sp = ls.startPoint();
-        auto ep = ls.endPoint();
-        std::ostringstream os;
-        os << "LineSegment((" << getX(sp) << ", " << getY(sp) << ") -> (" << getX(ep) << ", " << getY(ep)
-           << "), len=" << ls.length() << ")";
-        return os.str();
-      });
 }
 
 // ============================================================================
@@ -612,8 +490,6 @@ void bind_lsd_houghp(py::module_& m, const std::string& suffix) {
 
 template <class FT>
 void bind_lsd_preset(py::module_& m, const std::string& suffix) {
-  bind_line<FT>(m, suffix);
-  bind_line_segment<FT>(m, suffix);
   bind_ld_base<FT>(m, suffix);
   bind_lsd_base<FT>(m, suffix);
   bind_lsd_cc<FT>(m, suffix);
@@ -632,8 +508,6 @@ void bind_lsd_preset(py::module_& m, const std::string& suffix) {
 // ============================================================================
 
 // Default: float — suffix ""
-template void bind_line<float>(py::module_&, const std::string&);
-template void bind_line_segment<float>(py::module_&, const std::string&);
 template void bind_ld_base<float>(py::module_&, const std::string&);
 template void bind_lsd_base<float>(py::module_&, const std::string&);
 template void bind_lsd_cc<float>(py::module_&, const std::string&);
@@ -648,8 +522,6 @@ template void bind_lsd_houghp<float>(py::module_&, const std::string&);
 template void bind_lsd_preset<float>(py::module_&, const std::string&);
 
 // Double (64-bit) — suffix "_f64"
-template void bind_line<double>(py::module_&, const std::string&);
-template void bind_line_segment<double>(py::module_&, const std::string&);
 template void bind_ld_base<double>(py::module_&, const std::string&);
 template void bind_lsd_base<double>(py::module_&, const std::string&);
 template void bind_lsd_cc<double>(py::module_&, const std::string&);

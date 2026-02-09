@@ -1,0 +1,49 @@
+"""lib_geometry Python bindings"""
+
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_python//python:defs.bzl", "py_test")
+load("//tools/bazel:copts.bzl", "LE_PYBIND_COPTS")
+load("//tools/bazel:pybind.bzl", "le_pybind_module")
+
+package(default_visibility = ["//visibility:public"])
+
+# Reusable C++ binding library (can be linked by other pybind modules)
+pybind_library(
+    name = "geometry_python_pybind",
+    srcs = [
+        "src/geometry_binding.cpp",
+    ],
+    hdrs = [
+        "src/geometry_binding.hpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    includes = ["src"],
+    deps = [
+        "//libs/eval:lib_eval",
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "@cvnp",
+    ],
+)
+
+# Python extension module: import le_geometry
+le_pybind_module(
+    name = "le_geometry",
+    srcs = ["src/module_le_geometry.cpp"],
+    copts = LE_PYBIND_COPTS,
+    deps = [
+        ":geometry_python_pybind",
+    ],
+)
+
+# Python integration test
+py_test(
+    name = "test_le_geometry",
+    srcs = ["tests/test_le_geometry.py"],
+    main = "tests/test_le_geometry.py",
+    deps = [
+        ":le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)

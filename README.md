@@ -159,6 +159,71 @@ bazel run //evaluation/thesis:eval_gradient_orientation
 bazel run //evaluation/thesis:eval_spe_precision
 ```
 
+## Python Bindings
+
+The core libraries have Python bindings via [pybind11](https://pybind11.readthedocs.io/),
+providing access to all major algorithms from Python with NumPy integration:
+
+| Module | Library | Documentation | Description |
+|--------|---------|---------------|-------------|
+| `le_imgproc` | `libs/imgproc` | [README](libs/imgproc/python/README.md) | Gradient filters, core types (Range, Value, FilterData) |
+| `le_edge` | `libs/edge` | [README](libs/edge/python/README.md) | Edge detection, NMS, edge segment extraction |
+| `le_geometry` | `libs/geometry` | [README](libs/geometry/python/README.md) | Line, LineSegment, Polygon, drawing, LineOptimizer |
+| `le_eval` | `libs/eval` | [README](libs/eval/python/README.md) | Performance benchmarking framework |
+| `le_lsd` | `libs/lsd` | [README](libs/lsd/python/README.md) | 9 line segment detection algorithms |
+
+```python
+import numpy as np
+import le_lsd
+import le_geometry as geo
+
+# Detect line segments
+img = np.zeros((200, 200), dtype=np.uint8)
+img[40:160, 40:160] = 255
+
+det = le_lsd.LsdCC()
+det.detect(img)
+segments = det.line_segments()
+
+# Visualise
+vis = np.stack([img, img, img], axis=-1)
+result = geo.draw_lines_random(vis, segments)
+```
+
+```bash
+# Build all Python bindings
+bazel build //libs/imgproc/python:le_imgproc //libs/edge/python:le_edge \
+            //libs/geometry/python:le_geometry //libs/eval/python:le_eval \
+            //libs/lsd/python:le_lsd
+
+# Run all Python tests
+bazel test //libs/imgproc/python:test_le_imgproc \
+           //libs/edge/python:test_le_edge \
+           //libs/geometry/python:test_le_geometry \
+           //libs/eval/python:test_le_eval \
+           //libs/lsd/python:test_le_lsd
+
+# Run Python example scripts
+bazel run //examples/lsd/python:lsd_demo
+bazel run //examples/edge/python:edge_demo
+bazel run //examples/imgproc/python:filter_demo
+```
+
+### Module Dependency Graph
+
+```
+le_imgproc       le_geometry       le_eval
+(filters)        (primitives)      (benchmarks)
+    │                 │
+    ▼                 │
+ le_edge              │
+(NMS, ESD)            │
+    │                 │
+    ▼                 ▼
+         le_lsd
+    (9 LSD detectors)
+```
+
 ## Dependencies
 
 All dependencies are automatically managed by both build systems:

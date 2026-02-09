@@ -3,9 +3,11 @@
 ///
 /// This is the entry point for the le_lsd Python extension module.
 /// It registers all line segment detector bindings: core types
-/// (DataDescriptorEntry, flags), geometry types (Line, LineSegment),
-/// base classes (LdBase, LsdBase), and concrete detectors for
-/// multiple floating-point type presets.
+/// (DataDescriptorEntry, flags), base classes (LdBase, LsdBase),
+/// and concrete detectors for multiple floating-point type presets.
+///
+/// Line and LineSegment geometry types are provided by le_geometry
+/// and re-exported here for backward compatibility.
 ///
 /// ## Presets
 ///
@@ -22,6 +24,10 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(le_lsd, m) {
+  // Import le_geometry so that Line and LineSegment type bindings
+  // are available as base/return types for LSD detectors.
+  auto geometry = py::module_::import("le_geometry");
+
   // Import le_imgproc so that ValueManager, Value, Range, FilterData
   // type bindings are available as base classes for LSD types.
   py::module_::import("le_imgproc");
@@ -38,8 +44,8 @@ PYBIND11_MODULE(le_lsd, m) {
       "  - Default (float):   LsdCC, LsdBurns, LsdFGioi, ...\n"
       "  - 64-bit (double):   LsdCC_f64, LsdBurns_f64, ...\n\n"
       "Core types:\n"
-      "    Line             - 2D line in Hesse normal form\n"
-      "    LineSegment      - 2D line segment with endpoints\n"
+      "    Line             - 2D line in Hesse normal form (from le_geometry)\n"
+      "    LineSegment      - 2D line segment with endpoints (from le_geometry)\n"
       "    DataDescriptorEntry - Auxiliary image data layer descriptor\n\n"
       "Detector flags:\n"
       "    CC_FIND_NEAR_COMPLEX, CC_CORNER_RULE, CC_ADD_THICK_PIXELS\n"
@@ -55,6 +61,12 @@ PYBIND11_MODULE(le_lsd, m) {
       "    segments = detector.line_segments()\n"
       "    for seg in segments:\n"
       "        print(seg)";
+
+  // ---- Re-export Line/LineSegment from le_geometry for backward compat ----
+  m.attr("Line") = geometry.attr("Line");
+  m.attr("LineSegment") = geometry.attr("LineSegment");
+  m.attr("Line_f64") = geometry.attr("Line_f64");
+  m.attr("LineSegment_f64") = geometry.attr("LineSegment_f64");
 
   // ---- Core types (DataDescriptorEntry, flag constants) ----
   lsfm::python::bind_lsd_core_types(m);

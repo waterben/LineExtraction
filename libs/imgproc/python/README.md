@@ -106,3 +106,11 @@ To add bindings for a new filter (e.g., `LaplaceSimple`):
 1. Add a `bind_*` function in `filter_binding.hpp`/`.cpp`
 2. Call it from `module_le_imgproc.cpp`
 3. Add tests in both `test_filter_binding.cpp` and `test_le_imgproc.py`
+
+## See Also
+
+- [le_edge](../../edge/python/README.md) — edge detection (uses imgproc gradients)
+- [le_geometry](../../geometry/python/README.md) — geometric primitives and drawing
+- [le_lsd](../../lsd/python/README.md) — line segment detection
+- [le_eval](../../eval/python/README.md) — performance benchmarking
+- [Filter demo](../../../examples/imgproc/python/filter_demo.py) — runnable example script

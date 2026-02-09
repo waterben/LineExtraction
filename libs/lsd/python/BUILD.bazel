@@ -36,12 +36,14 @@ le_pybind_module(
     ],
     copts = LE_PYBIND_COPTS,
     py_deps = [
+        "//libs/geometry/python:le_geometry_lib",
         "//libs/imgproc/python:le_imgproc_lib",
         "//libs/edge/python:le_edge_lib",
     ],
     deps = [
         ":lsd_python_pybind",
         "//libs/edge/python:edge_python_pybind",
+        "//libs/geometry/python:geometry_python_pybind",
         "//libs/imgproc/python:imgproc_python_pybind",
     ],
 )
@@ -53,6 +55,7 @@ py_test(
     main = "tests/test_le_lsd.py",
     deps = [
         ":le_lsd_lib",
+        "//libs/geometry/python:le_geometry_lib",
         "@pip//numpy",
         "@pip//pytest",
     ],
