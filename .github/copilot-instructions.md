@@ -251,6 +251,16 @@ Python environment is in `.venv/` (created by setup script). Dependencies in `py
 - **Do** use pre-commit hooks (installed by setup script) for code quality
 - **WSL users**: Configure `DISPLAY` for X server (see `docs/WSL.md`)
 
+### Git Policy
+
+- **NEVER** run `git commit` or `git push` on your own unless the user has **explicitly** requested it.
+- Changes may be staged (e.g. `git add`, `git diff`), but must **not** be committed or pushed without explicit instruction.
+
+### Language Policy
+
+- **ALL** code comments, documentation (Doxygen, docstrings, READMEs), commit messages, instructions, and inline notes **must be written in English** throughout the entire repository.
+- This applies to every file type: C++, Python, Markdown, Bazel/Starlark, YAML, shell scripts, etc.
+
 ### Build System Priority
 
 1. **Default:** Use Bazel (`bazel build`, `bazel test`, `bazel run`)
