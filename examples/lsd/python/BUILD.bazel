@@ -1,0 +1,20 @@
+"""Python examples for lsd — line segment detection demo."""
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "lsd_demo",
+    srcs = ["lsd_demo.py"],
+    data = [
+        "//resources:windmill",
+    ],
+    deps = [
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "@pip//matplotlib",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

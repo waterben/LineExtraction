@@ -661,7 +661,7 @@ class LineSegment : public Line<FT, PT> {
   inline FT length() const { return detail::abs(end_ - beg_); }
 
   /// @brief Get detection octave.
-  inline int octave() const { return octave; }
+  inline int octave() const { return octave_; }
 
   /// @brief Set detection octave.
   inline void octave(int oct) const { this->octave_ = oct; }

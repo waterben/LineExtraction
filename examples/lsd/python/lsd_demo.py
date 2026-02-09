@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
-"""Interactive edge detection demo for the le_edge Python bindings.
+"""Interactive line segment detection demo for the le_lsd Python bindings.
 
-Loads an image, lets the user choose an edge source (Sobel/Scharr/Prewitt),
-an edge segment detector (Drawing/Simple/Linking/Pattern), run the pipeline,
-and display edge segments overlaid on the original image.
+Loads an image, lets the user choose a line segment detector (LsdCC, LsdBurns,
+LsdFGioi, LsdEDLZ, etc.), run the pipeline, and display detected line segments
+overlaid on the original image.
 
 Usage::
 
     # Via Bazel (uses bundled windmill.jpg by default)
-    bazel run //examples/edge/python:edge_demo
+    bazel run //examples/lsd/python:lsd_demo
 
     # With a custom image
-    bazel run //examples/edge/python:edge_demo -- /path/to/image.jpg
+    bazel run //examples/lsd/python:lsd_demo -- /path/to/image.jpg
 
-    # Directly (if le_edge is importable)
-    python edge_demo.py [image_path]
+    # Directly (if le_lsd is importable)
+    python lsd_demo.py [image_path]
 """
 
 from __future__ import annotations
 
 import argparse
+import colorsys
 import shutil
 import subprocess
 import sys
@@ -27,7 +28,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-import le_edge
+import le_lsd
 import matplotlib
 import numpy as np
 from PIL import Image
@@ -53,30 +54,53 @@ if not _INTERACTIVE:
 import matplotlib.pyplot as plt  # noqa: E402
 
 # ============================================================================
-# Available edge sources and detectors
+# Available detectors
 # ============================================================================
 
-#: Edge source classes keyed by display name.
-EDGE_SOURCES: dict[str, str] = {
-    "Sobel": "EdgeSourceSobel",
-    "Scharr": "EdgeSourceScharr",
-    "Prewitt": "EdgeSourcePrewitt",
+#: Detector classes keyed by display name.
+DETECTORS: dict[str, dict[str, Any]] = {
+    "CC (Connected Components)": {
+        "class": "LsdCC",
+        "desc": "Edge linking into connected components + split/fit",
+    },
+    "CP (CC with Patterns)": {
+        "class": "LsdCP",
+        "desc": "CC detection with pattern-based linking",
+    },
+    "Burns": {
+        "class": "LsdBurns",
+        "desc": "Classic Burns 'Extracting Straight Lines' algorithm",
+    },
+    "FBW (Fast Region Growing)": {
+        "class": "LsdFBW",
+        "desc": "Fast region growing from gradient-aligned seeds",
+    },
+    "FGioi (PLSD)": {
+        "class": "LsdFGioi",
+        "desc": "Probabilistic LSD using NFA validation",
+    },
+    "EDLines": {
+        "class": "LsdEDLZ",
+        "desc": "Edge Drawing Lines algorithm",
+    },
+    "EL (Edge Linking)": {
+        "class": "LsdEL",
+        "desc": "Sophisticated edge linking + NFA + sub-pixel",
+    },
+    "EP (Edge Pattern)": {
+        "class": "LsdEP",
+        "desc": "Edge pattern detection + split/fit",
+    },
+    "HoughP (Probabilistic Hough)": {
+        "class": "LsdHoughP",
+        "desc": "OpenCV Probabilistic Hough Transform",
+    },
 }
 
-#: Edge segment detector classes keyed by display name.
-DETECTORS: dict[str, str] = {
-    "Drawing": "EsdDrawing",
-    "Simple": "EsdSimple",
-    "Linking": "EsdLinking",
-    "Pattern": "EsdPattern",
-}
-
-#: Type presets with their suffix, numpy dtype, and description.
+#: Type presets.
 PRESETS: dict[str, dict[str, Any]] = {
-    "uint8  (default)": {"suffix": "", "dtype": np.uint8, "scale": 255},
-    "uint16 (_16u)": {"suffix": "_16u", "dtype": np.uint16, "scale": 65535},
-    "float32 (_f32)": {"suffix": "_f32", "dtype": np.float32, "scale": 1.0},
-    "float64 (_f64)": {"suffix": "_f64", "dtype": np.float64, "scale": 1.0},
+    "float (default)": {"suffix": "", "label": "float"},
+    "double (_f64)": {"suffix": "_f64", "label": "double"},
 }
 
 
@@ -118,31 +142,6 @@ def _numbered_menu(title: str, items: list[str], default: int = 0) -> int:
         print(f"  Please enter a number between 1 and {len(items)}.")
 
 
-def _ask_int(prompt: str, default: int, valid: list[int] | None = None) -> int:
-    """Ask the user for an integer value.
-
-    :param prompt: Prompt text.
-    :type prompt: str
-    :param default: Default value if the user presses Enter.
-    :type default: int
-    :param valid: Optional list of allowed values.
-    :type valid: list[int] or None
-    :return: The chosen integer.
-    :rtype: int
-    """
-    while True:
-        raw = input(f"  {prompt} [default={default}]: ").strip()
-        if not raw:
-            return default
-        try:
-            val = int(raw)
-            if valid is None or val in valid:
-                return val
-            print(f"  Allowed values: {valid}")
-        except ValueError:
-            print("  Please enter an integer.")
-
-
 def _load_image(path: str) -> np.ndarray:
     """Load an image as grayscale uint8 via Pillow.
 
@@ -175,7 +174,7 @@ def _show_or_save(fig: matplotlib.figure.Figure, filename: str) -> Path | None:
         plt.pause(0.1)
         return None
 
-    out_dir = Path(tempfile.mkdtemp(prefix="edge_demo_"))
+    out_dir = Path(tempfile.mkdtemp(prefix="lsd_demo_"))
     out_path = out_dir / filename
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"  Saved: {out_path}")
@@ -216,47 +215,63 @@ def _resolve_default_image() -> str:
         return str(TestImages().windmill())
     except (ImportError, FileNotFoundError):
         print("Error: no image specified and default windmill.jpg not found.")
-        print("Usage: edge_demo.py [image_path]")
+        print("Usage: lsd_demo.py [image_path]")
         sys.exit(1)
+
+
+def _generate_colors(n: int) -> list[tuple[float, float, float]]:
+    """Generate n visually distinct colors using HSV spacing.
+
+    :param n: Number of colors to generate.
+    :type n: int
+    :return: List of RGB tuples.
+    :rtype: list[tuple[float, float, float]]
+    """
+    colors = []
+    for i in range(max(n, 1)):
+        hue = i / max(n, 1)
+        rgb = colorsys.hsv_to_rgb(hue, 0.9, 0.9)
+        colors.append(rgb)
+    return colors
 
 
 def _draw_segments(
     ax: plt.Axes,
     img: np.ndarray,
-    segments: list[le_edge.EdgeSegment],
-    points: list[int],
+    segments: list[Any],
     title: str,
 ) -> None:
-    """Draw edge segments overlaid on the image.
+    """Draw line segments overlaid on the image.
 
-    Each segment is drawn in a different color.  Points are converted from
-    linear indices to (x, y) coordinates.
+    Each segment is drawn as a colored line between its endpoints.
 
     :param ax: Matplotlib axes to draw on.
     :type ax: matplotlib.axes.Axes
     :param img: Original grayscale image.
     :type img: numpy.ndarray
-    :param segments: List of detected edge segments.
-    :type segments: list[le_edge.EdgeSegment]
-    :param points: List of linear pixel indices (shared by all segments).
-    :type points: list[int]
+    :param segments: List of detected line segments (LineSegment objects).
+    :type segments: list
     :param title: Title for the subplot.
     :type title: str
     """
     ax.imshow(img, cmap="gray", alpha=0.5)
-    cols = img.shape[1]
 
-    # Use a colormap for distinct segment colors
-    cmap = plt.cm.get_cmap("tab20", max(len(segments), 1))
+    if len(segments) == 0:
+        ax.set_title(f"{title}\n(0 segments)")
+        ax.axis("off")
+        return
+
+    colors = _generate_colors(len(segments))
 
     for i, seg in enumerate(segments):
-        seg_indices = points[seg.begin : seg.end]
-        if not seg_indices:
-            continue
-        xs = [idx % cols for idx in seg_indices]
-        ys = [idx // cols for idx in seg_indices]
-        color = cmap(i % cmap.N)
-        ax.plot(xs, ys, ".", markersize=0.8, color=color, alpha=0.9)
+        ep = seg.end_points()  # (x1, y1, x2, y2)
+        ax.plot(
+            [ep[0], ep[2]],
+            [ep[1], ep[3]],
+            linewidth=1.5,
+            color=colors[i % len(colors)],
+            alpha=0.8,
+        )
 
     ax.set_title(f"{title}\n({len(segments)} segments)")
     ax.axis("off")
@@ -268,9 +283,9 @@ def _draw_segments(
 
 
 def main() -> None:
-    """Run the interactive edge detection demo."""
+    """Run the interactive line segment detection demo."""
     parser = argparse.ArgumentParser(
-        description="Interactive edge detection demo for le_edge."
+        description="Interactive line segment detection demo for le_lsd."
     )
     parser.add_argument(
         "image",
@@ -290,149 +305,124 @@ def main() -> None:
     saved_files: list[Path] = []
 
     # ------------------------------------------------------------------
-    # Step 2: Select edge source, detector, and preset
+    # Step 2: Select detector and preset
     # ------------------------------------------------------------------
-    source_names = list(EDGE_SOURCES.keys())
-    source_idx = _numbered_menu("Select edge source", source_names, default=0)
-    source_base = EDGE_SOURCES[source_names[source_idx]]
-
     detector_names = list(DETECTORS.keys())
     detector_idx = _numbered_menu(
-        "Select edge segment detector", detector_names, default=0
+        "Select line segment detector", detector_names, default=0
     )
-    detector_base = DETECTORS[detector_names[detector_idx]]
+    detector_info = DETECTORS[detector_names[detector_idx]]
 
     preset_names = list(PRESETS.keys())
     preset_idx = _numbered_menu("Select type preset", preset_names, default=0)
     preset = PRESETS[preset_names[preset_idx]]
 
-    min_pixels = _ask_int("Minimum segment length", default=10)
-
     # ------------------------------------------------------------------
-    # Step 3: Instantiate and configure
+    # Step 3: Instantiate detector
     # ------------------------------------------------------------------
     suffix = preset["suffix"]
-    es_cls_name = source_base + suffix
-    esd_cls_name = detector_base + suffix
+    cls_name = detector_info["class"] + suffix
 
-    # For ESD classes with MT=float (default, _16u, _f32) vs MT=double (_f64),
-    # the ESD suffix follows the MT type, not the IT type.
-    # Default/16u/f32 all use MT=float -> no suffix on ESD
-    # f64 uses MT=double -> _f64 suffix on ESD
-    esd_suffix = "_f64" if suffix == "_f64" else ""
-    esd_cls_name = detector_base + esd_suffix
-
-    es_cls = getattr(le_edge, es_cls_name)
-    esd_cls = getattr(le_edge, esd_cls_name)
-
-    es = es_cls()
-    esd = esd_cls()
-    esd.set_int("edge_min_pixels", min_pixels)
-
-    # Convert image to the chosen dtype
-    dtype = preset["dtype"]
-    scale = preset["scale"]
-    if dtype == np.uint8:
-        img = img_u8.copy()
-    elif dtype == np.uint16:
-        img = (img_u8.astype(np.uint16) * (scale // 255)).astype(np.uint16)
-    else:
-        img = (img_u8.astype(dtype) / 255.0 * scale).astype(dtype)
+    cls = getattr(le_lsd, cls_name)
+    det = cls()
 
     print(f"\n{'─' * 50}")
-    print(f"  Edge Source:  {es_cls_name}")
-    print(f"  Detector:     {esd_cls_name}")
-    print(f"  Min Pixels:   {min_pixels}")
-    print(f"  Image dtype:  {img.dtype}")
-    print(f"  Image range:  [{img.min()}, {img.max()}]")
+    print(f"  Detector:     {cls_name}")
+    print(f"  Description:  {detector_info['desc']}")
+    print(f"  Precision:    {preset['label']}")
+    print(f"  Image:        {img_u8.shape[1]}x{img_u8.shape[0]} uint8")
     print(f"{'─' * 50}")
 
     # ------------------------------------------------------------------
-    # Step 4: Process
+    # Step 4: Detect
     # ------------------------------------------------------------------
-    print("\nComputing edge source... ", end="", flush=True)
-    es.process(img)
+    print("\nDetecting line segments... ", end="", flush=True)
+    det.detect(img_u8)
     print("done.")
 
-    print("Detecting edge segments... ", end="", flush=True)
-    esd.detect(es)
-    print("done.")
-
-    segments = esd.segments()
-    points = esd.points()
+    segments = det.line_segments()
     num_segments = len(segments)
-    num_points = len(points)
-    print(f"\n  Found {num_segments} segments with {num_points} total points.")
+    print(f"\n  Found {num_segments} line segments.")
+
+    if num_segments > 0:
+        lengths = [seg.length for seg in segments]
+        print(f"  Length range: [{min(lengths):.1f}, {max(lengths):.1f}]")
+        print(f"  Mean length:  {sum(lengths) / len(lengths):.1f}")
 
     # ------------------------------------------------------------------
     # Step 5: Visualize results
     # ------------------------------------------------------------------
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
     fig.suptitle(
-        f"{es_cls_name} + {esd_cls_name}  (min_pixels={min_pixels})",
+        f"{cls_name} — Line Segment Detection",
         fontsize=14,
         fontweight="bold",
     )
 
-    # Top-left: Original image
-    axes[0, 0].imshow(img_u8, cmap="gray")
-    axes[0, 0].set_title("Original Image")
-    axes[0, 0].axis("off")
+    # Left: Original image
+    axes[0].imshow(img_u8, cmap="gray")
+    axes[0].set_title("Original Image")
+    axes[0].axis("off")
 
-    # Top-right: Magnitude map
-    mag = es.magnitude()
-    im_mag = axes[0, 1].imshow(mag.astype(np.float64), cmap="hot")
-    axes[0, 1].set_title("Edge Magnitude")
-    axes[0, 1].axis("off")
-    fig.colorbar(im_mag, ax=axes[0, 1], fraction=0.046, pad=0.04)
+    # Center: Detected segments overlaid on image
+    _draw_segments(axes[1], img_u8, segments, "Detected Segments")
 
-    # Bottom-left: Direction map (only where edges are detected)
-    direction = es.direction()
-    im_dir = axes[1, 0].imshow(direction.astype(np.float64), cmap="hsv")
-    axes[1, 0].set_title("Edge Direction")
-    axes[1, 0].axis("off")
-    fig.colorbar(im_dir, ax=axes[1, 0], fraction=0.046, pad=0.04)
+    # Right: Segments on black background
+    seg_img = np.zeros_like(img_u8)
+    for seg in segments:
+        ep = seg.end_points()  # (x1, y1, x2, y2)
+        x1, y1, x2, y2 = int(ep[0]), int(ep[1]), int(ep[2]), int(ep[3])
+        # Draw line on the segment image using Bresenham-like approach
+        npts = max(abs(x2 - x1), abs(y2 - y1), 1)
+        for t in range(npts + 1):
+            frac = t / npts
+            x = int(x1 + frac * (x2 - x1))
+            y = int(y1 + frac * (y2 - y1))
+            if 0 <= y < seg_img.shape[0] and 0 <= x < seg_img.shape[1]:
+                seg_img[y, x] = 255
 
-    # Bottom-right: Detected segments overlaid on image
-    _draw_segments(axes[1, 1], img_u8, segments, points, "Detected Segments")
+    axes[2].imshow(seg_img, cmap="gray")
+    axes[2].set_title(f"Segment Map ({num_segments})")
+    axes[2].axis("off")
 
     fig.tight_layout()
 
-    p = _show_or_save(fig, "edge_results.png")
+    p = _show_or_save(fig, "lsd_results.png")
     if p:
         saved_files.append(p)
 
     # ------------------------------------------------------------------
-    # Step 6: Additional view — hysteresis binary edge map
+    # Step 6: Additional view — image data layers (if available)
     # ------------------------------------------------------------------
-    fig2, axes2 = plt.subplots(1, 2, figsize=(12, 5))
-    fig2.suptitle("Edge Maps", fontsize=14, fontweight="bold")
+    try:
+        desc = det.image_data_descriptor()
+        data = det.image_data()
+    except Exception:
+        desc = []
+        data = []
 
-    # Hysteresis binary
-    hyst_bin = es.hysteresis_binary()
-    axes2[0].imshow(hyst_bin, cmap="gray")
-    axes2[0].set_title("Hysteresis Binary")
-    axes2[0].axis("off")
+    if desc and data:
+        num_layers = min(len(desc), 4)  # Show up to 4 layers
+        fig2, axes2 = plt.subplots(1, num_layers, figsize=(4 * num_layers, 4))
+        fig2.suptitle(
+            f"{cls_name} — Auxiliary Image Data", fontsize=14, fontweight="bold"
+        )
 
-    # Segment overlay on black background
-    seg_img = np.zeros_like(img_u8)
-    cols = img_u8.shape[1]
-    for seg in segments:
-        seg_indices = points[seg.begin : seg.end]
-        for idx in seg_indices:
-            row = idx // cols
-            col = idx % cols
-            if 0 <= row < seg_img.shape[0] and 0 <= col < seg_img.shape[1]:
-                seg_img[row, col] = 255
-    axes2[1].imshow(seg_img, cmap="gray")
-    axes2[1].set_title(f"Edge Segments ({num_segments})")
-    axes2[1].axis("off")
+        if num_layers == 1:
+            axes2 = [axes2]
 
-    fig2.tight_layout()
+        for i in range(num_layers):
+            layer = data[i]
+            layer_name = desc[i].name
+            axes2[i].imshow(layer.astype(np.float64), cmap="hot")
+            axes2[i].set_title(layer_name)
+            axes2[i].axis("off")
 
-    p = _show_or_save(fig2, "edge_maps.png")
-    if p:
-        saved_files.append(p)
+        fig2.tight_layout()
+
+        p = _show_or_save(fig2, "lsd_image_data.png")
+        if p:
+            saved_files.append(p)
 
     if saved_files:
         _open_images(saved_files)
