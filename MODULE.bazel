@@ -48,6 +48,28 @@ bazel_dep(name = "superlu", version = "7.0.1")
 # pybind11 for Python bindings
 bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 
+# cvnp - pybind11 type_casters for cv::Mat <-> numpy with shared memory
+# Provides zero-copy conversion for Mat, Mat_, plus casters for Matx, Vec,
+# Size, Point, Point3, Scalar, Rect
+bazel_dep(name = "cvnp", version = "1.0.0")
+
+# =============================================================================
+# Python toolchain and pip dependencies
+# =============================================================================
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.12",
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pip",
+    python_version = "3.12",
+    requirements_lock = "//tools/bazel:requirements_lock.txt",
+)
+use_repo(pip, "pip")
+
 # HTTP archive for external dependencies
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 

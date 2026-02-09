@@ -70,6 +70,19 @@ LE_BENCHMARK_COPTS = LE_COPTS_BASE + [
     "-Wno-deprecated-declarations",  # benchmark::DoNotOptimize deprecation
 ]
 
+# Warning flags for pybind11 binding code
+# Relaxed warnings because pybind11 macros generate code that triggers
+# -Weffc++, -Wold-style-cast, -Wconversion, etc.
+LE_PYBIND_COPTS = LE_COPTS_BASE + [
+    "-Werror",
+    "-Wno-effc++",
+    "-Wno-old-style-cast",
+    "-Wno-conversion",
+    "-Wno-sign-conversion",
+    "-Wno-zero-as-null-pointer-constant",
+    "-Wno-unused-parameter",
+]
+
 # Warning suppressions for arpack++ headers (legacy C++98 code)
 # arpack++ is not a system include, so we need to suppress warnings manually
 ARPACKPP_COPTS = [

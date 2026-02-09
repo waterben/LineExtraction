@@ -1,0 +1,50 @@
+"""lib_eval Python bindings"""
+
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_python//python:defs.bzl", "py_test")
+load("//tools/bazel:copts.bzl", "LE_PYBIND_COPTS")
+load("//tools/bazel:pybind.bzl", "le_pybind_module")
+
+package(default_visibility = ["//visibility:public"])
+
+# Reusable C++ binding library (can be linked by other pybind modules)
+pybind_library(
+    name = "eval_python_pybind",
+    srcs = [
+        "src/eval_binding.cpp",
+    ],
+    hdrs = [
+        "src/eval_binding.hpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    includes = ["src"],
+    deps = [
+        "//libs/eval:lib_eval",
+        "//libs/utility:lib_utility",
+        "@cvnp",
+    ],
+)
+
+# Python extension module: import le_eval
+le_pybind_module(
+    name = "le_eval",
+    srcs = [
+        "src/module_le_eval.cpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    deps = [
+        ":eval_python_pybind",
+    ],
+)
+
+# Python integration test
+py_test(
+    name = "test_le_eval",
+    srcs = ["tests/test_le_eval.py"],
+    main = "tests/test_le_eval.py",
+    deps = [
+        ":le_eval_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)

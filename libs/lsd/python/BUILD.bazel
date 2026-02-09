@@ -1,0 +1,62 @@
+"""lib_lsd Python bindings"""
+
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_python//python:defs.bzl", "py_test")
+load("//tools/bazel:copts.bzl", "LE_PYBIND_COPTS")
+load("//tools/bazel:pybind.bzl", "le_pybind_module")
+
+package(default_visibility = ["//visibility:public"])
+
+# Reusable C++ binding library (can be linked by other pybind modules)
+pybind_library(
+    name = "lsd_python_pybind",
+    srcs = [
+        "src/lsd_binding.cpp",
+    ],
+    hdrs = [
+        "src/lsd_binding.hpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    includes = ["src"],
+    deps = [
+        "//libs/edge:lib_edge",
+        "//libs/geometry:lib_geometry",
+        "//libs/imgproc:lib_imgproc",
+        "//libs/lsd:lib_lsd",
+        "//libs/utility:lib_utility",
+        "@cvnp",
+    ],
+)
+
+# Python extension module: import le_lsd
+le_pybind_module(
+    name = "le_lsd",
+    srcs = [
+        "src/module_le_lsd.cpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    py_deps = [
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/imgproc/python:le_imgproc_lib",
+        "//libs/edge/python:le_edge_lib",
+    ],
+    deps = [
+        ":lsd_python_pybind",
+        "//libs/edge/python:edge_python_pybind",
+        "//libs/geometry/python:geometry_python_pybind",
+        "//libs/imgproc/python:imgproc_python_pybind",
+    ],
+)
+
+# Python integration test
+py_test(
+    name = "test_le_lsd",
+    srcs = ["tests/test_le_lsd.py"],
+    main = "tests/test_le_lsd.py",
+    deps = [
+        ":le_lsd_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)

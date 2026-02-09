@@ -1,0 +1,29 @@
+"""Shared Python utilities for the lsfm (LineExtraction) project."""
+
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "lsfm",
+    srcs = [
+        "__init__.py",
+        "data.py",
+    ],
+    imports = [".."],
+)
+
+py_test(
+    name = "test_data",
+    srcs = ["tests/test_data.py"],
+    data = [
+        "//resources:windmill",
+        "//resources/datasets:noise",
+    ],
+    main = "tests/test_data.py",
+    deps = [
+        ":lsfm",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)

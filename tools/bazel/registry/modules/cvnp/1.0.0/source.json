@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/pthom/cvnp/archive/7a79541431671030a817c4fa2a3c511d8b6af904.tar.gz",
+  "integrity": "sha256-k0iPpVoMctn1QpnCxMKXf7JxMLs7JHEoQcprD9jKBuI=",
+  "strip_prefix": "cvnp-7a79541431671030a817c4fa2a3c511d8b6af904",
+  "overlay": {
+    "BUILD.bazel": "sha256-E3EpQr+OMJl4jzFUNyp/Ag7VNMCzY0JNYq563RUvNnQ="
+  }
+}

@@ -185,6 +185,9 @@ LineExtraction/
     ├── bazel/
     │   ├── qt5.bzl           # Qt5 MOC/UIC build rules
     │   ├── copts.bzl         # Shared compiler flags
+    │   ├── pybind.bzl        # pybind11 build rules
+    │   ├── requirements.in   # Direct pip deps (input)
+    │   ├── requirements_lock.txt  # Generated lockfile (pip.parse)
     │   └── registry/         # Local Bazel registry (dlib)
     └── scripts/
         └── detect_bazel_features.sh  # Feature detection
@@ -208,6 +211,68 @@ Managed via Bzlmod (`MODULE.bazel`):
 | bazel_skylib | 1.9.0 | BCR |
 | rules_cc | 0.2.15 | BCR |
 | rules_python | 1.1.0 | BCR |
+
+### Python Dependencies (pip)
+
+Python packages used by Bazel `py_test` and `py_binary` targets are managed via
+a **requirements lockfile** (`tools/bazel/requirements_lock.txt`).  The lockfile
+is auto-generated from `tools/bazel/requirements.in` — **never edit it by hand**.
+
+#### Files
+
+| File | Role |
+|------|------|
+| `pyproject.toml` | All project Python deps — used by the local `.venv/` (via `uv`) |
+| `tools/bazel/requirements.in` | Direct deps for Bazel targets (subset of `pyproject.toml`) |
+| `tools/bazel/requirements_lock.txt` | Auto-generated lockfile consumed by `pip.parse` in `MODULE.bazel` |
+
+#### Adding a new pip dependency
+
+1. Add the package to **both** `pyproject.toml` and `tools/bazel/requirements.in`:
+
+   ```bash
+   # pyproject.toml  →  project.dependencies
+   # tools/bazel/requirements.in  →  new line
+   ```
+
+2. Regenerate the Bazel lockfile:
+
+   ```bash
+   uv pip compile tools/bazel/requirements.in \
+       -o tools/bazel/requirements_lock.txt \
+       --python-version 3.12
+   ```
+
+3. Install into the local venv:
+
+   ```bash
+   uv pip install <package>
+   ```
+
+4. Reference the package in your `BUILD.bazel`:
+
+   ```python
+   py_binary(
+       name = "my_script",
+       srcs = ["my_script.py"],
+       deps = [
+           "@pip//matplotlib",
+           "@pip//numpy",
+       ],
+   )
+   ```
+
+   **Note:** Bazel pip package names are **lowercased** and use **underscores**
+   (e.g. `@pip//pillow`, not `@pip//Pillow`).
+
+#### Currently available packages
+
+| Package | Bazel target | Used by |
+|---------|-------------|---------|
+| numpy | `@pip//numpy` | Tests, examples |
+| pytest | `@pip//pytest` | All `py_test` targets |
+| matplotlib | `@pip//matplotlib` | Filter demo example |
+| Pillow | `@pip//pillow` | Filter demo example |
 
 ### opencv_contrib Modules
 
