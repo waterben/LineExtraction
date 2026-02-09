@@ -1,0 +1,20 @@
+"""Python examples for imgproc — gradient filter demo."""
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "filter_demo",
+    srcs = ["filter_demo.py"],
+    data = [
+        "//resources:windmill",
+    ],
+    deps = [
+        "//libs/imgproc/python:le_imgproc_lib",
+        "//python/lsfm",
+        "@pip//matplotlib",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

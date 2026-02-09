@@ -1,0 +1,16 @@
+# Direct pip dependencies required by Bazel Python targets.
+#
+# This is the INPUT file — do NOT edit requirements_lock.txt manually.
+# Instead, edit this file and regenerate the lockfile:
+#
+#   uv pip compile tools/bazel/requirements.in \
+#       -o tools/bazel/requirements_lock.txt \
+#       --python-version 3.12
+#
+# These packages are a subset of pyproject.toml [project.dependencies].
+# Only packages used by Bazel py_test / py_binary targets belong here.
+
+numpy>=1.24.0
+pytest>=8.0.0
+matplotlib>=3.9.0
+Pillow>=10.0.0
