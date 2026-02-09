@@ -1,13 +1,19 @@
 """Tests for le_imgproc Python bindings.
 
 Verifies that the pybind11 bindings for FilterI, GradientI, LaplaceI,
-and concrete gradient filters work correctly from Python.
+and concrete gradient filters work correctly from Python across all
+type presets (uint8, uint16, float32, float64).
 """
 
 import numpy as np
 import pytest
 
 import le_imgproc
+
+
+# ============================================================================
+# Core types (shared across all presets)
+# ============================================================================
 
 
 class TestRangeTypes:
@@ -43,11 +49,23 @@ class TestRangeTypes:
         assert r.lower == pytest.approx(0.0)
         assert r.upper == pytest.approx(1.0)
 
+    def test_range_s(self) -> None:
+        r = le_imgproc.RangeS(-100, 100)
+        assert r.lower == -100
+        assert r.upper == 100
+        assert r.size() == 200
+
     def test_range_uchar(self) -> None:
         r = le_imgproc.RangeUChar(0, 255)
         assert r.lower == 0
         assert r.upper == 255
         assert r.size() == 255
+
+    def test_range_ushort(self) -> None:
+        r = le_imgproc.RangeUShort(0, 65535)
+        assert r.lower == 0
+        assert r.upper == 65535
+        assert r.size() == 65535
 
 
 class TestValue:
@@ -93,6 +111,11 @@ class TestFilterData:
         img = np.zeros((10, 10), dtype=np.uint8)
         fd = le_imgproc.FilterData(img, 0.0, 255.0)
         assert "FilterData" in repr(fd)
+
+
+# ============================================================================
+# Default preset (uint8 / uchar) — no suffix
+# ============================================================================
 
 
 class TestSobelGradient:
@@ -232,6 +255,235 @@ class TestValueManager:
         grad.set_int("grad_kernel_size", 5)
         v2 = grad.get_value("grad_kernel_size")
         assert v2.get_int() == 5
+
+
+# ============================================================================
+# Abstract interface existence (ensures trampolines registered per preset)
+# ============================================================================
+
+
+class TestAbstractInterfaces:
+    """Test that abstract interfaces exist for all presets."""
+
+    @pytest.mark.parametrize(
+        "cls_name",
+        ["FilterI", "FilterI_16u", "FilterI_f32", "FilterI_f64"],
+    )
+    def test_filter_interface_exists(self, cls_name: str) -> None:
+        cls = getattr(le_imgproc, cls_name)
+        assert cls is not None
+
+    @pytest.mark.parametrize(
+        "cls_name",
+        ["GradientI", "GradientI_16u", "GradientI_f32", "GradientI_f64"],
+    )
+    def test_gradient_interface_exists(self, cls_name: str) -> None:
+        cls = getattr(le_imgproc, cls_name)
+        assert cls is not None
+
+    @pytest.mark.parametrize(
+        "cls_name",
+        ["LaplaceI", "LaplaceI_16u", "LaplaceI_f32", "LaplaceI_f64"],
+    )
+    def test_laplace_interface_exists(self, cls_name: str) -> None:
+        cls = getattr(le_imgproc, cls_name)
+        assert cls is not None
+
+    @pytest.mark.parametrize(
+        "cls_name",
+        [
+            "GradientBase",
+            "GradientBase_16u",
+            "GradientBase_f32",
+            "GradientBase_f64",
+        ],
+    )
+    def test_gradient_base_exists(self, cls_name: str) -> None:
+        cls = getattr(le_imgproc, cls_name)
+        assert cls is not None
+
+
+# ============================================================================
+# Parametrised multi-type gradient tests
+# ============================================================================
+
+
+def _make_edge_image(dtype: np.dtype, high: float) -> np.ndarray:
+    """Create a 64x64 image with a vertical edge at column 32."""
+    img = np.zeros((64, 64), dtype=dtype)
+    img[:, 32:] = high
+    return img
+
+
+class TestSobelGradientPresets:
+    """Test SobelGradient across all type presets."""
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 255),
+            ("_16u", np.uint16, 60000),
+            ("_f32", np.float32, 1.0),
+            ("_f64", np.float64, 1.0),
+        ],
+    )
+    def test_construction(self, suffix: str, dtype: np.dtype, high: float) -> None:
+        cls = getattr(le_imgproc, "SobelGradient" + suffix)
+        grad = cls()
+        assert grad.name() == "derivative_sobel"
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 255),
+            ("_16u", np.uint16, 60000),
+            ("_f32", np.float32, 1.0),
+            ("_f64", np.float64, 1.0),
+        ],
+    )
+    def test_process_and_results(
+        self, suffix: str, dtype: np.dtype, high: float
+    ) -> None:
+        cls = getattr(le_imgproc, "SobelGradient" + suffix)
+        grad = cls()
+        img = _make_edge_image(dtype, high)
+
+        grad.process(img)
+
+        mag = grad.magnitude()
+        assert mag is not None
+        assert mag.shape == (64, 64)
+        assert np.max(mag) > 0, f"No gradient response for {suffix}"
+
+        direction = grad.direction()
+        assert direction is not None
+        assert direction.shape == (64, 64)
+
+        gx = grad.gx()
+        gy = grad.gy()
+        assert gx.shape == (64, 64)
+        assert gy.shape == (64, 64)
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 255),
+            ("_16u", np.uint16, 60000),
+            ("_f32", np.float32, 1.0),
+            ("_f64", np.float64, 1.0),
+        ],
+    )
+    def test_results_dict(self, suffix: str, dtype: np.dtype, high: float) -> None:
+        cls = getattr(le_imgproc, "SobelGradient" + suffix)
+        grad = cls()
+        img = _make_edge_image(dtype, high)
+        grad.process(img)
+
+        results = grad.results()
+        for key in ("gx", "gy", "mag", "dir"):
+            assert key in results, f"Missing '{key}' in results for {suffix}"
+            assert isinstance(results[key], le_imgproc.FilterData)
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 255),
+            ("_f32", np.float32, 1.0),
+        ],
+    )
+    def test_magnitude_range(self, suffix: str, dtype: np.dtype, high: float) -> None:
+        cls = getattr(le_imgproc, "SobelGradient" + suffix)
+        grad = cls()
+        mr = grad.magnitude_range()
+        assert mr.lower == pytest.approx(0.0)
+        assert mr.upper > 0
+
+
+class TestScharrGradientPresets:
+    """Test ScharrGradient across all type presets."""
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 200),
+            ("_16u", np.uint16, 50000),
+            ("_f32", np.float32, 1.0),
+            ("_f64", np.float64, 1.0),
+        ],
+    )
+    def test_process(self, suffix: str, dtype: np.dtype, high: float) -> None:
+        cls = getattr(le_imgproc, "ScharrGradient" + suffix)
+        grad = cls()
+        assert grad.name() == "derivative_scharr"
+
+        img = _make_edge_image(dtype, high)
+        grad.process(img)
+
+        mag = grad.magnitude()
+        assert mag is not None
+        assert np.max(mag) > 0, f"No gradient response for ScharrGradient{suffix}"
+
+
+class TestPrewittGradientPresets:
+    """Test PrewittGradient across all type presets."""
+
+    @pytest.mark.parametrize(
+        "suffix, dtype, high",
+        [
+            ("", np.uint8, 200),
+            ("_16u", np.uint16, 50000),
+            ("_f32", np.float32, 1.0),
+            ("_f64", np.float64, 1.0),
+        ],
+    )
+    def test_process(self, suffix: str, dtype: np.dtype, high: float) -> None:
+        cls = getattr(le_imgproc, "PrewittGradient" + suffix)
+        grad = cls()
+        assert grad.name() == "derivative_prewitt"
+
+        img = _make_edge_image(dtype, high)
+        grad.process(img)
+
+        mag = grad.magnitude()
+        assert mag is not None
+        assert np.max(mag) > 0, f"No gradient response for PrewittGradient{suffix}"
+
+
+# ============================================================================
+# Float-preset specific tests (intensity range with floating point bounds)
+# ============================================================================
+
+
+class TestFloatPreset:
+    """Test float32 preset construction with custom intensity range."""
+
+    def test_sobel_f32_custom_range(self) -> None:
+        grad = le_imgproc.SobelGradient_f32(0.0, 1.0)
+        r = grad.intensity_range()
+        assert r.lower == pytest.approx(0.0)
+        assert r.upper == pytest.approx(1.0)
+
+    def test_sobel_f64_custom_range(self) -> None:
+        grad = le_imgproc.SobelGradient_f64(0.0, 1.0)
+        r = grad.intensity_range()
+        assert r.lower == pytest.approx(0.0)
+        assert r.upper == pytest.approx(1.0)
+
+    def test_sobel_16u_custom_range(self) -> None:
+        grad = le_imgproc.SobelGradient_16u(0, 4095)
+        r = grad.intensity_range()
+        assert r.lower == 0
+        assert r.upper == 4095
+
+    def test_value_manager_on_f32(self) -> None:
+        grad = le_imgproc.SobelGradient_f32()
+        vals = grad.values()
+        assert isinstance(vals, dict)
+        assert len(vals) > 0
+
+        grad.set_int("grad_kernel_size", 5)
+        v = grad.get_value("grad_kernel_size")
+        assert v.get_int() == 5
 
 
 if __name__ == "__main__":

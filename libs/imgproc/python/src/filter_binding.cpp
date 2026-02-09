@@ -1,9 +1,15 @@
 /// @file filter_binding.cpp
-/// @brief pybind11 bindings for the imgproc filter interface hierarchy.
+/// @brief Templated pybind11 bindings for the imgproc filter hierarchy.
 ///
-/// Binds core types (Range, Value, ValueManager, FilterData) and the abstract
-/// filter interfaces (FilterI, GradientI, LaplaceI) along with concrete
-/// implementations (DerivativeGradient with Sobel/Scharr/Prewitt).
+/// Implements the templated binding functions declared in filter_binding.hpp
+/// and provides explicit template instantiations for the standard presets:
+///
+///   | Suffix  | IT     | GT     | MT     | DT     | LT     |
+///   |---------|--------|--------|--------|--------|--------|
+///   | (none)  | uchar  | short  | float  | float  | int    |
+///   | _16u    | ushort | float  | float  | float  | int    |
+///   | _f32    | float  | float  | float  | float  | float  |
+///   | _f64    | double | double | double | double | double |
 
 #include "filter_binding.hpp"
 
@@ -18,140 +24,116 @@
 #include <utility/value.hpp>
 #include <utility/value_manager.hpp>
 
+#include <limits>
+#include <string>
+
 namespace py = pybind11;
 
 namespace lsfm {
 namespace python {
 
 // ============================================================================
-// Trampoline classes for abstract interfaces
+// Templated trampoline classes for abstract interfaces
 // ============================================================================
 
-// Type aliases to avoid PYBIND11_COMMA issues in PYBIND11_OVERRIDE macros
-using FilterI_uchar = FilterI<uchar>;
-using GradientI_uchar = GradientI<uchar, short, float, float>;
-using LaplaceI_uchar = LaplaceI<uchar, int>;
-
-/// @brief Trampoline class enabling Python subclassing of FilterI<uchar>.
-class PyFilterI : public FilterI_uchar {
+/// @brief Trampoline enabling Python subclassing of FilterI<IT>.
+/// @tparam IT Input image pixel type
+template <class IT>
+class PyFilterI : public FilterI<IT> {
  public:
-  using FilterI_uchar::FilterI;
+  using FilterI<IT>::FilterI;
 
-  Range<uchar> intensityRange() const override { PYBIND11_OVERRIDE_PURE(Range<uchar>, FilterI_uchar, intensityRange); }
+  Range<IT> intensityRange() const override { PYBIND11_OVERRIDE_PURE(Range<IT>, FilterI<IT>, intensityRange); }
 
-  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, FilterI_uchar, process, img); }
+  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, FilterI<IT>, process, img); }
 
-  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, FilterI_uchar, results); }
+  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, FilterI<IT>, results); }
 
-  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, FilterI_uchar, name); }
+  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, FilterI<IT>, name); }
 };
 
-/// @brief Trampoline for GradientI<uchar, short, int, float>.
-class PyGradientI : public GradientI_uchar {
+/// @brief Trampoline enabling Python subclassing of GradientI<IT,GT,MT,DT>.
+template <class IT, class GT, class MT, class DT>
+class PyGradientI : public GradientI<IT, GT, MT, DT> {
+  using Base = GradientI<IT, GT, MT, DT>;
+
  public:
-  using GradientI_uchar::GradientI;
+  using Base::Base;
 
-  Range<uchar> intensityRange() const override {
-    PYBIND11_OVERRIDE_PURE(Range<uchar>, GradientI_uchar, intensityRange);
-  }
+  Range<IT> intensityRange() const override { PYBIND11_OVERRIDE_PURE(Range<IT>, Base, intensityRange); }
 
-  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, GradientI_uchar, process, img); }
+  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, Base, process, img); }
 
-  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, GradientI_uchar, results); }
+  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, Base, results); }
 
-  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, GradientI_uchar, name); }
+  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, Base, name); }
 
-  cv::Mat magnitude() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, GradientI_uchar, magnitude); }
+  cv::Mat magnitude() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, Base, magnitude); }
 
-  Range<float> magnitudeRange() const override {
-    PYBIND11_OVERRIDE_PURE(Range<float>, GradientI_uchar, magnitudeRange);
-  }
+  Range<MT> magnitudeRange() const override { PYBIND11_OVERRIDE_PURE(Range<MT>, Base, magnitudeRange); }
 
-  cv::Mat direction() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, GradientI_uchar, direction); }
+  cv::Mat direction() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, Base, direction); }
 
-  Range<float> directionRange() const override {
-    PYBIND11_OVERRIDE_PURE(Range<float>, GradientI_uchar, directionRange);
-  }
+  Range<DT> directionRange() const override { PYBIND11_OVERRIDE_PURE(Range<DT>, Base, directionRange); }
 };
 
-/// @brief Trampoline for LaplaceI<uchar, int>.
-class PyLaplaceI : public LaplaceI_uchar {
+/// @brief Trampoline enabling Python subclassing of LaplaceI<IT,LT>.
+template <class IT, class LT>
+class PyLaplaceI : public LaplaceI<IT, LT> {
+  using Base = LaplaceI<IT, LT>;
+
  public:
-  using LaplaceI_uchar::LaplaceI;
+  using Base::Base;
 
-  Range<uchar> intensityRange() const override { PYBIND11_OVERRIDE_PURE(Range<uchar>, LaplaceI_uchar, intensityRange); }
+  Range<IT> intensityRange() const override { PYBIND11_OVERRIDE_PURE(Range<IT>, Base, intensityRange); }
 
-  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, LaplaceI_uchar, process, img); }
+  void process(const cv::Mat& img) override { PYBIND11_OVERRIDE_PURE(void, Base, process, img); }
 
-  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, LaplaceI_uchar, results); }
+  FilterResults results() const override { PYBIND11_OVERRIDE_PURE(FilterResults, Base, results); }
 
-  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, LaplaceI_uchar, name); }
+  std::string name() const override { PYBIND11_OVERRIDE_PURE(std::string, Base, name); }
 
-  cv::Mat laplace() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, LaplaceI_uchar, laplace); }
+  cv::Mat laplace() const override { PYBIND11_OVERRIDE_PURE(cv::Mat, Base, laplace); }
 
-  Range<int> laplaceRange() const override { PYBIND11_OVERRIDE_PURE(Range<int>, LaplaceI_uchar, laplaceRange); }
+  Range<LT> laplaceRange() const override { PYBIND11_OVERRIDE_PURE(Range<LT>, Base, laplaceRange); }
 };
 
 // ============================================================================
-// Core type bindings
+// Core type bindings (non-templated, called once)
 // ============================================================================
+
+/// @brief Helper to bind a single Range<T> specialization.
+/// @tparam T The scalar type for the range
+/// @param m Module
+/// @param name Python class name (e.g. "RangeD")
+/// @param doc Brief docstring
+template <class T>
+static void bind_range(py::module_& m, const char* name, const char* doc) {
+  py::class_<Range<T>>(m, name, doc)
+      .def(py::init<T, T>(), py::arg("lower") = T{0}, py::arg("upper") = T{0})
+      .def_readwrite("lower", &Range<T>::lower, "Lower bound.")
+      .def_readwrite("upper", &Range<T>::upper, "Upper bound.")
+      .def("size", &Range<T>::size, "Absolute size of range.")
+      .def("swap", &Range<T>::swap, "Swap lower and upper bounds.")
+      .def("__repr__", [name](const Range<T>& r) {
+        // Promote small integer types to int to avoid -Wsign-promo with std::to_string.
+        if constexpr (sizeof(T) < sizeof(int)) {
+          return std::string(name) + "(lower=" + std::to_string(static_cast<int>(r.lower)) +
+                 ", upper=" + std::to_string(static_cast<int>(r.upper)) + ")";
+        } else {
+          return std::string(name) + "(lower=" + std::to_string(r.lower) + ", upper=" + std::to_string(r.upper) + ")";
+        }
+      });
+}
 
 void bind_core_types(py::module_& m) {
-  // --- Range<double> ---
-  py::class_<Range<double>>(m, "RangeD", "Value range with double bounds.")
-      .def(py::init<double, double>(), py::arg("lower") = 0.0, py::arg("upper") = 0.0)
-      .def_readwrite("lower", &Range<double>::lower, "Lower bound.")
-      .def_readwrite("upper", &Range<double>::upper, "Upper bound.")
-      .def("size", &Range<double>::size, "Absolute size of range.")
-      .def("swap", &Range<double>::swap, "Swap lower and upper bounds.")
-      .def("__repr__", [](const Range<double>& r) {
-        return "RangeD(lower=" + std::to_string(r.lower) + ", upper=" + std::to_string(r.upper) + ")";
-      });
-
-  // --- Range<int> ---
-  py::class_<Range<int>>(m, "RangeI", "Value range with integer bounds.")
-      .def(py::init<int, int>(), py::arg("lower") = 0, py::arg("upper") = 0)
-      .def_readwrite("lower", &Range<int>::lower)
-      .def_readwrite("upper", &Range<int>::upper)
-      .def("size", &Range<int>::size)
-      .def("swap", &Range<int>::swap)
-      .def("__repr__", [](const Range<int>& r) {
-        return "RangeI(lower=" + std::to_string(r.lower) + ", upper=" + std::to_string(r.upper) + ")";
-      });
-
-  // --- Range<float> ---
-  py::class_<Range<float>>(m, "RangeF", "Value range with float bounds.")
-      .def(py::init<float, float>(), py::arg("lower") = 0.0f, py::arg("upper") = 0.0f)
-      .def_readwrite("lower", &Range<float>::lower)
-      .def_readwrite("upper", &Range<float>::upper)
-      .def("size", &Range<float>::size)
-      .def("swap", &Range<float>::swap)
-      .def("__repr__", [](const Range<float>& r) {
-        return "RangeF(lower=" + std::to_string(r.lower) + ", upper=" + std::to_string(r.upper) + ")";
-      });
-
-  // --- Range<uchar> ---
-  py::class_<Range<uchar>>(m, "RangeUChar", "Value range with uchar bounds (0-255).")
-      .def(py::init<uchar, uchar>(), py::arg("lower") = 0, py::arg("upper") = 0)
-      .def_readwrite("lower", &Range<uchar>::lower)
-      .def_readwrite("upper", &Range<uchar>::upper)
-      .def("size", &Range<uchar>::size)
-      .def("swap", &Range<uchar>::swap)
-      .def("__repr__", [](const Range<uchar>& r) {
-        return "RangeUChar(lower=" + std::to_string(static_cast<int>(r.lower)) +
-               ", upper=" + std::to_string(static_cast<int>(r.upper)) + ")";
-      });
-
-  // --- Range<short> ---
-  py::class_<Range<short>>(m, "RangeS", "Value range with short bounds.")
-      .def(py::init<short, short>(), py::arg("lower") = 0, py::arg("upper") = 0)
-      .def_readwrite("lower", &Range<short>::lower)
-      .def_readwrite("upper", &Range<short>::upper)
-      .def("size", &Range<short>::size)
-      .def("swap", &Range<short>::swap)
-      .def("__repr__", [](const Range<short>& r) {
-        return "RangeS(lower=" + std::to_string(r.lower) + ", upper=" + std::to_string(r.upper) + ")";
-      });
+  // Range specializations for every type used across all presets.
+  bind_range<double>(m, "RangeD", "Value range with double bounds.");
+  bind_range<float>(m, "RangeF", "Value range with float bounds.");
+  bind_range<int>(m, "RangeI", "Value range with int32 bounds.");
+  bind_range<short>(m, "RangeS", "Value range with int16 bounds.");
+  bind_range<uchar>(m, "RangeUChar", "Value range with uint8 bounds (0-255).");
+  bind_range<ushort>(m, "RangeUShort", "Value range with uint16 bounds (0-65535).");
 
   // --- FilterData ---
   py::class_<FilterData>(m, "FilterData",
@@ -169,8 +151,7 @@ void bind_core_types(py::module_& m) {
       });
 
   // --- Value ---
-  // Note: bool constructor must be registered before int to avoid Python
-  // bool->int implicit conversion ambiguity
+  // Note: bool constructor registered before int to avoid Python bool→int ambiguity.
   py::class_<Value>(m, "Value", "Type-safe variant supporting float, int, bool, and string.")
       .def(py::init<bool>(), py::arg("val"))
       .def(py::init<int>(), py::arg("val"))
@@ -184,7 +165,7 @@ void bind_core_types(py::module_& m) {
       .def("to_string", &Value::toString, "Convert to string representation.")
       .def("__repr__", [](const Value& v) { return "Value(" + v.toString() + ")"; });
 
-  // --- ValueManager (base, exposed for get/set) ---
+  // --- ValueManager ---
   py::class_<ValueManager>(m, "ValueManager",
                            "Base class for runtime-configurable parameters.\n"
                            "Provides get/set access to named algorithm parameters.")
@@ -200,55 +181,57 @@ void bind_core_types(py::module_& m) {
           },
           "Get all parameters as a dict {name: Value}.")
       .def(
-          "get_value", [](const ValueManager& vm, const std::string& name) { return vm.value(name); }, py::arg("name"),
+          "get_value", [](const ValueManager& vm, const std::string& n) { return vm.value(n); }, py::arg("name"),
           "Get parameter value by name.")
       .def(
-          "set_value", [](ValueManager& vm, const std::string& name, const Value& v) { vm.value(name, v); },
-          py::arg("name"), py::arg("value"), "Set parameter value by name.")
+          "set_value", [](ValueManager& vm, const std::string& n, const Value& v) { vm.value(n, v); }, py::arg("name"),
+          py::arg("value"), "Set parameter value by name.")
       .def(
-          "set_int", [](ValueManager& vm, const std::string& name, int v) { vm.value(name, Value(v)); },
-          py::arg("name"), py::arg("value"), "Set integer parameter by name.")
+          "set_int", [](ValueManager& vm, const std::string& n, int v) { vm.value(n, Value(v)); }, py::arg("name"),
+          py::arg("value"), "Set integer parameter by name.")
       .def(
-          "set_float", [](ValueManager& vm, const std::string& name, double v) { vm.value(name, Value(v)); },
-          py::arg("name"), py::arg("value"), "Set float parameter by name.")
+          "set_float", [](ValueManager& vm, const std::string& n, double v) { vm.value(n, Value(v)); }, py::arg("name"),
+          py::arg("value"), "Set float parameter by name.")
       .def(
-          "set_string",
-          [](ValueManager& vm, const std::string& name, const std::string& v) { vm.value(name, Value(v)); },
+          "set_string", [](ValueManager& vm, const std::string& n, const std::string& v) { vm.value(n, Value(v)); },
           py::arg("name"), py::arg("value"), "Set string parameter by name.");
 }
 
 // ============================================================================
-// Filter interface bindings
+// Templated interface bindings
 // ============================================================================
 
-void bind_filter_interface(py::module_& m) {
-  py::class_<FilterI<uchar>, ValueManager, PyFilterI>(m, "FilterI",
-                                                      "Abstract base interface for image filters (8-bit input).\n\n"
-                                                      "Provides a common interface for all image processing filters.\n"
-                                                      "Subclass this from Python to implement custom filters, or use\n"
-                                                      "concrete implementations like SobelGradient.")
-      .def("intensity_range", &FilterI<uchar>::intensityRange, "Get the expected input image intensity range.")
-      .def("process", &FilterI<uchar>::process, py::arg("img"),
-           "Process the input image through the filter.\n\n"
-           "Args:\n"
-           "    img: Input image as numpy array (uint8).")
-      .def("results", &FilterI<uchar>::results, "Get all filter outputs as a dict of {name: FilterData}.")
-      .def("name", &FilterI<uchar>::name, "Get the name identifier of this filter.");
+template <class IT>
+void bind_filter_interface(py::module_& m, const std::string& suffix) {
+  using FI = FilterI<IT>;
+  const std::string cls = "FilterI" + suffix;
+
+  py::class_<FI, ValueManager, PyFilterI<IT>>(m, cls.c_str(),
+                                              ("Abstract base interface for image filters" + suffix +
+                                               ".\n\n"
+                                               "Subclass from Python or use concrete implementations.")
+                                                  .c_str())
+      .def("intensity_range", &FI::intensityRange, "Get the expected input image intensity range.")
+      .def("process", &FI::process, py::arg("img"), "Process the input image through the filter.")
+      .def("results", &FI::results, "Get all filter outputs as a dict of {name: FilterData}.")
+      .def("name", &FI::name, "Get the name identifier of this filter.");
 }
 
-void bind_gradient_interface(py::module_& m) {
-  using GI = GradientI<uchar, short, float, float>;
+template <class IT, class GT, class MT, class DT>
+void bind_gradient_interface(py::module_& m, const std::string& suffix) {
+  using GI = GradientI<IT, GT, MT, DT>;
+  using FI = FilterI<IT>;
+  const std::string cls = "GradientI" + suffix;
 
-  py::class_<GI, FilterI<uchar>, PyGradientI>(m, "GradientI",
-                                              "Abstract interface for gradient computation filters.\n\n"
-                                              "Provides unified access to magnitude, direction, and directional\n"
-                                              "derivatives (gx, gy) computed from an input image.")
+  py::class_<GI, FI, PyGradientI<IT, GT, MT, DT>>(m, cls.c_str(),
+                                                  ("Abstract gradient computation interface" + suffix +
+                                                   ".\n\n"
+                                                   "Provides magnitude, direction, and derivative access.")
+                                                      .c_str())
       .def("magnitude", &GI::magnitude, "Get the gradient magnitude image as numpy array.")
       .def("magnitude_range", &GI::magnitudeRange, "Get the expected magnitude value range.")
       .def("magnitude_threshold", &GI::magnitudeThreshold, py::arg("val"),
-           "Convert normalized threshold [0,1] to magnitude threshold.\n\n"
-           "Args:\n"
-           "    val: Normalized threshold in [0, 1].")
+           "Convert normalized threshold [0,1] to magnitude threshold.")
       .def("direction", &GI::direction, "Get the gradient direction image as numpy array.")
       .def("direction_range", &GI::directionRange, "Get the direction value range.")
       .def("gx", &GI::gx, "Get X-direction gradient as numpy array.")
@@ -256,12 +239,13 @@ void bind_gradient_interface(py::module_& m) {
       .def("gradient_range", &GI::gradientRange, "Get the gradient value range for single direction.");
 }
 
-void bind_laplace_interface(py::module_& m) {
-  using LI = LaplaceI<uchar, int>;
+template <class IT, class LT>
+void bind_laplace_interface(py::module_& m, const std::string& suffix) {
+  using LI = LaplaceI<IT, LT>;
+  using FI = FilterI<IT>;
+  const std::string cls = "LaplaceI" + suffix;
 
-  py::class_<LI, FilterI<uchar>, PyLaplaceI>(m, "LaplaceI",
-                                             "Abstract interface for Laplacian filters.\n\n"
-                                             "Provides interface for computing second-order derivatives.")
+  py::class_<LI, FI, PyLaplaceI<IT, LT>>(m, cls.c_str(), ("Abstract Laplacian filter interface" + suffix + ".").c_str())
       .def("laplace", &LI::laplace, "Get the Laplacian response image as numpy array.")
       .def("laplace_range", &LI::laplaceRange, "Get the expected Laplacian value range.")
       .def("laplace_threshold", &LI::laplaceThreshold, py::arg("val"),
@@ -269,41 +253,40 @@ void bind_laplace_interface(py::module_& m) {
 }
 
 // ============================================================================
-// Concrete filter bindings
+// Templated concrete filter bindings
 // ============================================================================
 
-void bind_derivative_gradient(py::module_& m) {
-  // Common typedef aliases for DerivativeGradient variants
-  // Using float for magnitude type (MT) to avoid cv::sqrt SIMD alignment issues with int
-  using SobelGrad = DerivativeGradient<uchar, short, float, float, SobelDerivative, Magnitude, Direction>;
-  using ScharrGrad = DerivativeGradient<uchar, short, float, float, ScharrDerivative, Magnitude, Direction>;
-  using PrewittGrad = DerivativeGradient<uchar, short, float, float, PrewittDerivative, Magnitude, Direction>;
+template <class IT, class GT, class MT, class DT>
+void bind_derivative_gradient(py::module_& m, const std::string& suffix) {
+  using GI = GradientI<IT, GT, MT, DT>;
+  using GradBase = Gradient<IT, GT, MT, DT>;
+  using SobelGrad = DerivativeGradient<IT, GT, MT, DT, SobelDerivative, Magnitude, Direction>;
+  using ScharrGrad = DerivativeGradient<IT, GT, MT, DT, ScharrDerivative, Magnitude, Direction>;
+  using PrewittGrad = DerivativeGradient<IT, GT, MT, DT, PrewittDerivative, Magnitude, Direction>;
 
-  // Intermediate base: Gradient<uchar, short, float, float>
-  using GradBase = Gradient<uchar, short, float, float>;
-  py::class_<GradBase, GradientI<uchar, short, float, float>>(
-      m, "GradientBase", "Base gradient implementation (not directly constructible).");
+  const IT lo = std::numeric_limits<IT>::lowest();
+  const IT hi = std::numeric_limits<IT>::max();
+
+  // Intermediate base: Gradient<IT, GT, MT, DT>
+  py::class_<GradBase, GI>(m, ("GradientBase" + suffix).c_str(),
+                           "Base gradient implementation (not directly constructible).");
 
   // --- SobelGradient ---
-  py::class_<SobelGrad, GradBase>(m, "SobelGradient",
-                                  "Gradient computation using Sobel derivative operator.\n\n"
-                                  "Computes image gradients using 3x3 or larger Sobel kernels.\n"
-                                  "Provides magnitude, direction, and directional derivatives (gx, gy).\n\n"
-                                  "Parameters (via set_value/set_int):\n"
-                                  "    'grad_kernel_size': Kernel size (1, 3, 5, 7). Default: 3.\n\n"
-                                  "Example:\n"
-                                  "    grad = le_imgproc.SobelGradient()\n"
-                                  "    grad.process(image)\n"
-                                  "    mag = grad.magnitude()\n"
-                                  "    dir = grad.direction()")
-      .def(py::init<uchar, uchar>(), py::arg("int_lower") = 0, py::arg("int_upper") = 255,
+  py::class_<SobelGrad, GradBase>(m, ("SobelGradient" + suffix).c_str(),
+                                  ("Gradient computation using Sobel derivative operator" + suffix +
+                                   ".\n\n"
+                                   "Computes image gradients using 3x3 or larger Sobel kernels.\n"
+                                   "Parameters (via set_value/set_int):\n"
+                                   "    'grad_kernel_size': Kernel size (1, 3, 5, 7). Default: 3.")
+                                      .c_str())
+      .def(py::init<IT, IT>(), py::arg("int_lower") = lo, py::arg("int_upper") = hi,
            "Construct with intensity range bounds.")
       .def("process", static_cast<void (SobelGrad::*)(const cv::Mat&)>(&SobelGrad::process), py::arg("img"),
            "Process input image to compute Sobel gradients.")
-      .def("magnitude", &SobelGrad::magnitude, "Get gradient magnitude as numpy array.")
-      .def("direction", &SobelGrad::direction, "Get gradient direction as numpy array.")
-      .def("gx", &SobelGrad::gx, "Get X-direction gradient as numpy array.")
-      .def("gy", &SobelGrad::gy, "Get Y-direction gradient as numpy array.")
+      .def("magnitude", &SobelGrad::magnitude)
+      .def("direction", &SobelGrad::direction)
+      .def("gx", &SobelGrad::gx)
+      .def("gy", &SobelGrad::gy)
       .def("magnitude_range", &SobelGrad::magnitudeRange)
       .def("direction_range", &SobelGrad::directionRange)
       .def("gradient_range", &SobelGrad::gradientRange)
@@ -312,11 +295,12 @@ void bind_derivative_gradient(py::module_& m) {
       .def("intensity_range", &SobelGrad::intensityRange);
 
   // --- ScharrGradient ---
-  py::class_<ScharrGrad, GradBase>(m, "ScharrGradient",
-                                   "Gradient computation using Scharr derivative operator.\n\n"
-                                   "More accurate than Sobel for small kernels (3x3 only).\n"
-                                   "Provides magnitude, direction, and directional derivatives.")
-      .def(py::init<uchar, uchar>(), py::arg("int_lower") = 0, py::arg("int_upper") = 255)
+  py::class_<ScharrGrad, GradBase>(m, ("ScharrGradient" + suffix).c_str(),
+                                   ("Gradient computation using Scharr derivative operator" + suffix +
+                                    ".\n\n"
+                                    "More accurate than Sobel for small kernels (3x3 only).")
+                                       .c_str())
+      .def(py::init<IT, IT>(), py::arg("int_lower") = lo, py::arg("int_upper") = hi)
       .def("process", static_cast<void (ScharrGrad::*)(const cv::Mat&)>(&ScharrGrad::process), py::arg("img"))
       .def("magnitude", &ScharrGrad::magnitude)
       .def("direction", &ScharrGrad::direction)
@@ -330,10 +314,12 @@ void bind_derivative_gradient(py::module_& m) {
       .def("intensity_range", &ScharrGrad::intensityRange);
 
   // --- PrewittGradient ---
-  py::class_<PrewittGrad, GradBase>(m, "PrewittGradient",
-                                    "Gradient computation using Prewitt derivative operator.\n\n"
-                                    "Simple 3x3 averaging derivative, less noise-sensitive than Roberts.")
-      .def(py::init<uchar, uchar>(), py::arg("int_lower") = 0, py::arg("int_upper") = 255)
+  py::class_<PrewittGrad, GradBase>(m, ("PrewittGradient" + suffix).c_str(),
+                                    ("Gradient computation using Prewitt derivative operator" + suffix +
+                                     ".\n\n"
+                                     "Simple 3x3 averaging derivative.")
+                                        .c_str())
+      .def(py::init<IT, IT>(), py::arg("int_lower") = lo, py::arg("int_upper") = hi)
       .def("process", static_cast<void (PrewittGrad::*)(const cv::Mat&)>(&PrewittGrad::process), py::arg("img"))
       .def("magnitude", &PrewittGrad::magnitude)
       .def("direction", &PrewittGrad::direction)
@@ -346,6 +332,50 @@ void bind_derivative_gradient(py::module_& m) {
       .def("results", &PrewittGrad::results)
       .def("intensity_range", &PrewittGrad::intensityRange);
 }
+
+// ============================================================================
+// Convenience preset binder
+// ============================================================================
+
+template <class IT, class GT, class MT, class DT, class LT>
+void bind_filter_preset(py::module_& m, const std::string& suffix) {
+  bind_filter_interface<IT>(m, suffix);
+  bind_gradient_interface<IT, GT, MT, DT>(m, suffix);
+  bind_laplace_interface<IT, LT>(m, suffix);
+  bind_derivative_gradient<IT, GT, MT, DT>(m, suffix);
+}
+
+// ============================================================================
+// Explicit template instantiations for supported presets
+// ============================================================================
+
+// Default: 8-bit unsigned (uchar) — suffix ""
+template void bind_filter_interface<uchar>(py::module_&, const std::string&);
+template void bind_gradient_interface<uchar, short, float, float>(py::module_&, const std::string&);
+template void bind_laplace_interface<uchar, int>(py::module_&, const std::string&);
+template void bind_derivative_gradient<uchar, short, float, float>(py::module_&, const std::string&);
+template void bind_filter_preset<uchar, short, float, float, int>(py::module_&, const std::string&);
+
+// 16-bit unsigned (ushort) — suffix "_16u"
+template void bind_filter_interface<ushort>(py::module_&, const std::string&);
+template void bind_gradient_interface<ushort, float, float, float>(py::module_&, const std::string&);
+template void bind_laplace_interface<ushort, int>(py::module_&, const std::string&);
+template void bind_derivative_gradient<ushort, float, float, float>(py::module_&, const std::string&);
+template void bind_filter_preset<ushort, float, float, float, int>(py::module_&, const std::string&);
+
+// Float (32-bit) — suffix "_f32"
+template void bind_filter_interface<float>(py::module_&, const std::string&);
+template void bind_gradient_interface<float, float, float, float>(py::module_&, const std::string&);
+template void bind_laplace_interface<float, float>(py::module_&, const std::string&);
+template void bind_derivative_gradient<float, float, float, float>(py::module_&, const std::string&);
+template void bind_filter_preset<float, float, float, float, float>(py::module_&, const std::string&);
+
+// Double (64-bit) — suffix "_f64"
+template void bind_filter_interface<double>(py::module_&, const std::string&);
+template void bind_gradient_interface<double, double, double, double>(py::module_&, const std::string&);
+template void bind_laplace_interface<double, double>(py::module_&, const std::string&);
+template void bind_derivative_gradient<double, double, double, double>(py::module_&, const std::string&);
+template void bind_filter_preset<double, double, double, double, double>(py::module_&, const std::string&);
 
 }  // namespace python
 }  // namespace lsfm
