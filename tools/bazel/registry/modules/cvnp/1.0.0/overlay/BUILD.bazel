@@ -1,0 +1,30 @@
+"""cvnp - pybind11 casts and transformers between numpy and OpenCV, with shared memory.
+
+Provides automatic pybind11 type_caster specializations for:
+  - cv::Mat, cv::Mat_<T>: shared memory (zero-copy)
+  - cv::Matx, cv::Vec: without shared memory
+  - cv::Size, cv::Point, cv::Point3, cv::Scalar, cv::Rect: tuple cast
+
+See: https://github.com/pthom/cvnp
+"""
+
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+
+package(default_visibility = ["//visibility:public"])
+
+pybind_library(
+    name = "cvnp",
+    srcs = [
+        "cvnp/cvnp.cpp",
+        "cvnp/cvnp_synonyms.cpp",
+        "cvnp/pydef_cvnp.cpp",
+    ],
+    hdrs = [
+        "cvnp/cvnp.h",
+        "cvnp/cvnp_synonyms.h",
+    ],
+    includes = ["."],
+    deps = [
+        "@opencv",
+    ],
+)

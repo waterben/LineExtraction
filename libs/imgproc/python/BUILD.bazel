@@ -16,12 +16,12 @@ pybind_library(
     ],
     hdrs = [
         "src/filter_binding.hpp",
-        "src/ndarray_converter.hpp",
     ],
     copts = LE_PYBIND_COPTS,
     includes = ["src"],
     deps = [
         "//libs/imgproc:lib_imgproc",
+        "@cvnp",
     ],
 )
 

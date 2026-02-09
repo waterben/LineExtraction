@@ -79,7 +79,8 @@ class TestFilterData:
 
     def test_empty_construction(self) -> None:
         fd = le_imgproc.FilterData()
-        assert fd.data is None  # Empty Mat -> None
+        # cvnp returns a 0x0 array for empty cv::Mat (shared memory semantics)
+        assert fd.data.size == 0
 
     def test_construction_with_data(self) -> None:
         img = np.zeros((10, 10), dtype=np.uint8)

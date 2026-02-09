@@ -7,7 +7,7 @@
 
 #include "filter_binding.hpp"
 
-#include "ndarray_converter.hpp"
+#include <cvnp/cvnp.h>
 #include <imgproc/derivative_gradient.hpp>
 #include <imgproc/filter.hpp>
 #include <imgproc/gradient.hpp>
