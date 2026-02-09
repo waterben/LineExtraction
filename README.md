@@ -248,6 +248,7 @@ All dependencies are automatically managed by both build systems:
 | [`docs/CMAKE.md`](docs/CMAKE.md) | CMake build system, options, dependencies |
 | [`docs/DOCKER.md`](docs/DOCKER.md) | Docker/DevContainer development environment |
 | [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
+| [`docs/JUPYTER.md`](docs/JUPYTER.md) | Jupyter Notebook integration and examples |
 
 ### API Documentation
 

@@ -444,6 +444,22 @@ bazel clean --expunge
 bazel build //...
 ```
 
+## Jupyter Notebook Integration
+
+Jupyter is included in the Python environment (via `pyproject.toml`). After building the Python bindings, you can run interactive notebooks inside the container:
+
+```bash
+# Build Python bindings
+bazel build //libs/...
+
+# Start JupyterLab
+jupyter lab
+```
+
+Or open the example notebook directly in VS Code (select the container's Python kernel).
+
+See [`JUPYTER.md`](JUPYTER.md) for full documentation.
+
 ## Local Development (Without Docker)
 
 For native Linux/WSL development without Docker, see:
@@ -464,4 +480,5 @@ sudo ./tools/scripts/setup_local_dev.sh
 - [CMake Build System](CMAKE.md)
 - [Bazel Build System](BAZEL.md)
 - [WSL Setup (Windows)](WSL.md)
+- [Jupyter Notebooks](JUPYTER.md)
 - [Docker README (Details)](../docker/README.md)
