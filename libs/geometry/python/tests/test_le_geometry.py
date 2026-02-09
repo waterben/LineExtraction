@@ -97,14 +97,14 @@ class TestLine:
 
     def test_default_construction(self) -> None:
         line = le_geometry.Line()
-        assert line.empty
+        assert line.empty()
 
     def test_construction_from_normal(self) -> None:
         line = le_geometry.Line(0.0, 1.0, 5.0)
         assert pytest.approx(line.normal_x) == 0.0
         assert pytest.approx(line.normal_y) == 1.0
         assert pytest.approx(line.origin_dist) == 5.0
-        assert line.valid
+        assert line.valid()
 
     def test_construction_from_point(self) -> None:
         line = le_geometry.Line(0.0, 1.0, 10.0, 5.0)

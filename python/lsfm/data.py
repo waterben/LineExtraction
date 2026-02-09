@@ -231,6 +231,10 @@ class TestImages:
                 self._add_if_exists(rd / "line_extraction" / "resources")
                 # Local datasets
                 self._add_if_exists(rd / "line_extraction" / "resources" / "datasets")
+            else:
+                # Manifest-only mode (common on Windows): parse
+                # RUNFILES_MANIFEST_FILE to resolve runfile paths.
+                self._add_manifest_paths()
 
         # 2. Relative to cwd (works for CMake and manual runs)
         relative_paths = [
@@ -252,6 +256,56 @@ class TestImages:
             if exe_dir != Path("."):
                 for rel in relative_paths:
                     self._add_if_exists(exe_dir / rel)
+
+    def _add_manifest_paths(self) -> None:
+        """Derive search paths from ``RUNFILES_MANIFEST_FILE``.
+
+        The manifest is a plain-text file where each line maps a runfiles-
+        relative path to an absolute filesystem path, separated by a space::
+
+            line_extraction/resources/windmill.jpg /abs/path/to/windmill.jpg
+            bsds500/BSDS500/data/images/test/100007.jpg /abs/...
+
+        We scan for known directory prefixes and add the corresponding
+        filesystem directories to :pyattr:`_search_paths`.
+
+        :meta private:
+        """
+        manifest = os.environ.get("RUNFILES_MANIFEST_FILE", "")
+        if not manifest or not Path(manifest).is_file():
+            return
+
+        # Runfile prefixes we care about → number of segments to strip from
+        # the filesystem path to get the directory root.
+        _PREFIXES: list[tuple[str, int]] = [
+            ("bsds500/BSDS500/data/images/", 0),
+            ("line_extraction/resources/datasets/", 0),
+            ("line_extraction/resources/", 0),
+        ]
+
+        found: set[Path] = set()
+        try:
+            with open(manifest, encoding="utf-8") as fp:
+                for raw_line in fp:
+                    parts = raw_line.rstrip("\n").split(" ", 1)
+                    if len(parts) != 2:
+                        continue
+                    runpath, fspath = parts
+                    for prefix, _ in _PREFIXES:
+                        if runpath.startswith(prefix):
+                            # Compute the filesystem directory that corresponds
+                            # to `prefix` by stripping the suffix from fspath.
+                            suffix = runpath[len(prefix) :]
+                            if suffix:
+                                base = Path(fspath[: -len(suffix)]).resolve()
+                            else:
+                                base = Path(fspath).resolve()
+                            if base.is_dir() and base not in found:
+                                found.add(base)
+                                self._search_paths.append(base)
+                            break  # first matching prefix wins
+        except OSError:
+            pass
 
     def _add_if_exists(self, path: Path) -> None:
         """Append *path* to search paths if it is an existing directory.

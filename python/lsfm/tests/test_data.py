@@ -144,5 +144,108 @@ class TestTestImages:
         assert isinstance(TestImages.is_bazel_run(), bool)
 
 
+# =============================================================================
+# Manifest-based runfiles resolution
+# =============================================================================
+
+
+class TestManifestResolution:
+    """Test _add_manifest_paths when only RUNFILES_MANIFEST_FILE is set."""
+
+    def test_manifest_resolves_paths(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Simulate a manifest-only Bazel run and verify path resolution."""
+        # Create a fake resources directory tree
+        res_dir = tmp_path / "resources"
+        res_dir.mkdir()
+        (res_dir / "windmill.jpg").write_bytes(b"\xff\xd8")
+
+        # Build a minimal manifest that maps the runfile path to our tmp dir
+        manifest = tmp_path / "MANIFEST"
+        manifest.write_text(
+            f"line_extraction/resources/windmill.jpg {res_dir / 'windmill.jpg'}\n"
+        )
+
+        # Set only RUNFILES_MANIFEST_FILE, clear RUNFILES_DIR
+        monkeypatch.setenv("RUNFILES_MANIFEST_FILE", str(manifest))
+        monkeypatch.delenv("RUNFILES_DIR", raising=False)
+
+        images = TestImages()
+        assert res_dir.resolve() in images.search_paths
+
+    def test_manifest_resolves_datasets(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Datasets subdirectory is resolved from the manifest."""
+        ds_dir = tmp_path / "datasets"
+        ds_dir.mkdir()
+        (ds_dir / "img.png").write_bytes(b"\x89PNG")
+
+        manifest = tmp_path / "MANIFEST"
+        manifest.write_text(
+            f"line_extraction/resources/datasets/img.png {ds_dir / 'img.png'}\n"
+        )
+
+        monkeypatch.setenv("RUNFILES_MANIFEST_FILE", str(manifest))
+        monkeypatch.delenv("RUNFILES_DIR", raising=False)
+
+        images = TestImages()
+        assert ds_dir.resolve() in images.search_paths
+
+    def test_manifest_resolves_bsds500(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """BSDS500 external repository is resolved from the manifest."""
+        bsds_dir = tmp_path / "bsds_images"
+        bsds_dir.mkdir()
+        (bsds_dir / "100007.jpg").write_bytes(b"\xff\xd8")
+
+        manifest = tmp_path / "MANIFEST"
+        manifest.write_text(
+            f"bsds500/BSDS500/data/images/100007.jpg {bsds_dir / '100007.jpg'}\n"
+        )
+
+        monkeypatch.setenv("RUNFILES_MANIFEST_FILE", str(manifest))
+        monkeypatch.delenv("RUNFILES_DIR", raising=False)
+
+        images = TestImages()
+        assert bsds_dir.resolve() in images.search_paths
+
+    def test_manifest_no_duplicates(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Multiple manifest entries under the same prefix yield one path."""
+        res_dir = tmp_path / "res"
+        res_dir.mkdir()
+        (res_dir / "a.jpg").write_bytes(b"\xff\xd8")
+        (res_dir / "b.jpg").write_bytes(b"\xff\xd8")
+
+        manifest = tmp_path / "MANIFEST"
+        manifest.write_text(
+            f"line_extraction/resources/a.jpg {res_dir / 'a.jpg'}\n"
+            f"line_extraction/resources/b.jpg {res_dir / 'b.jpg'}\n"
+        )
+
+        monkeypatch.setenv("RUNFILES_MANIFEST_FILE", str(manifest))
+        monkeypatch.delenv("RUNFILES_DIR", raising=False)
+
+        images = TestImages()
+        # res_dir should appear exactly once
+        count = sum(1 for p in images.search_paths if p == res_dir.resolve())
+        assert count == 1
+
+    def test_manifest_missing_file_ignored(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A non-existent manifest file does not cause errors."""
+        monkeypatch.setenv("RUNFILES_MANIFEST_FILE", "/no/such/file")
+        monkeypatch.delenv("RUNFILES_DIR", raising=False)
+
+        images = TestImages()
+        # Should not raise — just falls through to relative-path probing
+        assert isinstance(images.search_paths, list)
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))

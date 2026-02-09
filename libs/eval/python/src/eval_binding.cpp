@@ -113,6 +113,25 @@ void bind_eval_core_types(py::module_& m) {
 // ITask / Task
 // ============================================================================
 
+/// @brief Trampoline for subclassing Task from Python.
+///
+/// Task has a pure-virtual run() method, so a trampoline is required to
+/// allow Python subclasses to provide their own implementation.
+class PyTask : public Task {
+ public:
+  using Task::Task;
+
+  void run(std::size_t loops) override { PYBIND11_OVERRIDE_PURE(void, Task, run, loops); }
+
+  void prepare(const GenericInputData& data) override { PYBIND11_OVERRIDE(void, Task, prepare, data); }
+
+  void reset() override { PYBIND11_OVERRIDE(void, Task, reset); }
+
+  void saveVisualResults(const std::string& target_path) override {
+    PYBIND11_OVERRIDE(void, Task, saveVisualResults, target_path);
+  }
+};
+
 /// @brief Trampoline for subclassing CVPerformanceTaskBase from Python.
 class PyCVPerformanceTask : public CVPerformanceTaskBase {
  public:
@@ -138,9 +157,16 @@ void bind_eval_task(py::module_& m) {
            "Save visual results to the target path.");
 
   // --- Task base ---
-  py::class_<Task, ITask, std::shared_ptr<Task>>(m, "Task",
-                                                 "Base task with name and verbose flag.\n\n"
-                                                 "Subclass and override run() to create tasks.")
+  py::class_<Task, ITask, PyTask, std::shared_ptr<Task>>(m, "Task",
+                                                         "Base task with name and verbose flag.\n\n"
+                                                         "Subclass and override run() to create custom tasks.\n\n"
+                                                         "Example::\n\n"
+                                                         "    class MyTask(le_eval.Task):\n"
+                                                         "        def run(self, loops):\n"
+                                                         "            for _ in range(loops):\n"
+                                                         "                pass  # measured work\n")
+      .def(py::init<const std::string&, bool>(), py::arg("name"), py::arg("verbose") = false,
+           "Construct a task with a name and optional verbose flag.")
       .def_readwrite("name", &Task::name, "Task name.")
       .def_readwrite("verbose", &Task::verbose, "Verbose output flag.");
 }

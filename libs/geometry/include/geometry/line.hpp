@@ -664,7 +664,7 @@ class LineSegment : public Line<FT, PT> {
   inline int octave() const { return octave_; }
 
   /// @brief Set detection octave.
-  inline void octave(int oct) const { this->octave_ = oct; }
+  inline void octave(int oct) { this->octave_ = oct; }
   /// @}
 
   /// @name Range checking

@@ -343,6 +343,113 @@ class TestCVPerformanceMeasure:
 
 
 # ============================================================================
+# Task tests (construction and Python subclassing)
+# ============================================================================
+
+
+class TestTask:
+    """Test Task class — constructable and subclassable from Python."""
+
+    def test_construction(self) -> None:
+        """Task can be instantiated with a required name argument."""
+
+        class MinimalTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+        task = MinimalTask("minimal")
+        assert task.name == "minimal"
+        assert not task.verbose
+
+    def test_construction_verbose(self) -> None:
+        """Task accepts an optional verbose flag."""
+
+        class MinimalTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+        task = MinimalTask("verbose_task", True)
+        assert task.verbose
+
+    def test_is_itask(self) -> None:
+        """Task instances satisfy the ITask interface."""
+
+        class MinimalTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+        task = MinimalTask("t")
+        assert isinstance(task, le_eval.ITask)
+
+    def test_run_called(self) -> None:
+        """Overridden run() is actually invoked."""
+        call_count = 0
+
+        class CountingTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                nonlocal call_count
+                call_count += loops
+
+        task = CountingTask("counter")
+        task.run(5)
+        assert call_count == 5
+
+    def test_reset_override(self) -> None:
+        """Optional reset() override is called from C++ interface."""
+        reset_called = False
+
+        class ResettableTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+            def reset(self) -> None:
+                nonlocal reset_called
+                reset_called = True
+
+        task = ResettableTask("resettable")
+        task.reset()
+        assert reset_called
+
+    def test_save_visual_results_override(self) -> None:
+        """Optional save_visual_results() override is forwarded."""
+        saved_path = None
+
+        class SavingTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+            def save_visual_results(self, target_path: str) -> None:
+                nonlocal saved_path
+                saved_path = target_path
+
+        task = SavingTask("saver")
+        task.save_visual_results("/tmp/results")
+        assert saved_path == "/tmp/results"
+
+    def test_task_name_via_itask(self) -> None:
+        """task_name() ITask method returns the name set at construction."""
+
+        class MinimalTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+        task = MinimalTask("my_name")
+        assert task.task_name() == "my_name"
+
+    def test_name_readwrite(self) -> None:
+        """name attribute is writable after construction."""
+
+        class MinimalTask(le_eval.Task):
+            def run(self, loops: int) -> None:
+                pass
+
+        task = MinimalTask("original")
+        task.name = "updated"
+        assert task.name == "updated"
+        assert task.task_name() == "updated"
+
+
+# ============================================================================
 # CVPerformanceTask tests (Python subclassing)
 # ============================================================================
 
