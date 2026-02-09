@@ -313,7 +313,6 @@ def main() -> None:
     # ------------------------------------------------------------------
     suffix = preset["suffix"]
     es_cls_name = source_base + suffix
-    esd_cls_name = detector_base + suffix
 
     # For ESD classes with MT=float (default, _16u, _f32) vs MT=double (_f64),
     # the ESD suffix follows the MT type, not the IT type.
