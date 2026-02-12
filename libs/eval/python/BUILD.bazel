@@ -32,6 +32,7 @@ le_pybind_module(
         "src/module_le_eval.cpp",
     ],
     copts = LE_PYBIND_COPTS,
+    stub = "le_eval.pyi",
     deps = [
         ":eval_python_pybind",
     ],

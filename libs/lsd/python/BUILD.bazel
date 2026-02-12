@@ -40,6 +40,7 @@ le_pybind_module(
         "//libs/imgproc/python:le_imgproc_lib",
         "//libs/edge/python:le_edge_lib",
     ],
+    stub = "le_lsd.pyi",
     deps = [
         ":lsd_python_pybind",
         "//libs/edge/python:edge_python_pybind",
