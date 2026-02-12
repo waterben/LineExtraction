@@ -1,6 +1,6 @@
 # Jupyter Notebook Integration
 
-Interactive Jupyter Notebooks for exploring the LineExtraction Python bindings.
+Interactive Jupyter Notebooks for learning and exploring the LineExtraction library and its Python bindings. The **tutorial series** provides a structured learning path — from computer vision basics through full detection pipelines and performance evaluation — making them the ideal starting point for new developers working with the Python API.
 
 ## Prerequisites
 
@@ -66,25 +66,25 @@ jupyter notebook examples/notebooks/line_extraction_bindings.ipynb
 
 ## Available Notebooks
 
-| Notebook | Description |
-|----------|-------------|
-| [`line_extraction_bindings.ipynb`](../examples/notebooks/line_extraction_bindings.ipynb) | Complete tour of all 5 Python binding modules with interactive visualizations |
+All notebooks are located in [`examples/notebooks/`](../examples/notebooks/).
 
-### Notebook Sections
+### Tutorial Series (Recommended Learning Path)
 
-The main notebook covers:
+The tutorial series is the recommended way to learn the Python bindings. Work through them in order:
 
-| # | Section | Modules |
-|---|---------|---------|
-| 1 | Import & Setup | all |
-| 2 | Gradient Filters (Sobel, Scharr, Prewitt) | `le_imgproc` |
-| 3 | Data Type Mapping (Range, Value, FilterData) | `le_imgproc` |
-| 4 | Geometry Primitives (Line, LineSegment, Polygon) | `le_geometry` |
-| 5 | Callback Integration (Python Subclassing) | `le_eval` |
-| 6 | Error Handling & Exception Propagation | all |
-| 7 | Performance: C++ vs Pure Python | `le_imgproc`, `le_lsd` |
-| 8 | Edge Detection Pipeline | `le_edge` |
-| 9 | Real-World Use Case — All 9 LSD Detectors | all |
+| # | Notebook | Description | Modules |
+|---|----------|-------------|---------|
+| 0 | [`cv_primer.ipynb`](../examples/notebooks/cv_primer.ipynb) | **Computer Vision Primer** — Self-contained introduction to CV concepts (images as arrays, gradients, edge detection, lines & LSD taxonomy). Uses only NumPy + Matplotlib — no library dependencies. Ideal prerequisite for newcomers to computer vision. | — |
+| 1 | [`tutorial_1_fundamentals.ipynb`](../examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Foundational modules: gradient filters, geometry primitives (Line, LineSegment, Polygon), drawing utilities, ValueManager configuration, and test image loading. | `le_imgproc`, `le_geometry` |
+| 2 | [`tutorial_2_pipelines.ipynb`](../examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full detection pipeline from edge sources through NMS, ESD variants, all 9 LSD detectors, grand comparison, line optimization, and noise robustness analysis. | `le_edge`, `le_lsd`, `le_imgproc`, `le_geometry` |
+| 3 | [`tutorial_3_evaluation.ipynb`](../examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation Framework** — Deep dive into benchmarking: StringTable, performance primitives, data providers, custom tasks, CVPerformanceTest orchestrator, result analysis, and full benchmark runs. | `le_eval`, `le_lsd`, `le_edge` |
+
+### Additional Notebooks
+
+| Notebook | Description | Modules |
+|----------|-------------|---------|
+| [`line_extraction_bindings.ipynb`](../examples/notebooks/line_extraction_bindings.ipynb) | **API Reference Guide** — Compact tour of all 5 Python binding modules with interactive visualizations, zero-copy NumPy integration, Python subclassing, and performance comparisons. | all |
+| [`pytorch_esd_demo.ipynb`](../examples/notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration Demo** — Combines PyTorch-based object segmentation (SAM / YOLO) with the ESD line extraction framework. Interactive click-to-segment, automatic instance segmentation, and contour-to-line-segment conversion. | `le_edge`, PyTorch |
 
 ## Module Import Path
 
