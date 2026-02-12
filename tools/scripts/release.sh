@@ -4,8 +4,8 @@
 # ==============================================================================
 # Builds the lsfm Python wheel, stamps the release version into source files,
 # creates a Git tag, and publishes a GitHub release with the wheel artifact.
-# Version strings are restored to "dev" after building; the release version
-# only lives in the Git tag and the built wheel.
+# Version strings are restored to "0.0.0.dev0" (PEP 440) after building;
+# the release version only lives in the Git tag and the built wheel.
 #
 # Version scheme: YYYY.MM.DD.COUNTER (e.g. 2026.02.12.0)
 # Default: today's date with counter 0.
@@ -18,7 +18,7 @@
 #
 # Safety checks:
 #   - Warns if not on 'main' branch (with confirmation prompt)
-#   - Prevents releasing with uncommitted changes
+#   - Warns if working tree has uncommitted changes (with confirmation prompt)
 #   - Prevents releasing if the tag already exists
 #   - Warns if the current commit already has a release tag
 #
@@ -89,11 +89,12 @@ if [[ "${CURRENT_BRANCH}" != "${MAIN_BRANCH}" ]]; then
     confirm "Continue releasing from '${CURRENT_BRANCH}'?"
 fi
 
-# Tag already exists
-if git rev-parse "${TAG}" &>/dev/null; then
+# Tag already exists (check both local and remote)
+if git rev-parse "${TAG}" &>/dev/null \
+    || git ls-remote --tags origin "refs/tags/${TAG}" 2>/dev/null | grep -q "${TAG}"; then
     NEXT_COUNTER=$((${VERSION##*.} + 1))
     NEXT_VERSION="${VERSION%.*}.${NEXT_COUNTER}"
-    die "Tag '${TAG}' already exists. Try: $0 ${NEXT_VERSION}"
+    die "Tag '${TAG}' already exists (local or remote). Try: $0 ${NEXT_VERSION}"
 fi
 
 # Commit already tagged (duplicate release)
@@ -116,29 +117,59 @@ echo ""
 confirm "Proceed?"
 
 # --- Stamp version -----------------------------------------------------------
+DEV_VERSION="0.0.0.dev0"
+
+# Use regex patterns so stamping works regardless of current version value.
+# restore_dev uses the exact release version (known at that point).
+stamp_version() {
+    local ver="$1"
+    sed -i "s/version = \"[^\"]*\"/version = \"${ver}\"/" MODULE.bazel
+    # Match only the indented version line inside py_wheel() — not the comment
+    sed -i "s/^\(    version = \)\"[^\"]*\"/\1\"${ver}\"/" python/BUILD.bazel
+    sed -i "s/^__version__ = \"[^\"]*\"/__version__ = \"${ver}\"/" python/lsfm/__init__.py
+}
+
+verify_stamp() {
+    local ver="$1" ok=1
+    grep -q "version = \"${ver}\"" MODULE.bazel          || { echo "  FAIL: MODULE.bazel"; ok=0; }
+    grep -q "version = \"${ver}\"" python/BUILD.bazel     || { echo "  FAIL: python/BUILD.bazel"; ok=0; }
+    grep -q "__version__ = \"${ver}\"" python/lsfm/__init__.py || { echo "  FAIL: python/lsfm/__init__.py"; ok=0; }
+    [[ ${ok} -eq 1 ]] || die "Version stamping to '${ver}' failed. Check files above."
+}
+
+restore_dev() {
+    echo "=== Restoring dev version ==="
+    stamp_version "${DEV_VERSION}"
+}
+
 echo "=== Stamping version ${VERSION} ==="
-sed -i "s/version = \"dev\"/version = \"${VERSION}\"/" MODULE.bazel
-sed -i "s/version = \"dev\"/version = \"${VERSION}\"/" python/BUILD.bazel
-sed -i "s/__version__ = \"dev\"/__version__ = \"${VERSION}\"/" python/lsfm/__init__.py
+stamp_version "${VERSION}"
+verify_stamp "${VERSION}"
+trap restore_dev EXIT INT TERM
 echo "  MODULE.bazel, python/BUILD.bazel, python/lsfm/__init__.py"
 
 # --- Build wheel --------------------------------------------------------------
 echo "=== Building wheel ==="
 bazel build "${WHEEL_TARGET}"
 
-# --- Restore dev version ------------------------------------------------------
-echo "=== Restoring dev version ==="
-sed -i "s/version = \"${VERSION}\"/version = \"dev\"/" MODULE.bazel
-sed -i "s/version = \"${VERSION}\"/version = \"dev\"/" python/BUILD.bazel
-sed -i "s/__version__ = \"${VERSION}\"/__version__ = \"dev\"/" python/lsfm/__init__.py
+# --- Restore dev version (via trap, but run eagerly so later steps see dev) ---
+trap - EXIT INT TERM
+restore_dev
 
 # --- Collect artifacts --------------------------------------------------------
 echo "=== Collecting artifacts ==="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
-cp bazel-bin/python/lsfm-*.whl "${DIST_DIR}/"
 
-WHEEL=$(ls "${DIST_DIR}"/lsfm-*.whl)
+WHEEL_PATTERN="lsfm-${VERSION}-*.whl"
+cp "bazel-bin/python/${WHEEL_PATTERN}" "${DIST_DIR}/" 2>/dev/null \
+    || die "No wheel matching '${WHEEL_PATTERN}' found in bazel-bin/python/."
+
+WHEELS=("${DIST_DIR}"/${WHEEL_PATTERN})
+if [[ ${#WHEELS[@]} -ne 1 ]]; then
+    die "Expected exactly 1 wheel, found ${#WHEELS[@]}: ${WHEELS[*]}"
+fi
+WHEEL="${WHEELS[0]}"
 echo "  ${WHEEL} ($(du -h "${WHEEL}" | cut -f1))"
 
 # --- Create tag and release ---------------------------------------------------
