@@ -32,8 +32,12 @@ le_pybind_module(
         "src/module_le_edge.cpp",
     ],
     copts = LE_PYBIND_COPTS,
+    generate_stubs = True,
     py_deps = [
         "//libs/imgproc/python:le_imgproc_lib",
+    ],
+    stub_deps = [
+        "//libs/imgproc/python:le_imgproc.so",
     ],
     deps = [
         ":edge_python_pybind",

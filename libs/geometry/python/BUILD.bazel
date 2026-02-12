@@ -31,6 +31,7 @@ le_pybind_module(
     name = "le_geometry",
     srcs = ["src/module_le_geometry.cpp"],
     copts = LE_PYBIND_COPTS,
+    generate_stubs = True,
     deps = [
         ":geometry_python_pybind",
     ],

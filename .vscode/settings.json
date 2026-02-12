@@ -77,6 +77,19 @@
   // In Docker: Overridden by devcontainer.json -> /opt/venv/deps/python
   // In WSL/local: Uses .venv
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  // Python analysis: add binding .so paths and .pyi stub paths for IDE support
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/libs/imgproc/python",
+    "${workspaceFolder}/libs/edge/python",
+    "${workspaceFolder}/libs/geometry/python",
+    "${workspaceFolder}/libs/eval/python",
+    "${workspaceFolder}/libs/lsd/python",
+    "${workspaceFolder}/bazel-bin/libs/imgproc/python",
+    "${workspaceFolder}/bazel-bin/libs/edge/python",
+    "${workspaceFolder}/bazel-bin/libs/geometry/python",
+    "${workspaceFolder}/bazel-bin/libs/eval/python",
+    "${workspaceFolder}/bazel-bin/libs/lsd/python"
+  ],
   // Disable VS Code's automatic venv activation - we handle it in .project_env
   "python.terminal.activateEnvironment": false,
   "cmake.configureOnOpen": false,

@@ -1,7 +1,20 @@
 """Bazel build utilities for LineExtraction"""
 
+load("@rules_python//python:defs.bzl", "py_binary")
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "copts.bzl",
 ])
+
+# Tool for generating .pyi stubs from pybind11 extensions at build time.
+# Used by le_pybind_stubgen() in pybind.bzl — not intended for direct use.
+py_binary(
+    name = "run_stubgen",
+    srcs = ["run_stubgen.py"],
+    deps = [
+        "@pip//numpy",
+        "@pip//pybind11_stubgen",
+    ],
+)

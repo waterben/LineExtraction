@@ -1,0 +1,73 @@
+"""Python wheel packaging for the lsfm (LineExtraction) project.
+
+Build the wheel:
+    bazel build //python:lsfm_wheel
+
+The resulting .whl file is at:
+    bazel-bin/python/lsfm-<version>-<tags>.whl
+
+Install in a virtualenv:
+    pip install bazel-bin/python/lsfm-*.whl
+"""
+
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+package(default_visibility = ["//visibility:public"])
+
+# Aggregate type stubs (.pyi) for wheel packaging — generated at build time
+filegroup(
+    name = "_wheel_stubs",
+    srcs = [
+        "//libs/edge/python:le_edge_pyi",
+        "//libs/eval/python:le_eval_pyi",
+        "//libs/geometry/python:le_geometry_pyi",
+        "//libs/imgproc/python:le_imgproc_pyi",
+        "//libs/lsd/python:le_lsd_pyi",
+    ],
+)
+
+# PEP 561 marker for type-checking support
+filegroup(
+    name = "_wheel_py_typed",
+    srcs = ["//python/lsfm:py.typed"],
+)
+
+py_wheel(
+    name = "lsfm_wheel",
+    abi = "cp312",
+    author = "Benjamin Wassermann",
+    distribution = "lsfm",
+    homepage = "https://github.com/waterben/LineExtraction",
+    license = "BSD-3-Clause",
+    platform = "linux_x86_64",
+    python_requires = ">=3.10",
+    python_tag = "cp312",
+    requires = [
+        "numpy>=1.24.0",
+    ],
+    strip_path_prefixes = [
+        "libs/imgproc/python",
+        "libs/edge/python",
+        "libs/geometry/python",
+        "libs/eval/python",
+        "libs/lsd/python",
+        "python",
+    ],
+    summary = "Line detection and analysis library with edge, LSD, and LFD algorithms",
+    version = "0.1.0",
+    deps = [
+        # ── Python package ─────────────────────────────────────────────
+        "//python/lsfm",
+        ":_wheel_py_typed",
+
+        # ── Native extension modules (.so) ─────────────────────────────
+        "//libs/imgproc/python:le_imgproc",
+        "//libs/edge/python:le_edge",
+        "//libs/geometry/python:le_geometry",
+        "//libs/eval/python:le_eval",
+        "//libs/lsd/python:le_lsd",
+
+        # ── Type stubs (.pyi) ──────────────────────────────────────────
+        ":_wheel_stubs",
+    ],
+)

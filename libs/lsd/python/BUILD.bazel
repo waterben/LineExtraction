@@ -35,10 +35,16 @@ le_pybind_module(
         "src/module_le_lsd.cpp",
     ],
     copts = LE_PYBIND_COPTS,
+    generate_stubs = True,
     py_deps = [
         "//libs/geometry/python:le_geometry_lib",
         "//libs/imgproc/python:le_imgproc_lib",
         "//libs/edge/python:le_edge_lib",
+    ],
+    stub_deps = [
+        "//libs/imgproc/python:le_imgproc.so",
+        "//libs/edge/python:le_edge.so",
+        "//libs/geometry/python:le_geometry.so",
     ],
     deps = [
         ":lsd_python_pybind",
