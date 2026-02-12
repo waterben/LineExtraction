@@ -59,6 +59,9 @@ def le_pybind_module(
     if stub:
         lib_data.append(stub)
 
+        # Export stub file so it can be referenced from the wheel packaging target
+        native.exports_files([stub], visibility = ["//visibility:public"])
+
     library_name = name + "_lib" if (py_target_name == None) else py_target_name
     py_library(
         name = library_name,

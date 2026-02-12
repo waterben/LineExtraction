@@ -4,6 +4,9 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 package(default_visibility = ["//visibility:public"])
 
+# Export py.typed for PEP 561 (used by wheel packaging)
+exports_files(["py.typed"])
+
 py_library(
     name = "lsfm",
     srcs = [

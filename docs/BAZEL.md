@@ -521,6 +521,106 @@ bazel query 'deps(//libs/lsd:lib_lsd)'
 bazel query 'rdeps(//..., //libs/utility:lib_utility)'
 ```
 
+## Python Wheel Package
+
+The Python bindings can be packaged as a pip-installable wheel file (`.whl`).
+The wheel contains all 5 native extension modules with statically linked C++ dependencies
+(OpenCV, Eigen, etc.), so users only need `pip install` — no compiler or system libraries required.
+
+### Build the Wheel
+
+```bash
+bazel build //python:lsfm_wheel
+```
+
+The output file is at:
+
+```
+bazel-bin/python/lsfm-0.1.0-cp312-cp312-linux_x86_64.whl
+```
+
+### Wheel Contents
+
+| Path | Description |
+|------|-------------|
+| `le_imgproc.so` + `.pyi` | Image processing module |
+| `le_edge.so` + `.pyi` | Edge detection module |
+| `le_geometry.so` + `.pyi` | Geometry primitives module |
+| `le_eval.so` + `.pyi` | Evaluation framework module |
+| `le_lsd.so` + `.pyi` | Line segment detection module |
+| `lsfm/__init__.py` | Python package with lazy re-exports |
+| `lsfm/data.py` | TestImages utility for dataset access |
+| `lsfm/py.typed` | PEP 561 type-checking marker |
+
+### Install the Wheel
+
+```bash
+# Install into a virtualenv
+pip install bazel-bin/python/lsfm-0.1.0-cp312-cp312-linux_x86_64.whl
+
+# Or with uv (faster)
+uv pip install bazel-bin/python/lsfm-*.whl
+
+# Force reinstall (after rebuilding)
+pip install --force-reinstall bazel-bin/python/lsfm-*.whl
+```
+
+### Usage After Installation
+
+```python
+# Direct import (backward compatible)
+import le_lsd
+import le_edge
+
+# Via namespace package
+from lsfm import le_lsd, le_edge, le_geometry
+
+# Utilities
+from lsfm.data import TestImages
+```
+
+### Distribute to Other Machines
+
+The wheel is a self-contained `.whl` file that can be copied to any Linux x86_64 machine
+with Python 3.12:
+
+```bash
+# Copy the wheel
+scp bazel-bin/python/lsfm-*.whl user@server:/tmp/
+
+# Install on target machine (no build tools needed)
+ssh user@server 'pip install /tmp/lsfm-*.whl'
+```
+
+**Requirements on the target machine:**
+- Python 3.12 (matching the `cp312` ABI tag)
+- Linux x86_64
+- `numpy >= 1.24.0` (installed automatically by pip)
+- No C++ compiler, OpenCV, Eigen, or other system libraries needed
+
+### Platform and Python Version
+
+The current wheel is built for **CPython 3.12 on Linux x86_64**. To support other
+platforms or Python versions, edit the `py_wheel` target in `python/BUILD.bazel`:
+
+```starlark
+py_wheel(
+    name = "lsfm_wheel",
+    python_tag = "cp312",   # Change for other Python versions
+    abi = "cp312",          # Must match python_tag for native modules
+    platform = "linux_x86_64",  # Change for other platforms
+    ...
+)
+```
+
+**Note:** Native `.so` modules are platform-specific. Cross-platform wheels require
+rebuilding on each target platform.
+
+### Target Definition
+
+The wheel target is defined in [`python/BUILD.bazel`](../python/BUILD.bazel).
+It uses `py_wheel` from `@rules_python//python:packaging.bzl`.
+
 ## Performance Tips
 
 ```bash

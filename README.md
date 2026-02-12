@@ -248,6 +248,31 @@ le_imgproc       le_geometry       le_eval
     (9 LSD detectors)
 ```
 
+### Pip Package (Wheel)
+
+The Python bindings can be packaged as a pip-installable wheel — a single `.whl` file
+containing all 5 native modules with no external C++ dependencies:
+
+```bash
+# Build the wheel
+bazel build //python:lsfm_wheel
+
+# Install (into any virtualenv)
+pip install bazel-bin/python/lsfm-*.whl
+```
+
+After installation, all modules are available system-wide:
+
+```python
+import le_lsd
+from lsfm import le_edge, le_geometry
+from lsfm.data import TestImages
+```
+
+The wheel is self-contained (OpenCV, Eigen etc. statically linked) and can be distributed
+to any Linux x86_64 machine with Python 3.12 — no compiler or system libraries needed.
+See [`docs/BAZEL.md`](docs/BAZEL.md#python-wheel-package) for details.
+
 ## Dependencies
 
 All dependencies are automatically managed by both build systems:
