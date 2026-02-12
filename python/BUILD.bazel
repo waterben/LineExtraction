@@ -14,15 +14,15 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 
 package(default_visibility = ["//visibility:public"])
 
-# Aggregate type stubs (.pyi) for wheel packaging
+# Aggregate type stubs (.pyi) for wheel packaging — generated at build time
 filegroup(
     name = "_wheel_stubs",
     srcs = [
-        "//libs/edge/python:le_edge.pyi",
-        "//libs/eval/python:le_eval.pyi",
-        "//libs/geometry/python:le_geometry.pyi",
-        "//libs/imgproc/python:le_imgproc.pyi",
-        "//libs/lsd/python:le_lsd.pyi",
+        "//libs/edge/python:le_edge_pyi",
+        "//libs/eval/python:le_eval_pyi",
+        "//libs/geometry/python:le_geometry_pyi",
+        "//libs/imgproc/python:le_imgproc_pyi",
+        "//libs/lsd/python:le_lsd_pyi",
     ],
 )
 

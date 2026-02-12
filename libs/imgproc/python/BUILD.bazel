@@ -32,7 +32,7 @@ le_pybind_module(
         "src/module_le_imgproc.cpp",
     ],
     copts = LE_PYBIND_COPTS,
-    stub = "le_imgproc.pyi",
+    generate_stubs = True,
     deps = [
         ":imgproc_python_pybind",
     ],

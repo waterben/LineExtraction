@@ -521,6 +521,46 @@ bazel query 'deps(//libs/lsd:lib_lsd)'
 bazel query 'rdeps(//..., //libs/utility:lib_utility)'
 ```
 
+## Type Stubs (.pyi)
+
+Type stubs are generated **automatically at build time** using `pybind11-stubgen`.
+Each Python binding module with `generate_stubs = True` in its `le_pybind_module()`
+call gets a corresponding `.pyi` file generated as a Bazel genrule — no manual steps
+or committed files needed.
+
+### How It Works
+
+The stub generation pipeline is defined in `tools/bazel/stubgen.bzl`:
+
+1. Bazel builds the `.so` extension module
+2. A genrule runs `pybind11-stubgen` inside the sandbox with the `.so` on `sys.path`
+3. The resulting `.pyi` file becomes a Bazel output available to downstream targets
+4. The wheel target (`//python:lsfm_wheel`) automatically includes all generated stubs
+
+Cross-module dependencies (e.g., `le_edge` imports `le_imgproc` at load time) are
+handled via the `stub_deps` parameter, which adds the dependent `.so` files to the
+import path during stub generation.
+
+### Build Stubs
+
+```bash
+# Stubs are built automatically with the bindings
+bazel build //libs/...
+
+# Or build individual stubs explicitly
+bazel build //libs/imgproc/python:le_imgproc_pyi
+```
+
+### IDE Support
+
+Generated stubs live in `bazel-bin/` and are not committed to the repository.
+For IDE autocomplete (Pylance/Pyright), you have two options:
+
+1. **Recommended:** Configure `python.analysis.extraPaths` in `.vscode/settings.json`
+   to include `bazel-bin/libs/*/python`
+2. **Alternative:** Run `./tools/scripts/generate_stubs.sh` to copy stubs into the
+   source tree (files are `.gitignore`d)
+
 ## Python Wheel Package
 
 The Python bindings can be packaged as a pip-installable wheel file (`.whl`).

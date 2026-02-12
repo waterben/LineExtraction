@@ -1,10 +1,15 @@
 #!/bin/bash
 # ==============================================================================
-# Python Type Stub Generator
+# Python Type Stub Generator (IDE Helper)
 # ==============================================================================
-# Generates .pyi type stubs for all LineExtraction Python binding modules
-# using pybind11-stubgen. Stubs are placed alongside each module's source
-# for IDE support (Pylance, Pyright, mypy).
+# NOTE: Stubs are generated automatically during `bazel build` via genrules
+# defined in tools/bazel/stubgen.bzl. The wheel target (//python:lsfm_wheel)
+# includes build-time generated stubs — no manual step is needed.
+#
+# This script is an optional convenience tool that places .pyi stubs into the
+# source tree (libs/<mod>/python/) so IDEs like Pylance/Pyright can find them
+# without relying on bazel-bin paths. Run it once after building to get
+# autocomplete in your editor.
 #
 # Prerequisites:
 #   - Python bindings built: bazel build //libs/...
@@ -20,6 +25,8 @@
 #   libs/geometry/python/le_geometry.pyi
 #   libs/eval/python/le_eval.pyi
 #   libs/lsd/python/le_lsd.pyi
+#
+# These files are .gitignored and should not be committed.
 # ==============================================================================
 
 set -e
