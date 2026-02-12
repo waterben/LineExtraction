@@ -2,33 +2,39 @@
 # ==============================================================================
 # Release Script
 # ==============================================================================
-# Builds the lsfm Python wheel, updates version strings across the project,
-# and creates a GitHub release with the wheel as a downloadable artifact.
+# Builds the lsfm Python wheel, stamps the release version into source files,
+# creates a Git tag, and publishes a GitHub release with the wheel artifact.
+# Version strings are restored to "dev" after building; the release version
+# only lives in the Git tag and the built wheel.
 #
-# Versioning follows the date-based scheme: YYYY.MM.DD.COUNTER
-# Default: today's date with counter 0 (e.g. 2026.02.12.0).
+# Version scheme: YYYY.MM.DD.COUNTER (e.g. 2026.02.12.0)
+# Default: today's date with counter 0.
 #
 # Usage:
-#   ./tools/scripts/release.sh                 # Use today's date, counter 0
+#   ./tools/scripts/release.sh                 # Today's date, counter 0
 #   ./tools/scripts/release.sh 2026.02.12.1    # Explicit version
-#   ./tools/scripts/release.sh --draft         # Draft release (today's date)
-#   ./tools/scripts/release.sh 2026.02.12.0 --draft
+#   ./tools/scripts/release.sh --draft         # Draft release
 #   ./tools/scripts/release.sh 2026.02.12.0 --prerelease
 #
-# Requires:
-#   - bazel  (build the wheel)
-#   - gh     (GitHub CLI, authenticated via ``gh auth login``)
-#   - sed    (update version strings)
+# Safety checks:
+#   - Warns if not on 'main' branch (with confirmation prompt)
+#   - Prevents releasing with uncommitted changes
+#   - Prevents releasing if the tag already exists
+#   - Warns if the current commit already has a release tag
+#
+# Requires: bazel, gh (authenticated), git
 # ==============================================================================
 
 set -euo pipefail
 
-# --- Colors ------------------------------------------------------------------
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
+# --- Configuration -----------------------------------------------------------
+WHEEL_TARGET="//python:lsfm_wheel"
+DIST_DIR="dist"
+MAIN_BRANCH="main"
+
+# --- Helpers -----------------------------------------------------------------
+die()     { echo "Error: $1" >&2; exit 1; }
+confirm() { read -rp "$1 [y/N] " ans; [[ "${ans}" =~ ^[Yy]$ ]] || exit 0; }
 
 # --- Find project root -------------------------------------------------------
 if [[ -f "MODULE.bazel" ]]; then
@@ -40,7 +46,6 @@ fi
 cd "${PROJECT_ROOT}"
 
 # --- Parse arguments ----------------------------------------------------------
-# First positional arg matching version pattern is the version; rest are gh flags.
 VERSION=""
 GH_FLAGS=()
 for arg in "$@"; do
@@ -50,90 +55,106 @@ for arg in "$@"; do
         GH_FLAGS+=("${arg}")
     fi
 done
-
-# Default: today's date with counter 0
-if [[ -z "${VERSION}" ]]; then
-    VERSION="$(date +%Y.%m.%d).0"
-fi
-
+VERSION="${VERSION:-$(date +%Y.%m.%d).0}"
 TAG="v${VERSION}"
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Release ${TAG}${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo ""
-
 # --- Preflight checks --------------------------------------------------------
-MISSING=()
-for cmd in bazel gh sed; do
-    if ! command -v "${cmd}" &>/dev/null; then
-        MISSING+=("${cmd}")
-    fi
+
+# Required tools
+for cmd in bazel gh git; do
+    command -v "${cmd}" &>/dev/null || die "'${cmd}' not found. Please install it first."
 done
-if [[ ${#MISSING[@]} -gt 0 ]]; then
-    echo -e "${RED}Error: Missing required tools: ${MISSING[*]}${NC}" >&2
-    exit 1
-fi
 
-if ! gh auth status &>/dev/null; then
-    echo -e "${RED}Error: GitHub CLI not authenticated. Run 'gh auth login' first.${NC}" >&2
-    exit 1
-fi
+# GitHub CLI authenticated
+gh auth status &>/dev/null || die "GitHub CLI not authenticated. Run 'gh auth login' first."
 
-# Warn about uncommitted changes
-if [[ -n "$(git status --porcelain)" ]]; then
-    echo -e "${YELLOW}Warning: Working tree has uncommitted changes.${NC}"
+# Version format
+[[ "${VERSION}" =~ ^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+$ ]] \
+    || die "Version must follow YYYY.MM.DD.N format (got: ${VERSION})."
+
+# Uncommitted changes
+if ! git diff --quiet HEAD 2>/dev/null || ! git diff --cached --quiet HEAD 2>/dev/null; then
+    echo "Warning: You have uncommitted changes:"
+    git status --short
     echo ""
+    confirm "Release anyway?"
 fi
 
-# --- Update version strings ---------------------------------------------------
-echo -e "${BLUE}Updating version to ${VERSION} ...${NC}"
+# Branch check
+CURRENT_BRANCH="$(git branch --show-current)"
+if [[ "${CURRENT_BRANCH}" != "${MAIN_BRANCH}" ]]; then
+    echo "Warning: You are on branch '${CURRENT_BRANCH}', not '${MAIN_BRANCH}'."
+    echo "Releases are normally created from '${MAIN_BRANCH}'."
+    echo ""
+    confirm "Continue releasing from '${CURRENT_BRANCH}'?"
+fi
 
-# MODULE.bazel: version = "..."
-sed -i "s/version = \"[^\"]*\"/version = \"${VERSION}\"/" MODULE.bazel
-echo "  MODULE.bazel"
+# Tag already exists
+if git rev-parse "${TAG}" &>/dev/null; then
+    NEXT_COUNTER=$((${VERSION##*.} + 1))
+    NEXT_VERSION="${VERSION%.*}.${NEXT_COUNTER}"
+    die "Tag '${TAG}' already exists. Try: $0 ${NEXT_VERSION}"
+fi
 
-# python/BUILD.bazel: version = "..." (in py_wheel)
-sed -i "s/^\(    version = \)\"[^\"]*\"/\1\"${VERSION}\"/" python/BUILD.bazel
-echo "  python/BUILD.bazel"
+# Commit already tagged (duplicate release)
+HEAD_SHORT="$(git rev-parse --short HEAD)"
+EXISTING_TAG="$(git tag --points-at HEAD 2>/dev/null | head -n1)"
+if [[ -n "${EXISTING_TAG}" ]]; then
+    echo "Warning: Commit ${HEAD_SHORT} is already tagged as '${EXISTING_TAG}'."
+    confirm "Create an additional release for this commit?"
+fi
 
-# python/lsfm/__init__.py: __version__ = "..."
-sed -i "s/^__version__ = \"[^\"]*\"/__version__ = \"${VERSION}\"/" python/lsfm/__init__.py
-echo "  python/lsfm/__init__.py"
-
+# --- Summary -----------------------------------------------------------------
 echo ""
+echo "=== Release Summary ==="
+echo "  Version: ${VERSION}"
+echo "  Tag:     ${TAG}"
+echo "  Branch:  ${CURRENT_BRANCH}"
+echo "  Commit:  ${HEAD_SHORT} ($(git log -1 --format='%s' HEAD))"
+echo "  Flags:   ${GH_FLAGS[*]:-none}"
+echo ""
+confirm "Proceed?"
+
+# --- Stamp version -----------------------------------------------------------
+echo "=== Stamping version ${VERSION} ==="
+sed -i "s/version = \"dev\"/version = \"${VERSION}\"/" MODULE.bazel
+sed -i "s/version = \"dev\"/version = \"${VERSION}\"/" python/BUILD.bazel
+sed -i "s/__version__ = \"dev\"/__version__ = \"${VERSION}\"/" python/lsfm/__init__.py
+echo "  MODULE.bazel, python/BUILD.bazel, python/lsfm/__init__.py"
 
 # --- Build wheel --------------------------------------------------------------
-WHEEL_TARGET="//python:lsfm_wheel"
-DIST_DIR="dist"
-
-echo -e "${BLUE}Building wheel ...${NC}"
+echo "=== Building wheel ==="
 bazel build "${WHEEL_TARGET}"
 
+# --- Restore dev version ------------------------------------------------------
+echo "=== Restoring dev version ==="
+sed -i "s/version = \"${VERSION}\"/version = \"dev\"/" MODULE.bazel
+sed -i "s/version = \"${VERSION}\"/version = \"dev\"/" python/BUILD.bazel
+sed -i "s/__version__ = \"${VERSION}\"/__version__ = \"dev\"/" python/lsfm/__init__.py
+
+# --- Collect artifacts --------------------------------------------------------
+echo "=== Collecting artifacts ==="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
 cp bazel-bin/python/lsfm-*.whl "${DIST_DIR}/"
 
 WHEEL=$(ls "${DIST_DIR}"/lsfm-*.whl)
-echo -e "  ${GREEN}${WHEEL}${NC}"
-echo "  Size: $(du -h "${WHEEL}" | cut -f1)"
-echo ""
+echo "  ${WHEEL} ($(du -h "${WHEEL}" | cut -f1))"
 
-# --- Create GitHub release ----------------------------------------------------
-echo -e "${BLUE}Creating GitHub release ${TAG} ...${NC}"
+# --- Create tag and release ---------------------------------------------------
+echo "=== Creating tag ${TAG} ==="
+git tag -a "${TAG}" -m "Release ${VERSION}" HEAD
+git push origin "${TAG}"
+
+echo "=== Creating GitHub release ==="
 gh release create "${TAG}" "${WHEEL}" \
     --title "${TAG}" \
     --generate-notes \
     "${GH_FLAGS[@]+"${GH_FLAGS[@]}"}"
 
 echo ""
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  Release ${TAG} created successfully!${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo "=== Done ==="
+echo "  https://github.com/waterben/LineExtraction/releases/tag/${TAG}"
 echo ""
-echo "  Install from file:"
-echo "      pip install ${WHEEL}"
-echo ""
-echo "  Install from GitHub release:"
-echo "      gh release download ${TAG} --pattern '*.whl' --dir /tmp"
-echo "      pip install /tmp/lsfm-*.whl"
+echo "  Install: pip install ${WHEEL}"
+echo "  Remote:  gh release download ${TAG} -p '*.whl' -D /tmp && pip install /tmp/lsfm-*.whl"
