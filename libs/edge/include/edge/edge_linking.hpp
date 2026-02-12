@@ -434,7 +434,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
     char tdir = -1, dir = 0;
     int gap = 0;
 
-    while (idx && gap < maxGap_) {
+    while (idx && gap <= maxGap_) {
       tdir = pdir_[idx];
       if (tdir > -1) {
         dir = tdir;
@@ -642,7 +642,7 @@ class EsdLinking : public EsdBase<MT, index_type> {
     }
 
     bool add = true;
-    while (s3.idx && gap < maxGap_) {
+    while (s3.idx && gap <= maxGap_) {
       // draw(s0, s1, s2, s3);
       //  check for corner rule
       char diff_s = absDiff<NUM_DIR>(s0.ndir - s1.ndir);

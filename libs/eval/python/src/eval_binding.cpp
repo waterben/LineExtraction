@@ -45,6 +45,9 @@ void bind_eval_core_types(py::module_& m) {
           [](const StringTable& t, py::tuple pos) {
             size_t r = pos[0].cast<size_t>();
             size_t c = pos[1].cast<size_t>();
+            if (r >= t.rows() || c >= t.cols()) {
+              throw py::index_error("StringTable index out of range");
+            }
             return t(r, c);
           },
           "Get cell value at (row, col).")
@@ -53,15 +56,30 @@ void bind_eval_core_types(py::module_& m) {
           [](StringTable& t, py::tuple pos, const std::string& val) {
             size_t r = pos[0].cast<size_t>();
             size_t c = pos[1].cast<size_t>();
+            if (r >= t.rows() || c >= t.cols()) {
+              throw py::index_error("StringTable index out of range");
+            }
             t(r, c) = val;
           },
           "Set cell value at (row, col).")
       .def(
-          "row", [](const StringTable& t, size_t r) { return t.row(r); }, py::arg("row"),
-          "Get a row as list of strings.")
+          "row",
+          [](const StringTable& t, size_t r) {
+            if (r >= t.rows()) {
+              throw py::index_error("StringTable row index out of range");
+            }
+            return t.row(r);
+          },
+          py::arg("row"), "Get a row as list of strings.")
       .def(
-          "col", [](const StringTable& t, size_t c) { return t.col(c); }, py::arg("col"),
-          "Get a column as list of strings.")
+          "col",
+          [](const StringTable& t, size_t c) {
+            if (c >= t.cols()) {
+              throw py::index_error("StringTable column index out of range");
+            }
+            return t.col(c);
+          },
+          py::arg("col"), "Get a column as list of strings.")
       .def("transpose", &StringTable::transpose, "Return a transposed copy of this table.")
       .def("save_csv", &StringTable::saveCSV, py::arg("filename"), "Save table to CSV file.")
       .def(

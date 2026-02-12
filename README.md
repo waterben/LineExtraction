@@ -27,6 +27,7 @@ A comprehensive C++ library for line detection and analysis in digital images, f
   - [`lsd/`](examples/lsd/README.md) - Line Segment Detection algorithm variants
   - [`thesis/`](examples/thesis/README.md) - Thesis figure generation
   - [`other/`](examples/other/README.md) - Miscellaneous demos (Hough transform)
+  - [`notebooks/`](examples/notebooks/) - **Jupyter tutorials** for Python onboarding (see [below](#jupyter-tutorials))
 
 - **`evaluation/`** - [Performance evaluation](evaluation/README.md) and thesis benchmarks:
   - [`performance/`](evaluation/performance/README.md) - Computational benchmarks (gradient, NMS, LSD, GPU)
@@ -142,6 +143,29 @@ bazel run //examples/lsd:lsd
 bazel run //examples/edge:edge_test -- /path/to/image.jpg
 ```
 
+## Jupyter Tutorials
+
+The [`examples/notebooks/`](examples/notebooks/) directory contains interactive Jupyter Notebooks — the **recommended starting point for Python developers** and for onboarding new team members. The tutorial series provides a structured learning path from CV basics to full evaluation pipelines.
+
+| # | Notebook | Description |
+|---|----------|-------------|
+| 0 | [`cv_primer`](examples/notebooks/cv_primer.ipynb) | **Computer Vision Primer** — CV fundamentals with pure NumPy/Matplotlib (no library dependencies) |
+| 1 | [`tutorial_1_fundamentals`](examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Gradients, geometry primitives, drawing, ValueManager |
+| 2 | [`tutorial_2_pipelines`](examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full pipeline with all 9 LSD detectors |
+| 3 | [`tutorial_3_evaluation`](examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation** — Benchmarking framework and result analysis |
+| — | [`pytorch_esd_demo`](examples/notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) + ESD line extraction |
+| — | [`line_extraction_bindings`](examples/notebooks/line_extraction_bindings.ipynb) | **API Reference** — Compact tour of all 5 Python modules |
+
+```bash
+# Prerequisites: build the Python bindings
+bazel build //libs/...
+
+# Open in VS Code (recommended) or start JupyterLab
+source .venv/bin/activate && jupyter lab examples/notebooks/
+```
+
+See [`docs/JUPYTER.md`](docs/JUPYTER.md) for detailed setup and troubleshooting.
+
 ## Evaluation & Benchmarking
 
 The [`evaluation/`](evaluation/README.md) directory contains performance benchmarks and precision evaluations:
@@ -248,6 +272,7 @@ All dependencies are automatically managed by both build systems:
 | [`docs/CMAKE.md`](docs/CMAKE.md) | CMake build system, options, dependencies |
 | [`docs/DOCKER.md`](docs/DOCKER.md) | Docker/DevContainer development environment |
 | [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
+| [`docs/JUPYTER.md`](docs/JUPYTER.md) | Jupyter Notebook tutorials and Python onboarding |
 
 ### API Documentation
 
