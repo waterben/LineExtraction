@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     le_eval: ModuleType
     le_lsd: ModuleType
 
-__version__ = "0.1.0"
+__version__ = "dev"
 
 _NATIVE_MODULES = frozenset(
     {
