@@ -9,6 +9,7 @@ images/
 thesis/
 resources/datasets/
 docs/generated/
+dist/
 
 #cmake
 CMakeLists.txt.user

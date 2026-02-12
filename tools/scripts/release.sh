@@ -123,7 +123,10 @@ DEV_VERSION="0.0.0.dev0"
 # restore_dev uses the exact release version (known at that point).
 stamp_version() {
     local ver="$1"
-    sed -i "s/version = \"[^\"]*\"/version = \"${ver}\"/" MODULE.bazel
+    # MODULE.bazel: only the version inside module(), not bazel_dep() lines.
+    # The module() version is on a line starting with exactly 4 spaces.
+    # bazel_dep() versions are inline: bazel_dep(name = "...", version = "...")
+    sed -i '/^module(/,/^)/ s/version = \"[^\"]*\"/version = \"'"${ver}"'\"/' MODULE.bazel
     # Match only the indented version line inside py_wheel() — not the comment
     sed -i "s/^\(    version = \)\"[^\"]*\"/\1\"${ver}\"/" python/BUILD.bazel
     sed -i "s/^__version__ = \"[^\"]*\"/__version__ = \"${ver}\"/" python/lsfm/__init__.py
@@ -131,7 +134,9 @@ stamp_version() {
 
 verify_stamp() {
     local ver="$1" ok=1
-    grep -q "version = \"${ver}\"" MODULE.bazel          || { echo "  FAIL: MODULE.bazel"; ok=0; }
+    # Check MODULE.bazel: only within the module() block, not bazel_dep() lines
+    sed -n '/^module(/,/^)/p' MODULE.bazel | grep -q "version = \"${ver}\"" \
+        || { echo "  FAIL: MODULE.bazel"; ok=0; }
     grep -q "version = \"${ver}\"" python/BUILD.bazel     || { echo "  FAIL: python/BUILD.bazel"; ok=0; }
     grep -q "__version__ = \"${ver}\"" python/lsfm/__init__.py || { echo "  FAIL: python/lsfm/__init__.py"; ok=0; }
     [[ ${ok} -eq 1 ]] || die "Version stamping to '${ver}' failed. Check files above."
@@ -152,17 +157,17 @@ echo "  MODULE.bazel, python/BUILD.bazel, python/lsfm/__init__.py"
 echo "=== Building wheel ==="
 bazel build "${WHEEL_TARGET}"
 
-# --- Restore dev version (via trap, but run eagerly so later steps see dev) ---
-trap - EXIT INT TERM
-restore_dev
-
-# --- Collect artifacts --------------------------------------------------------
+# --- Collect artifacts (before restoring dev — wheel filename has release version) ---
 echo "=== Collecting artifacts ==="
 rm -rf "${DIST_DIR}"
 mkdir -p "${DIST_DIR}"
 
-WHEEL_PATTERN="lsfm-${VERSION}-*.whl"
-cp "bazel-bin/python/${WHEEL_PATTERN}" "${DIST_DIR}/" 2>/dev/null \
+# PEP 440 normalizes versions by stripping leading zeros from each segment:
+# 2026.02.12.0 → 2026.2.12.0 in the wheel filename.
+PEP440_VERSION="$(echo "${VERSION}" | sed 's/\.0*\([0-9]\)/.\1/g')"
+WHEEL_PATTERN="lsfm-${PEP440_VERSION}-*.whl"
+# Note: glob must be unquoted for expansion
+cp bazel-bin/python/${WHEEL_PATTERN} "${DIST_DIR}/" 2>/dev/null \
     || die "No wheel matching '${WHEEL_PATTERN}' found in bazel-bin/python/."
 
 WHEELS=("${DIST_DIR}"/${WHEEL_PATTERN})
@@ -171,6 +176,10 @@ if [[ ${#WHEELS[@]} -ne 1 ]]; then
 fi
 WHEEL="${WHEELS[0]}"
 echo "  ${WHEEL} ($(du -h "${WHEEL}" | cut -f1))"
+
+# --- Restore dev version (via trap, but run eagerly now that wheel is collected) ---
+trap - EXIT INT TERM
+restore_dev
 
 # --- Create tag and release ---------------------------------------------------
 echo "=== Creating tag ${TAG} ==="
