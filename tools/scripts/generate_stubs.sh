@@ -116,16 +116,19 @@ STUBGEN_FLAGS=(
 # --- Generate stubs ---
 
 TMPDIR=$(mktemp -d)
-trap 'rm -rf "${TMPDIR}"' EXIT
+LOGDIR=$(mktemp -d)
+trap 'rm -rf "${TMPDIR}" "${LOGDIR}"' EXIT
 
 FAILED=0
+FAILED_MODULES=()
 for entry in "${MODULES[@]}"; do
     MODULE="${entry%%:*}"
     TARGET_DIR="${entry##*:}"
+    LOGFILE="${LOGDIR}/${MODULE}.log"
 
     echo -n "  Generating ${MODULE}.pyi ... "
 
-    if pybind11-stubgen "${MODULE}" -o "${TMPDIR}" "${STUBGEN_FLAGS[@]}" 2>/dev/null; then
+    if pybind11-stubgen "${MODULE}" -o "${TMPDIR}" "${STUBGEN_FLAGS[@]}" 2>"${LOGFILE}"; then
         STUB_FILE="${TMPDIR}/${MODULE}.pyi"
         if [[ -f "${STUB_FILE}" ]]; then
             cp "${STUB_FILE}" "${PROJECT_ROOT}/${TARGET_DIR}/${MODULE}.pyi"
@@ -134,10 +137,12 @@ for entry in "${MODULES[@]}"; do
         else
             echo -e "${RED}FAIL${NC} (no output file)"
             FAILED=$((FAILED + 1))
+            FAILED_MODULES+=("${MODULE}")
         fi
     else
         echo -e "${RED}FAIL${NC} (stubgen error)"
         FAILED=$((FAILED + 1))
+        FAILED_MODULES+=("${MODULE}")
     fi
 done
 
@@ -155,7 +160,12 @@ if [[ ${FAILED} -eq 0 ]]; then
     done
 else
     echo -e "${RED}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${RED}${FAILED} module(s) failed. Check errors above.${NC}"
+    echo -e "${RED}${FAILED} module(s) failed. Errors below:${NC}"
     echo -e "${RED}═══════════════════════════════════════════════════════════════${NC}"
+    for mod in "${FAILED_MODULES[@]}"; do
+        echo ""
+        echo -e "${YELLOW}--- ${mod} stderr ---${NC}"
+        cat "${LOGDIR}/${mod}.log"
+    done
     exit 1
 fi

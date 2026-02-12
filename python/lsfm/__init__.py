@@ -17,18 +17,30 @@ Usage::
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    le_imgproc: ModuleType
+    le_edge: ModuleType
+    le_geometry: ModuleType
+    le_eval: ModuleType
+    le_lsd: ModuleType
+
 __version__ = "0.1.0"
 
-__all__ = [
-    "le_imgproc",
-    "le_edge",
-    "le_geometry",
-    "le_eval",
-    "le_lsd",
-    "data",
-]
+_NATIVE_MODULES = frozenset(
+    {
+        "le_imgproc",
+        "le_edge",
+        "le_geometry",
+        "le_eval",
+        "le_lsd",
+    }
+)
 
-_NATIVE_MODULES = frozenset(__all__[:-1])  # All except 'data'
+__all__ = [*sorted(_NATIVE_MODULES), "data"]
 
 
 def __getattr__(name: str) -> object:
