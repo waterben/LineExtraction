@@ -552,7 +552,7 @@ class EsdPattern : public EsdBasePattern<MT, index_type> {
       }
     };
 
-    while (idx && gap < maxGap_) {
+    while (idx && gap <= maxGap_) {
       nidx = findAdjacent(idx, dir);
 #ifdef DRAW_MODE
       draw.ptr<cv::Vec3b>()[idx] = col;
