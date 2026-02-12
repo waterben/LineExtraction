@@ -54,7 +54,7 @@ py_wheel(
         "python",
     ],
     summary = "Line detection and analysis library with edge, LSD, and LFD algorithms",
-    version = "0.1.0",
+    version = "0.0.0.dev0",
     deps = [
         # ── Python package ─────────────────────────────────────────────
         "//python/lsfm",
