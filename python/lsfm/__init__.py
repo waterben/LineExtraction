@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from types import ModuleType
 
+    le_algorithm: ModuleType
     le_imgproc: ModuleType
     le_edge: ModuleType
     le_geometry: ModuleType
@@ -32,6 +33,7 @@ __version__ = "0.0.0.dev0"
 
 _NATIVE_MODULES = frozenset(
     {
+        "le_algorithm",
         "le_imgproc",
         "le_edge",
         "le_geometry",

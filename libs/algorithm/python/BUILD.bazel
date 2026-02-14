@@ -1,0 +1,59 @@
+"""lib_algorithm Python bindings"""
+
+load("@pybind11_bazel//:build_defs.bzl", "pybind_library")
+load("@rules_python//python:defs.bzl", "py_test")
+load("//tools/bazel:copts.bzl", "LE_PYBIND_COPTS")
+load("//tools/bazel:pybind.bzl", "le_pybind_module")
+
+package(default_visibility = ["//visibility:public"])
+
+# Reusable C++ binding library (can be linked by other pybind modules)
+pybind_library(
+    name = "algorithm_python_pybind",
+    srcs = [
+        "src/algorithm_binding.cpp",
+    ],
+    hdrs = [
+        "src/algorithm_binding.hpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    includes = ["src"],
+    deps = [
+        "//libs/algorithm:lib_algorithm",
+        "//libs/geometry:lib_geometry",
+        "@cvnp",
+    ],
+)
+
+# Python extension module: import le_algorithm
+le_pybind_module(
+    name = "le_algorithm",
+    srcs = [
+        "src/module_le_algorithm.cpp",
+    ],
+    copts = LE_PYBIND_COPTS,
+    generate_stubs = True,
+    py_deps = [
+        "//libs/geometry/python:le_geometry_lib",
+    ],
+    stub_deps = [
+        "//libs/geometry/python:le_geometry.so",
+    ],
+    deps = [
+        ":algorithm_python_pybind",
+        "//libs/geometry/python:geometry_python_pybind",
+    ],
+)
+
+# Python integration test
+py_test(
+    name = "test_le_algorithm",
+    srcs = ["tests/test_le_algorithm.py"],
+    main = "tests/test_le_algorithm.py",
+    deps = [
+        ":le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
