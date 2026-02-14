@@ -11,10 +11,12 @@ parameter optimisation for line segment detection pipelines:
 - **LineConnect** — connect nearby segments via gradient evidence
 - **AccuracyMeasure** — precision, recall, F1, and structural AP (sAP)
 - **GroundTruthLoader** — load / save ground truth annotations (CSV)
+- **ImageAnalyzer** — image property analysis (contrast, noise, edges, range)
+- **DetectorProfile** — intuitive 4-knob parameter profiles for all 9 LSD detectors
 - **ParamOptimizer** — automated hyperparameter search (grid + random)
 - **AccuracyResult**, **EvalResult**, **SearchResult** — result containers
 - **ParamRange** — search space definition helpers
-- **Enums**: `MergeType`, `OptimMetric`
+- **Enums**: `MergeType`, `OptimMetric`, `DetectorId`
 
 Images are passed as NumPy arrays and automatically converted to/from
 `cv::Mat`.  Line segments use `le_geometry.LineSegment_f64` (double
@@ -216,6 +218,179 @@ alg.GroundTruthLoader.save_csv("output.csv", [entry])
 |-------|------|-------------|
 | `image_name` | str | Image file name |
 | `segments` | list[LineSegment_f64] | Ground truth line segments |
+
+## ImageAnalyzer
+
+Static analyzer that extracts measurable image properties (contrast, noise
+level, edge density, dynamic range). All properties are normalized to
+[0, 1]. Works with both grayscale and color images (auto-converted internally).
+
+### Usage
+
+```python
+import numpy as np
+import le_algorithm as alg
+
+# Analyze a grayscale image
+img = np.random.randint(0, 255, (480, 640), dtype=np.uint8)
+props = alg.ImageAnalyzer.analyze(img)
+
+print(f"Contrast:      {props.contrast:.3f}")
+print(f"Noise level:   {props.noise_level:.3f}")
+print(f"Edge density:  {props.edge_density:.3f}")
+print(f"Dynamic range: {props.dynamic_range:.3f}")
+
+# Suggest profile knobs based on image properties
+hints = props.suggest_profile()
+print(f"Suggested detail:    {hints.detail:.0f}%")
+print(f"Suggested gap_tol:   {hints.gap_tolerance:.0f}%")
+print(f"Suggested min_len:   {hints.min_length:.0f}%")
+print(f"Suggested precision: {hints.precision:.0f}%")
+print(f"Contrast factor:     {hints.contrast_factor:.2f}")
+print(f"Noise factor:        {hints.noise_factor:.2f}")
+```
+
+### ImageProperties
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `contrast` | float | 0–1 | Normalized intensity standard deviation |
+| `noise_level` | float | 0–1 | Robust noise estimate (MAD of Laplacian) |
+| `edge_density` | float | 0–1 | Fraction of strong-gradient pixels |
+| `dynamic_range` | float | 0–1 | Percentile spread (5th–95th) |
+
+### ProfileHints
+
+Returned by `ImageProperties.suggest_profile()`. Contains suggested knob
+values and adaptive scaling factors.
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `detail` | float | 0–100 | Suggested detail level |
+| `gap_tolerance` | float | 0–100 | Suggested gap tolerance |
+| `min_length` | float | 0–100 | Suggested minimum length |
+| `precision` | float | 0–100 | Suggested precision level |
+| `contrast_factor` | float | 0.5–2.0 | Adaptive contrast scaling (>1 for low-contrast images) |
+| `noise_factor` | float | 0.5–2.0 | Adaptive noise scaling (>1 for noisy images) |
+
+Methods:
+
+| Method | Description |
+|--------|-------------|
+| `clamp()` | Clamp knobs to [0, 100] and factors to [0.5, 2.0] |
+
+## DetectorProfile
+
+Translates 4 intuitive percentage knobs (0–100%) into concrete detector
+parameters for all 9 supported LSD detectors. Supports adaptive scaling
+via `ImageAnalyzer`-produced hints.
+
+### Construction
+
+```python
+# Manual knob values (defaults: all 50%)
+profile = alg.DetectorProfile()
+profile = alg.DetectorProfile(
+    detail=70,           # 0=coarse, 100=fine
+    gap_tolerance=30,    # 0=strict, 100=tolerant
+    min_length=50,       # 0=keep all, 100=long only
+    precision=80,        # 0=rough/fast, 100=sub-pixel
+)
+
+# From ProfileHints (includes adaptive factors)
+hints = alg.ProfileHints()
+hints.detail = 70
+hints.contrast_factor = 1.3
+profile = alg.DetectorProfile(hints)
+# or: profile = alg.DetectorProfile.from_hints(hints)
+
+# Image-adaptive (analyze + suggest + translate)
+profile = alg.DetectorProfile.from_image(img)
+```
+
+### Generating Parameters
+
+```python
+# By DetectorId enum
+params = profile.to_params(alg.DetectorId.LSD_FGIOI)
+
+# By name string (case-insensitive)
+params = profile.to_params_by_name("LsdFGioi")
+
+# Inspect generated parameters
+for p in params:
+    print(f"  {p['name']} = {p['value']}")
+```
+
+### Properties
+
+| Property | Type | Range | Description |
+|----------|------|-------|-------------|
+| `detail` | float | 0–100 | Detail level (read/write) |
+| `gap_tolerance` | float | 0–100 | Gap tolerance (read/write) |
+| `min_length` | float | 0–100 | Minimum length (read/write) |
+| `precision` | float | 0–100 | Precision level (read/write) |
+| `contrast_factor` | float | 0.5–2.0 | Adaptive contrast factor (read/write) |
+| `noise_factor` | float | 0.5–2.0 | Adaptive noise factor (read/write) |
+
+### Static Methods
+
+| Method | Description |
+|--------|-------------|
+| `from_image(img)` | Analyze image and create adapted profile |
+| `from_hints(hints)` | Create profile from ProfileHints |
+| `supported_detectors()` | List all supported detector name strings |
+
+### DetectorId Enum
+
+| Value | Description |
+|-------|-------------|
+| `DetectorId.LSD_CC` | Connected Components |
+| `DetectorId.LSD_CP` | Connected Components with Patterns |
+| `DetectorId.LSD_BURNS` | Burns |
+| `DetectorId.LSD_FBW` | Fast Burns-Wassermann |
+| `DetectorId.LSD_FGIOI` | Grompone von Gioi |
+| `DetectorId.LSD_EDLZ` | EDLines |
+| `DetectorId.LSD_EL` | Edge Linking |
+| `DetectorId.LSD_EP` | Edge Patterns |
+| `DetectorId.LSD_HOUGHP` | Probabilistic Hough |
+
+### Utility Functions
+
+```python
+# Convert between enum and string
+name = alg.detector_id_to_name(alg.DetectorId.LSD_FGIOI)  # "LsdFGioi"
+did  = alg.detector_name_to_id("LsdFGioi")                 # DetectorId.LSD_FGIOI
+```
+
+### End-to-End Example
+
+```python
+import numpy as np
+import le_algorithm as alg
+
+# 1. Create or load an image
+img = np.random.randint(0, 255, (480, 640), dtype=np.uint8)
+
+# 2. Analyze image properties
+props = alg.ImageAnalyzer.analyze(img)
+print(f"Image: contrast={props.contrast:.2f}, noise={props.noise_level:.2f}")
+
+# 3. Get adaptive hints
+hints = props.suggest_profile()
+print(f"Suggested: detail={hints.detail:.0f}%, precision={hints.precision:.0f}%")
+
+# 4. Create profile (optionally override knobs)
+profile = alg.DetectorProfile.from_hints(hints)
+profile.detail = 80  # bump detail
+
+# 5. Generate parameters for desired detectors
+for name in alg.DetectorProfile.supported_detectors():
+    params = profile.to_params_by_name(name)
+    print(f"\n{name}:")
+    for p in params:
+        print(f"  {p['name']} = {p['value']}")
+```
 
 ## Search Strategies
 
@@ -452,7 +627,7 @@ strategies, enums) have no suffix.
 # Build the Python extension module
 bazel build //libs/algorithm/python:le_algorithm
 
-# Run Python tests (20 tests, 7 test classes)
+# Run Python tests (39 tests, 9 test classes)
 bazel test //libs/algorithm/python:test_le_algorithm
 
 # Run with verbose output

@@ -7,7 +7,9 @@
 #include "algorithm_binding.hpp"
 
 #include <algorithm/accuracy_measure.hpp>
+#include <algorithm/detector_profile.hpp>
 #include <algorithm/ground_truth.hpp>
+#include <algorithm/image_analyzer.hpp>
 #include <algorithm/line_connect.hpp>
 #include <algorithm/line_merge.hpp>
 #include <algorithm/param_search.hpp>
@@ -370,6 +372,145 @@ void bind_param_optimizer(py::module_& m) {
           "Returns:\n"
           "    SearchResult with best parameters and scores.")
       .def("__repr__", [](const ParamOptimizer&) { return "<ParamOptimizer>"; });
+}
+
+// ============================================================================
+// ImageAnalyzer binding
+// ============================================================================
+
+void bind_image_analyzer(py::module_& m) {
+  // ImageProperties
+  py::class_<ImageProperties>(m, "ImageProperties",
+                              "Measured image properties, each normalized to [0, 1].\n\n"
+                              "Attributes:\n"
+                              "    contrast: Normalized intensity standard deviation.\n"
+                              "    noise_level: Robust noise estimate (MAD of Laplacian).\n"
+                              "    edge_density: Fraction of strong-gradient pixels.\n"
+                              "    dynamic_range: Percentile spread (5th-95th).")
+      .def(py::init<>())
+      .def_readwrite("contrast", &ImageProperties::contrast, "Contrast in [0, 1].")
+      .def_readwrite("noise_level", &ImageProperties::noise_level, "Noise level in [0, 1].")
+      .def_readwrite("edge_density", &ImageProperties::edge_density, "Edge density in [0, 1].")
+      .def_readwrite("dynamic_range", &ImageProperties::dynamic_range, "Dynamic range in [0, 1].")
+      .def("suggest_profile", &ImageProperties::suggest_profile,
+           "Suggest DetectorProfile knob values based on these properties.\n\n"
+           "Returns:\n"
+           "    ProfileHints with suggested knob values and adaptive factors.")
+      .def("__repr__", [](const ImageProperties& p) {
+        std::ostringstream os;
+        os << "ImageProperties(contrast=" << p.contrast << ", noise=" << p.noise_level << ", edges=" << p.edge_density
+           << ", range=" << p.dynamic_range << ")";
+        return os.str();
+      });
+
+  // ProfileHints
+  py::class_<ProfileHints>(m, "ProfileHints",
+                           "Suggested knob values and adaptive scaling factors.\n\n"
+                           "Knobs are in [0, 100] percent. Factors are in [0.5, 2.0].")
+      .def(py::init<>())
+      .def_readwrite("detail", &ProfileHints::detail, "Detail level [0, 100].")
+      .def_readwrite("gap_tolerance", &ProfileHints::gap_tolerance, "Gap tolerance [0, 100].")
+      .def_readwrite("min_length", &ProfileHints::min_length, "Minimum length [0, 100].")
+      .def_readwrite("precision", &ProfileHints::precision, "Precision [0, 100].")
+      .def_readwrite("contrast_factor", &ProfileHints::contrast_factor, "Contrast scaling factor [0.5, 2.0].")
+      .def_readwrite("noise_factor", &ProfileHints::noise_factor, "Noise scaling factor [0.5, 2.0].")
+      .def("clamp", &ProfileHints::clamp, "Clamp all values to valid ranges.")
+      .def("__repr__", [](const ProfileHints& h) {
+        std::ostringstream os;
+        os << "ProfileHints(detail=" << h.detail << ", gap=" << h.gap_tolerance << ", len=" << h.min_length
+           << ", prec=" << h.precision << ")";
+        return os.str();
+      });
+
+  // ImageAnalyzer
+  py::class_<ImageAnalyzer>(m, "ImageAnalyzer",
+                            "Analyze an image to extract contrast, noise, edge density,\n"
+                            "and dynamic range properties.")
+      .def_static("analyze", &ImageAnalyzer::analyze, py::arg("image"),
+                  "Analyze a grayscale (or color) image.\n\n"
+                  "Args:\n"
+                  "    image: Input image (numpy array, single or 3-channel).\n\n"
+                  "Returns:\n"
+                  "    ImageProperties with all fields in [0, 1].");
+}
+
+// ============================================================================
+// DetectorProfile binding
+// ============================================================================
+
+void bind_detector_profile(py::module_& m) {
+  // DetectorId enum
+  py::enum_<DetectorId>(m, "DetectorId", "Identifiers for supported LSD detectors.")
+      .value("LSD_CC", DetectorId::LSD_CC, "Connected Components")
+      .value("LSD_CP", DetectorId::LSD_CP, "Connected Components with Patterns")
+      .value("LSD_BURNS", DetectorId::LSD_BURNS, "Burns")
+      .value("LSD_FBW", DetectorId::LSD_FBW, "Fast Burns-Wassermann")
+      .value("LSD_FGIOI", DetectorId::LSD_FGIOI, "Grompone von Gioi")
+      .value("LSD_EDLZ", DetectorId::LSD_EDLZ, "EDLines")
+      .value("LSD_EL", DetectorId::LSD_EL, "Edge Linking")
+      .value("LSD_EP", DetectorId::LSD_EP, "Edge Patterns")
+      .value("LSD_HOUGHP", DetectorId::LSD_HOUGHP, "Probabilistic Hough");
+
+  // Free functions
+  m.def("detector_id_to_name", &detector_id_to_name, py::arg("id"),
+        "Convert DetectorId to human-readable name string.");
+  m.def("detector_name_to_id", &detector_name_to_id, py::arg("name"),
+        "Parse a detector name string to DetectorId (case-insensitive).");
+
+  // DetectorProfile
+  py::class_<DetectorProfile>(m, "DetectorProfile",
+                              "Intuitive high-level parameter profile for LSD detectors.\n\n"
+                              "Set 4 percentage knobs (0-100) and translate them to\n"
+                              "concrete detector parameters. Supports adaptive scaling\n"
+                              "from image analysis.")
+      .def(py::init<double, double, double, double>(), py::arg("detail") = 50, py::arg("gap_tolerance") = 50,
+           py::arg("min_length") = 50, py::arg("precision") = 50, "Construct with explicit knob values (0-100 each).")
+      .def(py::init<const ProfileHints&>(), py::arg("hints"),
+           "Construct from ProfileHints (includes adaptive factors).")
+      // Static factories
+      .def_static("from_image", &DetectorProfile::from_image, py::arg("image"),
+                  "Create a profile by analyzing an image.\n\n"
+                  "Runs ImageAnalyzer and uses suggest_profile() to derive both\n"
+                  "knob values and adaptive scaling factors.\n\n"
+                  "Args:\n"
+                  "    image: Grayscale input image (numpy array).\n\n"
+                  "Returns:\n"
+                  "    DetectorProfile with image-adapted values.")
+      .def_static("from_hints", &DetectorProfile::from_hints, py::arg("hints"),
+                  "Create a profile from explicit ProfileHints.")
+      .def_static("supported_detectors", &DetectorProfile::supported_detectors,
+                  "Get list of all supported detector names.")
+      // Properties
+      .def_property("detail", &DetectorProfile::detail, &DetectorProfile::set_detail, "Detail level [0, 100].")
+      .def_property("gap_tolerance", &DetectorProfile::gap_tolerance, &DetectorProfile::set_gap_tolerance,
+                    "Gap tolerance [0, 100].")
+      .def_property("min_length", &DetectorProfile::min_length, &DetectorProfile::set_min_length,
+                    "Minimum length [0, 100].")
+      .def_property("precision", &DetectorProfile::precision, &DetectorProfile::set_precision, "Precision [0, 100].")
+      .def_property("contrast_factor", &DetectorProfile::contrast_factor, &DetectorProfile::set_contrast_factor,
+                    "Contrast factor [0.5, 2.0].")
+      .def_property("noise_factor", &DetectorProfile::noise_factor, &DetectorProfile::set_noise_factor,
+                    "Noise factor [0.5, 2.0].")
+      // Parameter generation
+      .def(
+          "to_params",
+          [](const DetectorProfile& self, DetectorId id) { return param_config_to_python(self.to_params(id)); },
+          py::arg("detector"),
+          "Generate concrete parameters for a detector (by DetectorId).\n\n"
+          "Returns:\n"
+          "    List of {'name': str, 'value': ...} dicts.")
+      .def(
+          "to_params_by_name",
+          [](const DetectorProfile& self, const std::string& name) {
+            return param_config_to_python(self.to_params(name));
+          },
+          py::arg("detector_name"), "Generate concrete parameters by detector name (case-insensitive).")
+      .def("__repr__", [](const DetectorProfile& p) {
+        std::ostringstream os;
+        os << "DetectorProfile(detail=" << p.detail() << ", gap=" << p.gap_tolerance() << ", len=" << p.min_length()
+           << ", prec=" << p.precision() << ")";
+        return os.str();
+      });
 }
 
 // ============================================================================

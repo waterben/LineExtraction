@@ -19,9 +19,10 @@ The `algorithm` library sits on top of the detection modules (`lsd`, `lfd`,
 | **GroundTruthLoader** | `ground_truth.hpp` | Load / save ground truth in CSV format |
 | **ParamOptimizer** | `param_search.hpp` | Automated parameter search (grid + random) |
 | **PrecisionOptimize** | `precision_optimize.hpp` | Sub-pixel line refinement (dlib-based) |
+| **ImageAnalyzer** | `image_analyzer.hpp` | Image property analysis (contrast, noise, edges) |
+| **DetectorProfile** | `detector_profile.hpp` | Intuitive high-level parameter profiles for LSD detectors |
 
-All code resides in the `lsfm` namespace. The library is **header-only**
-(no `.cpp` files in `src/`).
+All code resides in the `lsfm` namespace.
 
 ## Architecture
 
@@ -39,6 +40,14 @@ SearchStrategy (abstract)
   └── RandomSearchStrategy    — uniform random sampling
 
 ParamOptimizer                — orchestrates search + evaluation
+
+ImageAnalyzer                 — contrast/noise/edge/range analysis
+ImageProperties               — measured image characteristics
+ProfileHints                  — suggested knob values + adaptive factors
+
+DetectorProfile               — 4 percentage knobs → detector parameters
+  └── maps to all 9 LSD detectors (CC, CP, Burns, FBW, FGioi,
+                                    EDLZ, EL, EP, HoughP)
 ```
 
 `LineMerge`, `LineConnect`, and `PrecisionOptimize` extend `ValueManager`,
@@ -290,6 +299,177 @@ std::vector<lsfm::LineSegment<double>> refined;
 auto errors = optimizer.optimize_copy(gradient_magnitude, segments, refined);
 ```
 
+### ImageAnalyzer
+
+Analyzes an image to extract measurable properties (contrast, noise level,
+edge density, dynamic range), all normalized to [0, 1]. These properties
+can be used to suggest adaptive detector profile knob values via
+`suggest_profile()`.
+
+The analyzer accepts both grayscale and color images (auto-converted
+to 8-bit grayscale internally).
+
+#### Measured Properties (`ImageProperties`)
+
+| Property | Range | Derived From | Description |
+|----------|-------|--------------|-------------|
+| `contrast` | 0–1 | `meanStdDev` | Normalized intensity standard deviation. 0 = flat/uniform, 1 = maximum contrast. |
+| `noise_level` | 0–1 | MAD of Laplacian | Robust noise estimate (Immerkær method). 0 = noise-free, 1 = very noisy. |
+| `edge_density` | 0–1 | Sobel threshold | Fraction of strong-gradient pixels. 0 = no edges, 1 = edges everywhere. |
+| `dynamic_range` | 0–1 | Histogram percentiles | Spread between 5th–95th percentile. 0 = narrow, 1 = full range. |
+
+#### Profile Hints
+
+`ImageProperties::suggest_profile()` returns a `ProfileHints` struct
+with heuristic knob suggestions and adaptive scaling factors:
+
+| Field | Range | Derivation Logic |
+|-------|-------|------------------|
+| `detail` | 10–90 | Increases with contrast, decreases with noise |
+| `gap_tolerance` | 10–90 | Increases with noise, decreases with edge density |
+| `min_length` | 10–90 | Increases with noise and edge density |
+| `precision` | 10–90 | Increases with dynamic range, decreases with noise |
+| `contrast_factor` | 0.5–2.0 | >1 for low-contrast images (raises thresholds) |
+| `noise_factor` | 0.5–2.0 | >1 for noisy images (raises thresholds) |
+
+#### Usage
+
+```cpp
+#include <algorithm/image_analyzer.hpp>
+
+cv::Mat img = cv::imread("photo.png", cv::IMREAD_GRAYSCALE);
+lsfm::ImageProperties props = lsfm::ImageAnalyzer::analyze(img);
+
+std::cout << "Contrast:      " << props.contrast      << "\n"
+          << "Noise level:   " << props.noise_level    << "\n"
+          << "Edge density:  " << props.edge_density   << "\n"
+          << "Dynamic range: " << props.dynamic_range  << "\n";
+
+// Get suggested profile knobs based on image analysis
+lsfm::ProfileHints hints = props.suggest_profile();
+std::cout << "Suggested detail:    " << hints.detail         << "%\n"
+          << "Suggested gap_tol:   " << hints.gap_tolerance  << "%\n"
+          << "Suggested min_len:   " << hints.min_length     << "%\n"
+          << "Suggested precision: " << hints.precision      << "%\n"
+          << "Contrast factor:     " << hints.contrast_factor << "\n"
+          << "Noise factor:        " << hints.noise_factor    << "\n";
+```
+
+### DetectorProfile
+
+Translates 4 intuitive percentage knobs into concrete detector parameters
+for all 9 supported LSD detectors.  This abstraction lets users control
+detection behaviour without knowing the internal parameter names of each
+algorithm.
+
+#### Knob Semantics
+
+| Knob | Range | Low (0%) | High (100%) |
+|------|-------|----------|-------------|
+| `detail` | 0–100 | Coarse / salient edges only | Fine details included |
+| `gap_tolerance` | 0–100 | No gaps allowed — strict chaining | Very tolerant of gaps |
+| `min_length` | 0–100 | Keep all segments (even tiny) | Long segments only |
+| `precision` | 0–100 | Rough / fast | Sub-pixel accurate |
+
+#### Adaptive Scaling Factors
+
+When constructed `from_image()` or `from_hints()`, the profile carries
+two multiplicative factors that modulate the parameter translation:
+
+| Factor | Range | Effect |
+|--------|-------|--------|
+| `contrast_factor` | 0.5–2.0 | Scales threshold-like parameters. >1 for low-contrast images. |
+| `noise_factor` | 0.5–2.0 | Scales threshold-like parameters. >1 for noisy images. |
+
+These factors are multiplied into threshold / gradient parameters during
+`to_params()` so that the same knob settings produce adapted behaviour
+on different image types.
+
+#### How the Knob Mapping Works
+
+Each of the 9 detectors has its own mapping function (`map_lsd_cc()`, etc.)
+that translates the 4 human-readable knobs to a `ParamConfig` vector:
+
+1. The knob percentage is normalized to `[0, 1]`.
+2. Linear interpolation (`lerp`) maps each knob to the detector-specific
+   parameter range (e.g., `detail 0%→100%` maps `quant_error 3.0→0.5`
+   for LsdFGioi).
+3. Threshold-related parameters are multiplied by the combined adaptive
+   factor `contrast_factor * noise_factor`.
+4. The resulting `ParamConfig` can be injected into a detector via
+   `ValueManager::value()`.
+
+#### Supported Detectors
+
+| DetectorId | Name | Key Mapped Parameters |
+|-----------|------|----------------------|
+| `LSD_CC` | LsdCC | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `quant_error` |
+| `LSD_CP` | LsdCP | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `quant_error` |
+| `LSD_BURNS` | LsdBurns | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `angle_th` |
+| `LSD_FBW` | LsdFBW | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `angle_th` |
+| `LSD_FGIOI` | LsdFGioi | `quant_error`, `angle_th`, `min_length`, `refine` |
+| `LSD_EDLZ` | LsdEDLZ | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `min_length` |
+| `LSD_EL` | LsdEL | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `quant_error` |
+| `LSD_EP` | LsdEP | `nms_th_low`, `nms_th_high`, `min_pix`, `max_gap`, `quant_error`, `pat_tol` |
+| `LSD_HOUGHP` | LsdHoughP | `nms_th_low`, `nms_th_high`, `rho`, `theta`, `threshold`, `min_line_length`, `max_line_gap` |
+
+#### Usage
+
+```cpp
+#include <algorithm/detector_profile.hpp>
+
+// Option 1: Manual knob values
+lsfm::DetectorProfile profile(/*detail=*/70, /*gap_tolerance=*/30,
+                               /*min_length=*/50, /*precision=*/80);
+
+// Option 2: Image-adaptive (analyze + suggest + translate)
+auto profile = lsfm::DetectorProfile::from_image(image);
+
+// Generate concrete parameters for a specific detector
+auto params = profile.to_params(lsfm::DetectorId::LSD_CC);
+
+// Apply directly to a detector instance
+LsdCC<double> detector;
+profile.apply(detector, lsfm::DetectorId::LSD_CC);
+detector.detect(image);
+
+// Inspect generated parameters
+for (const auto& p : params)
+    std::cout << p.name << " = " << p.value << "\n";
+
+// List supported detectors
+auto names = lsfm::DetectorProfile::supported_detectors();
+// -> {"LsdCC", "LsdCP", "LsdBurns", "LsdFBW", "LsdFGioi",
+//     "LsdEDLZ", "LsdEL", "LsdEP", "LsdHoughP"}
+```
+
+#### End-to-End Workflow
+
+The typical image-adaptive workflow is:
+
+```cpp
+// 1. Analyze the image
+auto props = lsfm::ImageAnalyzer::analyze(image);
+
+// 2. Get suggested knobs + adaptive factors
+auto hints = props.suggest_profile();
+
+// 3. Create profile (carries factors automatically)
+auto profile = lsfm::DetectorProfile::from_hints(hints);
+
+// 4. (Optional) Override individual knobs
+profile.set_detail(80);  // user wants more detail
+
+// 5. Apply to any number of detectors
+LsdFGioi<double> fgioi;
+profile.apply(fgioi, lsfm::DetectorId::LSD_FGIOI);
+fgioi.detect(image);
+
+LsdEDLZ<double> edlz;
+profile.apply(edlz, lsfm::DetectorId::LSD_EDLZ);
+edlz.detect(image);
+```
+
 ## Python Bindings (`le_algorithm`)
 
 The library is fully exposed to Python via pybind11.  All classes in the
@@ -336,6 +516,27 @@ print(f"F1={result.f1:.3f}  P={result.precision:.3f}  R={result.recall:.3f}")
 entry = alg.GroundTruthLoader.make_entry("img.png", segments)
 # alg.GroundTruthLoader.save_csv("gt.csv", [entry])
 # entries = alg.GroundTruthLoader.load_csv("gt.csv")
+
+# --- Image analysis + Detector profiles ---
+# Analyze image properties
+img = np.random.randint(0, 255, (480, 640), dtype=np.uint8)
+props = alg.ImageAnalyzer.analyze(img)
+print(f"Contrast={props.contrast:.2f}, Noise={props.noise_level:.2f}")
+
+# Suggest adaptive profile knobs
+hints = props.suggest_profile()
+print(f"Suggested detail: {hints.detail:.0f}%")
+
+# Create detector profile (manual or image-adaptive)
+profile = alg.DetectorProfile(detail=70, gap_tolerance=30,
+                              min_length=50, precision=80)
+# or: profile = alg.DetectorProfile.from_image(img)
+
+# Generate detector-specific parameters
+params = profile.to_params(alg.DetectorId.LSD_CC)       # by enum
+params = profile.to_params_by_name("LsdFGioi")           # by name
+for p in params:
+    print(f"  {p['name']} = {p['value']}")
 
 # --- Parameter optimisation ---
 space = [alg.ParamRange("sensitivity", 0.0, 1.0, 0.1)]
@@ -392,6 +593,10 @@ This applies to:
 | `AccuracyResult` | `AccuracyResult` | — |
 | `EvalResult` | `EvalResult` | — |
 | `SearchResult` | `SearchResult` | — |
+| `ImageProperties` | `ImageProperties` | — |
+| `ProfileHints` | `ProfileHints` | — |
+| `ImageAnalyzer` | `ImageAnalyzer` | — |
+| `DetectorProfile` | `DetectorProfile` | — |
 
 #### Enums
 
@@ -399,6 +604,7 @@ This applies to:
 |-------------|--------|
 | `MergeType` | `STANDARD`, `AVG` |
 | `OptimMetric` | `F1`, `PRECISION`, `RECALL` |
+| `DetectorId` | `LSD_CC`, `LSD_CP`, `LSD_BURNS`, `LSD_FBW`, `LSD_FGIOI`, `LSD_EDLZ`, `LSD_EL`, `LSD_EP`, `LSD_HOUGHP` |
 
 ## Build
 
@@ -408,13 +614,14 @@ This applies to:
 # Build library
 bazel build //libs/algorithm:lib_algorithm
 
-# Run C++ tests (30 tests, 8 suites)
+# Run C++ tests
 bazel test //libs/algorithm:test_algorithm
+bazel test //libs/algorithm:test_detector_profile
 
 # Build Python module
 bazel build //libs/algorithm/python:le_algorithm
 
-# Run Python tests (20 tests, 7 classes)
+# Run Python tests
 bazel test //libs/algorithm/python:test_le_algorithm
 
 # Build everything
@@ -442,7 +649,9 @@ libs/algorithm/
 ├── README.md                                # This file
 ├── include/algorithm/
 │   ├── accuracy_measure.hpp                 # AccuracyMeasure, AccuracyResult
+│   ├── detector_profile.hpp                 # DetectorProfile, DetectorId
 │   ├── ground_truth.hpp                     # GroundTruthEntry, GroundTruthLoader
+│   ├── image_analyzer.hpp                   # ImageAnalyzer, ImageProperties, ProfileHints
 │   ├── line_connect.hpp                     # LineConnect
 │   ├── line_merge.hpp                       # LineMerge, MergeType
 │   ├── param_search.hpp                     # ParamOptimizer, SearchResult, EvalResult
@@ -455,15 +664,20 @@ libs/algorithm/
 │   │   ├── algorithm_binding.cpp            # Binding implementations
 │   │   └── module_le_algorithm.cpp          # PYBIND11_MODULE entry point
 │   └── tests/
-│       └── test_le_algorithm.py             # Python integration tests (20 tests)
-├── src/                                     # (empty — header-only library)
+│       └── test_le_algorithm.py             # Python integration tests
+├── src/
+│   ├── detector_profile.cpp                 # DetectorProfile per-detector mapping
+│   └── image_analyzer.cpp                   # ImageAnalyzer analysis implementation
 └── tests/
-    └── test_algorithm.cpp                   # C++ unit tests (30 tests, 8 suites)
+    ├── test_algorithm.cpp                   # C++ unit tests (LineMerge, Connect, etc.)
+    └── test_detector_profile.cpp             # C++ tests for ImageAnalyzer + DetectorProfile
 ```
 
 ## Testing
 
 ### C++ Tests (Google Test)
+
+**test_algorithm** (30 tests):
 
 | Suite | Tests | Description |
 |-------|-------|-------------|
@@ -476,6 +690,15 @@ libs/algorithm/
 | `GroundTruthTest` | 1 | make_entry |
 | `SearchResultTest` | 1 | top_n |
 
+**test_detector_profile** (31 tests):
+
+| Suite | Tests | Description |
+|-------|-------|-------------|
+| `ImageAnalyzerTest` | 6 | Uniform, high contrast, noisy, empty throws, color, range validation |
+| `ProfileHintsTest` | 3 | Suggest from uniform, high noise factors, clamp |
+| `DetectorProfileTest` | 21 | Construction, from_hints, from_image, setters, name resolution, params for all 9 detectors, monotonicity (detail/gap/length/precision), adaptive factors, extreme values |
+| `IntegrationTest` | 1 | Analyze → profile → params for all detectors |
+
 ### Python Tests (pytest)
 
 | Class | Tests | Description |
@@ -486,4 +709,6 @@ libs/algorithm/
 | `TestGroundTruth` | 2 | make_entry, repr |
 | `TestSearchStrategy` | 4 | Grid single param, grid bool, random count, reproducible |
 | `TestParamOptimizer` | 2 | Construction, basic optimisation |
-| `TestEnums` | 2 | MergeType, OptimMetric |
+| `TestEnums` | 3 | MergeType, OptimMetric, DetectorId |
+| `TestImageAnalyzer` | 6 | Uniform, noisy, high contrast, repr, suggest_profile, hints clamp |
+| `TestDetectorProfile` | 12 | Construction, from_hints, from_image, supported_detectors, to_params, all detectors, name conversion, setters, repr, detail affects thresholds |

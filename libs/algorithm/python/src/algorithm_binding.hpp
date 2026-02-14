@@ -40,6 +40,12 @@ void bind_search_strategy(pybind11::module_& m);
 /// @brief Bind ParamOptimizer, SearchResult, EvalResult.
 void bind_param_optimizer(pybind11::module_& m);
 
+/// @brief Bind ImageProperties, ProfileHints, and ImageAnalyzer.
+void bind_image_analyzer(pybind11::module_& m);
+
+/// @brief Bind DetectorId enum and DetectorProfile class.
+void bind_detector_profile(pybind11::module_& m);
+
 /// @brief Bind all algorithm types for a given floating-point type.
 /// @param m pybind11 module.
 /// @param suffix Type suffix.

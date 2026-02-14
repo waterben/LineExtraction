@@ -188,6 +188,145 @@ class TestEnums:
         assert le_algorithm.OptimMetric.PRECISION is not None
         assert le_algorithm.OptimMetric.RECALL is not None
 
+    def test_detector_id(self) -> None:
+        assert le_algorithm.DetectorId.LSD_CC is not None
+        assert le_algorithm.DetectorId.LSD_FGIOI is not None
+        assert le_algorithm.DetectorId.LSD_HOUGHP is not None
+
+
+class TestImageAnalyzer:
+    """Tests for ImageAnalyzer and ImageProperties bindings."""
+
+    def test_analyze_uniform(self) -> None:
+        img = np.full((100, 100), 128, dtype=np.uint8)
+        props = le_algorithm.ImageAnalyzer.analyze(img)
+        assert 0.0 <= props.contrast <= 1.0
+        assert props.contrast < 0.05
+
+    def test_analyze_noisy(self) -> None:
+        rng = np.random.default_rng(42)
+        img = rng.normal(128, 50, (200, 200)).clip(0, 255).astype(np.uint8)
+        props = le_algorithm.ImageAnalyzer.analyze(img)
+        assert props.noise_level > 0.1
+
+    def test_analyze_high_contrast(self) -> None:
+        img = np.zeros((100, 100), dtype=np.uint8)
+        img[::2, :] = 255
+        props = le_algorithm.ImageAnalyzer.analyze(img)
+        assert props.contrast > 0.3
+
+    def test_properties_repr(self) -> None:
+        props = le_algorithm.ImageProperties()
+        assert "ImageProperties" in repr(props)
+
+    def test_suggest_profile(self) -> None:
+        props = le_algorithm.ImageProperties()
+        props.contrast = 0.5
+        props.noise_level = 0.2
+        props.edge_density = 0.3
+        props.dynamic_range = 0.7
+        hints = props.suggest_profile()
+        assert 0 <= hints.detail <= 100
+        assert 0 <= hints.gap_tolerance <= 100
+        assert 0 <= hints.min_length <= 100
+        assert 0 <= hints.precision <= 100
+
+    def test_hints_clamp(self) -> None:
+        hints = le_algorithm.ProfileHints()
+        hints.detail = 150
+        hints.noise_factor = 0.1
+        hints.clamp()
+        assert hints.detail == 100.0
+        assert hints.noise_factor == 0.5
+
+
+class TestDetectorProfile:
+    """Tests for DetectorProfile bindings."""
+
+    def test_default_construction(self) -> None:
+        profile = le_algorithm.DetectorProfile()
+        assert profile.detail == 50.0
+        assert profile.gap_tolerance == 50.0
+
+    def test_explicit_construction(self) -> None:
+        profile = le_algorithm.DetectorProfile(
+            detail=80, gap_tolerance=30, min_length=60, precision=90
+        )
+        assert profile.detail == 80.0
+        assert profile.precision == 90.0
+
+    def test_from_hints(self) -> None:
+        hints = le_algorithm.ProfileHints()
+        hints.detail = 70
+        hints.contrast_factor = 1.3
+        profile = le_algorithm.DetectorProfile.from_hints(hints)
+        assert profile.detail == 70.0
+        assert profile.contrast_factor == 1.3
+
+    def test_from_image(self) -> None:
+        img = np.full((200, 200), 128, dtype=np.uint8)
+        img[50:150, 50:150] = 200
+        profile = le_algorithm.DetectorProfile.from_image(img)
+        assert 0 <= profile.detail <= 100
+        assert 0 <= profile.precision <= 100
+
+    def test_supported_detectors(self) -> None:
+        names = le_algorithm.DetectorProfile.supported_detectors()
+        assert len(names) == 9
+        assert "LsdCC" in names
+        assert "LsdHoughP" in names
+
+    def test_to_params(self) -> None:
+        profile = le_algorithm.DetectorProfile(50, 50, 50, 50)
+        params = profile.to_params(le_algorithm.DetectorId.LSD_CC)
+        assert len(params) > 0
+        assert all("name" in p and "value" in p for p in params)
+
+    def test_to_params_by_name(self) -> None:
+        profile = le_algorithm.DetectorProfile(50, 50, 50, 50)
+        params = profile.to_params_by_name("LsdCC")
+        assert len(params) > 0
+
+    def test_all_detectors_produce_params(self) -> None:
+        profile = le_algorithm.DetectorProfile(50, 50, 50, 50)
+        for det_id in le_algorithm.DetectorId.__members__.values():
+            params = profile.to_params(det_id)
+            assert len(params) > 0, f"No params for {det_id}"
+
+    def test_name_conversion(self) -> None:
+        assert (
+            le_algorithm.detector_id_to_name(le_algorithm.DetectorId.LSD_CC) == "LsdCC"
+        )
+        assert (
+            le_algorithm.detector_name_to_id("LsdCC") == le_algorithm.DetectorId.LSD_CC
+        )
+        assert (
+            le_algorithm.detector_name_to_id("lsdcc") == le_algorithm.DetectorId.LSD_CC
+        )
+
+    def test_property_setters(self) -> None:
+        profile = le_algorithm.DetectorProfile()
+        profile.detail = 80
+        profile.noise_factor = 1.5
+        assert profile.detail == 80.0
+        assert profile.noise_factor == 1.5
+
+    def test_repr(self) -> None:
+        profile = le_algorithm.DetectorProfile(70, 30, 50, 80)
+        assert "DetectorProfile" in repr(profile)
+
+    def test_detail_affects_thresholds(self) -> None:
+        lo = le_algorithm.DetectorProfile(detail=10)
+        hi = le_algorithm.DetectorProfile(detail=90)
+        lo_p = {
+            p["name"]: p["value"] for p in lo.to_params(le_algorithm.DetectorId.LSD_CC)
+        }
+        hi_p = {
+            p["name"]: p["value"] for p in hi.to_params(le_algorithm.DetectorId.LSD_CC)
+        }
+        # More detail → lower NMS thresholds
+        assert lo_p["nms_th_low"] > hi_p["nms_th_low"]
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

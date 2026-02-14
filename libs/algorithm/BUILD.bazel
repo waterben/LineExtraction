@@ -7,6 +7,8 @@ Provides general-purpose algorithm tools:
 - GroundTruthLoader: Load ground truth annotations (CSV format)
 - ParamOptimizer: Parameter search framework (Grid + Random search)
 - PrecisionOptimize: Headless line precision optimization wrapper
+- ImageAnalyzer: Image property analysis (contrast, noise, edges, dynamic range)
+- DetectorProfile: Intuitive high-level parameter profiles for LSD detectors
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
@@ -16,6 +18,10 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "lib_algorithm",
+    srcs = glob(
+        ["src/*.cpp"],
+        allow_empty = True,
+    ),
     hdrs = glob(
         [
             "include/algorithm/*.hpp",
@@ -47,6 +53,8 @@ cc_library(
             ":lib_algorithm",
             "@googletest//:gtest",
             "@googletest//:gtest_main",
+            "@opencv//:core",
+            "@opencv//:imgproc",
         ],
     )
     for test_file in glob(["tests/test_*.cpp"])
