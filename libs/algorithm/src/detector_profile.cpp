@@ -189,8 +189,8 @@ ParamConfig DetectorProfile::map_lsd_cp() const {
   int max_gap = static_cast<int>(std::round(lerp(tg, 0.0, 5.0)));
   double split_err = lerp(1.0 - tp, 0.5, 5.0);
   int kernel = (tp > 0.7) ? 7 : (tp > 0.3 ? 5 : 3);
-  // edge_pattern_tolerance: precision↑ → less tolerance (0 .. 5)
-  int pat_tol = static_cast<int>(std::round(lerp(1.0 - tp, 0.0, 5.0)));
+  // edge_pattern_tolerance: precision↑ → less tolerance (1 .. 5)
+  int pat_tol = std::max(1, static_cast<int>(std::round(lerp(1.0 - tp, 0.0, 5.0))));
 
   return {
       NV("grad_kernel_size", Value(kernel)),
