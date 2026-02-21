@@ -2,7 +2,11 @@
 applyTo: "**/*.{py}"
 ---
 
-Write Python docstrings in Sphinx style and always use type hints for the code. Here are some examples:
+Write Python docstrings in Sphinx style and always use type hints for the code.
+
+**Language:** Use **American English** spelling in all docstrings, comments, and string literals.
+- `color` not `colour`, `gray` not `grey`, `initialize` not `initialise`, `optimize` not `optimise`,
+  `normalize` not `normalise`, `recognize` not `recognise`, `visualize` not `visualise`, etc. Here are some examples:
 
 ```python
 from typing import Dict, List, Union, Optional, Any, Generator, AsyncGenerator

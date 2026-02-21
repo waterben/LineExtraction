@@ -298,6 +298,7 @@ All dependencies are automatically managed by both build systems:
 | [`docs/DOCKER.md`](docs/DOCKER.md) | Docker/DevContainer development environment |
 | [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
 | [`docs/JUPYTER.md`](docs/JUPYTER.md) | Jupyter Notebook tutorials and Python onboarding |
+| [`docs/RERUN.md`](docs/RERUN.md) | Rerun visualization — viewer setup, C++ SDK, Python SDK, Jupyter |
 
 ### API Documentation
 

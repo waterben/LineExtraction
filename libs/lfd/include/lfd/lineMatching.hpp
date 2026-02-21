@@ -34,14 +34,14 @@ namespace lsfm {
 /// @brief Convert a vector of LineSegment objects to a vector of KeyLine objects.
 /// @tparam FT Floating-point type for line segment coordinates
 /// @param lines0 Input vector of line segments to convert
-/// @param cam0grey Grayscale image used for determining image dimensions
+/// @param cam0gray Grayscale image used for determining image dimensions
 /// @param octave Octave level for the KeyLine (default: 0)
 /// @return Vector of KeyLine objects corresponding to the input line segments
 template <class FT>
-std::vector<KeyLine> lineSegment2KeyLine(const std::vector<LineSegment<FT>>& lines0, cv::Mat cam0grey, int octave = 0) {
+std::vector<KeyLine> lineSegment2KeyLine(const std::vector<LineSegment<FT>>& lines0, cv::Mat cam0gray, int octave = 0) {
   std::vector<KeyLine> klV0;
   for (int i = 0; i < lines0.size(); ++i) {
-    KeyLine kl = lineSegment2KeyLine(lines0[i], cam0grey, i, octave);
+    KeyLine kl = lineSegment2KeyLine(lines0[i], cam0gray, i, octave);
     klV0.push_back(kl);
   }
   return klV0;
@@ -389,7 +389,7 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
   for (int i = 0; i < static_cast<int>(lsd_matches.size()); i++) {
     if (lsd_matches[i].distance < MATCHES_DIST_THRESHOLD_LM) good_matches.push_back(lsd_matches[i]);
   }
-  //        imshow("Detected matches", drawKeyLineMatches<FT,DescriptorMatch<FT>>(cam0grey, klV0, cam1grey, klV1,
+  //        imshow("Detected matches", drawKeyLineMatches<FT,DescriptorMatch<FT>>(cam0gray, klV0, cam1gray, klV1,
   //        good_matches));
   return good_matches;
 }
@@ -397,28 +397,28 @@ inline std::vector<DMatch> lineMatchingLsdAndCV(cv::Mat lsd_descr0,
 /// @brief Detect, describe, and match line segments between two images.
 /// Converts line segments to KeyLines, computes LBD descriptors, then matches them.
 /// @tparam LSV Line segment vector type convertible via lineSegment2KeyLine
-/// @param cam0grey Grayscale image for the first (query) view
-/// @param cam1grey Grayscale image for the second (train) view
+/// @param cam0gray Grayscale image for the first (query) view
+/// @param cam1gray Grayscale image for the second (train) view
 /// @param lines0 Line segments detected in the first image
 /// @param lines1 Line segments detected in the second image
 /// @param mask Optional mask restricting which descriptor pairs to compare
 /// @return Vector of good DMatch objects passing the distance threshold
 template <class LSV>
 inline std::vector<DMatch> lineMatchingLsdAndCV(
-    cv::Mat cam0grey, cv::Mat cam1grey, LSV lines0, LSV lines1, cv::Mat mask = cv::Mat::ones(0, 0, CV_8UC1)) {
+    cv::Mat cam0gray, cv::Mat cam1gray, LSV lines0, LSV lines1, cv::Mat mask = cv::Mat::ones(0, 0, CV_8UC1)) {
   if (mask.rows = 0 && mask.cols == 0) mask = cv::Mat::ones(lines0.size(), lines1.size(), CV_8UC1);
 
   std::vector<KeyLine> klV0, klV1;
-  klV0 = lineSegment2KeyLine(lines0, cam0grey);
-  klV1 = lineSegment2KeyLine(lines1, cam1grey);
+  klV0 = lineSegment2KeyLine(lines0, cam0gray);
+  klV1 = lineSegment2KeyLine(lines1, cam1gray);
 
   /* create a pointer to a BinaryDescriptor object with default parameters */
   Ptr<BinaryDescriptor> bd = BinaryDescriptor::createBinaryDescriptor();
 
   /* compute descriptors for lines from first octave */
   Mat lsd_descr0, lsd_descr1;
-  bd->compute(cam0grey, klV0, lsd_descr0);
-  bd->compute(cam1grey, klV1, lsd_descr1);
+  bd->compute(cam0gray, klV0, lsd_descr0);
+  bd->compute(cam1gray, klV1, lsd_descr1);
 
   return lineMatchingLsdAndCV(lsd_descr0, lsd_descr1);
 }
@@ -444,30 +444,30 @@ inline std::vector<MATCH> leftRightCheck(std::vector<MATCH> mVec1, std::vector<M
 }
 
 /// @brief Compute LBD (Line Band Descriptor) descriptors for a set of KeyLines.
-/// @param cam0grey Grayscale image containing the lines
+/// @param cam0gray Grayscale image containing the lines
 /// @param klV Vector of KeyLine objects to compute descriptors for
 /// @param bd BinaryDescriptor instance to use (default: newly created)
 /// @return Descriptor matrix where each row is the LBD descriptor for the corresponding KeyLine
-inline cv::Mat createLBD(cv::Mat cam0grey,
+inline cv::Mat createLBD(cv::Mat cam0gray,
                          std::vector<KeyLine> klV,
                          Ptr<BinaryDescriptor> bd = BinaryDescriptor::createBinaryDescriptor()) {
   cv::Mat lsd_descr;
-  bd->compute(cam0grey, klV, lsd_descr);
+  bd->compute(cam0gray, klV, lsd_descr);
   return lsd_descr;
 }
 /// @brief Compute LBD descriptors for a set of LineSegment objects.
 /// Converts line segments to KeyLines internally before computing descriptors.
 /// @tparam FT Floating-point type for line segment coordinates
-/// @param cam0grey Grayscale image containing the lines
+/// @param cam0gray Grayscale image containing the lines
 /// @param lineVec Vector of LineSegment objects to compute descriptors for
 /// @param bd BinaryDescriptor instance to use (default: newly created)
 /// @return Descriptor matrix where each row is the LBD descriptor for the corresponding line segment
 template <class FT>
-inline cv::Mat createLBD(cv::Mat cam0grey,
+inline cv::Mat createLBD(cv::Mat cam0gray,
                          std::vector<LineSegment<FT>> lineVec,
                          Ptr<BinaryDescriptor> bd = BinaryDescriptor::createBinaryDescriptor()) {
-  std::vector<KeyLine> klV = lineSegment2KeyLine(lineVec, cam0grey);
-  return createLBD(cam0grey, klV, bd);
+  std::vector<KeyLine> klV = lineSegment2KeyLine(lineVec, cam0gray);
+  return createLBD(cam0gray, klV, bd);
 }
 
 /// @brief Match line descriptors with left-right consistency check.
@@ -484,20 +484,20 @@ inline std::vector<DMatch> matchingLRcheck(cv::Mat l_descr0, cv::Mat l_descr1) {
 /// @brief Match line segments between two images with left-right consistency check.
 /// Computes LBD descriptors from line segments, then performs bidirectional matching.
 /// @tparam LSV Line segment vector type convertible via createLBD
-/// @param cam0grey Grayscale image for the first (query) view
-/// @param cam1grey Grayscale image for the second (train) view
+/// @param cam0gray Grayscale image for the first (query) view
+/// @param cam1gray Grayscale image for the second (train) view
 /// @param lines0 Line segments detected in the first image
 /// @param lines1 Line segments detected in the second image
 /// @return Vector of DMatch objects that pass both matching and left-right consistency
 template <class LSV>
-inline std::vector<DMatch> matchingLRcheck(cv::Mat cam0grey, cv::Mat cam1grey, LSV lines0, LSV lines1) {
+inline std::vector<DMatch> matchingLRcheck(cv::Mat cam0gray, cv::Mat cam1gray, LSV lines0, LSV lines1) {
   cv::Mat l_descr0, l_descr1;
 
   /* create a pointer to a BinaryDescriptor object with default parameters */
   Ptr<BinaryDescriptor> bd = BinaryDescriptor::createBinaryDescriptor();
 
-  l_descr0 = createLBD(cam0grey, lines0, bd);
-  l_descr1 = createLBD(cam1grey, lines1, bd);
+  l_descr0 = createLBD(cam0gray, lines0, bd);
+  l_descr1 = createLBD(cam1gray, lines1, bd);
   return matchingLRcheck(l_descr0, l_descr1);
 }
 

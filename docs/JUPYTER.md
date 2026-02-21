@@ -208,6 +208,7 @@ import le_imgproc, le_edge, le_geometry, le_eval, le_lsd
 ## Further Reading
 
 - [Python Bindings Overview](../README.md#python-bindings)
+- [Rerun Visualization (Python, C++, Notebooks)](RERUN.md)
 - [le_imgproc API](../libs/imgproc/python/README.md)
 - [le_edge API](../libs/edge/python/README.md)
 - [le_geometry API](../libs/geometry/python/README.md)
