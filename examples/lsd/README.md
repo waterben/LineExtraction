@@ -15,6 +15,12 @@ Examples demonstrating various Line Segment Detection (LSD) algorithms and their
 | `lsd_nfa` | [lsd_nfa.cpp](src/lsd_nfa.cpp) | NFA-validated line detection — a contrario false positive rejection |
 | `lsd_video` | [lsd_video.cpp](src/lsd_video.cpp) | Real-time LSD on webcam or video file |
 
+### Python (Rerun Visualization)
+
+| Bazel Target | Source | Description |
+|---|---|---|
+| `rerun_lsd_demo` | [rerun_lsd_demo.py](python/rerun_lsd_demo.py) | Interactive LSD visualization with [Rerun.io](https://rerun.io/) — line segments, endpoints, auxiliary data layers |
+
 ### Algorithm Variants (in `lsd.cpp`)
 
 | Variant | Approach |
@@ -41,6 +47,20 @@ bazel run //examples/lsd:lsd -- /path/to/image.jpg
 
 # Real-time video (webcam by default)
 bazel run //examples/lsd:lsd_video
+
+# --- Rerun visualization (Python) ---
+
+# Run with a specific detector (native viewer)
+bazel run //examples/lsd/python:rerun_lsd_demo -- --detector CC
+
+# Run all detectors (compare on timeline)
+bazel run //examples/lsd/python:rerun_lsd_demo -- --all
+
+# Web viewer (WSL / headless — open printed URL in browser)
+bazel run //examples/lsd/python:rerun_lsd_demo -- --serve --detector CC
+
+# Save to .rrd file for later viewing
+bazel run //examples/lsd/python:rerun_lsd_demo -- --save /tmp/lsd.rrd
 ```
 
 ## Key Concepts

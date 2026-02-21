@@ -1,0 +1,14 @@
+"""Python examples for other — general Rerun.io visualization demo."""
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "rerun_general_demo",
+    srcs = ["rerun_general_demo.py"],
+    deps = [
+        "//tools/bazel/third_party:rerun_sdk",
+        "@pip//numpy",
+    ],
+)
