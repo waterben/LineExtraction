@@ -11,7 +11,7 @@ Demonstration programs showcasing the capabilities of the LineExtraction library
 | [imgproc/](imgproc/) | `libs/imgproc` | Gradient operators, FFT, steerable filters, pyramids |
 | [lfd/](lfd/) | `libs/lfd` | Line feature descriptor matching (stereo, video, motion) |
 | [lsd/](lsd/) | `libs/lsd` | Line Segment Detection algorithm variants |
-| [other/](other/) | — | Miscellaneous demos (Hough transform, **Rerun general demo**) |
+| [other/](other/) | — | Miscellaneous demos (Hough transform, **Rerun C++ demo**, Rerun Python demo) |
 | [qt/](qt/) | — | Qt-based visualization (currently empty) |
 | [thesis/](thesis/) | `libs/eval` | Figure generation for thesis chapters |
 | [notebooks/](notebooks/) | all | **Jupyter tutorial series and interactive demos** (Python) |
