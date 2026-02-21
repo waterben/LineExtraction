@@ -97,7 +97,7 @@ int main() {
   // ---- Static background (logged once at frame 0) ----
   rec.set_time_sequence("frame", 0);
 
-  // Gradient image - demonstrates image logging with greyscale pixel buffer
+  // Gradient image - demonstrates image logging with grayscale pixel buffer
   auto pixels = make_gradient_image(kWidth, kHeight);
   rec.log("image/gradient",
           rerun::archetypes::Image::from_grayscale8(
