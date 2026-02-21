@@ -117,6 +117,7 @@ For detailed documentation, see:
 - **Build Systems:** `docs/CMAKE.md`, `docs/BAZEL.md`
 - **Development Environments:** `docs/DOCKER.md`, `docs/WSL.md`
 - **Jupyter Notebooks:** `docs/JUPYTER.md`
+- **Rerun Visualization:** `docs/RERUN.md`
 - **Code Guidelines:** `.github/instructions/cpp.instructions.md`, `.github/instructions/python.instructions.md`
 
 ## Development Workflows

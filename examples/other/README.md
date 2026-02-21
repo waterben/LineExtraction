@@ -10,6 +10,12 @@ Other examples demonstrating comparison with standard OpenCV algorithms.
 |---|---|---|
 | `test_other_houghlines` | [houghlines.cpp](src/houghlines.cpp) | OpenCV Hough line detection: standard vs probabilistic Hough Transform |
 
+### C++ (Rerun Visualization)
+
+| Bazel Target | Source | Description |
+|---|---|---|
+| `rerun_cpp_demo` | [rerun_demo.cpp](src/rerun_demo.cpp) | Rerun C++ SDK demo — gradient image, animated star line strips, grid keypoints |
+
 ### Python (Rerun Visualization)
 
 | Bazel Target | Source | Description |
@@ -21,16 +27,30 @@ Other examples demonstrating comparison with standard OpenCV algorithms.
 ```bash
 bazel build //examples/other:all
 bazel run //examples/other:test_other_houghlines
+```
 
-# --- Rerun general demo (Python) ---
+### Rerun Demos
 
-# Native viewer
+> **First:** Start the Rerun viewer before running any demo.
+> See [docs/RERUN.md](../../docs/RERUN.md) for platform-specific setup (WSL, Docker, headless).
+
+```bash
+# --- Quick start (web viewer — works on all platforms) ---
+rerun --serve &
+# Open http://localhost:9090 in your browser
+
+# --- C++ demo ---
+bazel run //examples/other:rerun_cpp_demo
+
+# --- Python general demo ---
+
+# Native viewer (requires display)
 bazel run //examples/other/python:rerun_general_demo
 
 # Web viewer (WSL / headless — open printed URL in browser)
 bazel run //examples/other/python:rerun_general_demo -- --serve
 
-# Save to .rrd file
+# Save to .rrd file (no viewer needed)
 bazel run //examples/other/python:rerun_general_demo -- --save /tmp/general.rrd
 ```
 
