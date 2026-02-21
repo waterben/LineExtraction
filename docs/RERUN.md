@@ -192,16 +192,23 @@ The `rerun-sdk[notebook]` package is already installed in `.venv` via `pyproject
 
 ```python
 import rerun as rr
-import rerun.notebook as rr_nb
 import numpy as np
 
-# Initialize a recording for the notebook (inline renderer)
+# Initialize a recording
 rr.init("my_notebook_demo")
-rr_nb.as_html()  # renders the viewer inline in the notebook output cell
 
 # Log data
 rr.set_time_sequence("frame", 0)
 rr.log("image", rr.Image(np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)))
+
+# Render the Rerun viewer inline in the notebook output cell
+rr.notebook_show()
+```
+
+`rr.notebook_show()` accepts optional `width` and `height` keyword arguments (pixels):
+
+```python
+rr.notebook_show(width=1600, height=1080)
 ```
 
 ### Connecting to the standalone viewer (optional)
