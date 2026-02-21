@@ -142,7 +142,7 @@ http_archive(
 #   - CMakeLists.txt - used via rules_foreign_cc cmake() rule
 #   - download_and_build_arrow.cmake - builds Apache Arrow as ExternalProject
 #
-# Requires: ninja-build (sudo apt install ninja-build)
+# Note: The SDK is patched (rerun_sdk_no_ninja.patch) to use Unix Makefiles; ninja-build is NOT required.
 #
 # Usage in BUILD.bazel:
 #   deps = ["@rerun_sdk//:rerun_sdk"]
