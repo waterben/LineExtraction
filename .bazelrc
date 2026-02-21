@@ -139,21 +139,18 @@ build:gcc --repo_env=CXX=g++
 # build --config=gcc
 
 # Debug configuration
-# build:debug --compilation_mode=dbg
-# build:debug --cxxopt=-g
-# build:debug --cxxopt=-O0
-# build:debug --strip=never
-# build:debug --copt=-DDEBUG
+build:debug --compilation_mode=dbg
+build:debug --cxxopt=-g
+build:debug --cxxopt=-O0
+build:debug --strip=never
+build:debug --copt=-DDEBUG
 
 # Release configuration
-# build:release --compilation_mode=opt
-# build:release --cxxopt=-O3
-# build:release --cxxopt=-ffast-math
-# build:release --cxxopt=-DNDEBUG
-# build:release --strip=always
-
-# Default to release
-# build --config=release
+build:release --compilation_mode=opt
+build:release --cxxopt=-O3
+build:release --cxxopt=-ffast-math
+build:release --cxxopt=-DNDEBUG
+build:release --strip=always
 
 # Test configuration
 # test --test_output=errors
