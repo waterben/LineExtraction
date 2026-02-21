@@ -30,7 +30,11 @@ from typing import Any
 
 import le_lsd
 import numpy as np
-import rerun_pth_fix as _  # noqa: F401  (Bazel .pth workaround)
+
+try:
+    import rerun_pth_fix as _  # noqa: F401  (Bazel .pth workaround — not available outside Bazel)
+except ImportError:
+    pass
 import rerun as rr
 from PIL import Image
 

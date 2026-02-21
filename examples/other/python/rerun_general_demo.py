@@ -20,7 +20,11 @@ import colorsys
 import math
 
 import numpy as np
-import rerun_pth_fix as _  # noqa: F401  (Bazel .pth workaround)
+
+try:
+    import rerun_pth_fix as _  # noqa: F401  (Bazel .pth workaround — not available outside Bazel)
+except ImportError:
+    pass
 import rerun as rr
 
 

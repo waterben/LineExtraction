@@ -285,8 +285,28 @@ deps = [
 ]
 ```
 
+#### Why the wrapper target exists — `.pth` workaround
+
+The `rerun-sdk` pip wheel installs `import rerun` via a `.pth` file that adds the package
+subdirectory to `sys.path` at interpreter startup. Bazel's `rules_python` does **not** process
+`.pth` files, so a bare `@pip//rerun_sdk` dep would result in `ModuleNotFoundError: No module named 'rerun'`.
+
+The wrapper target `//tools/bazel/third_party:rerun_sdk` adds
+[`rerun_pth_fix.py`](../tools/bazel/third_party/rerun_pth_fix.py) as a `py_library` dep, which
+patches `sys.path` at import time — equivalent to what the `.pth` file does in a normal pip environment.
+
+The Python demo scripts guard this import so they work both inside and outside Bazel:
+
+```python
+try:
+    import rerun_pth_fix as _  # Bazel .pth workaround — not available outside Bazel
+except ImportError:
+    pass  # Running directly with pip-installed rerun-sdk: .pth is processed normally
+import rerun as rr
+```
+
 | Target | Description |
-|--------|-------------|
+|--------|---------|
 | `//examples/other/python:rerun_general_demo` | Synthetic data demo |
 | `//examples/lsd/python:rerun_lsd_demo` | LSD line detection visualization |
 
@@ -311,9 +331,12 @@ deps = [
 
 ## Running the Python Demos
 
-Python demos support `--serve` to bypass the viewer entirely.
+Python demos can be run via Bazel or directly as scripts (if `rerun-sdk` and `le_lsd` are
+installed in the active Python environment).
 
 ```bash
+# --- Via Bazel ---
+
 # Native viewer (requires a display)
 bazel run //examples/other/python:rerun_general_demo
 
@@ -325,7 +348,15 @@ bazel run //examples/lsd/python:rerun_lsd_demo -- --serve
 
 # Save recording to file (no viewer needed)
 bazel run //examples/other/python:rerun_general_demo -- --save /tmp/output.rrd
+
+# --- Direct execution (pip environment, .venv active) ---
+python examples/other/python/rerun_general_demo.py --serve
+python examples/lsd/python/rerun_lsd_demo.py --serve
 ```
+
+> **Note:** Direct execution requires the Python bindings to be importable.
+> Build them first (`bazel build //libs/...`) and set `PYTHONPATH` to include the Bazel output,
+> or use the `.venv` with installed packages.
 
 Open saved `.rrd` files later:
 
