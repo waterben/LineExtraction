@@ -123,29 +123,29 @@ void pixelOfLine(FT x1, FT y1, FT x2, FT y2, std::vector<std::pair<int, int>>& p
   }
 }
 
-/// @brief Calculate the neighbouring bins to a set of bins.
+/// @brief Calculate the neighboring bins to a set of bins.
 /// Expands a set of bin coordinates by including all bins within the specified
 /// search range, avoiding duplicates.
 /// @tparam nrBinsX Number of bins along the X axis
 /// @tparam nrBinsY Number of bins along the Y axis (defaults to nrBinsX)
 /// @param pixel Input vector of bin coordinates
-/// @param pixelNeighbours Output vector of neighbouring bin coordinates
+/// @param pixelNeighbors Output vector of neighboring bin coordinates
 /// @param searchRange Number of bins to expand in each direction
 template <int nrBinsX, int nrBinsY = nrBinsX>
 void getNeighbouringBins(const std::vector<std::pair<int, int>>& pixel,
-                         std::vector<std::pair<int, int>>& pixelNeighbours,
+                         std::vector<std::pair<int, int>>& pixelNeighbors,
                          const int searchRange) {
   std::array<std::vector<char>, nrBinsX> used;
   for (int i = 0; i < used.size(); ++i) {
     used.at(i).assign(nrBinsY, 0);
   }
 
-  for_each(pixel.begin(), pixel.end(), [&used, &searchRange, &pixelNeighbours](const std::pair<int, int>& p) {
+  for_each(pixel.begin(), pixel.end(), [&used, &searchRange, &pixelNeighbors](const std::pair<int, int>& p) {
     for (int x = std::max(0, p.first - searchRange); x <= std::min(nrBinsX - 1, p.first + searchRange); ++x) {
       for (int y = std::max(0, p.second - searchRange); y <= std::min(nrBinsY - 1, p.second + searchRange); ++y) {
         if (used.at(x).at(y) == 0) {
           used.at(x).at(y) = 1;
-          pixelNeighbours.push_back(std::pair<int, int>(x, y));
+          pixelNeighbors.push_back(std::pair<int, int>(x, y));
         }
       }
     }
@@ -311,13 +311,13 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
       std::array<std::array<std::vector<int>, bins>, bins>& qbins =
           this->bins_[static_cast<int>(ld.angle / (360 / angleBins)) % angleBins];
 
-      std::vector<std::pair<int, int>> pixel, pixelNeighbours;
+      std::vector<std::pair<int, int>> pixel, pixelNeighbors;
       pixelOfLine((ld.beg.x() / width_) * static_cast<FT>(bins), (ld.beg.y() / height_) * static_cast<FT>(bins),
                   (ld.end.x() / width_) * static_cast<FT>(bins), (ld.end.y() / height_) * static_cast<FT>(bins), pixel);
       int searchRange = 1;
-      getNeighbouringBins<bins>(pixel, pixelNeighbours, searchRange);
+      getNeighbouringBins<bins>(pixel, pixelNeighbors, searchRange);
 
-      for_each(pixelNeighbours.begin(), pixelNeighbours.end(),
+      for_each(pixelNeighbors.begin(), pixelNeighbors.end(),
                [this, &qbins, &nidx, &matches, &oidxList](std::pair<int, int>& p) {
                  std::vector<int>& bin = qbins.at(p.first).at(p.second);
                  for_each(bin.begin(), bin.end(), [this, &matches, &oidxList, &nidx](int oidx) {
@@ -387,20 +387,20 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
       const LineData ld = newLines_[nIdx];
       pIdxList.assign(pSize, 0);
 
-      std::vector<std::pair<int, int>> pixel, pixelNeighbours;
+      std::vector<std::pair<int, int>> pixel, pixelNeighbors;
       pixelOfLine((ld.beg.x() / width_) * static_cast<FT>(bins), (ld.beg.y() / height_) * static_cast<FT>(bins),
                   (ld.end.x() / width_) * static_cast<FT>(bins), (ld.end.y() / height_) * static_cast<FT>(bins), pixel);
       int searchRange = 1;
-      getNeighbouringBins<bins>(pixel, pixelNeighbours, searchRange);
+      getNeighbouringBins<bins>(pixel, pixelNeighbors, searchRange);
 
-      // loop through same and neighbouring angle-bins
+      // loop through same and neighboring angle-bins
       int aBinIdx = static_cast<int>(ld.angle / (360 / angleBins)) % angleBins;
       for (int bidx = -1; bidx <= 1; ++bidx) {
         int currABin = (aBinIdx + bidx) % angleBins;
         currABin = (currABin < 0 ? (currABin + angleBins) : currABin);
         std::array<std::array<std::vector<int>, bins>, bins>& aBin = this->bins_[currABin];
 
-        for_each(pixelNeighbours.begin(), pixelNeighbours.end(),
+        for_each(pixelNeighbors.begin(), pixelNeighbors.end(),
                  [this, &aBin, &nIdx, &matches, &pIdxList, &nm, &pm](std::pair<int, int>& p) {
                    std::vector<int>& bin = aBin.at(p.first).at(p.second);
                    for_each(bin.begin(), bin.end(), [this, &matches, &pIdxList, &nIdx, &nm, &pm](int pIdx) {
@@ -494,7 +494,7 @@ class MotionLineFilter : public FeatureFilter<FT>, public OptionManager {
                           std::cout << "4should not happen" << std::endl;
                       }
       */
-      // just getting the bins, not the neighbours, neighbours are calculated in the calling function for the other set
+      // just getting the bins, not the neighbors, neighbors are calculated in the calling function for the other set
       pixelOfLine((ld.beg.x() / width_) * (bins - 1), (ld.beg.y() / height_) * (bins - 1),
                   (ld.end.x() / width_) * (bins - 1), (ld.end.y() / height_) * (bins - 1), pixel);
 

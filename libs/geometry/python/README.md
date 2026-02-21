@@ -5,14 +5,14 @@ Python bindings for the `libs/geometry` C++ library using [pybind11](https://pyb
 ## Overview
 
 This module provides 2D geometric primitives, drawing utilities, and line
-optimisation routines:
+optimization routines:
 
 - **Line** — infinite line in Hesse normal form
 - **LineSegment** — finite line segment (extends Line)
 - **Polygon** — 2D polygon with vertex list
 - **Drawing** — render line segments onto images
 - **LineOptimizer** — refine segments against gradient magnitude (dlib-based)
-- **Visualisation helpers** — edge colouring, border padding, normalised saving
+- **Visualization helpers** — edge coloring, border padding, normalized saving
 
 Images are passed as NumPy arrays and automatically converted to/from `cv::Mat`.
 
@@ -212,7 +212,7 @@ poly.fill(img, color=[0, 0, 255])
 
 ## Drawing Utilities
 
-Render line segments onto images — useful for visualisation and debugging:
+Render line segments onto images — useful for visualization and debugging:
 
 ```python
 import le_geometry as geo
@@ -224,10 +224,10 @@ segments = [
 
 img = np.zeros((100, 100, 3), dtype=np.uint8)
 
-# Uniform colour (returns new image)
+# Uniform color (returns new image)
 result = geo.draw_lines(img, segments, color=[0, 255, 0])
 
-# Random colours per segment
+# Random colors per segment
 result = geo.draw_lines_random(img, segments)
 
 # With string labels
@@ -252,7 +252,7 @@ print(seg.start_point(), seg.end_point())
 ## LineOptimizer
 
 Refine line segment positions against a gradient magnitude image using
-dlib-based optimisation:
+dlib-based optimization:
 
 ```python
 import le_geometry as geo
@@ -269,17 +269,17 @@ seg = geo.LineSegment.from_endpoints(10.0, 48.0, 90.0, 48.0)
 error, d, r = geo.optimize_line_segment(mag, seg)
 print(f"Error: {error:.4f}, shift: {d:.2f}, rotation: {r:.4f}")
 
-# In-place optimisation (modifies seg, returns error)
+# In-place optimization (modifies seg, returns error)
 error = geo.optimize_line_segment_inplace(mag, seg)
 
-# Batch optimisation
+# Batch optimization
 segments = [seg, geo.LineSegment.from_endpoints(20.0, 49.0, 80.0, 49.0)]
-optimised, errors = geo.optimize_line_segments(mag, segments)
-for s, e in zip(optimised, errors):
+optimized, errors = geo.optimize_line_segments(mag, segments)
+for s, e in zip(optimized, errors):
     print(f"  {s}, error={e:.4f}")
 ```
 
-## Visualisation Helpers
+## Visualization Helpers
 
 ```python
 import le_geometry as geo
@@ -291,13 +291,13 @@ color_img = geo.create_nms_color(nms_map)
 # Add border padding to an image
 bordered = geo.apply_border(img, border_size=10)
 
-# Save matrix as normalised grayscale PNG
+# Save matrix as normalized grayscale PNG
 geo.save_normalized(matrix, "output.png")
 
-# Save edge map as coloured PNG
+# Save edge map as colored PNG
 geo.save_edge(edge_map, "edges.png")
 
-# Generate a random BGR+A colour
+# Generate a random BGR+A color
 r, g, b, a = geo.random_color()
 ```
 
