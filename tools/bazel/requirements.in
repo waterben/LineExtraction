@@ -17,3 +17,4 @@ scipy>=1.11.0
 pyyaml>=6.0
 Pillow>=10.0.0
 pybind11-stubgen==2.5.4
+rerun-sdk>=0.29.0

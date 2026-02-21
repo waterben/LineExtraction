@@ -37,7 +37,7 @@ def _is_image(path: Path) -> bool:
 
     :param path: File path to check.
     :type path: Path
-    :return: ``True`` if the suffix is a recognised image format.
+    :return: ``True`` if the suffix is a recognized image format.
     :rtype: bool
     """
     return path.suffix.lower() in _IMAGE_EXTENSIONS

@@ -62,6 +62,7 @@ LE_THIRD_PARTY_C_COPTS = [
     "-Wno-sign-conversion",
     "-Wno-unused-parameter",
     "-Wno-implicit-fallthrough",
+    "-Wno-maybe-uninitialized",
 ]
 
 # Warning flags for benchmarks (Google Benchmark uses deprecated patterns)

@@ -183,7 +183,7 @@ Matx33<FT> quaternion(const Vec4<FT>& q) {
 
   Vec4<FT> sq(q[0] * q[0], q[1] * q[1], q[2] * q[2], q[3] * q[3]);
 
-  // invs (inverse square length) is only required if quaternion is not already normalised
+  // invs (inverse square length) is only required if quaternion is not already normalized
   FT invs = 1 / (sq[0] + sq[1] + sq[2] + sq[3]);
   ret(0, 0) = (sq[0] - sq[1] - sq[2] + sq[3]) * invs;  // since sqw + sqx + sqy + sqz =1/invs*invs
   ret(1, 1) = (-sq[0] + sq[1] - sq[2] + sq[3]) * invs;

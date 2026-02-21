@@ -242,7 +242,7 @@ le_lsd.EP_USE_PRECISE_SPE  # 2 — precise sub-pixel estimation (EP)
 ## Complete Pipeline Example
 
 ```python
-"""Detect and visualise line segments on a test image."""
+"""Detect and visualize line segments on a test image."""
 import numpy as np
 import le_lsd
 import le_geometry as geo

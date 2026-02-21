@@ -117,6 +117,7 @@ For detailed documentation, see:
 - **Build Systems:** `docs/CMAKE.md`, `docs/BAZEL.md`
 - **Development Environments:** `docs/DOCKER.md`, `docs/WSL.md`
 - **Jupyter Notebooks:** `docs/JUPYTER.md`
+- **Rerun Visualization:** `docs/RERUN.md`
 - **Code Guidelines:** `.github/instructions/cpp.instructions.md`, `.github/instructions/python.instructions.md`
 
 ## Development Workflows
@@ -261,6 +262,9 @@ Python environment is in `.venv/` (created by setup script). Dependencies in `py
 
 - **ALL** code comments, documentation (Doxygen, docstrings, READMEs), commit messages, instructions, and inline notes **must be written in English** throughout the entire repository.
 - This applies to every file type: C++, Python, Markdown, Bazel/Starlark, YAML, shell scripts, etc.
+- **Use American English spelling** throughout — not British English.
+  - Correct: `color`, `gray`, `initialize`, `optimize`, `recognize`, `normalize`, `visualize`, `neighbor`, `analyze`, `serialize`, `behavior`, `center`
+  - Wrong: `colour`, `grey`, `initialise`, `optimise`, `recognise`, `normalise`, `visualise`, `neighbour`, `analyse`, `serialise`, `behaviour`, `centre`
 
 ### Build System Priority
 

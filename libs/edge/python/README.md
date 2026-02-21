@@ -115,7 +115,7 @@ points   = esd.points()    # list[int]
 |-------|----------|---------------|---------|
 | `EsdDrawing` | Greedy edge drawing | `min_pixels`, `mag_mul`, `mag_th` | `_f64` |
 | `EsdSimple` | Simple linking | `min_pixels` | `_f64` |
-| `EsdLinking` | Continuity-optimised linking | `min_pixels`, `max_gap`, `mag_mul`, `mag_th` | `_f64` |
+| `EsdLinking` | Continuity-optimized linking | `min_pixels`, `max_gap`, `mag_mul`, `mag_th` | `_f64` |
 | `EsdPattern` | Pattern-based linking | `min_pixels`, `max_gap`, `mag_mul`, `mag_th`, `pat_tol` | `_f64` |
 
 ### EdgeSegment
@@ -176,7 +176,7 @@ segments = esd.segments()
 points = esd.points()
 print(f"Found {len(segments)} edge segments")
 
-# Create edge map visualisation
+# Create edge map visualization
 edge_img = np.zeros_like(img)
 for seg in segments:
     for idx in points[seg.begin : seg.end]:

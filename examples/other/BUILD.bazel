@@ -21,3 +21,26 @@ cc_binary(
         "@opencv",
     ],
 )
+
+# Rerun C++ SDK demo - logs a synthetic gradient image and animated 2D line strips.
+#
+# Requires a running rerun viewer:
+#   rerun   (in a separate terminal)
+#
+# Then build and run:
+#   bazel run //examples/other:rerun_cpp_demo
+cc_binary(
+    name = "rerun_cpp_demo",
+    srcs = ["src/rerun_demo.cpp"],
+    # LE_COPTS_COMPAT: use relaxed warnings since rerun APIs may trigger pedantic issues
+    copts = LE_COPTS_COMPAT,
+    tags = [
+        # The cmake build of rerun downloads Arrow at build time (first run only)
+        "requires-network",
+        # Avoid building in `bazel build //...` by default - build explicitly
+        "manual",
+    ],
+    deps = [
+        "@rerun_sdk",
+    ],
+)
