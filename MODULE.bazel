@@ -14,6 +14,10 @@ bazel_dep(name = "platforms", version = "0.0.11")
 # C++ rules
 bazel_dep(name = "rules_cc", version = "0.2.15")
 
+# rules_foreign_cc - build non-Bazel dependencies (CMake, Make, etc.)
+# Used for building the Rerun C++ SDK (which uses CMake internally)
+bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
+
 # Python rules
 bazel_dep(name = "rules_python", version = "1.1.0")
 
@@ -127,3 +131,27 @@ http_archive(
 # Note: dlib, opencv, and qt5 are now provided via local registry
 # See tools/bazel/registry/modules/ for module definitions
 # GCC and Clang selection is done via .bazelrc --config flags
+
+# =============================================================================
+# Rerun C++ SDK - Visualization and logging library
+# https://rerun.io
+# =============================================================================
+# The rerun_cpp_sdk.zip contains:
+#   - C++ source files (src/) - compiled as cc_library
+#   - Pre-built librerun_c*.a - the Rust FFI layer (platform specific)
+#   - CMakeLists.txt - used via rules_foreign_cc cmake() rule
+#   - download_and_build_arrow.cmake - builds Apache Arrow as ExternalProject
+#
+# Note: The SDK is patched (rerun_sdk_no_ninja.patch) to use Unix Makefiles; ninja-build is NOT required.
+#
+# Usage in BUILD.bazel:
+#   deps = ["@rerun_sdk//:rerun_sdk"]
+http_archive(
+    name = "rerun_sdk",
+    build_file = "//tools/bazel/third_party:rerun_sdk.BUILD",
+    patch_args = ["-p1"],
+    patches = ["//tools/bazel/third_party:rerun_sdk_no_ninja.patch"],
+    sha256 = "5413059ddff300ad62adde1b47ec4c0ca28bf639a6a368c30ecd494589781188",
+    strip_prefix = "rerun_cpp_sdk",
+    url = "https://github.com/rerun-io/rerun/releases/download/0.29.2/rerun_cpp_sdk.zip",
+)

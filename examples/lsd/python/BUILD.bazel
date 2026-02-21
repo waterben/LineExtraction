@@ -18,3 +18,18 @@ py_binary(
         "@pip//pillow",
     ],
 )
+
+py_binary(
+    name = "rerun_lsd_demo",
+    srcs = ["rerun_lsd_demo.py"],
+    data = [
+        "//resources:windmill",
+    ],
+    deps = [
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "//tools/bazel/third_party:rerun_sdk",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

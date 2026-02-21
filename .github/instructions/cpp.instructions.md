@@ -116,6 +116,12 @@ class BadExample {
 };
 ```
 
+**Language:**
+
+- Use **American English** spelling in all comments, Doxygen docs, and identifiers.
+  - `color` not `colour`, `gray` not `grey`, `initialize` not `initialise`, `optimize` not `optimise`,
+    `normalize` not `normalise`, `neighbor` not `neighbour`, `behavior` not `behaviour`, etc.
+
 **Additional Documentation Guidelines:**
 
 - Use `@brief` for short descriptions

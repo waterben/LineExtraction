@@ -11,7 +11,7 @@ Demonstration programs showcasing the capabilities of the LineExtraction library
 | [imgproc/](imgproc/) | `libs/imgproc` | Gradient operators, FFT, steerable filters, pyramids |
 | [lfd/](lfd/) | `libs/lfd` | Line feature descriptor matching (stereo, video, motion) |
 | [lsd/](lsd/) | `libs/lsd` | Line Segment Detection algorithm variants |
-| [other/](other/) | — | Miscellaneous demos (Hough transform) |
+| [other/](other/) | — | Miscellaneous demos (Hough transform, **Rerun C++ demo**, Rerun Python demo) |
 | [qt/](qt/) | — | Qt-based visualization (currently empty) |
 | [thesis/](thesis/) | `libs/eval` | Figure generation for thesis chapters |
 | [notebooks/](notebooks/) | all | **Jupyter tutorial series and interactive demos** (Python) |
@@ -92,6 +92,7 @@ Work through the tutorials in order for a structured introduction:
 |----------|-------------|
 | [`line_extraction_bindings.ipynb`](notebooks/line_extraction_bindings.ipynb) | **API Reference Guide** — Compact tour of all 5 Python modules with visualizations and performance comparisons. |
 | [`pytorch_esd_demo.ipynb`](notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) combined with ESD line extraction. |
+| [`rerun_lsd_demo.ipynb`](notebooks/rerun_lsd_demo.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. |
 
 ### Running Notebooks
 

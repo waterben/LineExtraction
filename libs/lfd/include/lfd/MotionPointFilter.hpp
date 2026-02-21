@@ -175,12 +175,12 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
                   std::array<std::array<std::vector<int>,bins>,bins>& qbins = this->bins_[static_cast<int>(ld.angle /
      (360 / angleBins)) % angleBins];
 
-                  std::vector<std::pair<int, int>> pixel, pixelNeighbours;
+                  std::vector<std::pair<int, int>> pixel, pixelNeighbors;
                   pixelOfLine((ld.beg.x() / width_ ) * static_cast<FT>(bins), (ld.beg.y() / height_ ) *
      static_cast<FT>(bins), (ld.end.x() / width_ ) * static_cast<FT>(bins), (ld.end.y() / height_ ) *
-     static_cast<FT>(bins), pixel); int searchRange = 1; getNeighbouringBins<bins>(pixel, pixelNeighbours, searchRange);
+     static_cast<FT>(bins), pixel); int searchRange = 1; getNeighbouringBins<bins>(pixel, pixelNeighbors, searchRange);
 
-                  for_each(pixelNeighbours.begin(), pixelNeighbours.end(), [this, &qbins, &nidx, &matches,
+                  for_each(pixelNeighbors.begin(), pixelNeighbors.end(), [this, &qbins, &nidx, &matches,
      &oidxList](std::pair<int, int> &p){
 
                       std::vector<int> &bin = qbins.at(p.first).at(p.second);
@@ -262,16 +262,16 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
       const PointData pd = newPoints_[nIdx];
       pIdxList.assign(pSize, 0);
 
-      std::vector<std::pair<int, int>> pixel, pixelNeighbours;
+      std::vector<std::pair<int, int>> pixel, pixelNeighbors;
       //                pixelOfLine((ld.beg.x() / width_ ) * static_cast<FT>(bins), (ld.beg.y() / height_ ) *
       //                static_cast<FT>(bins), (ld.end.x() / width_ ) * static_cast<FT>(bins), (ld.end.y() / height_ ) *
       //                static_cast<FT>(bins), pixel);
       pixel.push_back(std::pair<int, int>((pd.position.x() / width_) * static_cast<FT>(bins),
                                           (pd.position.y() / height_) * static_cast<FT>(bins)));
       int searchRange = 1;
-      getNeighbouringBins<bins>(pixel, pixelNeighbours, searchRange);
+      getNeighbouringBins<bins>(pixel, pixelNeighbors, searchRange);
 
-      // loop through same and neighbouring angle-bins
+      // loop through same and neighboring angle-bins
       //                int aBinIdx = static_cast<int>(ld.angle);// (360 / angleBins)) % angleBins;
       //                for(int bidx = -1; bidx <= 1; ++bidx){
 
@@ -279,7 +279,7 @@ class MotionPointFilter : public FeatureFilter<FT>, public OptionManager {
       //                    currABin = (currABin < 0 ? (currABin + angleBins) : currABin);
       std::array<std::array<std::vector<int>, bins>, bins>& aBin = this->bins_;
 
-      for_each(pixelNeighbours.begin(), pixelNeighbours.end(),
+      for_each(pixelNeighbors.begin(), pixelNeighbors.end(),
                [this, &aBin, &nIdx, &matches, &pIdxList, &nm, &pm](std::pair<int, int>& p) {
                  std::vector<int>& bin = aBin.at(p.first).at(p.second);
                  for_each(bin.begin(), bin.end(), [this, &matches, &pIdxList, &nIdx, &nm, &pm](int pIdx) {

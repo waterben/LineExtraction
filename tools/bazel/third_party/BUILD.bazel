@@ -1,5 +1,7 @@
 """Third-party dependencies"""
 
+load("@rules_python//python:defs.bzl", "py_library")
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files(
@@ -9,4 +11,18 @@ exports_files(
         "opencv.BUILD",
         "dlib.BUILD",
     ],
+)
+
+# ---------------------------------------------------------------------------
+# rerun-sdk .pth workaround
+# ---------------------------------------------------------------------------
+# The rerun-sdk wheel uses a .pth file to make ``import rerun`` resolve.
+# Bazel does not process .pth files, so this wrapper patches sys.path at
+# import time.  Use ``//tools/bazel/third_party:rerun_sdk`` as a dep
+# instead of ``@pip//rerun_sdk`` directly.
+py_library(
+    name = "rerun_sdk",
+    srcs = ["rerun_pth_fix.py"],
+    imports = ["."],
+    deps = ["@pip//rerun_sdk"],
 )
