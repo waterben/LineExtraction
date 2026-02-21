@@ -293,7 +293,7 @@ def make_detect_fn(
             elif isinstance(value, int):
                 det.set_int(name, value)
             elif isinstance(value, float):
-                det.set_double(name, value)
+                det.set_float(name, value)
         det.detect(src)
         return det.line_segments()
 
