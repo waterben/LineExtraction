@@ -5,6 +5,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <utility/test_images.hpp>
 
+#include <QComboBox>
+#include <QLabel>
 #include <QMessageBox>
 
 
@@ -91,6 +93,156 @@ ControlWindow::ControlWindow(QWidget* parent)
   ui->pb_pre->setEnabled(true);
   ui->pb_load->setEnabled(true);
   ui->pb_line_color->setEnabled(true);
+
+  // --- Test Image Selector ---
+  // Adds a category + image combo box row so the user can quickly pick
+  // test images from the bundled datasets instead of browsing the filesystem.
+  {
+    namespace fs = std::filesystem;
+
+    auto* testRow = new QHBoxLayout();
+    testRow->setSpacing(4);
+    auto* lblTest = new QLabel(tr("Test Images:"), this);
+    auto* cbCat = new QComboBox(this);
+    auto* cbImg = new QComboBox(this);
+    cbImg->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    cbCat->setToolTip(tr("Select a dataset category"));
+    cbImg->setToolTip(tr("Select a test image"));
+
+    testRow->addWidget(lblTest);
+    testRow->addWidget(cbCat);
+    testRow->addWidget(cbImg);
+    ui->layout_main->insertLayout(1, testRow);
+
+    // Helper: scan a directory for common image file types.
+    auto scanImages = [](const fs::path& dir) {
+      std::vector<std::pair<QString, QString>> result;
+      if (!fs::exists(dir) || !fs::is_directory(dir)) return result;
+      for (const auto& entry : fs::directory_iterator(dir)) {
+        if (!entry.is_regular_file()) continue;
+        auto ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".tif" || ext == ".tiff") {
+          result.emplace_back(QString::fromStdString(entry.path().filename().string()),
+                              QString::fromStdString(entry.path().string()));
+        }
+      }
+      std::sort(result.begin(), result.end());
+      return result;
+    };
+
+    // Build category list.
+    // Search for resources/ directory the same way TestImages does — check
+    // relative paths from cwd (workspace root) and from the executable.
+    using ImgList = std::vector<std::pair<QString, QString>>;
+    auto cats = std::make_shared<std::vector<std::pair<QString, ImgList>>>();
+
+    auto findResources = []() -> std::pair<fs::path, fs::path> {
+      // Candidate relative paths (mirrors TestImages::detectSearchPaths).
+      const std::vector<std::string> candidates = {
+          "resources",
+          "../resources",
+          "../../resources",
+          "../../../resources",
+      };
+      for (const auto& rel : candidates) {
+        fs::path resDir = fs::absolute(rel);
+        fs::path dsDir = resDir / "datasets";
+        if (fs::exists(resDir) && fs::exists(dsDir)) {
+          return {resDir, dsDir};
+        }
+      }
+      // Bazel sets BUILD_WORKSPACE_DIRECTORY when running via `bazel run`.
+      if (const char* wsDir = std::getenv("BUILD_WORKSPACE_DIRECTORY")) {
+        fs::path resDir = fs::path(wsDir) / "resources";
+        fs::path dsDir = resDir / "datasets";
+        if (fs::exists(resDir) && fs::exists(dsDir)) {
+          return {resDir, dsDir};
+        }
+      }
+      // Fallback: try via RUNFILES_DIR environment variable.
+      if (const char* rd = std::getenv("RUNFILES_DIR")) {
+        for (const auto& repo : {"_main", "line_extraction"}) {
+          fs::path resDir = fs::path(rd) / repo / "resources";
+          fs::path dsDir = resDir / "datasets";
+          if (fs::exists(resDir) && fs::exists(dsDir)) {
+            return {resDir, dsDir};
+          }
+        }
+      }
+      // Last resort: derive from windmill.jpg path if it exists on disk.
+      std::string wm = lsfm::TestImages::windmill();
+      if (!wm.empty() && fs::exists(wm)) {
+        fs::path resDir = fs::path(wm).parent_path();
+        fs::path dsDir = resDir / "datasets";
+        if (fs::exists(dsDir)) {
+          return {resDir, dsDir};
+        }
+      }
+      return {{}, {}};
+    };
+
+    auto [res, ds] = findResources();
+
+    if (!res.empty()) {
+      auto addCat = [&](const QString& name, const fs::path& dir) {
+        auto imgs = scanImages(dir);
+        if (!imgs.empty()) {
+          cats->emplace_back(name, std::move(imgs));
+        }
+      };
+
+      addCat(tr("General"), res);
+      addCat(tr("Noise"), ds / "noise");
+      addCat(tr("BSDS500"), ds / "BSDS500");
+      addCat(tr("York Urban"), ds / "YorkUrban" / "images");
+      addCat(tr("Wireframe"), ds / "Wireframe" / "images");
+      addCat(tr("MDB Quarter"), ds / "MDB" / "MiddEval3-Q");
+      addCat(tr("MDB Half"), ds / "MDB" / "MiddEval3-H");
+      addCat(tr("MDB Full"), ds / "MDB" / "MiddEval3-F");
+    }
+
+    // Populate category combo.
+    for (const auto& [name, imgs] : *cats) {
+      cbCat->addItem(name + " (" + QString::number(static_cast<int>(imgs.size())) + ")");
+    }
+
+    // Re-populate image combo when category changes.
+    auto refreshImages = [cats, cbImg](int index) {
+      cbImg->clear();
+      if (index < 0 || index >= static_cast<int>(cats->size())) return;
+      for (const auto& [name, path] : (*cats)[static_cast<size_t>(index)].second) {
+        cbImg->addItem(name, path);
+      }
+    };
+
+    connect(cbCat, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [refreshImages](int idx) { refreshImages(idx); });
+
+    // Update the filename field when a test image is selected.
+    connect(cbImg, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int idx) {
+      auto* cb = qobject_cast<QComboBox*>(sender());
+      if (!cb || idx < 0) return;
+      QString path = cb->itemData(idx).toString();
+      if (!path.isEmpty()) {
+        ui->le_image_filename->setText(path);
+        ui->pb_pre->setEnabled(true);
+        ui->pb_load->setEnabled(true);
+      }
+    });
+
+    // Populate images for the first category (windmill).
+    if (!cats->empty()) {
+      refreshImages(0);
+    }
+
+    // Hide the row entirely when no datasets were found.
+    if (cats->empty()) {
+      lblTest->hide();
+      cbCat->hide();
+      cbImg->hide();
+    }
+  }
 
   updateRanges();
 }
