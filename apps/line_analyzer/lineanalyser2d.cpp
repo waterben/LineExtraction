@@ -1,23 +1,28 @@
 #include "lineanalyser2d.h"
 
+#include <QMessageBox>
 #include <QTableWidgetItem>
 #include <fstream>
 
 LineAnalyser2D::LineAnalyser2D(QWidget* parent)
     : LATool("Line Analyser 2D", parent),
+      lines(nullptr),
+      srcImg(nullptr),
+      sources(nullptr),
+      imgMap(nullptr),
       file(new QFileDialog(this, tr("Open .txt File"))),
       lplot(new PlotWindow("Line Analyser 2D Image Viewer", this)),
-      lines(0),
-      sources(0),
-      imgMap(0),
+      ui(new Ui::LineAnalyser2D),
+      po(nullptr),
+      ao(new AnalyserOptions(this)),
+      clDataTemp(nullptr),
+      gtDataTemp(nullptr),
+      lockedGTLine(nullptr),
+      lockedOtherLine(nullptr),
       displayMode(false),
       debugMode(false),
-      analysisMode(false),
       curSelMode(0),
-      clDataTemp(0),
-      gtDataTemp(0),
-      ao(new AnalyserOptions(this)),
-      ui(new Ui::LineAnalyser2D) {
+      analysisMode(false) {
   setWindowTitle("Line Analyser 2D");
   ui->setupUi(this);
 
@@ -296,7 +301,7 @@ double LineAnalyser2D::miscalculation(const lsfm::LineSegment2d& gtline, const l
     return fabs(a + b) / 2;
   }
 
-  lsfm::Point2d p1, p2, s;
+  lsfm::Vec2<double> p1, p2, s;
   lsfm::LineSegment2d temp;
   double s1, s2;
 
@@ -342,7 +347,8 @@ double LineAnalyser2D::anglediff(const lsfm::LineSegment2d& gtline, const lsfm::
 
   if (gtline.angle() < 0 && line.angle() > 0) return fabs((CV_PI + gtline.angle()) - line.angle()) * 180 / CV_PI;
 
-  if (gtline.angle() > 0 && line.angle() < 0) return fabs(gtline.angle() - (CV_PI + line.angle())) * 180 / CV_PI;
+  // gtline.angle() > 0 && line.angle() < 0, or one is exactly 0
+  return fabs(gtline.angle() - (CV_PI + line.angle())) * 180 / CV_PI;
 }
 
 /**
@@ -358,15 +364,14 @@ bool LineAnalyser2D::checkLineAngles(const lsfm::LineSegment2d& gtline,
                                      double& angle) {
   if (!this->ui->cb_check_angle->isChecked()) return true;
 
-  if (gtline.angle() < 0 && line.angle() < 0) return fabs(gtline.angle() - line.angle()) <= angle ? true : false;
+  if (gtline.angle() < 0 && line.angle() < 0) return fabs(gtline.angle() - line.angle()) <= angle;
 
-  if (gtline.angle() >= 0 && line.angle() >= 0) return fabs(gtline.angle() - line.angle()) <= angle ? true : false;
+  if (gtline.angle() >= 0 && line.angle() >= 0) return fabs(gtline.angle() - line.angle()) <= angle;
 
-  if (gtline.angle() < 0 && line.angle() > 0)
-    return fabs((CV_PI + gtline.angle()) - line.angle()) <= angle ? true : false;
+  if (gtline.angle() < 0 && line.angle() > 0) return fabs((CV_PI + gtline.angle()) - line.angle()) <= angle;
 
-  if (gtline.angle() > 0 && line.angle() < 0)
-    return fabs(gtline.angle() - (CV_PI + line.angle())) <= angle ? true : false;
+  // gtline.angle() > 0 && line.angle() < 0, or one is exactly 0
+  return fabs(gtline.angle() - (CV_PI + line.angle())) <= angle;
 }
 
 /**
@@ -444,14 +449,19 @@ void LineAnalyser2D::openAnalyserOptions() { ao->show(); }
  *          Loads the Ground Truth Data from a given path
  */
 void LineAnalyser2D::loadGroundTruthData() {
-  if (!gtLines.empty()) gtLines.clear();
+  try {
+    if (!gtLines.empty()) gtLines.clear();
 
-  if (!cLines.empty()) this->resetTestSettings();
+    if (!cLines.empty()) this->resetTestSettings();
 
-  this->loadGroundTruthDataFromFile(ui->le_file_path->text().toStdString());
-  this->loadGroundTruthDataIntoTable();
+    this->loadGroundTruthDataFromFile(ui->le_file_path->text().toStdString());
+    this->loadGroundTruthDataIntoTable();
 
-  if (lplot->isVisible()) this->redrawItems();
+    if (lplot->isVisible()) this->redrawItems();
+  } catch (const std::exception& ex) {
+    std::cerr << "Load ground truth failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Ground Truth Error"), tr("Failed to load ground truth data:\n%1").arg(ex.what()));
+  }
 }
 
 /**
@@ -477,8 +487,8 @@ void LineAnalyser2D::loadGroundTruthDataFromFile(std::string file_path) {
   // uniform or calculated
   while (std::getline(txt_file, tempLine)) {
     tempList = QString::fromStdString(tempLine).split(",");
-    lsfm::Point2d p1(tempList[0].toDouble(0), tempList[1].toDouble(0));
-    lsfm::Point2d p2(tempList[2].toDouble(0), tempList[3].toDouble(0));
+    cv::Point2d p1(tempList[0].toDouble(0), tempList[1].toDouble(0));
+    cv::Point2d p2(tempList[2].toDouble(0), tempList[3].toDouble(0));
 
     if (this->ui->cb_uniform_data->isChecked() && !srcImg->empty()) {
       p1.x = ((imgWidth * p1.x) / div) - offset / div;
@@ -503,26 +513,31 @@ void LineAnalyser2D::loadGroundTruthDataFromFile(std::string file_path) {
 void LineAnalyser2D::computeCorrectLines() {
   if (gtLines.empty() || lines->empty()) return;
 
-  if (!cLines.empty()) {
-    cLines.clear();
-    for_each(gtLines.begin(), gtLines.end(), [&](GTData& gtd) { gtd.clData.clear(); });
+  try {
+    if (!cLines.empty()) {
+      cLines.clear();
+      for_each(gtLines.begin(), gtLines.end(), [&](GTData& gtd) { gtd.clData.clear(); });
+    }
+
+    // User Input
+    double distance = this->ui->dsb_distance_threshold->value();
+    double angle = this->ui->dsb_angle_threshold->value();
+    double error = this->ui->dsb_error_threshold->value();
+
+    // Calculate Lines with given Threshold
+    this->computeCorrectLinesHelper(angle, distance, error);
+
+    // draw lines
+    this->redrawItems();
+    this->ui->cb_correct_lines->setChecked(true);
+    this->ui->cb_correct_lines->setDisabled(false);
+    this->ui->cb_gtline_plus_clines->setDisabled(false);
+    this->ui->pb_analysis_start->setDisabled(false);
+    this->setLayerVisibility("clines", true);
+  } catch (const std::exception& ex) {
+    std::cerr << "Compute correct lines failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Computation Error"), tr("Correct lines computation failed:\n%1").arg(ex.what()));
   }
-
-  // User Input
-  double distance = this->ui->dsb_distance_threshold->value();
-  double angle = this->ui->dsb_angle_threshold->value();
-  double error = this->ui->dsb_error_threshold->value();
-
-  // Calculate Lines with given Threshold
-  this->computeCorrectLinesHelper(angle, distance, error);
-
-  // draw lines
-  this->redrawItems();
-  this->ui->cb_correct_lines->setChecked(true);
-  this->ui->cb_correct_lines->setDisabled(false);
-  this->ui->cb_gtline_plus_clines->setDisabled(false);
-  this->ui->pb_analysis_start->setDisabled(false);
-  this->setLayerVisibility("clines", true);
 }
 
 /**
@@ -586,16 +601,16 @@ void LineAnalyser2D::loadLineInfo(T& data, QTableWidget*& widget, int& row) {
   item = new QTableWidgetItem(QString::number(data.segment.length()));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 1, item);
-  item = new QTableWidgetItem(QString::number(data.segment.startPoint().x));
+  item = new QTableWidgetItem(QString::number(lsfm::getX(data.segment.startPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 2, item);
-  item = new QTableWidgetItem(QString::number(data.segment.startPoint().y));
+  item = new QTableWidgetItem(QString::number(lsfm::getY(data.segment.startPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 3, item);
-  item = new QTableWidgetItem(QString::number(data.segment.endPoint().x));
+  item = new QTableWidgetItem(QString::number(lsfm::getX(data.segment.endPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 4, item);
-  item = new QTableWidgetItem(QString::number(data.segment.endPoint().y));
+  item = new QTableWidgetItem(QString::number(lsfm::getY(data.segment.endPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 5, item);
 }
@@ -818,41 +833,46 @@ void LineAnalyser2D::enableTestSettings() {
 void LineAnalyser2D::displayImageView() {
   if (srcImg->empty()) return;
 
-  // Load RGB Image
-  if (srcImg->channels() != 1) {
-    lplot->qplot->setCurrentLayer("image");
-    lplot->qplot->clearItems();
-    lplot->setAxis(QCPRange(0, srcImg->cols - 1), QCPRange(0, srcImg->rows - 1));
-    lplot->keepAspectRatio(true, static_cast<double>(srcImg->cols / srcImg->rows));
-    lplot->hold(true);
-    lplot->plot(*srcImg, false, QCPRange(), QCPRange(), QCPRange(), ImageMode("RGB").grad, QCPAxis::stLinear, false);
-    lplot->hold(false);
-    this->setLayerVisibility("image", true);
-    lplot->show();
-  } else if (srcImg->channels() == 1) {
-    lplot->qplot->setCurrentLayer("image");
-    lplot->qplot->clearItems();
-    lplot->setAxis(QCPRange(0, srcImg->cols - 1), QCPRange(0, srcImg->rows - 1));
-    lplot->keepAspectRatio(true, static_cast<double>(srcImg->cols / srcImg->rows));
-    lplot->hold(true);
-    lplot->plot(*srcImg, false, QCPRange(), QCPRange(), QCPRange(), ImageMode("Gray").grad, QCPAxis::stLinear, false);
-    lplot->hold(false);
-    this->setLayerVisibility("image", true);
-    lplot->show();
-  }
+  try {
+    // Load RGB Image
+    if (srcImg->channels() != 1) {
+      lplot->qplot->setCurrentLayer("image");
+      lplot->qplot->clearItems();
+      lplot->setAxis(QCPRange(0, srcImg->cols - 1), QCPRange(0, srcImg->rows - 1));
+      lplot->keepAspectRatio(true, static_cast<double>(srcImg->cols / srcImg->rows));
+      lplot->hold(true);
+      lplot->plot(*srcImg, false, QCPRange(), QCPRange(), QCPRange(), ImageMode("RGB").grad, QCPAxis::stLinear, false);
+      lplot->hold(false);
+      this->setLayerVisibility("image", true);
+      lplot->show();
+    } else if (srcImg->channels() == 1) {
+      lplot->qplot->setCurrentLayer("image");
+      lplot->qplot->clearItems();
+      lplot->setAxis(QCPRange(0, srcImg->cols - 1), QCPRange(0, srcImg->rows - 1));
+      lplot->keepAspectRatio(true, static_cast<double>(srcImg->cols / srcImg->rows));
+      lplot->hold(true);
+      lplot->plot(*srcImg, false, QCPRange(), QCPRange(), QCPRange(), ImageMode("Gray").grad, QCPAxis::stLinear, false);
+      lplot->hold(false);
+      this->setLayerVisibility("image", true);
+      lplot->show();
+    }
 
-  this->redrawItems();
-  this->loadImageSources();
-  this->enableImageSettings();
+    this->redrawItems();
+    this->loadImageSources();
+    this->enableImageSettings();
 
-  if (!lines->empty() && !gtLines.empty()) {
-    this->ui->pb_debug_start->setDisabled(false);
-    this->enableTestSettings();
-  }
+    if (!lines->empty() && !gtLines.empty()) {
+      this->ui->pb_debug_start->setDisabled(false);
+      this->enableTestSettings();
+    }
 
-  if (!gtLines.empty()) {
-    this->ui->cb_gt_data->setChecked(true);
-    this->setLayerVisibility("gtlines", true);
+    if (!gtLines.empty()) {
+      this->ui->cb_gt_data->setChecked(true);
+      this->setLayerVisibility("gtlines", true);
+    }
+  } catch (const std::exception& ex) {
+    std::cerr << "Display image view failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Display Error"), tr("Failed to display image view:\n%1").arg(ex.what()));
   }
 }
 
@@ -861,21 +881,26 @@ void LineAnalyser2D::displayImageView() {
  *          Displays the selected Source
  */
 void LineAnalyser2D::displaySource() {
-  this->ui->cb_image_source->blockSignals(true);
-  const ImageSource& s = sources->at(ui->cb_image_source->currentIndex());
-  this->updateModes();
-  const ImageMode& m = s.modes.at(ui->cb_image_mode->currentIndex());
-  this->lplot->qplot->setCurrentLayer("image");
-  this->lplot->qplot->clearPlottables();
-  // Plot Image
-  this->lplot->hold(true);
-  this->imgMap = lplot->plot(s.data, false, QCPRange(), QCPRange(), s.range, m.grad, QCPAxis::stLinear, false);
-  this->lplot->hold(false);
-  this->updateModes();
-  this->setLayerVisibility("image", true);
-  // Update UI
-  if (!this->ui->cb_image->isChecked()) this->ui->cb_image->setChecked(true);
-  this->ui->cb_image_source->blockSignals(false);
+  try {
+    this->ui->cb_image_source->blockSignals(true);
+    const ImageSource& s = sources->at(ui->cb_image_source->currentIndex());
+    this->updateModes();
+    const ImageMode& m = s.modes.at(ui->cb_image_mode->currentIndex());
+    this->lplot->qplot->setCurrentLayer("image");
+    this->lplot->qplot->clearPlottables();
+    // Plot Image
+    this->lplot->hold(true);
+    this->imgMap = lplot->plot(s.data, false, QCPRange(), QCPRange(), s.range, m.grad, QCPAxis::stLinear, false);
+    this->lplot->hold(false);
+    this->updateModes();
+    this->setLayerVisibility("image", true);
+    // Update UI
+    if (!this->ui->cb_image->isChecked()) this->ui->cb_image->setChecked(true);
+    this->ui->cb_image_source->blockSignals(false);
+  } catch (const std::exception& ex) {
+    std::cerr << "Display source failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Display Error"), tr("Failed to display source:\n%1").arg(ex.what()));
+  }
 }
 
 /**
@@ -1068,11 +1093,13 @@ template <class T>
 void LineAnalyser2D::loadLineInformationIntoTable(T& line) {
   switch (curSelMode) {
     case 0:
-      this->lockedGTLine = &line.segment;
+      this->lockedGTLine_storage = lsfm::LineSegment2d(line.segment);
+      this->lockedGTLine = &this->lockedGTLine_storage;
       this->loadGTLineInformation(line);
       break;
     case 1:
-      this->lockedOtherLine = &line.segment;
+      this->lockedOtherLine_storage = lsfm::LineSegment2d(line.segment);
+      this->lockedOtherLine = &this->lockedOtherLine_storage;
       this->loadOtherLineInformation(line);
       break;
     default:
@@ -1102,7 +1129,7 @@ void LineAnalyser2D::loadOtherLineInformation(T& line) {
  * @brief   LineAnalyser2D::lockInGTLine
  */
 void LineAnalyser2D::lockInGTLine() {
-  if (this->curSelMode != 2 && this->lockedGTLine != 0) {
+  if (this->curSelMode != 2 && this->lockedGTLine != nullptr) {
     this->curSelMode = 1;
     this->ui->pb_debug_lockin_gtline->setDisabled(true);
   }
@@ -1112,7 +1139,7 @@ void LineAnalyser2D::lockInGTLine() {
  * @brief   LineAnalyser2D::lockInOtherLine
  */
 void LineAnalyser2D::lockInOtherLine() {
-  if (this->curSelMode != 0 && this->lockedOtherLine != 0) {
+  if (this->curSelMode != 0 && this->lockedOtherLine != nullptr) {
     this->curSelMode = 2;
     this->ui->pb_debug_lockin_lines->setDisabled(true);
   }
@@ -1123,7 +1150,7 @@ void LineAnalyser2D::lockInOtherLine() {
  *          Compute miscalculation from selected gt line and other line
  */
 void LineAnalyser2D::processDebugData() {
-  if (lockedGTLine == 0 || lockedOtherLine == 0) return;
+  if (lockedGTLine == nullptr || lockedOtherLine == nullptr) return;
 
   int row = 0;
   this->ui->tw_debug_result_info->setRowCount(1);
@@ -1144,11 +1171,11 @@ void LineAnalyser2D::processDebugData() {
  *          Reset all debug settings in UI
  */
 void LineAnalyser2D::resetDebugSettings() {
-  if (lockedGTLine == 0 && lockedOtherLine == 0) return;
+  if (lockedGTLine == nullptr && lockedOtherLine == nullptr) return;
 
   this->curSelMode = 0;
-  this->lockedGTLine = 0;
-  this->lockedOtherLine = 0;
+  this->lockedGTLine = nullptr;
+  this->lockedOtherLine = nullptr;
   this->ui->tw_debug_gtline_info->setRowCount(0);
   this->ui->tw_debug_lines_info->setRowCount(0);
   this->ui->tw_debug_result_info->setRowCount(0);
@@ -1395,10 +1422,10 @@ void LineAnalyser2D::loadSaveFileContent(QTextStream& outStream, CLData& cl, int
   outStream << i << "\t" << "&" << "\t";
   outStream << "$" << cl.segment.angle() * 180 / CV_PI << "$" << "\t" << "&" << "\t";
   outStream << "$" << cl.segment.length() << "$" << "\t" << "&" << "\t";
-  outStream << "$" << cl.segment.startPoint().x << "$" << "\t" << "&" << "\t";
-  outStream << "$" << cl.segment.startPoint().y << "$" << "\t" << "&" << "\t";
-  outStream << "$" << cl.segment.endPoint().x << "$" << "\t" << "&" << "\t";
-  outStream << "$" << cl.segment.endPoint().y << "$" << "\t" << "&" << "\t";
+  outStream << "$" << lsfm::getX(cl.segment.startPoint()) << "$" << "\t" << "&" << "\t";
+  outStream << "$" << lsfm::getY(cl.segment.startPoint()) << "$" << "\t" << "&" << "\t";
+  outStream << "$" << lsfm::getX(cl.segment.endPoint()) << "$" << "\t" << "&" << "\t";
+  outStream << "$" << lsfm::getY(cl.segment.endPoint()) << "$" << "\t" << "&" << "\t";
   outStream << "$" << cl.error << "$" << "\t" << "\\\\" << "\n";
   outStream << "\t" << "\t" << "\\hline" << "\n";
 }
@@ -1465,35 +1492,40 @@ double LineAnalyser2D::calculatePercentage(int& i) {
 void LineAnalyser2D::saveAnalysis() {
   if (cLines.empty() || cLinesOld.empty()) return;
 
-  QString filename = "";
-  filename = file->getSaveFileName(this, "Save File", "", ".txt");
-  if (filename != "") {
-    int index = 1;
-    QFile f(filename);
-    QTextStream outStream(&f);
-    f.open(QIODevice::WriteOnly);
-    loadSaveFileHeader(outStream, "Previous Line Information");
-    for_each(cLinesOld.begin(), cLinesOld.end(), [&](CLData& cl) {
-      loadSaveFileContent(outStream, cl, index);
-      ++index;
-    });
-    loadSaveFileFooter(outStream);
-    index = 1;
-    loadSaveFileHeader(outStream, "Optimized Line Information");
-    for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
-      loadSaveFileContent(outStream, cl, index);
-      ++index;
-    });
-    loadSaveFileFooter(outStream);
-    if (static_cast<int>(cLinesOld.size()) == static_cast<int>(cLines.size())) {
-      index = 0;
-      loadPercentageVarianceHeader(outStream);
-      for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
-        loadPercentageVarianceContent(outStream, index);
+  try {
+    QString filename = "";
+    filename = file->getSaveFileName(this, "Save File", "", ".txt");
+    if (filename != "") {
+      int index = 1;
+      QFile f(filename);
+      QTextStream outStream(&f);
+      f.open(QIODevice::WriteOnly);
+      loadSaveFileHeader(outStream, "Previous Line Information");
+      for_each(cLinesOld.begin(), cLinesOld.end(), [&](CLData& cl) {
+        loadSaveFileContent(outStream, cl, index);
         ++index;
       });
       loadSaveFileFooter(outStream);
+      index = 1;
+      loadSaveFileHeader(outStream, "Optimized Line Information");
+      for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
+        loadSaveFileContent(outStream, cl, index);
+        ++index;
+      });
+      loadSaveFileFooter(outStream);
+      if (static_cast<int>(cLinesOld.size()) == static_cast<int>(cLines.size())) {
+        index = 0;
+        loadPercentageVarianceHeader(outStream);
+        for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
+          loadPercentageVarianceContent(outStream, index);
+          ++index;
+        });
+        loadSaveFileFooter(outStream);
+      }
+      f.close();
     }
-    f.close();
+  } catch (const std::exception& ex) {
+    std::cerr << "Save analysis failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Save Error"), tr("Failed to save analysis:\n%1").arg(ex.what()));
   }
 }

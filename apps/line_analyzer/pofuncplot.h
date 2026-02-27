@@ -93,7 +93,8 @@ class POFuncPlot : public LATool {
     }
 
     void fitProfile() {
-      plot->setRotation(0, 0, 0);
+      // Side view along the Angle (Y) axis, showing Profile (X) vs Mean (Z).
+      plot->setRotation(20, 0, 0);
       plot->setScale(1, 1, -1);
       plot->setShift(0, 0, 0);
       plot->setViewportShift(0, 0);
@@ -103,7 +104,8 @@ class POFuncPlot : public LATool {
     }
 
     void fitRotation() {
-      plot->setRotation(0, 0, 90);
+      // Side view along the Profile (X) axis, showing Angle (Y) vs Mean (Z).
+      plot->setRotation(20, 0, 90);
       plot->setScale(1, 1, -1);
       plot->setShift(0, 0, 0);
       plot->setViewportShift(0, 0);

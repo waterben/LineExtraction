@@ -2,14 +2,6 @@
 
 Note: This application requires Qt5 and OpenGL.
 Build with: bazel build //apps/line_analyzer:app_line_analyzer
-
-The build excludes some files that depend on missing headers:
-- connectionoptimizer.cpp (requires utility/line_connect.hpp)
-- continuityoptimizer.cpp (requires utility/line_merge.hpp)
-- lineanalyser2d.cpp (type mismatches)
-- analyseroptions.cpp (depends on lineanalyser2d)
-
-This matches the CMake build configuration.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
@@ -30,22 +22,34 @@ QT5_COPTS = [
 
 # Headers that contain Q_OBJECT and need MOC processing
 MOC_HEADERS = [
+    "accuracypanel.h",
+    "analyseroptions.h",
+    "connectionoptimizer.h",
+    "continuityoptimizer.h",
     "controlwindow.h",
+    "detectorprofilepanel.h",
     "helpers.h",
+    "lineanalyser2d.h",
+    "pofuncplot.h",
+    "precisionoptimizer.h",
     "preprocessing.h",
     "profileanalyzer.h",
-    "precisionoptimizer.h",
-    "pofuncplot.h",
     "quiver.h",
 ]
 
 # UI files for UIC processing
 UI_FILES = [
+    "accuracypanel.ui",
+    "analyseroptions.ui",
+    "connectionoptimizer.ui",
+    "continuityoptimizer.ui",
     "controlwindow.ui",
+    "detectorprofilepanel.ui",
+    "lineanalyser2d.ui",
+    "pofuncplot.ui",
+    "precisionoptimizer.ui",
     "preprocessing.ui",
     "profileanalyzer.ui",
-    "precisionoptimizer.ui",
-    "pofuncplot.ui",
     "quiver.ui",
 ]
 
@@ -70,15 +74,22 @@ qt5_uic(
 cc_binary(
     name = "app_line_analyzer",
     srcs = [
-        "main.cpp",
-        "helpers.cpp",
+        "accuracypanel.cpp",
+        "analyseroptions.cpp",
+        "connectionoptimizer.cpp",
+        "continuityoptimizer.cpp",
         "controlwindow.cpp",
+        "detectorprofilepanel.cpp",
+        "helpers.cpp",
+        "lineanalyser2d.cpp",
+        "main.cpp",
+        "pofuncplot.cpp",
+        "precisionoptimizer.cpp",
         "preprocessing.cpp",
         "profileanalyzer.cpp",
-        "precisionoptimizer.cpp",
-        "pofuncplot.cpp",
         "quiver.cpp",
         # Headers
+        "help_button.hpp",
         "latool.h",
     ] + MOC_HEADERS + [
         # MOC-generated files
@@ -99,6 +110,7 @@ cc_binary(
     ],
     deps = [
         ":line_analyzer_uic",
+        "//libs/algorithm:lib_algorithm",
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/lsd:lib_lsd",

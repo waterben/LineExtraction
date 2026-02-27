@@ -119,6 +119,14 @@ class ControlWindow : public QMainWindow {
   cv::Mat& getSrcImg() { return img; }
   PlotWindow* getPlotWindow() { return lplot; }
 
+  /// @brief Get the currently selected detector.
+  /// @return Shared pointer to the current detector, or nullptr if none selected.
+  DetectorPtr getCurrentDetector() const;
+
+  /// @brief Get the display name of the currently selected detector.
+  /// @return Detector name, or empty string if none selected.
+  QString getCurrentDetectorName() const;
+
  public slots:
   // image stuff
   void selectImage();
@@ -136,6 +144,9 @@ class ControlWindow : public QMainWindow {
   void resetAllDetectors();
   void setDetectorOption(int row, int col);
   void processData();
+
+  /// @brief Refresh the detector parameter table from the current detector's ValueManager.
+  void refreshDetectorOptions();
 
   // line stuff
   void updateLine(int idx);
@@ -196,6 +207,10 @@ class ControlWindow : public QMainWindow {
   void lineChanged(const LineSegment& l);
   void lineSelChanged(int sel);
   void linesUpdated(LineVector* lines);
+
+  /// @brief Emitted when the selected detector changes.
+  /// @param name Display name of the newly selected detector.
+  void detectorChanged(const QString& name);
 
  private:
   Ui::ControlWindow* ui;

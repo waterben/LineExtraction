@@ -15,43 +15,50 @@ le_add_executable(app_line_analyzer
         main.cpp
         helpers.cpp
         controlwindow.cpp
+        connectionoptimizer.cpp
+        continuityoptimizer.cpp
+        accuracypanel.cpp
+        detectorprofilepanel.cpp
+        imageanalyzerpanel.cpp
+        analyseroptions.cpp
+        lineanalyser2d.cpp
         preprocessing.cpp
         profileanalyzer.cpp
         precisionoptimizer.cpp
         pofuncplot.cpp
         quiver.cpp
-        # Commented out files - enable as needed:
-        # continuityoptimizer.cpp
-        # analyseroptions.cpp
-        # lineanalyser2d.cpp
-        # connectionoptimizer.cpp
     HEADERS
         helpers.h
         controlwindow.h
+        connectionoptimizer.h
+        continuityoptimizer.h
+        accuracypanel.h
+        detectorprofilepanel.h
+        imageanalyzerpanel.h
+        analyseroptions.h
+        lineanalyser2d.h
         preprocessing.h
         profileanalyzer.h
         precisionoptimizer.h
         pofuncplot.h
         quiver.h
-        # Commented out files - enable as needed:
-        # continuityoptimizer.h
-        # analyseroptions.h
-        # lineanalyser2d.h
-        # connectionoptimizer.h
         # UI files
         controlwindow.ui
+        connectionoptimizer.ui
+        continuityoptimizer.ui
+        accuracypanel.ui
+        detectorprofilepanel.ui
+        imageanalyzerpanel.ui
+        analyseroptions.ui
+        lineanalyser2d.ui
         preprocessing.ui
         profileanalyzer.ui
         precisionoptimizer.ui
         pofuncplot.ui
         quiver.ui
-        # Commented out files - enable as needed:
-        # continuityoptimizer.ui
-        # analyseroptions.ui
-        # lineanalyser2d.ui
-        # connectionoptimizer.ui
     QT_MODULES Core Gui Widgets PrintSupport OpenGL
     DEPS
+        lib_algorithm
         lib_lsd
         lib_imgproc
         lib_qplot

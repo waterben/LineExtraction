@@ -1,13 +1,42 @@
+#include "accuracypanel.h"
+#include "connectionoptimizer.h"
+#include "continuityoptimizer.h"
 #include "controlwindow.h"
+#include "detectorprofilepanel.h"
 #include "helpers.h"
+#include "lineanalyser2d.h"
 #include "pofuncplot.h"
 #include "precisionoptimizer.h"
+#include "profileanalyzer.h"
 
 #include <QApplication>
-// #include "continuityoptimizer.h"
-// #include "connectionoptimizer.h"
-// #include "lineanalyser2d.h"
-#include "profileanalyzer.h"
+#include <QMessageBox>
+#include <iostream>
+
+/**
+ * @brief Custom QApplication subclass that catches uncaught exceptions in
+ *        Qt event handlers, preventing std::terminate from being called.
+ *
+ * Any exception escaping a slot/event handler is caught here, logged to
+ * stderr, and shown to the user in a modal error dialog.
+ */
+class SafeApplication : public QApplication {
+ public:
+  using QApplication::QApplication;
+
+  bool notify(QObject* receiver, QEvent* event) override {
+    try {
+      return QApplication::notify(receiver, event);
+    } catch (const std::exception& ex) {
+      std::cerr << "Uncaught exception: " << ex.what() << std::endl;
+      QMessageBox::critical(nullptr, tr("Unexpected Error"), tr("An unexpected error occurred:\n%1").arg(ex.what()));
+    } catch (...) {
+      std::cerr << "Uncaught unknown exception" << std::endl;
+      QMessageBox::critical(nullptr, tr("Unexpected Error"), tr("An unknown error occurred."));
+    }
+    return false;
+  }
+};
 
 #define USE_PERIODIC_FFT
 #include <edge/edge_drawing.hpp>
@@ -42,7 +71,7 @@
 #endif
 
 int main(int argc, char* argv[]) {
-  QApplication a(argc, argv);
+  SafeApplication a(argc, argv);
   ControlWindow w;
 
   w.addDetector(createDetectorES<lsfm::LsdEL<float_type, cv::Point_>>("LSD EL", D_MAG_SQR));
@@ -193,11 +222,11 @@ int main(int argc, char* argv[]) {
   w.addTool<ProfileAnalyzer>();
   w.addTool<PrecisionOptimizer>();
   w.addTool<POFuncPlot>();
-  /*
-
   w.addTool<ContinuityOptimizer>();
   w.addTool<ConnectionOptimizer>();
-  w.addTool<LineAnalyser2D>();*/
+  w.addTool<DetectorProfilePanel>();
+  w.addTool<AccuracyPanel>();
+  w.addTool<LineAnalyser2D>();
 
   w.show();
 

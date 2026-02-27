@@ -12,8 +12,8 @@ class LineAnalyser2D : public LATool {
   Q_OBJECT
 
   // Typedef
-  typedef ControlWindow::LineSegmentVector LineVector;
-  typedef ControlWindow::LineSegment Line;
+  typedef ControlWindow::LineVector LineVector;
+  typedef ControlWindow::Line Line;
 
   // Correct Line Data
   struct CLData {
@@ -38,6 +38,7 @@ class LineAnalyser2D : public LATool {
            int posCL,
            bool isDrawn = false)
         : segment(cline),
+          line(nullptr),
           error(error),
           angle_diff(angle_diff),
           length_diff(length_diff),
@@ -59,7 +60,7 @@ class LineAnalyser2D : public LATool {
     bool isDrawn = false;              /* Check if line is already drawn in plot window */
 
     GTData(const lsfm::LineSegment2d gtline, int posGT, bool isDrawn = false)
-        : segment(gtline), posGT(posGT), isDrawn(isDrawn) {}
+        : segment(gtline), line(nullptr), posGT(posGT), isDrawn(isDrawn) {}
   };
 
   typedef std::vector<GTData> GTDataVector;
@@ -92,10 +93,10 @@ class LineAnalyser2D : public LATool {
   AnalyserOptions* ao; /* AnalyserOptions UI */
 
  public:
-  explicit LineAnalyser2D(QWidget* parent = 0);
+  explicit LineAnalyser2D(QWidget* parent = nullptr);
   ~LineAnalyser2D();
 
-  void connectTools(ControlWindow* w);
+  void connectTools(ControlWindow* w) override;
 
   double anglediff(const lsfm::LineSegment2d& gtline, const lsfm::LineSegment2d& line);
   double miscalculation(const lsfm::LineSegment2d& gtline, const lsfm::LineSegment2d& line);
@@ -157,7 +158,9 @@ class LineAnalyser2D : public LATool {
  private:
   CLData* clDataTemp;
   GTData* gtDataTemp;
+  lsfm::LineSegment2d lockedGTLine_storage;
   const lsfm::LineSegment2d* lockedGTLine;
+  lsfm::LineSegment2d lockedOtherLine_storage;
   const lsfm::LineSegment2d* lockedOtherLine;
   bool displayMode;
   bool debugMode;

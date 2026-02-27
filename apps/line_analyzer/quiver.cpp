@@ -1,5 +1,7 @@
 #include "quiver.h"
 
+#include "help_button.hpp"
+
 #include <iostream>
 
 Quiver::Quiver(QWidget* parent)
@@ -15,6 +17,57 @@ Quiver::Quiver(QWidget* parent)
   ui->cb_interpolate->setCurrentIndex(3);
 
   ui->pb_color->setStyleSheet("background-color: rgb(0,255,0);");
+
+  // Tooltips for all controls.
+  setToolTip(
+      tr("Display gradient vector fields (quivers) as arrows "
+         "overlaid on the image."));
+  ui->rb_gradient->setToolTip(tr("Display raw horizontal (Gx) and vertical (Gy) gradient components."));
+  ui->rb_direction->setToolTip(tr("Display edge direction vectors (perpendicular to gradient)."));
+  ui->rb_phase->setToolTip(tr("Display gradient phase angles as arrows."));
+  ui->rb_phase_dir->setToolTip(tr("Overlay both phase and direction vectors."));
+  ui->chb_threshold->setToolTip(
+      tr("Only display arrows where gradient magnitude "
+         "exceeds the threshold value."));
+  ui->chb_scaling->setToolTip(tr("Scale arrow length proportionally to gradient magnitude."));
+  ui->sb_threshold->setToolTip(tr("Minimum gradient magnitude for an arrow to be displayed."));
+  ui->sb_interpolate->setToolTip(
+      tr("Area in pixels over which gradient values are "
+         "averaged for each arrow."));
+  ui->cb_interpolate->setToolTip(tr("OpenCV interpolation method (NN, Linear, Cubic, Area, Lanczos4)."));
+  ui->pb_color->setToolTip(tr("Choose the arrow color."));
+  ui->chb_visibility->setToolTip(tr("Toggle arrow visibility on the image."));
+  ui->pb_apply->setToolTip(tr("Apply the current settings and recompute the quiver overlay."));
+  ui->pb_delete->setToolTip(tr("Remove all arrows from the image."));
+
+  // Help button.
+  addHelpButton(this, tr("Help \xe2\x80\x94 Quiver Visualization"),
+                tr("<h3>Quiver Visualization</h3>"
+                   "<p>Displays gradient vector fields as arrows overlaid on the "
+                   "image. Useful for inspecting gradient directions and magnitudes "
+                   "computed by the edge detector.</p>"
+                   "<h4>Mode</h4>"
+                   "<ul>"
+                   "<li><b>Gx and Gy:</b> Raw horizontal/vertical gradient components.</li>"
+                   "<li><b>Direction:</b> Edge direction vectors (perpendicular to gradient).</li>"
+                   "<li><b>Phase:</b> Gradient phase angles as arrows.</li>"
+                   "<li><b>Phase + Direction:</b> Both phase and direction overlaid.</li>"
+                   "</ul>"
+                   "<h4>Options</h4>"
+                   "<ul>"
+                   "<li><b>Use Thresholding:</b> Only show arrows above the threshold.</li>"
+                   "<li><b>Threshold:</b> Minimum magnitude for display.</li>"
+                   "<li><b>Use Scaling:</b> Arrow length proportional to magnitude.</li>"
+                   "<li><b>Pixel Area:</b> Averaging area per arrow.</li>"
+                   "<li><b>Interpolation Mode:</b> OpenCV interpolation method.</li>"
+                   "</ul>"
+                   "<h4>Controls</h4>"
+                   "<ul>"
+                   "<li><b>Select Color:</b> Arrow color.</li>"
+                   "<li><b>Display Quivers:</b> Toggle visibility.</li>"
+                   "<li><b>Apply:</b> Recompute arrows with current settings.</li>"
+                   "<li><b>Delete Quivers:</b> Remove all arrows.</li>"
+                   "</ul>"));
 }
 
 Quiver::~Quiver() { delete ui; }

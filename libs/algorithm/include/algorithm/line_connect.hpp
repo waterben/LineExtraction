@@ -226,12 +226,26 @@ class LineConnect : public ValueManager {
       int iy = static_cast<int>(std::round(static_cast<double>(y)));
 
       if (ix >= 0 && ix < magnitude.cols && iy >= 0 && iy < magnitude.rows) {
-        if (magnitude.type() == CV_32F) {
-          sum += static_cast<FT>(magnitude.at<float>(iy, ix));
-        } else if (magnitude.type() == CV_64F) {
-          sum += static_cast<FT>(magnitude.at<double>(iy, ix));
-        } else {
-          sum += static_cast<FT>(magnitude.at<uchar>(iy, ix));
+        switch (magnitude.depth()) {
+          case CV_8U:
+            sum += static_cast<FT>(magnitude.at<uchar>(iy, ix));
+            break;
+          case CV_16U:
+            sum += static_cast<FT>(magnitude.at<ushort>(iy, ix));
+            break;
+          case CV_16S:
+            sum += static_cast<FT>(magnitude.at<short>(iy, ix));
+            break;
+          case CV_32S:
+            sum += static_cast<FT>(magnitude.at<int>(iy, ix));
+            break;
+          case CV_32F:
+            sum += static_cast<FT>(magnitude.at<float>(iy, ix));
+            break;
+          case CV_64F:
+          default:
+            sum += static_cast<FT>(magnitude.at<double>(iy, ix));
+            break;
         }
         ++valid;
       }

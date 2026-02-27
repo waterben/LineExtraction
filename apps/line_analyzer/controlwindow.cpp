@@ -5,6 +5,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <utility/test_images.hpp>
 
+#include <QMessageBox>
+
 
 using namespace std;
 
@@ -106,95 +108,101 @@ void ControlWindow::selectImage() {
 void ControlWindow::openPreprocess() { pp->show(); }
 
 void ControlWindow::loadImage() {
-  sources.clear();
-  ui->layout_image_options->setEnabled(false);
+  try {
+    sources.clear();
+    ui->layout_image_options->setEnabled(false);
 
-  string filename = ui->le_image_filename->text().toStdString();
+    string filename = ui->le_image_filename->text().toStdString();
 
-  img = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    img = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
-  if (img.empty()) {
-    cout << "Can not open " << filename << endl;
-    ui->le_image_filename->setText("None");
-    return;
-  }
+    if (img.empty()) {
+      cout << "Can not open " << filename << endl;
+      ui->le_image_filename->setText("None");
+      return;
+    }
 
-  float_type s = static_cast<float_type>(pp->ui->spin_scale->value());
-  if (pp->ui->chb_scale->isChecked() && s != 1.0) {
-    cv::resize(img, img, cv::Size(), s, s, pp->ui->cb_interp->currentIndex());
-  }
+    float_type s = static_cast<float_type>(pp->ui->spin_scale->value());
+    if (pp->ui->chb_scale->isChecked() && s != 1.0) {
+      cv::resize(img, img, cv::Size(), s, s, pp->ui->cb_interp->currentIndex());
+    }
 
-  if (img.channels() != 1) {
-    sources.push_back(ImageSource("Image", img));
-    sources.back().modes.push_back(ImageMode("RGB"));
+    if (img.channels() != 1) {
+      sources.push_back(ImageSource("Image", img));
+      sources.back().modes.push_back(ImageMode("RGB"));
 
-    cv::Mat tmp;
-    cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
+      cv::Mat tmp;
+      cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
 
-    sources.push_back(ImageSource("Image (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
-    if (pp->ui->chb_gray->isChecked())
-      src = tmp.clone();
-    else
+      sources.push_back(ImageSource("Image (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
+      if (pp->ui->chb_gray->isChecked())
+        src = tmp.clone();
+      else
+        src = img.clone();
+    } else {
+      sources.push_back(ImageSource("Image (grayscale)", img, Detector::imageModePresets, QCPRange(0, 255)));
       src = img.clone();
-  } else {
-    sources.push_back(ImageSource("Image (grayscale)", img, Detector::imageModePresets, QCPRange(0, 255)));
-    src = img.clone();
+    }
+
+    if (pp->ui->chb_noise->isChecked()) {
+      lsfm::GaussianNoiseOperator noise(pp->ui->spin_noise->value());
+      noise(src);
+      if (src.channels() != 1) {
+        sources.push_back(ImageSource("Noise", src.clone()));
+        sources.back().modes.push_back(ImageMode("RGB"));
+
+        cv::Mat tmp;
+        cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
+
+        sources.push_back(ImageSource("Noise (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
+      } else
+        sources.push_back(ImageSource("Noise (grayscale)", src.clone(), Detector::imageModePresets, QCPRange(0, 255)));
+    }
+
+    if (pp->ui->chb_blur->isChecked()) {
+      cv::GaussianBlur(src, src, cv::Size(), pp->ui->spin_blur->value());
+      if (src.channels() != 1) {
+        sources.push_back(ImageSource("Blured", src.clone()));
+        sources.back().modes.push_back(ImageMode("RGB"));
+
+        cv::Mat tmp;
+        cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
+
+        sources.push_back(ImageSource("Blured (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
+      } else
+        sources.push_back(ImageSource("Blured (grayscale)", src.clone(), Detector::imageModePresets, QCPRange(0, 255)));
+    }
+
+    inputSourcesSize = sources.size();
+
+    ui->layout_line_options->setDisabled(true);
+    ui->pb_normal_flip->setDisabled(true);
+    ui->pb_endpoint_flip->setDisabled(true);
+    ui->pb_lines_freeze->setDisabled(true);
+    ui->pb_lines_reset->setDisabled(true);
+
+    ui->table_lines->blockSignals(true);
+    ui->table_lines->setRowCount(0);
+    ui->table_lines->clearSelection();
+    ui->table_lines->scrollToTop();
+    ui->table_lines->blockSignals(false);
+    clearLines();
+
+    ui->layout_image_options->setEnabled(true);
+    ui->cb_image_source->setEnabled(true);
+    ui->cb_image_mode->setEnabled(true);
+    ui->pb_image_fit->setEnabled(true);
+    if (detectors.size()) ui->pb_detector_process->setEnabled(true);
+    loadSources();
+    lplot->show();
+    updateSource();
+    lplot->keepAspectRatio(true, static_cast<float_type>(src.cols) / src.rows);
+    lplot->replot();
+    emit sourcesChanged(sources);
+  } catch (const std::exception& ex) {
+    std::cerr << "loadImage failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Load Image Error"), tr("Failed to load image:\n%1").arg(ex.what()));
   }
-
-  if (pp->ui->chb_noise->isChecked()) {
-    lsfm::GaussianNoiseOperator noise(pp->ui->spin_noise->value());
-    noise(src);
-    if (src.channels() != 1) {
-      sources.push_back(ImageSource("Noise", src.clone()));
-      sources.back().modes.push_back(ImageMode("RGB"));
-
-      cv::Mat tmp;
-      cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
-
-      sources.push_back(ImageSource("Noise (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
-    } else
-      sources.push_back(ImageSource("Noise (grayscale)", src.clone(), Detector::imageModePresets, QCPRange(0, 255)));
-  }
-
-  if (pp->ui->chb_blur->isChecked()) {
-    cv::GaussianBlur(src, src, cv::Size(), pp->ui->spin_blur->value());
-    if (src.channels() != 1) {
-      sources.push_back(ImageSource("Blured", src.clone()));
-      sources.back().modes.push_back(ImageMode("RGB"));
-
-      cv::Mat tmp;
-      cv::cvtColor(img, tmp, cv::COLOR_BGR2GRAY);
-
-      sources.push_back(ImageSource("Blured (grayscale)", tmp, Detector::imageModePresets, QCPRange(0, 255)));
-    } else
-      sources.push_back(ImageSource("Blured (grayscale)", src.clone(), Detector::imageModePresets, QCPRange(0, 255)));
-  }
-
-  inputSourcesSize = sources.size();
-
-  ui->layout_line_options->setDisabled(true);
-  ui->pb_normal_flip->setDisabled(true);
-  ui->pb_endpoint_flip->setDisabled(true);
-  ui->pb_lines_freeze->setDisabled(true);
-  ui->pb_lines_reset->setDisabled(true);
-
-  ui->table_lines->blockSignals(true);
-  ui->table_lines->setRowCount(0);
-  ui->table_lines->clearSelection();
-  ui->table_lines->scrollToTop();
-  ui->table_lines->blockSignals(false);
-  clearLines();
-
-  ui->layout_image_options->setEnabled(true);
-  ui->cb_image_source->setEnabled(true);
-  ui->cb_image_mode->setEnabled(true);
-  ui->pb_image_fit->setEnabled(true);
-  if (detectors.size()) ui->pb_detector_process->setEnabled(true);
-  loadSources();
-  lplot->show();
-  updateSource();
-  lplot->keepAspectRatio(true, static_cast<float_type>(src.cols) / src.rows);
-  lplot->replot();
 }
 
 void ControlWindow::loadSources() {
@@ -310,56 +318,61 @@ void ControlWindow::processQuiver() {
     return;
   }
 
-  for_each(quiver.begin(), quiver.end(), [&](Line& l) { lplot->qplot->removeItem(l.line); });
-  quiver.clear();
+  try {
+    for_each(quiver.begin(), quiver.end(), [&](Line& l) { lplot->qplot->removeItem(l.line); });
+    quiver.clear();
 
-  cv::Mat mag, gx, gy, dir, phase, energy;
-  for_each(sources.begin(), sources.end(), [&](ImageSource& is) {
-    if (is.name.compare(QString("mag"), Qt::CaseInsensitive) == 0) {
-      mag = is.data.clone();
-    }
-    if (is.name.compare(QString("gx"), Qt::CaseInsensitive) == 0) {
-      gx = is.data.clone();
-    }
-    if (is.name.compare(QString("gy"), Qt::CaseInsensitive) == 0) {
-      gy = is.data.clone();
-    }
-    if (is.name.compare(QString("dir"), Qt::CaseInsensitive) == 0) {
-      dir = is.data;
-    }
-    if (is.name.compare(QString("phase"), Qt::CaseInsensitive) == 0) {
-      phase = is.data.clone();
-    }
-    if (is.name.compare(QString("energy"), Qt::CaseInsensitive) == 0) {
-      energy = is.data;
-    }
-  });
+    cv::Mat mag, gx, gy, dir, phase, energy;
+    for_each(sources.begin(), sources.end(), [&](ImageSource& is) {
+      if (is.name.compare(QString("mag"), Qt::CaseInsensitive) == 0) {
+        mag = is.data.clone();
+      }
+      if (is.name.compare(QString("gx"), Qt::CaseInsensitive) == 0) {
+        gx = is.data.clone();
+      }
+      if (is.name.compare(QString("gy"), Qt::CaseInsensitive) == 0) {
+        gy = is.data.clone();
+      }
+      if (is.name.compare(QString("dir"), Qt::CaseInsensitive) == 0) {
+        dir = is.data;
+      }
+      if (is.name.compare(QString("phase"), Qt::CaseInsensitive) == 0) {
+        phase = is.data.clone();
+      }
+      if (is.name.compare(QString("energy"), Qt::CaseInsensitive) == 0) {
+        energy = is.data;
+      }
+    });
 
-  if (qo->data_mode == 0) {
-    gradientQuiver(mag, gx, gy);
-  }
-  if (qo->data_mode == 1) {
-    angleQuiver(dir, mag);
-  }
-  if (qo->data_mode == 2) {
-    angleQuiver(phase, energy);
-  }
-  if (qo->data_mode == 3) {
-    angleQuiver(dir + phase, energy);
-  }
+    if (qo->data_mode == 0) {
+      gradientQuiver(mag, gx, gy);
+    }
+    if (qo->data_mode == 1) {
+      angleQuiver(dir, mag);
+    }
+    if (qo->data_mode == 2) {
+      angleQuiver(phase, energy);
+    }
+    if (qo->data_mode == 3) {
+      angleQuiver(dir + phase, energy);
+    }
 
-  // draw the quivers
-  lplot->hold(true);
-  for_each(quiver.begin(), quiver.end(), [&](Line& q) {
-    const LineSegment& qs = q.segment;
-    lplot->qplot->setCurrentLayer("quiver");
-    q.line = lplot->line(qs, false);
-    q.line->setHead(QCPLineEnding(QCPLineEnding::esSpikeArrow, 4, 5));
-    q.line->setPen(qo->qPen);
-  });
-  lplot->hold(false);
-  lplot->qplot->layer("quiver")->setVisible(qo->ui->chb_visibility->isChecked());
-  lplot->replot();
+    // draw the quivers
+    lplot->hold(true);
+    for_each(quiver.begin(), quiver.end(), [&](Line& q) {
+      const LineSegment& qs = q.segment;
+      lplot->qplot->setCurrentLayer("quiver");
+      q.line = lplot->line(qs, false);
+      q.line->setHead(QCPLineEnding(QCPLineEnding::esSpikeArrow, 4, 5));
+      q.line->setPen(qo->qPen);
+    });
+    lplot->hold(false);
+    lplot->qplot->layer("quiver")->setVisible(qo->ui->chb_visibility->isChecked());
+    lplot->replot();
+  } catch (const std::exception& ex) {
+    std::cerr << "processQuiver failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Quiver Error"), tr("Quiver computation failed:\n%1").arg(ex.what()));
+  }
 }
 
 void ControlWindow::gradientQuiver(cv::Mat mag, cv::Mat gx, cv::Mat gy) {
@@ -599,7 +612,24 @@ void ControlWindow::selectDetector() {
   ui->table_detector_params->blockSignals(false);
   ui->table_detector_params->resizeColumnsToContents();
   ui->table_detector_params->horizontalHeader()->setStretchLastSection(true);
+
+  emit detectorChanged(detector->name);
 }
+
+DetectorPtr ControlWindow::getCurrentDetector() const {
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return nullptr;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return nullptr;
+  return detectors[detectorIndex];
+}
+
+QString ControlWindow::getCurrentDetectorName() const {
+  auto det = getCurrentDetector();
+  return det ? det->name : QString();
+}
+
+void ControlWindow::refreshDetectorOptions() { selectDetector(); }
 
 void ControlWindow::resetDetector() {
   const int detectorIdx = ui->cb_detector_select->currentIndex();
@@ -669,18 +699,23 @@ void ControlWindow::processData() {
               << "Disable it to load color images." << std::endl;
     return;
   }
-  double stime = double(cv::getTickCount());
-  LineSegmentVector l = detector->detect(src);
-  std::cout << "Time for line detection: " << (double(cv::getTickCount()) - stime) * 1000 / cv::getTickFrequency()
-            << "ms" << std::endl;
+  try {
+    double stime = double(cv::getTickCount());
+    LineSegmentVector l = detector->detect(src);
+    std::cout << "Time for line detection: " << (double(cv::getTickCount()) - stime) * 1000 / cv::getTickFrequency()
+              << "ms" << std::endl;
 
-  ImageSources ds = detector->sources(src);
-  sources.insert(sources.end(), ds.begin(), ds.end());
-  loadSources();
-  lplot->show();
-  updateSource(false);
-  deleteQuivers(false);
-  setLines(l);
+    ImageSources ds = detector->sources(src);
+    sources.insert(sources.end(), ds.begin(), ds.end());
+    loadSources();
+    lplot->show();
+    updateSource(false);
+    deleteQuivers(false);
+    setLines(l);
+  } catch (const std::exception& ex) {
+    std::cerr << "Detection failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Detection Error"), tr("Line detection failed:\n%1").arg(ex.what()));
+  }
 }
 
 void ControlWindow::clearLines() {

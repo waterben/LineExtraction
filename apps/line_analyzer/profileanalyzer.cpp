@@ -1,8 +1,12 @@
 #include "profileanalyzer.h"
 
 #include "controlwindow.h"
+#include "help_button.hpp"
 #include "ui_profileanalyzer.h"
 #include <imgproc/mean.hpp>
+
+#include <QMessageBox>
+
 
 using namespace std;
 
@@ -46,6 +50,72 @@ ProfileAnalyzer::ProfileAnalyzer(QWidget* parent)
   pa_indicator = nullptr;
 
   createX();
+
+  // Tooltips explaining the analyzer and its controls.
+  setToolTip(
+      tr("Visualize the gradient profile perpendicular to a selected "
+         "line segment. The blue curve shows the mean gradient response "
+         "and the shaded band shows the standard deviation."));
+  ui->cb_data_source->setToolTip(tr("Image source to sample the profile from."));
+  ui->cb_interp->setToolTip(tr("Interpolation method for sampling perpendicular to the line."));
+  ui->spin_profile_range->setToolTip(
+      tr("Half-range in pixels around the line center for "
+         "profile evaluation."));
+  ui->spin_line_dist->setToolTip(tr("Number of support pixels along the line for averaging."));
+  ui->chb_line_dist->setToolTip(
+      tr("Interpret Line Distance as discrete sample count "
+         "instead of pixel spacing."));
+  ui->spin_subdiv->setToolTip(
+      tr("Evaluation points per pixel in the profile range. "
+         "Higher = finer resolution."));
+  ui->fast_interp->setToolTip(tr("Use faster approximate interpolation (may be less accurate)."));
+  ui->chb_profile_show->setToolTip(tr("Toggle the mean gradient profile curve (blue)."));
+  ui->chb_std_dev->setToolTip(
+      tr("Toggle the \xc2\xb1"
+         "1\xcf\x83 standard deviation band."));
+  ui->chb_single->setToolTip(
+      tr("Show a red curve for a single cross-section at "
+         "the specified position along the line."));
+  ui->spin_profile_pos->setToolTip(
+      tr("Position along the line (0 = start, max = end) "
+         "for the single-point profile."));
+  ui->slider_profile_pos->setToolTip(tr("Drag to move the single-point sample position along the line."));
+  ui->chb_profile_fit->setToolTip(tr("Automatically scale the plot axes to fit all visible data."));
+  ui->pb_profile_fit->setToolTip(tr("Manually rescale the plot to fit all visible curves."));
+
+  // Help button.
+  addHelpButton(this, tr("Help \xe2\x80\x94 Profile Analyzer"),
+                tr("<h3>Line Profile Analyzer</h3>"
+                   "<p>Visualizes the gradient response profile perpendicular "
+                   "to a selected line segment.</p>"
+                   "<p><b>Blue curve:</b> Mean gradient response averaged along "
+                   "the line length.<br/>"
+                   "<b>Shaded band:</b> \xc2\xb1"
+                   "1 standard deviation.<br/>"
+                   "<b>Red curve:</b> Single-point profile at a specific "
+                   "position along the line.</p>"
+                   "<h4>Parameters</h4>"
+                   "<ul>"
+                   "<li><b>Select Source:</b> Gradient image to sample from.</li>"
+                   "<li><b>Profile Range:</b> \xc2\xb1"
+                   "pixels around the line center.</li>"
+                   "<li><b>Line Distance:</b> Support pixels for averaging.</li>"
+                   "<li><b>Use Line Distance as Line Samples:</b> Discrete mode.</li>"
+                   "<li><b>Subdivisions:</b> Evaluation points per pixel.</li>"
+                   "<li><b>Interpolation:</b> Sampling method.</li>"
+                   "<li><b>Fast Interpolation:</b> Approximate sampling.</li>"
+                   "</ul>"
+                   "<h4>Display</h4>"
+                   "<ul>"
+                   "<li><b>Show Profile:</b> Toggle mean profile (blue).</li>"
+                   "<li><b>Show Standard Deviation:</b> Toggle \xc2\xb1"
+                   "\xcf\x83 band.</li>"
+                   "<li><b>Show single Profile on Line:</b> Single-point "
+                   "cross-section (red).</li>"
+                   "<li><b>Profile Position:</b> Where along the line to sample.</li>"
+                   "<li><b>Auto Fit to Range:</b> Auto-scale plot axes.</li>"
+                   "<li><b>Fit Profile:</b> Manual axis rescale.</li>"
+                   "</ul>"));
 }
 
 ProfileAnalyzer::~ProfileAnalyzer() {
@@ -181,52 +251,67 @@ void ProfileAnalyzer::fitProfile() {
 void ProfileAnalyzer::updatePlot() {
   if (sources == nullptr) return;
 
-  if (ui->chb_profile_show->isChecked()) {
-    createProfile();
-    plotProfile();
-  }
+  try {
+    if (ui->chb_profile_show->isChecked()) {
+      createProfile();
+      plotProfile();
+    }
 
-  if (ui->chb_single->isChecked()) {
-    createSProfile();
-    plotSProfile();
-  }
+    if (ui->chb_single->isChecked()) {
+      createSProfile();
+      plotSProfile();
+    }
 
-  if (ui->chb_profile_fit->isChecked())
-    fitProfile();
-  else {
-    plot->show();
-    plot->replot();
+    if (ui->chb_profile_fit->isChecked())
+      fitProfile();
+    else {
+      plot->show();
+      plot->replot();
+    }
+  } catch (const std::exception& ex) {
+    std::cerr << "Profile plot failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Profile Error"), tr("Profile plot failed:\n%1").arg(ex.what()));
   }
 }
 
 void ProfileAnalyzer::updateProfile() {
   if (sources == nullptr) return;
 
-  if (ui->chb_profile_show->isChecked()) {
-    createProfile();
-    plotProfile();
-  }
+  try {
+    if (ui->chb_profile_show->isChecked()) {
+      createProfile();
+      plotProfile();
+    }
 
-  if (ui->chb_profile_fit->isChecked())
-    fitProfile();
-  else {
-    plot->show();
-    plot->replot();
+    if (ui->chb_profile_fit->isChecked())
+      fitProfile();
+    else {
+      plot->show();
+      plot->replot();
+    }
+  } catch (const std::exception& ex) {
+    std::cerr << "Profile update failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Profile Error"), tr("Profile update failed:\n%1").arg(ex.what()));
   }
 }
 
 void ProfileAnalyzer::updateSProfile() {
   if (sources == nullptr) return;
 
-  if (ui->chb_single->isChecked()) {
-    createSProfile();
-    plotSProfile();
-  }
-  if (ui->chb_profile_fit->isChecked())
-    fitProfile();
-  else {
-    plot->show();
-    plot->replot();
+  try {
+    if (ui->chb_single->isChecked()) {
+      createSProfile();
+      plotSProfile();
+    }
+    if (ui->chb_profile_fit->isChecked())
+      fitProfile();
+    else {
+      plot->show();
+      plot->replot();
+    }
+  } catch (const std::exception& ex) {
+    std::cerr << "Single profile update failed: " << ex.what() << std::endl;
+    QMessageBox::warning(this, tr("Profile Error"), tr("Single profile update failed:\n%1").arg(ex.what()));
   }
 }
 
