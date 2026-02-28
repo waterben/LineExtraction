@@ -4,9 +4,11 @@
 #include "latool.h"
 #include "preprocessing.h"
 #include "quiver.h"
+#include <algorithm/preset_store.hpp>
 #include <qplot/PlotWindow.h>
 
 #include <QColorDialog>
+#include <QComboBox>
 #include <QFileDialog>
 #include <QMainWindow>
 
@@ -34,6 +36,9 @@ class ControlWindow : public QMainWindow {
   size_t inputSourcesSize;
 
   DetectorVector detectors;
+
+  lsfm::PresetStore presetStore;
+  QComboBox* cbPreset{nullptr};
 
   QCPItemLine* indicator;
 
@@ -119,6 +124,10 @@ class ControlWindow : public QMainWindow {
   cv::Mat& getSrcImg() { return img; }
   PlotWindow* getPlotWindow() { return lplot; }
 
+  /// @brief Set the image path and trigger a load.
+  /// @param path Absolute path to the image file.
+  void setImagePath(const QString& path);
+
   /// @brief Get the currently selected detector.
   /// @return Shared pointer to the current detector, or nullptr if none selected.
   DetectorPtr getCurrentDetector() const;
@@ -147,6 +156,9 @@ class ControlWindow : public QMainWindow {
 
   /// @brief Refresh the detector parameter table from the current detector's ValueManager.
   void refreshDetectorOptions();
+
+  /// @brief Apply the selected preset to the current detector.
+  void applyPreset(int presetIndex);
 
   // line stuff
   void updateLine(int idx);
@@ -222,6 +234,18 @@ class ControlWindow : public QMainWindow {
   void clearLines();
 
   void connectQuiver();
+
+  /// @brief Resolve a display name like "LSD CC" to a DetectorId.
+  /// @param name Detector display name from the combo box.
+  /// @return Pair of (found, DetectorId). found is false for unsupported detectors.
+  static std::pair<bool, lsfm::DetectorId> resolveDetectorId(const QString& name);
+
+  /// @brief Find the presets JSON file path relative to the workspace.
+  /// @return Absolute path to lsd_presets.json, or empty string if not found.
+  static std::string findPresetsPath();
+
+  /// @brief Update the preset combo box state for the current detector.
+  void updatePresetCombo();
 
   QPen pen, mPen, nPen, nmPen, selPen, nSelPen, iPen;
 };

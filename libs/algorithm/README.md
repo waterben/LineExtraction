@@ -80,6 +80,45 @@ criteria simultaneously:
 | `parallel_error` | 10 | Maximum parallel gap (pixels) |
 | `merge_type` | `STANDARD` | `STANDARD` (furthest endpoints) or `AVG` (average positions) |
 
+#### Merge Criteria Illustrated
+
+Two segments A and B are merged when **all four** criteria pass:
+
+```
+  1. Endpoint distance ≤ max_dist (smallest of 4 endpoint pairs)
+
+        max_dist
+       |<------->|
+  A ===●          ●=== B
+
+  2. Angle difference ≤ angle_error (in degrees, 0–90° range)
+
+                     ╱ B
+  A ══════════      ╱
+              α° ──╱       α must be ≤ angle_error
+
+  3. Perpendicular distance ≤ distance_error
+     (midpoint of B projected onto line through A)
+
+  A ════════════════════
+                  |
+           d⊥     |  ← perpendicular distance
+                  |
+             ●────── midpoint of B
+        B ═══════════
+
+  4. Parallel gap ≤ parallel_error
+     (projection of all endpoints onto A's direction)
+
+  A ══════════                 B ══════
+             |<── gap ──>|
+  gap = 0 if segments overlap along the direction.
+```
+
+The process repeats until convergence (no more merges possible).
+
+> **GUI:** The [Continuity Optimizer](../../apps/line_analyzer/extensions/continuityoptimizer/README.md) in the Line Analyzer app provides an interactive UI for this algorithm.
+
 ```cpp
 #include <algorithm/line_merge.hpp>
 
@@ -105,6 +144,23 @@ The algorithm evaluates all four endpoint pairings (start–start,
 start–end, end–start, end–end) and picks the one with the highest
 gradient response above the threshold.
 
+#### Connection Process Illustrated
+
+```
+  A ════●              ●════ B
+        |              |
+        |<── radius ──>|    (must be ≤ max_radius)
+        |              |
+        ○──○──○──○──○──○    gradient samples (every `accuracy` px)
+              ↓
+  avg(samples) ≥ threshold  → connect!
+
+  Before:  A ●════●         ●════● B
+  After:   A ●════════════════════● B   (endpoints extended)
+```
+
+> **GUI:** The [Connection Optimizer](../../apps/line_analyzer/extensions/connectionoptimizer/README.md) in the Line Analyzer app provides an interactive UI for this algorithm.
+
 ```cpp
 #include <algorithm/line_connect.hpp>
 
@@ -128,6 +184,16 @@ to ground truth using endpoint distance.
 A detected segment matches a ground truth segment when the minimum of
 the two endpoint-to-endpoint distance averages (forward and reversed) is
 below the threshold.
+
+```
+  GT:  A ●════════════● B
+
+  Det: C ●═══════════● D     avg(dist(A,C) + dist(B,D)) ≤ threshold → TP
+       E ●══════● F                                    dist > threshold → FP
+                                                     GT not matched → FN
+```
+
+> **GUI:** The [Accuracy Measure](../../apps/line_analyzer/extensions/accuracy/README.md) and [Line Analyser 2D](../../apps/line_analyzer/extensions/lineanalyser2d/README.md) panels in the Line Analyzer app provide interactive UIs for accuracy evaluation.
 
 ```cpp
 #include <algorithm/accuracy_measure.hpp>
@@ -270,6 +336,20 @@ numerical optimisation (BFGS / L-BFGS / Conjugate Gradient via dlib).
 Searches over orthogonal translation and rotation to maximise the
 mean gradient response along the segment.
 
+```
+  Search space (2 degrees of freedom):
+
+       ←── d (orthogonal offset, ±pixels) ──→
+
+              ╱  r (rotation, ±degrees)
+       ●═════╱══════════●
+             ╱
+            ╱
+       ●══════════════════●   ← optimized position (max gradient)
+```
+
+> **GUI:** The [Precision Optimizer](../../apps/line_analyzer/extensions/precisionoptimizer/README.md) and [PO Function Plot](../../apps/line_analyzer/extensions/pofuncplot/README.md) panels in the Line Analyzer app provide interactive UIs for this algorithm.
+
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `search_range_d` | 1.0 | Orthogonal search range (pixels) |
@@ -308,6 +388,8 @@ can be used to suggest adaptive detector profile knob values via
 
 The analyzer accepts both grayscale and color images (auto-converted
 to 8-bit grayscale internally).
+
+> **GUI:** The [Image Analyzer](../../apps/line_analyzer/extensions/imageanalyzer/README.md) panel in the Line Analyzer app provides an interactive UI for this analysis.
 
 #### Measured Properties (`ImageProperties`)
 
@@ -361,6 +443,8 @@ Translates 4 intuitive percentage knobs into concrete detector parameters
 for all 9 supported LSD detectors.  This abstraction lets users control
 detection behaviour without knowing the internal parameter names of each
 algorithm.
+
+> **GUI:** The [Detector Profile](../../apps/line_analyzer/extensions/detectorprofile/README.md) panel in the Line Analyzer app provides an interactive UI with sliders for this algorithm.
 
 #### Knob Semantics
 

@@ -58,6 +58,7 @@ import numpy as np
 _le_algorithm: Any = None
 _le_geometry: Any = None
 _le_lsd: Any = None
+_cv2: Any = None
 
 
 def _import_modules() -> None:
@@ -76,6 +77,35 @@ def _import_modules() -> None:
     _le_algorithm = le_algorithm
     _le_geometry = le_geometry
     _le_lsd = le_lsd
+
+
+def _ensure_cv2() -> Any:
+    """Lazily import OpenCV (needed only for ``--refine``).
+
+    :return: The ``cv2`` module.
+    :rtype: module
+    """
+    global _cv2  # noqa: PLW0603
+    if _cv2 is None:
+        import cv2  # type: ignore[import-untyped]
+
+        _cv2 = cv2
+    return _cv2
+
+
+def _compute_gradient_magnitude(gray: np.ndarray) -> np.ndarray:
+    """Compute gradient magnitude from a grayscale image using Sobel.
+
+    :param gray: Grayscale input image (uint8).
+    :type gray: numpy.ndarray
+    :return: Gradient magnitude image (float32).
+    :rtype: numpy.ndarray
+    """
+    cv2 = _ensure_cv2()
+    gray_f = gray.astype(np.float32) / 255.0
+    gx = cv2.Sobel(gray_f, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(gray_f, cv2.CV_32F, 0, 1, ksize=3)
+    return cv2.magnitude(gx, gy)
 
 
 # ---------------------------------------------------------------------------
@@ -468,6 +498,7 @@ def _combo_worker(
     gt_map: dict[str, list[Any]],
     match_threshold: float,
     result_queue: mp.Queue,
+    refine: bool = False,
 ) -> None:
     """Run one (detector, strategy) combo inside a subprocess.
 
@@ -489,8 +520,11 @@ def _combo_worker(
     :type match_threshold: float
     :param result_queue: Queue to put results into.
     :type result_queue: multiprocessing.Queue
+    :param refine: Apply precision refinement to detected segments.
+    :type refine: bool
     """
     measure = _le_algorithm.AccuracyMeasure(threshold=match_threshold)
+    precision_opt = _le_algorithm.PrecisionOptimize() if refine else None
     stats: list[ImageStats] = []
 
     for img_idx, (img_name, img) in enumerate(images):
@@ -509,6 +543,11 @@ def _combo_worker(
                 exc,
             )
             continue
+
+        # Optional precision refinement of detected segments
+        if precision_opt is not None and detected:
+            mag = _compute_gradient_magnitude(img)
+            _, detected = precision_opt.optimize_all(mag, detected)
 
         result = measure.evaluate(detected, gt_segs)
 
@@ -538,6 +577,7 @@ def evaluate_all(
     images: list[tuple[str, np.ndarray]],
     gt_map: dict[str, list[Any]],
     match_threshold: float,
+    refine: bool = False,
 ) -> list[ImageStats]:
     """Run detection and evaluate across all combinations.
 
@@ -555,6 +595,8 @@ def evaluate_all(
     :type gt_map: dict[str, list]
     :param match_threshold: Endpoint distance threshold in pixels.
     :type match_threshold: float
+    :param refine: Apply precision refinement to detected segments.
+    :type refine: bool
     :return: List of per-image statistics records.
     :rtype: list[ImageStats]
     """
@@ -587,6 +629,7 @@ def evaluate_all(
                     gt_map,
                     match_threshold,
                     result_queue,
+                    refine,
                 ),
             )
             proc.start()
@@ -909,9 +952,12 @@ def run_statistics(args: argparse.Namespace) -> dict[str, Any]:
     print_image_property_summary(prop_summary)
 
     # --- Run detection ---
+    refine = getattr(args, "refine", False)
+    if refine:
+        log.info("Precision refinement enabled (--refine)")
     total_start = time.time()
     all_stats = evaluate_all(
-        detectors, strategies, images, gt_map, args.match_threshold
+        detectors, strategies, images, gt_map, args.match_threshold, refine=refine
     )
     total_elapsed = time.time() - total_start
     log.info("Evaluation complete in %s", format_duration(total_elapsed))
@@ -927,6 +973,7 @@ def run_statistics(args: argparse.Namespace) -> dict[str, Any]:
             "num_images": len(images),
             "num_gt_segments": total_gt_segs,
             "match_threshold": args.match_threshold,
+            "refine": refine,
             "strategies": strategies,
             "detectors": [n for n, _ in detectors],
             "total_duration_seconds": round(total_elapsed, 1),
@@ -1021,6 +1068,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Directory for CSV/JSON output (default: print only).",
+    )
+    parser.add_argument(
+        "--refine",
+        action="store_true",
+        help="Apply precision refinement (PrecisionOptimize) to detected "
+        "segments before accuracy evaluation. Requires OpenCV.",
     )
     parser.add_argument(
         "--verbose",

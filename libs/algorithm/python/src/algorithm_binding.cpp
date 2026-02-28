@@ -2,7 +2,7 @@
 /// @brief pybind11 bindings for the algorithm library.
 ///
 /// Binds LineMerge, LineConnect, AccuracyMeasure, GroundTruthLoader,
-/// search strategies, and ParamOptimizer to Python.
+/// search strategies, ParamOptimizer, and PrecisionOptimize to Python.
 
 #include "algorithm_binding.hpp"
 
@@ -13,6 +13,8 @@
 #include <algorithm/line_connect.hpp>
 #include <algorithm/line_merge.hpp>
 #include <algorithm/param_search.hpp>
+#include <algorithm/precision_optimize.hpp>
+#include <algorithm/preset_store.hpp>
 #include <algorithm/search_strategy.hpp>
 #include <cvnp/cvnp.h>
 #include <pybind11/functional.h>
@@ -352,9 +354,7 @@ void bind_param_optimizer(py::module_& m) {
             ProgressCallback cb = nullptr;
             if (!py_progress.is_none()) {
               auto progress_fn = py_progress.cast<std::function<bool(int, int, double)>>();
-              cb = [&progress_fn](int step, int total, double score) -> bool {
-                return progress_fn(step, total, score);
-              };
+              cb = [progress_fn](int step, int total, double score) -> bool { return progress_fn(step, total, score); };
             }
             return self.optimize(strategy, space, images, ground_truth, detect_fn, cb);
           },
@@ -509,6 +509,261 @@ void bind_detector_profile(py::module_& m) {
         std::ostringstream os;
         os << "DetectorProfile(detail=" << p.detail() << ", gap=" << p.gap_tolerance() << ", len=" << p.min_length()
            << ", prec=" << p.precision() << ")";
+        return os.str();
+      });
+}
+
+// ============================================================================
+// PrecisionOptimize binding
+// ============================================================================
+
+void bind_precision_optimize(py::module_& m) {
+  using LST = LineSegment<double, Vec2>;
+
+  // PrecisionSearchStrategy enum
+  py::enum_<PrecisionSearchStrategy>(m, "PrecisionSearchStrategy", "Search strategy for precision optimization.")
+      .value("BFGS", PrecisionSearchStrategy::BFGS, "BFGS quasi-Newton method.")
+      .value("LBFGS", PrecisionSearchStrategy::LBFGS, "Limited-memory BFGS.")
+      .value("CG", PrecisionSearchStrategy::CG, "Conjugate gradient.");
+
+  // PrecisionStopStrategy enum
+  py::enum_<PrecisionStopStrategy>(m, "PrecisionStopStrategy", "Stop strategy for precision optimization.")
+      .value("DELTA", PrecisionStopStrategy::DELTA, "Stop when objective delta < threshold.")
+      .value("GRAD_NORM", PrecisionStopStrategy::GRAD_NORM, "Stop when gradient norm < threshold.");
+
+  // InterpolationMode enum
+  py::enum_<InterpolationMode>(m, "InterpolationMode", "Interpolation mode for gradient sampling.")
+      .value("NEAREST", InterpolationMode::NEAREST, "Nearest neighbor.")
+      .value("NEAREST_ROUND", InterpolationMode::NEAREST_ROUND, "Fast rounded nearest neighbor.")
+      .value("BILINEAR", InterpolationMode::BILINEAR, "Bilinear interpolation.")
+      .value("BICUBIC", InterpolationMode::BICUBIC, "Bicubic interpolation.");
+
+  // PrecisionOptimize class
+  py::class_<PrecisionOptimize>(m, "PrecisionOptimize",
+                                "Headless precision optimizer for line segments.\n\n"
+                                "Refines line segment positions by maximizing gradient response\n"
+                                "along the line using dlib optimization. All parameters are exposed\n"
+                                "as a dict-based interface for easy programmatic configuration.\n\n"
+                                "Parameters:\n"
+                                "    search_range_d: Orthogonal distance search range in pixels (default: 1.0).\n"
+                                "    search_range_r: Rotation search range in degrees (default: 1.0).\n"
+                                "    interpolation: 0=nearest, 1=nearest_round, 2=bilinear, 3=bicubic (default: 2).\n"
+                                "    search_strategy: 0=BFGS, 1=LBFGS, 2=CG (default: 0).\n"
+                                "    stop_strategy: 0=delta, 1=gradient_norm (default: 0).\n"
+                                "    stop_delta: Stop criterion threshold (default: 1e-7).\n"
+                                "    max_iterations: Maximum iterations, 0=unlimited (default: 0).\n"
+                                "    derivative_precision: Numerical derivative delta (default: 1e-7).\n"
+                                "    mean_param: Mean calculation parameter (default: 1.0).\n"
+                                "    use_sampled: Use sampled mean calculation (default: false).\n"
+                                "    use_fast: Use fast interpolation (default: false).")
+      .def(py::init<>(), "Construct with default parameters.")
+      .def(py::init([](const py::dict& params) {
+             auto opt = std::make_unique<PrecisionOptimize>();
+             for (const auto& item : params) {
+               auto name = item.first.cast<std::string>();
+               py::object val = py::reinterpret_borrow<py::object>(item.second);
+               if (py::isinstance<py::bool_>(val)) {
+                 opt->value(name, Value(val.cast<bool>()));
+               } else if (py::isinstance<py::int_>(val)) {
+                 opt->value(name, Value(val.cast<int>()));
+               } else {
+                 opt->value(name, Value(val.cast<double>()));
+               }
+             }
+             return opt;
+           }),
+           py::arg("params"),
+           "Construct from a dict of parameter names to values.\n\n"
+           "Args:\n"
+           "    params: Dict mapping parameter names to values.")
+      // Parameter access
+      .def(
+          "get_params",
+          [](const PrecisionOptimize& self) {
+            py::dict result;
+            for (const auto& nv : self.values()) {
+              switch (nv.value.type()) {
+                case Value::INT:
+                  result[py::str(nv.name)] = nv.value.getInt();
+                  break;
+                case Value::BOOL:
+                  result[py::str(nv.name)] = nv.value.getBool();
+                  break;
+                case Value::STRING:
+                  result[py::str(nv.name)] = nv.value.getString();
+                  break;
+                default:
+                  result[py::str(nv.name)] = nv.value.getDouble();
+                  break;
+              }
+            }
+            return result;
+          },
+          "Get all parameters as a dict.\n\n"
+          "Returns:\n"
+          "    Dict mapping parameter names to current values.")
+      .def(
+          "set_params",
+          [](PrecisionOptimize& self, const py::dict& params) {
+            for (const auto& item : params) {
+              auto name = item.first.cast<std::string>();
+              py::object val = py::reinterpret_borrow<py::object>(item.second);
+              if (py::isinstance<py::bool_>(val)) {
+                self.value(name, Value(val.cast<bool>()));
+              } else if (py::isinstance<py::int_>(val)) {
+                self.value(name, Value(val.cast<int>()));
+              } else {
+                self.value(name, Value(val.cast<double>()));
+              }
+            }
+          },
+          py::arg("params"),
+          "Set parameters from a dict.\n\n"
+          "Args:\n"
+          "    params: Dict mapping parameter names to values.")
+      .def(
+          "param_descriptions",
+          [](const PrecisionOptimize& self) {
+            py::dict result;
+            for (const auto& nv : self.values()) {
+              result[py::str(nv.name)] = nv.description;
+            }
+            return result;
+          },
+          "Get parameter descriptions as a dict.\n\n"
+          "Returns:\n"
+          "    Dict mapping parameter names to description strings.")
+      // Optimization methods
+      .def(
+          "optimize_line",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude, const LST& line) {
+            LST copy = line;
+            double error = self.optimize_line(magnitude, copy);
+            return py::make_tuple(error, copy);
+          },
+          py::arg("magnitude"), py::arg("line"),
+          "Optimize a single line segment.\n\n"
+          "Refines the line position to maximize gradient response.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    line: Line segment to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (error, optimized_line) where error is the negative\n"
+          "    of the maximized mean gradient response.")
+      .def(
+          "optimize_all",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude, const std::vector<LST>& lines) {
+            std::vector<LST> output;
+            auto errors = self.optimize_copy(magnitude, lines, output);
+            return py::make_tuple(errors, output);
+          },
+          py::arg("magnitude"), py::arg("lines"),
+          "Optimize all line segments.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    lines: List of line segments to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (errors, optimized_lines) where errors is a list of\n"
+          "    error values and optimized_lines is the refined segments.")
+      .def("__repr__", [](const PrecisionOptimize&) { return "<PrecisionOptimize>"; });
+}
+
+// ============================================================================
+// PresetStore binding
+// ============================================================================
+
+void bind_preset_store(py::module_& m) {
+  py::class_<PresetStore>(m, "PresetStore",
+                          "Store of optimized detector parameter presets loaded from JSON.\n\n"
+                          "Load presets generated by ``optimize_presets.py`` and retrieve\n"
+                          "concrete detector parameters by preset name.\n\n"
+                          "Example::\n\n"
+                          "    store = le_algorithm.PresetStore('lsd_presets.json')\n"
+                          "    params = store.get(le_algorithm.DetectorId.LSD_CC, 'balanced')\n")
+      .def(py::init<>(), "Construct an empty preset store.")
+      .def(py::init<const std::string&>(), py::arg("json_path"),
+           "Load presets from a JSON file.\n\n"
+           "Args:\n"
+           "    json_path: Path to the presets JSON file.\n\n"
+           "Raises:\n"
+           "    RuntimeError: If the file cannot be read or parsed.")
+      .def_static("from_string", &PresetStore::from_string, py::arg("json_content"),
+                  "Parse presets from a JSON string.\n\n"
+                  "Args:\n"
+                  "    json_content: JSON content as a string.\n\n"
+                  "Returns:\n"
+                  "    PresetStore populated from the JSON.")
+      // Lookup by DetectorId
+      .def(
+          "get",
+          [](const PresetStore& self, DetectorId detector, const std::string& preset) {
+            return param_config_to_python(self.get(detector, preset));
+          },
+          py::arg("detector"), py::arg("preset_name"),
+          "Get parameters for a detector and preset.\n\n"
+          "Args:\n"
+          "    detector: DetectorId enum value.\n"
+          "    preset_name: Preset profile name ('fast', 'balanced', 'accurate').\n\n"
+          "Returns:\n"
+          "    List of {'name': str, 'value': ...} dicts.\n\n"
+          "Raises:\n"
+          "    IndexError: If detector or preset not found.")
+      // Lookup by name string
+      .def(
+          "get_by_name",
+          [](const PresetStore& self, const std::string& detector_name, const std::string& preset) {
+            return param_config_to_python(self.get(detector_name, preset));
+          },
+          py::arg("detector_name"), py::arg("preset_name"),
+          "Get parameters by detector name string.\n\n"
+          "Args:\n"
+          "    detector_name: Detector name (e.g. 'LsdCC').\n"
+          "    preset_name: Preset profile name.\n\n"
+          "Returns:\n"
+          "    List of {'name': str, 'value': ...} dicts.")
+      // Score
+      .def("score", static_cast<double (PresetStore::*)(DetectorId, const std::string&) const>(&PresetStore::score),
+           py::arg("detector"), py::arg("preset_name"),
+           "Get the optimization score for a detector preset.\n\n"
+           "Returns:\n"
+           "    Score value (0-1, higher is better).")
+      .def("score_by_name",
+           static_cast<double (PresetStore::*)(const std::string&, const std::string&) const>(&PresetStore::score),
+           py::arg("detector_name"), py::arg("preset_name"), "Get the optimization score by detector name string.")
+      // has()
+      .def("has", static_cast<bool (PresetStore::*)(DetectorId, const std::string&) const>(&PresetStore::has),
+           py::arg("detector"), py::arg("preset_name"), "Check if a preset exists for the given detector.")
+      .def("has_by_name",
+           static_cast<bool (PresetStore::*)(const std::string&, const std::string&) const>(&PresetStore::has),
+           py::arg("detector_name"), py::arg("preset_name"), "Check if a preset exists by detector name string.")
+      // Enumeration
+      .def("preset_names", &PresetStore::preset_names, "Get all preset profile names in the store.")
+      .def("detector_names", &PresetStore::detector_names, "Get all detector names that have presets.")
+      .def("empty", &PresetStore::empty, "Check if the store is empty.")
+      .def("num_detectors", &PresetStore::num_detectors, "Get the number of detectors with presets.")
+      // Constants
+      .def_property_readonly_static(
+          "FAST", [](py::object) { return PresetStore::FAST; },
+          "Default preset name: 'fast' (optimized for Precision).")
+      .def_property_readonly_static(
+          "BALANCED", [](py::object) { return PresetStore::BALANCED; },
+          "Default preset name: 'balanced' (optimized for F1).")
+      .def_property_readonly_static(
+          "ACCURATE", [](py::object) { return PresetStore::ACCURATE; },
+          "Default preset name: 'accurate' (optimized for Recall).")
+      .def("__repr__", [](const PresetStore& s) {
+        std::ostringstream os;
+        os << "<PresetStore: " << s.num_detectors() << " detectors";
+        if (!s.empty()) {
+          os << ", presets=[";
+          auto names = s.preset_names();
+          for (size_t i = 0; i < names.size(); ++i) {
+            if (i > 0) os << ", ";
+            os << names[i];
+          }
+          os << "]";
+        }
+        os << ">";
         return os.str();
       });
 }

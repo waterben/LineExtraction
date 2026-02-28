@@ -5,6 +5,9 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QString>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
 
 AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", parent), ui(new Ui::AccuracyPanel) {
   ui->setupUi(this);
@@ -15,6 +18,9 @@ AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", paren
          "precision, recall, F1-score, and structural Average Precision (sAP)."));
   ui->edit_gt_path->setToolTip(tr("Path to the loaded ground truth CSV file."));
   ui->pb_browse->setToolTip(tr("Open a file dialog to select a ground truth CSV."));
+  ui->pb_load_example->setToolTip(
+      tr("Load the bundled example ground truth (example_gt.csv) and "
+         "the matching example_lines.png image for quick evaluation."));
   ui->spin_threshold->setToolTip(
       tr("Maximum endpoint distance (px) for a detected segment "
          "to count as a true positive match against a GT segment."));
@@ -87,6 +93,43 @@ void AccuracyPanel::browseGroundTruth() {
   } catch (const std::exception& ex) {
     setStatus(QString("Load failed: %1").arg(ex.what()));
     gt_entries.clear();
+  }
+}
+
+void AccuracyPanel::loadExampleGroundTruth() {
+  // Locate the bundled example ground truth CSV.
+  std::string csv_path = findResourcePath("datasets/ground_truth/example_gt.csv");
+  if (csv_path.empty()) {
+    setStatus("Example ground truth not found.");
+    QMessageBox::warning(this, tr("Example Ground Truth"),
+                         tr("Could not locate the bundled example_gt.csv.\n"
+                            "Make sure you are running from the workspace directory "
+                            "or via 'bazel run'."));
+    return;
+  }
+
+  try {
+    gt_entries = lsfm::GroundTruthLoader::load_csv(csv_path);
+    ui->edit_gt_path->setText(QString::fromStdString(csv_path));
+    ui->edit_image_name->setText("example_lines.png");
+
+    int total_segs = 0;
+    for (const auto& entry : gt_entries) {
+      total_segs += static_cast<int>(entry.segments.size());
+    }
+    setStatus(QString("Loaded example: %1 segments.").arg(total_segs));
+  } catch (const std::exception& ex) {
+    setStatus(QString("Load failed: %1").arg(ex.what()));
+    gt_entries.clear();
+    return;
+  }
+
+  // Also load the matching example image into the ControlWindow.
+  if (ctrl != nullptr) {
+    std::string img_path = findResourcePath("example_lines.png");
+    if (!img_path.empty()) {
+      ctrl->setImagePath(QString::fromStdString(img_path));
+    }
   }
 }
 
@@ -189,3 +232,39 @@ std::vector<lsfm::LineSegment<double>> AccuracyPanel::convertLines(const Control
 }
 
 void AccuracyPanel::setStatus(const QString& msg) { ui->lbl_status->setText(msg); }
+
+// ---------------------------------------------------------------------------
+// Resource path resolution
+// ---------------------------------------------------------------------------
+
+std::string AccuracyPanel::findResourcePath(const std::string& relative_path) {
+  namespace fs = std::filesystem;
+
+  // Candidate base directories relative to cwd (mirrors ControlWindow::findResources).
+  const std::vector<std::string> candidates = {
+      "resources",
+      "../resources",
+      "../../resources",
+      "../../../resources",
+  };
+  for (const auto& base : candidates) {
+    fs::path p = fs::absolute(fs::path(base) / relative_path);
+    if (fs::exists(p)) return p.string();
+  }
+
+  // Bazel: BUILD_WORKSPACE_DIRECTORY (set by `bazel run`).
+  if (const char* ws_dir = std::getenv("BUILD_WORKSPACE_DIRECTORY")) {
+    fs::path p = fs::path(ws_dir) / "resources" / relative_path;
+    if (fs::exists(p)) return p.string();
+  }
+
+  // Bazel: RUNFILES_DIR (hermetic builds).
+  if (const char* rd = std::getenv("RUNFILES_DIR")) {
+    for (const auto& repo : {"_main", "line_extraction"}) {
+      fs::path p = fs::path(rd) / repo / "resources" / relative_path;
+      if (fs::exists(p)) return p.string();
+    }
+  }
+
+  return {};
+}

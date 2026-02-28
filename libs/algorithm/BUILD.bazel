@@ -37,6 +37,7 @@ cc_library(
         "//libs/imgproc:lib_imgproc",
         "//libs/utility:lib_utility",
         "@dlib",
+        "@nlohmann_json//:json",
         "@opencv//:core",
         "@opencv//:imgproc",
     ],

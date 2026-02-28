@@ -1,6 +1,7 @@
 #include "controlwindow.h"
 
 #include "ui_controlwindow.h"
+#include <algorithm/preset_store.hpp>
 #include <imgproc/image_operator.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <utility/test_images.hpp>
@@ -244,6 +245,44 @@ ControlWindow::ControlWindow(QWidget* parent)
     }
   }
 
+  // --- Preset Selector ---
+  // Adds a preset combo box next to the detector params row so the user
+  // can quickly apply optimized parameter presets (fast/balanced/accurate).
+  {
+    // Try to load presets from the JSON file.
+    std::string presetsPath = findPresetsPath();
+    if (!presetsPath.empty()) {
+      try {
+        presetStore = lsfm::PresetStore(presetsPath);
+        std::cout << "Loaded " << presetStore.num_detectors() << " detector presets from " << presetsPath << std::endl;
+      } catch (const std::exception& ex) {
+        std::cerr << "Warning: Failed to load presets: " << ex.what() << std::endl;
+      }
+    }
+
+    auto* lblPreset = new QLabel(tr("Preset:"), this);
+    lblPreset->setToolTip(tr("Apply optimized parameter presets to the current detector"));
+    cbPreset = new QComboBox(this);
+    cbPreset->setToolTip(
+        tr("Select a parameter preset:\n"
+           "  Default - built-in detector defaults\n"
+           "  Fast - optimized for speed (high precision)\n"
+           "  Balanced - optimized for F1 score\n"
+           "  Accurate - optimized for recall"));
+    cbPreset->addItem(tr("Default"));
+    cbPreset->addItem(tr("Fast"));
+    cbPreset->addItem(tr("Balanced"));
+    cbPreset->addItem(tr("Accurate"));
+    cbPreset->setEnabled(false);
+    cbPreset->setCurrentIndex(0);
+
+    // Insert into the detector params layout (before the spacer).
+    ui->layout_detector_params->insertWidget(0, lblPreset);
+    ui->layout_detector_params->insertWidget(1, cbPreset);
+
+    connect(cbPreset, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ControlWindow::applyPreset);
+  }
+
   updateRanges();
 }
 
@@ -258,6 +297,13 @@ void ControlWindow::selectImage() {
 }
 
 void ControlWindow::openPreprocess() { pp->show(); }
+
+void ControlWindow::setImagePath(const QString& path) {
+  ui->le_image_filename->setText(path);
+  ui->pb_pre->setEnabled(true);
+  ui->pb_load->setEnabled(true);
+  loadImage();
+}
 
 void ControlWindow::loadImage() {
   try {
@@ -735,6 +781,9 @@ void ControlWindow::addDetector(const DetectorPtr& detector) {
     ui->pb_detector_params_reset->setEnabled(true);
     ui->pb_detectors_params_reset->setEnabled(true);
     ui->table_detector_params->setEnabled(true);
+    if (cbPreset != nullptr && !presetStore.empty()) {
+      cbPreset->setEnabled(true);
+    }
   }
   ui->cb_detector_select->addItem(detector->name);
 }
@@ -765,6 +814,7 @@ void ControlWindow::selectDetector() {
   ui->table_detector_params->resizeColumnsToContents();
   ui->table_detector_params->horizontalHeader()->setStretchLastSection(true);
 
+  updatePresetCombo();
   emit detectorChanged(detector->name);
 }
 
@@ -790,12 +840,149 @@ void ControlWindow::resetDetector() {
   if (detectorIndex >= detectors.size()) return;
 
   detectors[detectorIndex]->create();
+  if (cbPreset != nullptr) {
+    cbPreset->blockSignals(true);
+    cbPreset->setCurrentIndex(0);
+    cbPreset->blockSignals(false);
+  }
   selectDetector();
 }
 
 void ControlWindow::resetAllDetectors() {
   for_each(detectors.begin(), detectors.end(), [](DetectorPtr d) { d->create(); });
   selectDetector();
+}
+
+// ---------------------------------------------------------------------------
+// Preset support
+// ---------------------------------------------------------------------------
+
+std::string ControlWindow::findPresetsPath() {
+  namespace fs = std::filesystem;
+
+  // Same search strategy as findResources() for the test image selector.
+  const std::vector<std::string> candidates = {
+      "resources/presets/lsd_presets.json",
+      "../resources/presets/lsd_presets.json",
+      "../../resources/presets/lsd_presets.json",
+      "../../../resources/presets/lsd_presets.json",
+  };
+  for (const auto& rel : candidates) {
+    fs::path p = fs::absolute(rel);
+    if (fs::exists(p)) return p.string();
+  }
+  // Bazel sets BUILD_WORKSPACE_DIRECTORY when running via `bazel run`.
+  if (const char* wsDir = std::getenv("BUILD_WORKSPACE_DIRECTORY")) {
+    fs::path p = fs::path(wsDir) / "resources" / "presets" / "lsd_presets.json";
+    if (fs::exists(p)) return p.string();
+  }
+  // Runfiles directory (for `bazel run` in hermetic mode).
+  if (const char* rd = std::getenv("RUNFILES_DIR")) {
+    for (const auto& repo : {"_main", "line_extraction"}) {
+      fs::path p = fs::path(rd) / repo / "resources" / "presets" / "lsd_presets.json";
+      if (fs::exists(p)) return p.string();
+    }
+  }
+  return {};
+}
+
+std::pair<bool, lsfm::DetectorId> ControlWindow::resolveDetectorId(const QString& name) {
+  // Maps display names like "LSD CC", "LSD EL QFSt Odd" etc. to the
+  // canonical DetectorId enum. Variant suffixes are handled by prefix matching.
+  static const struct {
+    const char* prefix;
+    lsfm::DetectorId id;
+  } kMap[] = {
+      {"LSD CC", lsfm::DetectorId::LSD_CC},         {"LSD CP", lsfm::DetectorId::LSD_CP},
+      {"LSD BURNS", lsfm::DetectorId::LSD_BURNS},   {"LSD FBW", lsfm::DetectorId::LSD_FBW},
+      {"LSD FGIOI", lsfm::DetectorId::LSD_FGIOI},   {"LSD EDLZ", lsfm::DetectorId::LSD_EDLZ},
+      {"LSD EDTA", lsfm::DetectorId::LSD_EDLZ},  // EDTA maps to EDLZ profile
+      {"LSD EL", lsfm::DetectorId::LSD_EL},         {"LSD EP", lsfm::DetectorId::LSD_EP},
+      {"LSD HOUGHP", lsfm::DetectorId::LSD_HOUGHP},
+  };
+
+  for (const auto& entry : kMap) {
+    if (name.startsWith(entry.prefix)) {
+      return {true, entry.id};
+    }
+  }
+  return {false, lsfm::DetectorId::LSD_CC};
+}
+
+void ControlWindow::updatePresetCombo() {
+  if (cbPreset == nullptr) return;
+
+  cbPreset->blockSignals(true);
+  cbPreset->setCurrentIndex(0);  // Default
+
+  if (presetStore.empty()) {
+    cbPreset->setEnabled(false);
+  } else {
+    QString detName = getCurrentDetectorName();
+    auto [found, detId] = resolveDetectorId(detName);
+    // Enable only if we have presets for this detector.
+    bool hasPresets = found && presetStore.has(detId, lsfm::PresetStore::BALANCED);
+
+    // Detectors like "LSD ED", "LSD ES", "LSD HOUGH" have no preset support,
+    // but specialized EL variants (QFSt, SUSAN, etc.) share the EL preset.
+    cbPreset->setEnabled(hasPresets);
+  }
+  cbPreset->blockSignals(false);
+}
+
+void ControlWindow::applyPreset(int presetIndex) {
+  if (presetIndex <= 0) return;  // 0 = "Default", skip
+
+  const int detectorIdx = ui->cb_detector_select->currentIndex();
+  if (detectorIdx < 0) return;
+  const std::size_t detectorIndex{static_cast<std::size_t>(detectorIdx)};
+  if (detectorIndex >= detectors.size()) return;
+
+  DetectorPtr detector = detectors[detectorIndex];
+  if (!detector || !detector->lsd) return;
+
+  auto [found, detId] = resolveDetectorId(detector->name);
+  if (!found) return;
+
+  // Map combo index to preset name.
+  std::string presetName;
+  switch (presetIndex) {
+    case 1:
+      presetName = lsfm::PresetStore::FAST;
+      break;
+    case 2:
+      presetName = lsfm::PresetStore::BALANCED;
+      break;
+    case 3:
+      presetName = lsfm::PresetStore::ACCURATE;
+      break;
+    default:
+      return;
+  }
+
+  if (!presetStore.has(detId, presetName)) {
+    std::cerr << "No preset '" << presetName << "' for detector '" << detector->name.toStdString() << "'" << std::endl;
+    return;
+  }
+
+  try {
+    presetStore.apply(*detector->lsd, detId, presetName);
+    double score = presetStore.score(detId, presetName);
+    std::cout << "Applied preset '" << presetName << "' to " << detector->name.toStdString() << " (score: " << score
+              << ")" << std::endl;
+
+    // Refresh the parameter table to reflect the new values.
+    // Block preset combo signals to avoid recursion.
+    cbPreset->blockSignals(true);
+    selectDetector();
+    cbPreset->blockSignals(false);
+    // Restore the selected preset (selectDetector resets to 0).
+    cbPreset->blockSignals(true);
+    cbPreset->setCurrentIndex(presetIndex);
+    cbPreset->blockSignals(false);
+  } catch (const std::exception& ex) {
+    std::cerr << "Failed to apply preset: " << ex.what() << std::endl;
+  }
 }
 
 

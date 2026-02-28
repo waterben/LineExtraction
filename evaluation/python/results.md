@@ -184,3 +184,84 @@ void tolerance(int pt) { pat_tol_ = std::max(1, pt); }
 | `libs/lsd/tests/test_lsd_cp_crash.cpp` | New ASAN regression test (8 test cases) |
 | `evaluation/python/tools/detector_statistics.py` | `set_double` → `set_float` (matching Python binding API) |
 | `evaluation/python/tools/optimize_presets.py` | Same `set_double` → `set_float` fix |
+
+---
+
+## Wireframe Dataset Evaluation
+
+Evaluation of all 9 LSD detectors on the **Wireframe** dataset (50 images,
+ground-truth line segments) using the same three parameter strategies.
+Matching threshold: 10 px (endpoint distance).
+
+### Aggregate Results (Wireframe)
+
+| Detector   | Strategy | mP    | mR    | mF1   | σF1   | mdF1  | μP    | μR    | μF1   | det/img | ms/img |
+|:-----------|:---------|------:|------:|------:|------:|------:|------:|------:|------:|--------:|-------:|
+| **LsdCC**  | adaptive | 0.154 | 0.310 | **0.196** | 0.059 | 0.205 | 0.147 | 0.293 | 0.196 | 166.7 | 19.0  |
+| **LsdCP**  | adaptive | 0.155 | 0.296 | **0.194** | 0.056 | 0.199 | 0.148 | 0.280 | 0.194 | 157.6 | 13.3  |
+| LsdCC      | profile  | 0.145 | 0.320 | 0.193 | 0.059 | 0.195 | 0.140 | 0.304 | 0.191 | 181.4 | 20.4  |
+| LsdCP      | profile  | 0.146 | 0.304 | 0.191 | 0.057 | 0.194 | 0.141 | 0.288 | 0.190 | 170.0 | 14.1  |
+| LsdEDLZ    | adaptive | 0.169 | 0.232 | 0.186 | 0.057 | 0.184 | 0.163 | 0.215 | 0.185 | 109.9 |  6.2  |
+| LsdEDLZ    | profile  | 0.159 | 0.227 | 0.179 | 0.059 | 0.181 | 0.151 | 0.213 | 0.176 | 117.6 |  6.7  |
+| LsdEL      | adaptive | 0.078 | 0.422 | 0.128 | 0.050 | 0.126 | 0.073 | 0.419 | 0.124 | 478.3 | 22.6  |
+| LsdEL      | profile  | 0.074 | 0.434 | 0.125 | 0.049 | 0.123 | 0.071 | 0.429 | 0.122 | 505.2 | 23.6  |
+| LsdFGioi   | profile  | 0.078 | 0.339 | 0.124 | 0.049 | 0.122 | 0.074 | 0.337 | 0.122 | 378.8 | 52.7  |
+| LsdEDLZ    | default  | 0.073 | 0.321 | 0.117 | 0.045 | 0.105 | 0.070 | 0.314 | 0.115 | 372.8 |  9.2  |
+| LsdEP      | profile  | 0.059 | 0.441 | 0.102 | 0.043 | 0.098 | 0.055 | 0.436 | 0.098 | 662.4 | 12.7  |
+| LsdEP      | adaptive | 0.059 | 0.431 | 0.101 | 0.043 | 0.100 | 0.053 | 0.428 | 0.095 | 668.5 | 12.3  |
+| LsdFGioi   | default  | 0.062 | 0.303 | 0.101 | 0.043 | 0.095 | 0.059 | 0.304 | 0.099 | 426.3 | 53.6  |
+| LsdFBW     | adaptive | 0.057 | 0.484 | 0.100 | 0.044 | 0.094 | 0.051 | 0.484 | 0.092 | 795.4 | 24.9  |
+| LsdFGioi   | adaptive | 0.061 | 0.249 | 0.097 | 0.051 | 0.098 | 0.057 | 0.247 | 0.092 | 363.1 | 70.2  |
+| LsdFBW     | profile  | 0.051 | 0.497 | 0.092 | 0.040 | 0.087 | 0.048 | 0.498 | 0.087 | 869.0 | 27.9  |
+| LsdBurns   | adaptive | 0.046 | 0.308 | 0.078 | 0.036 | 0.074 | 0.041 | 0.307 | 0.072 | 626.1 | 24.0  |
+| LsdFBW     | default  | 0.043 | 0.499 | 0.078 | 0.033 | 0.069 | 0.041 | 0.501 | 0.076 | 1011.9| 35.0  |
+| LsdBurns   | profile  | 0.043 | 0.331 | 0.074 | 0.033 | 0.070 | 0.041 | 0.331 | 0.073 | 674.6 | 27.5  |
+| LsdCP      | default  | 0.041 | 0.427 | 0.073 | 0.030 | 0.067 | 0.040 | 0.426 | 0.072 | 899.7 | 26.3  |
+| LsdCC      | default  | 0.040 | 0.434 | 0.072 | 0.030 | 0.066 | 0.039 | 0.434 | 0.071 | 930.4 | 30.9  |
+| LsdEP      | default  | 0.018 | 0.462 | 0.035 | 0.017 | 0.033 | 0.017 | 0.465 | 0.033 | 2266.1| 24.5  |
+| LsdEL      | default  | 0.018 | 0.474 | 0.034 | 0.017 | 0.032 | 0.017 | 0.477 | 0.033 | 2369.4| 42.9  |
+| LsdHoughP  | profile  | 0.019 | 0.032 | 0.021 | 0.017 | 0.015 | 0.011 | 0.033 | 0.017 | 251.3 | 33.8  |
+| LsdHoughP  | adaptive | 0.025 | 0.021 | 0.020 | 0.025 | 0.013 | 0.017 | 0.020 | 0.018 |  96.4 | 31.5  |
+| LsdBurns   | default  | 0.010 | 0.496 | 0.019 | 0.010 | 0.018 | 0.009 | 0.503 | 0.018 | 4715.2| 56.5  |
+| LsdHoughP  | default  | 0.007 | 0.086 | 0.012 | 0.009 | 0.010 | 0.006 | 0.090 | 0.011 | 1270.3| 66.4  |
+
+### Best Strategy per Detector (Wireframe)
+
+| Detector   | Best Strategy | mF1   | Improvement over default |
+|:-----------|:--------------|------:|:-------------------------|
+| LsdCC      | adaptive      | 0.196 | +172% (0.072 → 0.196)    |
+| LsdCP      | adaptive      | 0.194 | +166% (0.073 → 0.194)    |
+| LsdEDLZ    | adaptive      | 0.186 | +59% (0.117 → 0.186)     |
+| LsdEL      | adaptive      | 0.128 | +276% (0.034 → 0.128)    |
+| LsdFGioi   | profile       | 0.124 | +23% (0.101 → 0.124)     |
+| LsdEP      | profile       | 0.102 | +191% (0.035 → 0.102)    |
+| LsdFBW     | adaptive      | 0.100 | +28% (0.078 → 0.100)     |
+| LsdBurns   | adaptive      | 0.078 | +311% (0.019 → 0.078)    |
+| LsdHoughP  | profile       | 0.021 | +75% (0.012 → 0.021)     |
+
+### Cross-Dataset Comparison
+
+| Detector   | Best (York Urban) | Best (Wireframe) | Δ mF1  |
+|:-----------|:------------------|:-----------------|-------:|
+| LsdCC      | 0.159 (adaptive)  | 0.196 (adaptive) | +0.037 |
+| LsdCP      | 0.160 (adaptive)  | 0.194 (adaptive) | +0.034 |
+| LsdEDLZ    | 0.144 (adaptive)  | 0.186 (adaptive) | +0.042 |
+| LsdFGioi   | 0.120 (profile)   | 0.124 (profile)  | +0.004 |
+| LsdEL      | 0.110 (adaptive)  | 0.128 (adaptive) | +0.018 |
+| LsdEP      | 0.085 (adaptive)  | 0.102 (profile)  | +0.017 |
+| LsdFBW     | 0.078 (adaptive)  | 0.100 (adaptive) | +0.022 |
+| LsdBurns   | 0.068 (adaptive)  | 0.078 (adaptive) | +0.010 |
+| LsdHoughP  | 0.020 (adaptive)  | 0.021 (profile)  | +0.001 |
+
+**Key observations:**
+
+- All detectors score **higher on Wireframe** than on York Urban,
+  suggesting Wireframe's ground truth aligns better with the line
+  segment extraction approach.
+- **LsdCC** overtakes LsdCP as the top detector on Wireframe (F1=0.196
+  vs 0.194), while LsdCP was marginally ahead on York Urban.
+- **LsdEDLZ** remains the best speed-accuracy trade-off: F1=0.186 at
+  only 6.2 ms/image on Wireframe.
+- The **adaptive strategy wins for 7 of 9** detectors on Wireframe
+  (vs 8 of 9 on York Urban). LsdFGioi and LsdEP prefer the neutral
+  profile.

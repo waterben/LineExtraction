@@ -54,166 +54,19 @@ The application supports multiple Line Segment Detector (LSD) variants:
 
 ### Analysis Tools
 
-Each tool opens as a separate dockable window and connects to the main ControlWindow via signals and slots. Hover over any control for a tooltip explaining its purpose.
+Each tool opens as a separate dockable window and connects to the main ControlWindow via signals and slots. Hover over any control for a tooltip explaining its purpose. See the individual extension READMEs for detailed documentation:
 
----
-
-#### Profile Analyzer
-
-Visualizes the gradient profile perpendicular to a selected line segment. This is the primary tool for understanding how edge strength varies across a detected line.
-
-- **Blue curve:** Mean gradient response sampled perpendicular to the line
-- **Shaded band:** Standard deviation of the gradient response
-- **Red curve:** Smoothed profile for comparison
-- **Data Source:** Choose which image source to sample (magnitude, gradient, etc.)
-- **Interpolation:** Select the sub-pixel interpolation method (nearest, bilinear, bicubic)
-
-**Use case:** Verify that a detected line sits on a true edge (sharp peak in the profile) and diagnose false positives (flat or noisy profiles).
-
----
-
-#### Precision Optimizer
-
-Optimizes sub-pixel line localization by maximizing the mean gradient response along a line segment's profile. Uses numerical optimization to refine position and angle.
-
-- **Search Strategy:** BFGS, L-BFGS, or Conjugate Gradient
-- **Stopping Criterion:** Delta (function value change) or Gradient Norm
-- **Interpolation:** Method for sampling the gradient during optimization
-- **Data Source:** Gradient magnitude source to evaluate
-
-**Use case:** Improve endpoint precision of detected lines. Run on a single selected line or batch-optimize all lines.
-
----
-
-#### PO Function Plot
-
-3D surface plot of the precision optimization objective function. Shows how the mean gradient response changes as a function of profile offset (X-axis) and rotation angle (Y-axis) around the current line position.
-
-- **Profile Range / Rotation Range:** Half-range for each axis
-- **Subdivisions:** Mesh density (higher = finer surface)
-- **Line Distance:** Number of support pixels for the mean computation
-- **Fit Profile:** Side view emphasizing the profile (offset) dimension
-- **Fit Rotation:** Side view emphasizing the rotation (angle) dimension
-- **Reset View:** Restore default 3D perspective
-
-**Use case:** Understand the optimization landscape. A well-defined peak means reliable optimization; a flat or multi-modal surface indicates ambiguity.
-
----
-
-#### Continuity Optimizer
-
-Merges near-collinear line segments that likely belong to the same physical edge but were split during detection. Uses the `LineMerge` algorithm from `libs/algorithm`.
-
-- **Max. Distance:** Maximum endpoint distance (px) between candidates
-- **Angle Error:** Maximum allowed angle difference (rad). Smaller = more strict
-- **Distance Error:** Maximum perpendicular distance (px) between endpoints and the other segment's supporting line
-- **Parallel Error:** Maximum lateral gap tolerance along the line direction
-- **Merge Type:** "Endpoints" connects outermost endpoints; "Average" fits a new segment to averaged geometry
-
-**Use case:** Reduce over-segmentation where a single edge is detected as multiple short segments. Useful for structured scenes (buildings, roads).
-
----
-
-#### Connection Optimizer
-
-Connects nearby line segment endpoints when the gradient magnitude along the connecting path is strong enough. Uses the `LineConnect` algorithm from `libs/algorithm`.
-
-- **Max. Radius:** Maximum endpoint distance (px) to consider a connection
-- **Accuracy:** Sampling step (px) along the connecting path. Smaller = denser sampling
-- **Threshold:** Minimum average gradient magnitude along the connection path
-
-**Requires:** At least one gradient magnitude source (`mag`, `qmag`, or `nmag`) must be available, or a source image from which gradients are computed via Sobel.
-
-**Use case:** Bridge gaps between segment endpoints that are separated by a few pixels but belong to the same edge (e.g., gaps caused by noise or occlusion).
-
----
-
-#### Detector Profile
-
-High-level detector parameter tuning via 4 percentage knobs and 2 adaptive factors. Translates intuitive settings into concrete detector parameters via `DetectorProfile` from `libs/algorithm`.
-
-**Profile Knobs (0–100%):**
-
-- **Detail:** Detection granularity. Higher → more segments including fine features
-- **Gap Tolerance:** How tolerant the detector is of gaps in edge chains
-- **Min Length:** Minimum segment length. Higher → discard shorter segments
-- **Precision:** Sub-pixel precision emphasis. Higher → tighter fitting tolerances
-
-**Adaptive Factors:**
-
-- **Contrast:** Multiplier for contrast-dependent thresholds (> 1 raises, < 1 lowers)
-- **Noise:** Multiplier for noise-related thresholds (increase for noisy images)
-
-**Image Properties (auto-updated):**
-
-- Contrast, noise level, edge density, and dynamic range of the current source image
-
-**Buttons:**
-
-- **Auto from Image:** Analyze the source image and set all knobs and factors automatically
-- **Apply to Detector:** Push the current profile to the active detector
-- **Reset:** Reset all knobs to 50% and factors to 1.0
-
-**Use case:** Quickly tune detector parameters without understanding the low-level options. Start with "Auto from Image" for a reasonable baseline, then fine-tune.
-
----
-
-#### Accuracy Measure
-
-Evaluates detected line segments against ground truth data. Computes standard metrics for quantitative comparison.
-
-**Ground Truth CSV Format:**
-
-```csv
-image_name,x1,y1,x2,y2
-image001.png,10.5,20.3,100.2,20.8
-image001.png,50.0,10.0,50.0,200.0
-image002.png,5.0,5.0,295.0,195.0
-```
-
-Each row defines one ground truth line segment with sub-pixel endpoints. Multiple images can be stored in one CSV; use the "Image Name Filter" field to select the relevant entry.
-
-**Settings:**
-
-- **Match Threshold (px):** Maximum endpoint distance for a detected segment to count as a true positive match. Default: 5.0
-- **Image Name Filter:** Select which image entry from the CSV to use. Leave empty for auto-selection (single-entry CSVs)
-
-**Metrics:**
-
-- **Precision:** TP / (TP + FP) — what fraction of detected lines match GT
-- **Recall:** TP / (TP + FN) — what fraction of GT lines were detected
-- **F1 Score:** Harmonic mean of precision and recall
-- **sAP:** Structural Average Precision — considers endpoint accuracy
-- **TP / FP / FN:** Raw counts for true/false positives and false negatives
-- **GT Segments:** Total number of ground truth segments
-
-**Workflow:**
-
-1. Load an image and run detection
-2. Click "Browse..." to load a ground truth CSV
-3. (Optional) Enter an image name filter
-4. Click "Evaluate" to compute metrics
-5. Adjust detector parameters and re-evaluate for comparison
-
----
-
-#### Line Analyser 2D
-
-Advanced ground truth comparison tool with interactive visualization. Unlike the simple Accuracy Measure panel, this tool provides detailed per-segment analysis with visual feedback.
-
-**Key capabilities:**
-
-- **Side-by-side visualization:** GT lines and detected lines drawn in a dedicated plot window
-- **Per-segment matching:** Each detected line is matched to its closest GT segment with detailed error metrics (angle difference, length difference, endpoint distances)
-- **Interactive exploration:** Click on GT or detected lines in the table to highlight them in the plot
-- **Debug mode:** Lock a GT line and a detected line to examine their geometric relationship in detail
-- **Analysis mode:** Compare two different detection runs (current vs. saved) with percentage-change tables
-- **Configurable thresholds:** Angle tolerance, distance threshold, and error bounds for the matching algorithm
-- **Export:** Save analysis results to text files for external processing
-
-**Use case:** Detailed investigation of detection quality for research and publication. When the simple P/R/F1 numbers from Accuracy Measure are not enough and you need to understand *which* lines are wrong and *why*.
-
-**Note:** Requires its own ground truth loading (File → Open GT) separate from the Accuracy Measure panel.
+| Extension | Description |
+|-----------|-------------|
+| [Profile Analyzer](extensions/profileanalyzer/README.md) | Edge gradient profile visualization |
+| [Precision Optimizer](extensions/precisionoptimizer/README.md) | Sub-pixel line localization via numerical optimization |
+| [PO Function Plot](extensions/pofuncplot/README.md) | 3D surface plot of optimization objective |
+| [Continuity Optimizer](extensions/continuityoptimizer/README.md) | Merge near-collinear line segments |
+| [Connection Optimizer](extensions/connectionoptimizer/README.md) | Bridge endpoint gaps using gradient evidence |
+| [Detector Profile](extensions/detectorprofile/README.md) | High-level parameter tuning via percentage knobs |
+| [Image Analyzer](extensions/imageanalyzer/README.md) | Image property analysis and profile suggestions |
+| [Accuracy Measure](extensions/accuracy/README.md) | P/R/F1/sAP evaluation against ground truth |
+| [Line Analyser 2D](extensions/lineanalyser2d/README.md) | Interactive per-segment GT comparison |
 
 ### Visualization Options
 
@@ -269,8 +122,10 @@ cmake --build . -j$(nproc)
    - Multiple detector configurations can be tested
 
 3. **Adjust Parameters:**
+   - **Quick start:** Select a preset (Fast / Balanced / Accurate) from the Preset dropdown
    - Use sliders for real-time tuning
    - Or use Detector Profile for high-level control
+   - Or manually edit values in the parameter table
 
 4. **Analyze Results:**
    - View detected lines in main window
@@ -293,6 +148,54 @@ Parameters are stored per detector and include:
 - **NFA:** Precision, log epsilon
 - **Fitting:** Method, tolerance, max iterations
 
+### Parameter Presets
+
+The application ships with optimized parameter presets for the core LSD detectors. Presets were generated by running random parameter search over the York Urban dataset and selecting the best configuration for each optimization target.
+
+**Preset Profiles:**
+
+| Preset | Optimization Target | Best For |
+|--------|-------------------|----------|
+| **Default** | Built-in detector defaults | Starting point, no optimization |
+| **Fast** | Precision (few false positives) | Speed-critical applications, clean results |
+| **Balanced** | F1 score (precision + recall) | General-purpose use, best overall quality |
+| **Accurate** | Recall (few missed lines) | Completeness, research evaluation |
+
+**Supported Detectors:**
+
+Presets are available for the following 9 detectors:
+
+| Detector | Fast Score | Balanced Score | Accurate Score |
+|----------|-----------|----------------|----------------|
+| LSD CC | 0.094 | 0.140 | 0.491 |
+| LSD CP | 0.083 | 0.126 | 0.465 |
+| LSD Burns | 0.050 | 0.082 | 0.502 |
+| LSD FBW | 0.065 | 0.108 | 0.514 |
+| LSD FGioi | 0.095 | 0.145 | 0.461 |
+| LSD EDLZ | 0.115 | 0.138 | 0.381 |
+| LSD EL | 0.036 | 0.064 | 0.466 |
+| LSD EP | 0.037 | 0.065 | 0.464 |
+| LSD HoughP | 0.034 | 0.024 | 0.039 |
+
+Scores represent the optimization metric value (higher is better). "Accurate" consistently achieves the highest scores because recall is the dominant component.
+
+Variant detectors (e.g., LSD EL QFSt Odd, LSD EL SUSAN) share the base detector's preset since they differ only in the edge source, not in the line fitting parameters.
+
+Detectors without preset support (LSD ED, LSD ES, LSD HOUGH) show a disabled Preset dropdown.
+
+**How it works:**
+
+1. Select a detector from the dropdown
+2. Choose a preset profile from the Preset dropdown
+3. Parameters are applied instantly to the detector
+4. Click "Process" to run detection with the new parameters
+5. The parameter table updates to show the applied values
+6. You can further fine-tune individual parameters after applying a preset
+
+**Preset File:**
+
+Presets are stored in `resources/presets/lsd_presets.json`. The file is loaded automatically at application startup. To regenerate presets with different settings, use the `optimize_presets.py` script in the evaluation directory.
+
 ## Architecture
 
 The application follows Qt's Model-View-Controller pattern:
@@ -302,6 +205,7 @@ ControlWindow (main controller)
   ├─ PreProcessing (image preprocessing)
   ├─ DetectorVector (detector management)
   │   └─ DetectorES<LsdVariant> (detector instances)
+  ├─ PresetStore (optimized parameter presets from JSON)
   ├─ ProfileAnalyzer (profile analysis tool)
   ├─ PrecisionOptimizer (parameter optimization)
   ├─ POFuncPlot (3D function visualization)
@@ -314,89 +218,47 @@ ControlWindow (main controller)
 
 ### Key Components
 
-**[controlwindow.h](controlwindow.h) / [controlwindow.cpp](controlwindow.cpp):**
+**Core (`src/`):**
 
-- Main application window
-- Detector management and line storage
-- Signal hub: `sourcesChanged`, `lineChanged`, `lineSelChanged`
+- [controlwindow.h](src/controlwindow.h) / [controlwindow.cpp](src/controlwindow.cpp) — Main application window, detector management, preset loading, signal hub
+- [helpers.h](src/helpers.h) / [helpers.cpp](src/helpers.cpp) — Detector creation helpers, type definitions
+- [latool.h](src/latool.h) — Abstract base class for all tool panels
+- [help_button.hpp](src/help_button.hpp) — Reusable help button utility
+- [preprocessing.h](src/preprocessing.h) / [preprocessing.cpp](src/preprocessing.cpp) — Image loading, format conversion, scaling
+- [quiver.h](src/quiver.h) / [quiver.cpp](src/quiver.cpp) — Gradient vector field visualization
+- [main.cpp](src/main.cpp) — Application entry point, detector registration
 
-**[helpers.h](helpers.h) / [helpers.cpp](helpers.cpp):**
-
-- Detector creation helpers (`createDetectorES`, `createDetectorGS`, etc.)
-- Type definitions (`float_type`, `LineSegment`, `ImageSources`)
-
-**[latool.h](latool.h):**
-
-- Abstract base class for all tool panels
-- Provides `connectTools(ControlWindow*)` interface
-
-**[preprocessing.h](preprocessing.h) / [preprocessing.cpp](preprocessing.cpp):**
-
-- Image loading and preprocessing
-- Format conversion, size adjustment, blurring
-
-**[profileanalyzer.h](profileanalyzer.h) / [profileanalyzer.cpp](profileanalyzer.cpp):**
-
-- Edge profile extraction perpendicular to lines
-- Sub-pixel analysis and gradient visualization
-
-**[precisionoptimizer.h](precisionoptimizer.h) / [precisionoptimizer.cpp](precisionoptimizer.cpp):**
-
-- Numerical optimization of line position and angle
-- BFGS / L-BFGS / CG search strategies
-
-**[pofuncplot.h](pofuncplot.h) / [pofuncplot.cpp](pofuncplot.cpp):**
-
-- 3D surface plot (Qwt3D) of the objective function
-- Parameter landscape visualization
-
-**[continuityoptimizer.h](continuityoptimizer.h) / [continuityoptimizer.cpp](continuityoptimizer.cpp):**
-
-- `LineMerge` integration for collinear segment merging
-- Configurable distance, angle, and parallelism thresholds
-
-**[connectionoptimizer.h](connectionoptimizer.h) / [connectionoptimizer.cpp](connectionoptimizer.cpp):**
-
-- `LineConnect` integration for endpoint bridging
-- Uses gradient magnitude to validate connections
-
-**[detectorprofilepanel.h](detectorprofilepanel.h) / [detectorprofilepanel.cpp](detectorprofilepanel.cpp):**
-
-- `DetectorProfile` + `ImageAnalyzer` integration
-- High-level percentage knobs mapped to detector parameters
-- Auto-updated image property display
-
-**[accuracypanel.h](accuracypanel.h) / [accuracypanel.cpp](accuracypanel.cpp):**
-
-- `AccuracyMeasure` + `GroundTruthLoader` integration
-- CSV-based ground truth loading and P/R/F1/sAP evaluation
-
-**[lineanalyser2d.h](lineanalyser2d.h) / [lineanalyser2d.cpp](lineanalyser2d.cpp):**
-
-- Interactive per-segment GT comparison with plot visualization
-- Debug mode for detailed geometric error inspection
-- Analysis mode for comparing detection runs
+**Extensions (`extensions/`):** See [Analysis Tools](#analysis-tools) above for the full list with links to individual READMEs.
 
 ## Code Structure
 
 ```
 apps/line_analyzer/
-├── main.cpp                    # Application entry point
-├── controlwindow.{h,cpp,ui}    # Main window
-├── helpers.{h,cpp}             # Detector helpers
-├── latool.h                    # Tool interface
-├── preprocessing.{h,cpp,ui}    # Image preprocessing
-├── profileanalyzer.*           # Profile analysis
-├── precisionoptimizer.*        # Precision optimization
-├── pofuncplot.*                # 3D function plotting
-├── continuityoptimizer.*       # Segment merging
-├── connectionoptimizer.*       # Endpoint connection
-├── detectorprofilepanel.*      # High-level tuning + image analysis
-├── accuracypanel.*             # Accuracy evaluation (P/R/F1/sAP)
-├── lineanalyser2d.*            # Detailed GT comparison
-├── analyseroptions.*           # Analysis options dialog
-├── quiver.*                    # Vector field display
-└── BUILD.bazel                 # Bazel build configuration
+├── BUILD.bazel                 # Bazel build configuration
+├── CMakeLists.txt              # CMake build configuration (legacy)
+├── README.md                   # This file
+├── src/                        # Core application sources
+│   ├── main.cpp                # Entry point and detector registration
+│   ├── controlwindow.{h,cpp}   # Main window controller
+│   ├── helpers.{h,cpp}         # Detector creation helpers
+│   ├── latool.h                # Tool panel interface
+│   ├── help_button.hpp         # Help button utility
+│   ├── preprocessing.{h,cpp}   # Image preprocessing
+│   └── quiver.{h,cpp}         # Vector field display
+├── ui/                         # Core UI layouts
+│   ├── controlwindow.ui
+│   ├── preprocessing.ui
+│   └── quiver.ui
+└── extensions/                 # Tool panel extensions
+    ├── profileanalyzer/        # Edge profile visualization
+    ├── precisionoptimizer/     # Sub-pixel optimization
+    ├── pofuncplot/             # 3D objective function plot
+    ├── continuityoptimizer/    # Segment merging
+    ├── connectionoptimizer/    # Endpoint connection
+    ├── detectorprofile/        # High-level parameter tuning
+    ├── imageanalyzer/          # Image property analysis
+    ├── accuracy/               # P/R/F1/sAP evaluation
+    └── lineanalyser2d/         # Detailed GT comparison
 ```
 
 ## Related Documentation

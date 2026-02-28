@@ -24,6 +24,7 @@ py_binary(
         "//libs/geometry/python:le_geometry_lib",
         "//libs/lsd/python:le_lsd_lib",
         "@pip//numpy",
+        "@pip//pillow",
     ],
 )
 

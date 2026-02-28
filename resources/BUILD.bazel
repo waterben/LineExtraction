@@ -7,3 +7,15 @@ filegroup(
     name = "windmill",
     srcs = ["windmill.jpg"],
 )
+
+# Synthetic example image with known line segments for accuracy evaluation
+filegroup(
+    name = "example_lines",
+    srcs = ["example_lines.png"],
+)
+
+# Optimized detector parameter presets (fast / balanced / accurate)
+filegroup(
+    name = "presets",
+    srcs = ["presets/lsd_presets.json"],
+)

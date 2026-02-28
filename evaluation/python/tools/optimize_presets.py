@@ -49,8 +49,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import cv2
 import numpy as np
+from PIL import Image
+
+# cv2 is only needed for --refine (gradient computation).
+# Lazy import avoids hard dependency on opencv-python pip package.
+_cv2: Any = None
+
+
+def _ensure_cv2() -> Any:
+    """Lazy-import cv2 on first use (needed only for --refine)."""
+    global _cv2  # noqa: PLW0603
+    if _cv2 is None:
+        import cv2 as _cv2_mod
+
+        _cv2 = _cv2_mod
+    return _cv2
+
 
 # ---------------------------------------------------------------------------
 # Lazy imports for pybind11 modules (only available under Bazel or after build)
@@ -257,8 +272,24 @@ def build_param_ranges(
     return ranges
 
 
+def _compute_gradient_magnitude(gray: np.ndarray) -> np.ndarray:
+    """Compute gradient magnitude from a grayscale image using Sobel.
+
+    :param gray: Grayscale input image (uint8).
+    :type gray: numpy.ndarray
+    :return: Gradient magnitude image (float32).
+    :rtype: numpy.ndarray
+    """
+    cv2 = _ensure_cv2()
+    gray_f = gray.astype(np.float32) / 255.0
+    gx = cv2.Sobel(gray_f, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(gray_f, cv2.CV_32F, 0, 1, ksize=3)
+    return cv2.magnitude(gx, gy)
+
+
 def make_detect_fn(
     detector_cls: type,
+    refine: bool = False,
 ) -> Any:
     """Create a detection function for the optimizer.
 
@@ -267,9 +298,12 @@ def make_detect_fn(
 
     :param detector_cls: The LSD detector class (double-precision variant).
     :type detector_cls: type
+    :param refine: Apply precision refinement after detection.
+    :type refine: bool
     :return: Detection function suitable for ParamOptimizer.optimize().
     :rtype: callable
     """
+    precision_opt = _le_algorithm.PrecisionOptimize() if refine else None
 
     def detect_fn(
         src: np.ndarray,
@@ -295,7 +329,14 @@ def make_detect_fn(
             elif isinstance(value, float):
                 det.set_float(name, value)
         det.detect(src)
-        return det.line_segments()
+        segments = det.line_segments()
+
+        # Optional precision refinement
+        if precision_opt is not None and segments:
+            mag = _compute_gradient_magnitude(src)
+            _, segments = precision_opt.optimize_all(mag, segments)
+
+        return segments
 
     return detect_fn
 
@@ -329,8 +370,10 @@ def load_images(
             name = img_path.name
             if name not in gt_image_names or name in seen:
                 continue
-            img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
-            if img is None:
+            try:
+                pil_img = Image.open(img_path).convert("L")
+                img = np.array(pil_img, dtype=np.uint8)
+            except Exception:  # noqa: BLE001
                 log.warning("Failed to read image: %s", img_path)
                 continue
             images.append((name, img))
@@ -415,6 +458,7 @@ def optimize_detector(
     num_samples: int,
     match_threshold: float,
     seed: int,
+    refine: bool = False,
 ) -> dict[str, Any]:
     """Run parameter optimization for a single detector and metric.
 
@@ -434,12 +478,14 @@ def optimize_detector(
     :type match_threshold: float
     :param seed: Random seed for reproducibility.
     :type seed: int
+    :param refine: Apply precision refinement after detection.
+    :type refine: bool
     :return: Dictionary with optimization results.
     :rtype: dict[str, Any]
     """
     detector_cls = getattr(_le_lsd, detector_def.cls_name)
     space = build_param_ranges(detector_def)
-    detect_fn = make_detect_fn(detector_cls)
+    detect_fn = make_detect_fn(detector_cls, refine=refine)
 
     optimizer = _le_algorithm.ParamOptimizer(
         metric=metric,
@@ -564,6 +610,7 @@ def run_optimization(args: argparse.Namespace) -> dict[str, Any]:
             "num_samples": args.samples,
             "match_threshold": args.match_threshold,
             "seed": args.seed,
+            "refine": getattr(args, "refine", False),
         },
         "detectors": {},
     }
@@ -599,6 +646,7 @@ def run_optimization(args: argparse.Namespace) -> dict[str, Any]:
                 num_samples=args.samples,
                 match_threshold=args.match_threshold,
                 seed=args.seed,
+                refine=getattr(args, "refine", False),
             )
 
             det_results[profile_name] = result
@@ -698,6 +746,13 @@ def main() -> None:
         type=str,
         default="lsd_presets.json",
         help="Output JSON file path (default: lsd_presets.json)",
+    )
+    parser.add_argument(
+        "--refine",
+        action="store_true",
+        help="Apply precision refinement (PrecisionOptimize) to detected "
+        "segments during optimization. May improve accuracy at the cost "
+        "of slower evaluation.",
     )
     parser.add_argument(
         "--verbose",

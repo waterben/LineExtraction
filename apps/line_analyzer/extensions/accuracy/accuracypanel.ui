@@ -59,6 +59,16 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="pb_load_example">
+         <property name="text">
+          <string>Example</string>
+         </property>
+         <property name="toolTip">
+          <string>Load the bundled example ground truth (example_lines.png)</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -285,10 +295,27 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pb_load_example</sender>
+   <signal>clicked()</signal>
+   <receiver>AccuracyPanel</receiver>
+   <slot>loadExampleGroundTruth()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>340</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>180</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>browseGroundTruth()</slot>
   <slot>evaluate()</slot>
   <slot>clearResults()</slot>
+  <slot>loadExampleGroundTruth()</slot>
  </slots>
 </ui>

@@ -20,6 +20,7 @@ Feature overview and implementation status (as of February 2026).
 | 9 | [Library Architecture](#9-library-architecture) | GUI separation, granular OpenCV deps, include cleanup |
 | 12 | [PyPI Package](#12-pypi-package) | Bazel `py_wheel` → `pip install lsfm-*.whl` |
 | 13 | [Type Stubs](#13-type-stubs) | pybind11-stubgen `.pyi` stubs for IDE support (Pylance, Pyright) |
+| 17 | [Rerun.io Integration](#17-rerunio-integration) | Interactive visualization of line detection results via [rerun.io](https://rerun.io) (C++ + Python SDK, Jupyter, WSL docs) |
 
 ### 🔧 In Progress
 
@@ -32,7 +33,6 @@ Feature overview and implementation status (as of February 2026).
 
 | # | Feature | Effort | Description |
 |---|---------|--------|-------------|
-| 17 | [Rerun.io Integration](#17-rerunio-integration) | 🟡 | Interactive visualization of line detection results via [rerun.io](https://rerun.io) |
 | 18 | [Line Feature Demo](#18-line-feature-demo) | 🟡 | Modern line feature descriptor based on LSD |
 | 19 | [3D Reconstruction with Lines](#19-3d-reconstruction-with-lines) | 🔴 | 3D line reconstruction using LSD (e.g. [LIMAP](https://github.com/rerun-io/limap)) |
 

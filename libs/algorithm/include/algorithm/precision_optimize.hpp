@@ -64,7 +64,7 @@ class PrecisionOptimize : public ValueManager {
  public:
   using LineSegmentType = LineSegment<double>;
   using LineSegmentVector = std::vector<LineSegmentType>;
-  using MeanFunc = MeanHelper<double, cv::Point_>::func_type;
+  using MeanFunc = MeanHelper<double, Vec2>::func_type;
 
   /// @brief Construct with default parameters.
   PrecisionOptimize()
@@ -233,38 +233,65 @@ class PrecisionOptimize : public ValueManager {
   /// @return Mean computation function pointer.
   template <class MT>
   MeanFunc get_mean_func() const {
-    // Select interpolation type and mean computation variant
+    // Select interpolation type and mean computation variant.
+    // Explicit template argument <Vec2> and static_cast are required because
+    // process() is a member function template and the ternary operator cannot
+    // deduce a common type from different class function pointers.
     int idx = static_cast<int>(interpolation_);
     switch (idx) {
       case 0:
         if (use_sampled_) {
-          return use_fast_ ? FastMeanSampled<double, MT, NearestInterpolator<double, MT>>::process
-                           : MeanSampled<double, MT, NearestInterpolator<double, MT>>::process;
+          if (use_fast_) {
+            return static_cast<MeanFunc>(
+                FastMeanSampled<double, MT, NearestInterpolator<double, MT>>::template process<Vec2>);
+          }
+          return static_cast<MeanFunc>(
+              MeanSampled<double, MT, NearestInterpolator<double, MT>>::template process<Vec2>);
         }
-        return use_fast_ ? FastMean<double, MT, NearestInterpolator<double, MT>>::process
-                         : Mean<double, MT, NearestInterpolator<double, MT>>::process;
+        if (use_fast_) {
+          return static_cast<MeanFunc>(FastMean<double, MT, NearestInterpolator<double, MT>>::template process<Vec2>);
+        }
+        return static_cast<MeanFunc>(Mean<double, MT, NearestInterpolator<double, MT>>::template process<Vec2>);
       case 1:
         if (use_sampled_) {
-          return use_fast_ ? FastMeanSampled<double, MT, FastRoundNearestInterpolator<double, MT>>::process
-                           : MeanSampled<double, MT, FastRoundNearestInterpolator<double, MT>>::process;
+          if (use_fast_) {
+            return static_cast<MeanFunc>(
+                FastMeanSampled<double, MT, FastRoundNearestInterpolator<double, MT>>::template process<Vec2>);
+          }
+          return static_cast<MeanFunc>(
+              MeanSampled<double, MT, FastRoundNearestInterpolator<double, MT>>::template process<Vec2>);
         }
-        return use_fast_ ? FastMean<double, MT, FastRoundNearestInterpolator<double, MT>>::process
-                         : Mean<double, MT, FastRoundNearestInterpolator<double, MT>>::process;
+        if (use_fast_) {
+          return static_cast<MeanFunc>(
+              FastMean<double, MT, FastRoundNearestInterpolator<double, MT>>::template process<Vec2>);
+        }
+        return static_cast<MeanFunc>(
+            Mean<double, MT, FastRoundNearestInterpolator<double, MT>>::template process<Vec2>);
       case 3:
         if (use_sampled_) {
-          return use_fast_ ? FastMeanSampled<double, MT, CubicInterpolator<double, MT>>::process
-                           : MeanSampled<double, MT, CubicInterpolator<double, MT>>::process;
+          if (use_fast_) {
+            return static_cast<MeanFunc>(
+                FastMeanSampled<double, MT, CubicInterpolator<double, MT>>::template process<Vec2>);
+          }
+          return static_cast<MeanFunc>(MeanSampled<double, MT, CubicInterpolator<double, MT>>::template process<Vec2>);
         }
-        return use_fast_ ? FastMean<double, MT, CubicInterpolator<double, MT>>::process
-                         : Mean<double, MT, CubicInterpolator<double, MT>>::process;
+        if (use_fast_) {
+          return static_cast<MeanFunc>(FastMean<double, MT, CubicInterpolator<double, MT>>::template process<Vec2>);
+        }
+        return static_cast<MeanFunc>(Mean<double, MT, CubicInterpolator<double, MT>>::template process<Vec2>);
       case 2:
       default:
         if (use_sampled_) {
-          return use_fast_ ? FastMeanSampled<double, MT, LinearInterpolator<double, MT>>::process
-                           : MeanSampled<double, MT, LinearInterpolator<double, MT>>::process;
+          if (use_fast_) {
+            return static_cast<MeanFunc>(
+                FastMeanSampled<double, MT, LinearInterpolator<double, MT>>::template process<Vec2>);
+          }
+          return static_cast<MeanFunc>(MeanSampled<double, MT, LinearInterpolator<double, MT>>::template process<Vec2>);
         }
-        return use_fast_ ? FastMean<double, MT, LinearInterpolator<double, MT>>::process
-                         : Mean<double, MT, LinearInterpolator<double, MT>>::process;
+        if (use_fast_) {
+          return static_cast<MeanFunc>(FastMean<double, MT, LinearInterpolator<double, MT>>::template process<Vec2>);
+        }
+        return static_cast<MeanFunc>(Mean<double, MT, LinearInterpolator<double, MT>>::template process<Vec2>);
     }
   }
 

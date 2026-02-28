@@ -26,6 +26,12 @@ PYBIND11_MODULE(le_algorithm, m) {
   lsfm::python::bind_image_analyzer(m);
   lsfm::python::bind_detector_profile(m);
 
+  // Bind precision optimizer
+  lsfm::python::bind_precision_optimize(m);
+
+  // Bind preset store
+  lsfm::python::bind_preset_store(m);
+
   // Bind templated types for double (primary) and float
   lsfm::python::bind_algorithm<double>(m, "");
   lsfm::python::bind_algorithm<float>(m, "_f32");

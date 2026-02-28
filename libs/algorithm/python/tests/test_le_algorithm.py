@@ -328,5 +328,236 @@ class TestDetectorProfile:
         assert lo_p["nms_th_low"] > hi_p["nms_th_low"]
 
 
+class TestPrecisionOptimize:
+    """Tests for PrecisionOptimize bindings."""
+
+    def test_default_construction(self) -> None:
+        opt = le_algorithm.PrecisionOptimize()
+        assert repr(opt) == "<PrecisionOptimize>"
+
+    def test_construction_from_dict(self) -> None:
+        opt = le_algorithm.PrecisionOptimize({"search_range_d": 2.0, "use_fast": True})
+        params = opt.get_params()
+        assert params["search_range_d"] == pytest.approx(2.0)
+        assert params["use_fast"] is True
+
+    def test_get_params(self) -> None:
+        opt = le_algorithm.PrecisionOptimize()
+        params = opt.get_params()
+        assert "search_range_d" in params
+        assert "search_range_r" in params
+        assert "interpolation" in params
+        assert "search_strategy" in params
+        assert "stop_strategy" in params
+        assert "stop_delta" in params
+        assert "max_iterations" in params
+        assert "derivative_precision" in params
+        assert "mean_param" in params
+        assert "use_sampled" in params
+        assert "use_fast" in params
+        assert len(params) == 11
+
+    def test_set_params(self) -> None:
+        opt = le_algorithm.PrecisionOptimize()
+        opt.set_params({"search_range_d": 3.5, "max_iterations": 100})
+        params = opt.get_params()
+        assert params["search_range_d"] == pytest.approx(3.5)
+        assert params["max_iterations"] == 100
+
+    def test_param_descriptions(self) -> None:
+        opt = le_algorithm.PrecisionOptimize()
+        descs = opt.param_descriptions()
+        assert "search_range_d" in descs
+        assert len(descs["search_range_d"]) > 0
+
+    def test_optimize_line(self) -> None:
+        # Create a horizontal bright stripe and a slightly offset line
+        mag = np.zeros((100, 100), dtype=np.float32)
+        mag[48:52, 10:90] = 255.0  # Bright horizontal band at y=50
+        line = _make_segment(10, 51, 90, 51)  # 1 pixel off
+
+        opt = le_algorithm.PrecisionOptimize()
+        error, refined = opt.optimize_line(mag, line)
+        assert isinstance(error, float)
+        assert isinstance(refined, le_geometry.LineSegment_f64)
+
+    def test_optimize_all(self) -> None:
+        mag = np.zeros((100, 100), dtype=np.float32)
+        mag[48:52, 10:90] = 255.0
+        lines = [
+            _make_segment(10, 51, 90, 51),
+            _make_segment(10, 49, 90, 49),
+        ]
+
+        opt = le_algorithm.PrecisionOptimize()
+        errors, refined = opt.optimize_all(mag, lines)
+        assert len(errors) == 2
+        assert len(refined) == 2
+        assert all(isinstance(e, float) for e in errors)
+        assert all(isinstance(s, le_geometry.LineSegment_f64) for s in refined)
+
+    def test_optimize_empty(self) -> None:
+        mag = np.zeros((50, 50), dtype=np.float32)
+        opt = le_algorithm.PrecisionOptimize()
+        errors, refined = opt.optimize_all(mag, [])
+        assert len(errors) == 0
+        assert len(refined) == 0
+
+    def test_enums(self) -> None:
+        assert le_algorithm.PrecisionSearchStrategy.BFGS is not None
+        assert le_algorithm.PrecisionSearchStrategy.LBFGS is not None
+        assert le_algorithm.PrecisionSearchStrategy.CG is not None
+        assert le_algorithm.PrecisionStopStrategy.DELTA is not None
+        assert le_algorithm.PrecisionStopStrategy.GRAD_NORM is not None
+        assert le_algorithm.InterpolationMode.NEAREST is not None
+        assert le_algorithm.InterpolationMode.NEAREST_ROUND is not None
+        assert le_algorithm.InterpolationMode.BILINEAR is not None
+        assert le_algorithm.InterpolationMode.BICUBIC is not None
+
+    def test_enum_params(self) -> None:
+        opt = le_algorithm.PrecisionOptimize({"search_strategy": 1, "interpolation": 3})
+        params = opt.get_params()
+        assert params["search_strategy"] == 1  # LBFGS
+        assert params["interpolation"] == 3  # BICUBIC
+
+
+# ===========================================================================
+# PresetStore tests
+# ===========================================================================
+
+# Minimal JSON for testing PresetStore
+_TEST_PRESETS_JSON = """{
+  "metadata": {"num_images": 10},
+  "detectors": {
+    "LsdCC": {
+      "fast": {
+        "params": {"nms_th_low": 0.01, "nms_th_high": 0.03, "edge_min_pixels": 5},
+        "score": 0.85
+      },
+      "balanced": {
+        "params": {"nms_th_low": 0.008, "nms_th_high": 0.025, "edge_min_pixels": 8},
+        "score": 0.90
+      },
+      "accurate": {
+        "params": {"nms_th_low": 0.004, "edge_min_pixels": 3},
+        "score": 0.78
+      }
+    },
+    "LsdFGioi": {
+      "fast": {
+        "params": {"quant_error": 2.0, "bins": 1024},
+        "score": 0.82
+      }
+    }
+  }
+}"""
+
+
+class TestPresetStore:
+    """Tests for PresetStore bindings."""
+
+    def test_default_construction(self) -> None:
+        store = le_algorithm.PresetStore()
+        assert store.empty()
+        assert store.num_detectors() == 0
+
+    def test_from_string(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        assert not store.empty()
+        assert store.num_detectors() == 2
+
+    def test_invalid_json_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            le_algorithm.PresetStore.from_string("{bad json")
+
+    def test_missing_detectors_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            le_algorithm.PresetStore.from_string('{"metadata": {}}')
+
+    def test_nonexistent_file_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            le_algorithm.PresetStore("/nonexistent/preset_file.json")
+
+    def test_detector_names(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        names = store.detector_names()
+        assert "LsdCC" in names
+        assert "LsdFGioi" in names
+
+    def test_preset_names(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        names = store.preset_names()
+        assert "fast" in names
+        assert "balanced" in names
+        assert "accurate" in names
+
+    def test_get_by_detector_id(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        params = store.get(le_algorithm.DetectorId.LSD_CC, "balanced")
+        assert isinstance(params, list)
+        assert len(params) == 3
+        param_dict = {p["name"]: p["value"] for p in params}
+        assert abs(param_dict["nms_th_low"] - 0.008) < 1e-6
+        assert param_dict["edge_min_pixels"] == 8
+
+    def test_get_by_name(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        params = store.get_by_name("LsdFGioi", "fast")
+        assert len(params) == 2
+        param_dict = {p["name"]: p["value"] for p in params}
+        assert abs(param_dict["quant_error"] - 2.0) < 1e-6
+        assert param_dict["bins"] == 1024
+
+    def test_get_unknown_preset_raises(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        with pytest.raises(IndexError):
+            store.get(le_algorithm.DetectorId.LSD_CC, "nonexistent")
+
+    def test_get_unknown_detector_raises(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        with pytest.raises(IndexError):
+            store.get(le_algorithm.DetectorId.LSD_BURNS, "fast")
+
+    def test_score(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        assert abs(store.score(le_algorithm.DetectorId.LSD_CC, "fast") - 0.85) < 1e-6
+        assert (
+            abs(store.score(le_algorithm.DetectorId.LSD_CC, "balanced") - 0.90) < 1e-6
+        )
+
+    def test_score_by_name(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        assert abs(store.score_by_name("LsdFGioi", "fast") - 0.82) < 1e-6
+
+    def test_has(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        assert store.has(le_algorithm.DetectorId.LSD_CC, "fast")
+        assert store.has(le_algorithm.DetectorId.LSD_CC, "balanced")
+        assert not store.has(le_algorithm.DetectorId.LSD_CC, "nonexistent")
+        assert not store.has(le_algorithm.DetectorId.LSD_BURNS, "fast")
+
+    def test_has_by_name(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        assert store.has_by_name("LsdFGioi", "fast")
+        assert not store.has_by_name("LsdFGioi", "accurate")
+        assert not store.has_by_name("NoSuch", "fast")
+
+    def test_constants(self) -> None:
+        assert le_algorithm.PresetStore.FAST == "fast"
+        assert le_algorithm.PresetStore.BALANCED == "balanced"
+        assert le_algorithm.PresetStore.ACCURATE == "accurate"
+
+    def test_repr(self) -> None:
+        store = le_algorithm.PresetStore.from_string(_TEST_PRESETS_JSON)
+        r = repr(store)
+        assert "PresetStore" in r
+        assert "2 detectors" in r
+
+    def test_empty_store_repr(self) -> None:
+        store = le_algorithm.PresetStore()
+        r = repr(store)
+        assert "0 detectors" in r
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -2,7 +2,8 @@
 /// @brief Declarations for algorithm pybind11 bindings.
 ///
 /// Provides binding functions for line merging, connecting, accuracy
-/// measurement, parameter optimization, and search strategies.
+/// measurement, parameter optimization, precision optimization, and search
+/// strategies.
 
 #pragma once
 
@@ -45,6 +46,12 @@ void bind_image_analyzer(pybind11::module_& m);
 
 /// @brief Bind DetectorId enum and DetectorProfile class.
 void bind_detector_profile(pybind11::module_& m);
+
+/// @brief Bind PrecisionOptimize and related enums.
+void bind_precision_optimize(pybind11::module_& m);
+
+/// @brief Bind PresetStore class for loading optimized detector presets.
+void bind_preset_store(pybind11::module_& m);
 
 /// @brief Bind all algorithm types for a given floating-point type.
 /// @param m pybind11 module.
