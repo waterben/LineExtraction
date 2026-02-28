@@ -65,12 +65,15 @@ Minimum average gradient magnitude along the connection path. The gradient image
   Gradient magnitude along path:
 
   ▓▓▓ = strong gradient (edge)
+
   ░░░ = weak gradient (no edge)
 
   Strong connection (accepted):
+
   A ●──▓▓▓▓▓▓▓──● B     avg = 45.2 > threshold → connect
 
   Weak connection (rejected):
+
   A ●──░░░▓░░░──● B     avg = 3.1 < threshold → skip
 ```
 
@@ -82,6 +85,32 @@ At least one gradient magnitude source (`mag`, `qmag`, or `nmag`) must be availa
 
 - **Connect:** Run the connection algorithm on all current line segments
 - **Undo:** Revert to the previous line set
+
+## Workflows
+
+### Basic Connection
+
+1. **Detect lines** in the ControlWindow. Ensure that gradient magnitude sources are available (most detectors produce `mag` or `qmag`).
+2. **Open the Connection Optimizer** panel.
+3. **Set the parameters:**
+   - *Max. Radius* — how far apart endpoints can be (px). Start with the default (10) and increase if you see gaps that should be bridged.
+   - *Accuracy* — sampling step along the connecting path (px). Smaller = more accurate but slower.
+   - *Threshold* — minimum average gradient along the connection path. Lower values accept weaker connections.
+4. **Click "Connect"** (`pb_coprun`). The algorithm tests all endpoint pairs within radius, samples the gradient along each candidate path, and extends matched segments.
+5. **Inspect the result** in the main plot — newly connected segments replace the original pair. The line count decreases when connections succeed.
+6. **Undo** if the result is unsatisfactory — click **Undo** to revert to the pre-connection line set.
+
+### Combined Post-Processing Pipeline
+
+Connection works best as part of a multi-step post-processing chain:
+
+1. **Detect lines** in the ControlWindow.
+2. **Optimize** with the [Precision Optimizer](../precisionoptimizer/README.md) → lines shift to true edge positions.
+3. **Merge** with the [Continuity Optimizer](../continuityoptimizer/README.md) → near-collinear fragments become single long segments.
+4. **Connect** with the Connection Optimizer → bridge remaining small gaps between nearby endpoints.
+5. **Evaluate** the final result in the [Accuracy Measure](../accuracy/README.md) panel.
+
+The recommended order is Optimize → Merge → Connect, because optimization improves alignment (making merges more accurate), and merging reduces the segment count (making connection faster and more targeted).
 
 ## Use Case
 

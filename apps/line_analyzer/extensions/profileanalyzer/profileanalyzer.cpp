@@ -83,39 +83,8 @@ ProfileAnalyzer::ProfileAnalyzer(QWidget* parent)
   ui->chb_profile_fit->setToolTip(tr("Automatically scale the plot axes to fit all visible data."));
   ui->pb_profile_fit->setToolTip(tr("Manually rescale the plot to fit all visible curves."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Profile Analyzer"),
-                tr("<h3>Line Profile Analyzer</h3>"
-                   "<p>Visualizes the gradient response profile perpendicular "
-                   "to a selected line segment.</p>"
-                   "<p><b>Blue curve:</b> Mean gradient response averaged along "
-                   "the line length.<br/>"
-                   "<b>Shaded band:</b> \xc2\xb1"
-                   "1 standard deviation.<br/>"
-                   "<b>Red curve:</b> Single-point profile at a specific "
-                   "position along the line.</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Select Source:</b> Gradient image to sample from.</li>"
-                   "<li><b>Profile Range:</b> \xc2\xb1"
-                   "pixels around the line center.</li>"
-                   "<li><b>Line Distance:</b> Support pixels for averaging.</li>"
-                   "<li><b>Use Line Distance as Line Samples:</b> Discrete mode.</li>"
-                   "<li><b>Subdivisions:</b> Evaluation points per pixel.</li>"
-                   "<li><b>Interpolation:</b> Sampling method.</li>"
-                   "<li><b>Fast Interpolation:</b> Approximate sampling.</li>"
-                   "</ul>"
-                   "<h4>Display</h4>"
-                   "<ul>"
-                   "<li><b>Show Profile:</b> Toggle mean profile (blue).</li>"
-                   "<li><b>Show Standard Deviation:</b> Toggle \xc2\xb1"
-                   "\xcf\x83 band.</li>"
-                   "<li><b>Show single Profile on Line:</b> Single-point "
-                   "cross-section (red).</li>"
-                   "<li><b>Profile Position:</b> Where along the line to sample.</li>"
-                   "<li><b>Auto Fit to Range:</b> Auto-scale plot axes.</li>"
-                   "<li><b>Fit Profile:</b> Manual axis rescale.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/profileanalyzer/README.md");
 }
 
 ProfileAnalyzer::~ProfileAnalyzer() {

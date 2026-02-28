@@ -18,15 +18,58 @@ Advanced ground truth comparison tool with interactive visualization. Unlike the
 - **Configurable thresholds:** Angle tolerance, distance threshold, and error bounds for the matching algorithm
 - **Export:** Save analysis results to text files for external processing
 
-## Workflow
+## Workflows
 
-1. Load an image and run detection
-2. Open the Line Analyser 2D panel
-3. File → **Open GT** to load ground truth data (separate from Accuracy Measure)
-4. The table populates with per-segment matching results
-5. Click on rows to highlight the corresponding segments in the plot
-6. Use **Debug Mode** to lock pairs for detailed geometric inspection
-7. Use **Analysis Mode** to compare against a saved detection run
+### Basic Ground Truth Comparison
+
+1. **Load an image** in the main ControlWindow (browse or pick from the Test Images dropdown).
+2. **Select a detector** from the detector dropdown and click **Process** to run line detection.
+3. **Open the Line Analyser 2D** panel from the toolbar / menu.
+4. **Load ground truth data:**
+   - Click **Open GT** and select a `.txt` file with `x1,y1,x2,y2` lines, *or*
+   - Click the **Easy** / **Hard** button to load a bundled example (image + GT are loaded together so you can skip steps 1–2).
+5. **Set matching thresholds** on the Test page:
+   - *Distance Threshold* — maximum perpendicular distance (px) for a match.
+   - *Angle Threshold* — maximum angle difference (°) for a match.
+   - *Error Threshold* — combined metric bound for endpoint distances, angles, and lengths.
+6. **Click "Compute Correct Lines"** to run the matcher. The GT table fills with per-segment results; matched lines are drawn in green, unmatched GT lines in red, and false positive detections in orange.
+7. **Explore the results:**
+   - Click a row in the **GT table** to see which detected lines matched that GT segment.
+   - Click a row in the **matched-lines table** below to highlight the specific detected segment in the plot.
+   - Click directly on a line in the plot — the panel identifies whether it is a GT, matched, or detected line and selects the corresponding table row.
+
+### Debug Mode — Pairwise Geometric Inspection
+
+1. **Complete the Basic GT Comparison** workflow above so that matched lines are available.
+2. Switch to the **Debug** page.
+3. **Click "Start Debug"** to enable debug mode.
+4. **Lock a GT line:** Click a GT line in the plot or table, then click **Lock GT Line**. The locked line is highlighted and its geometry is shown in the result area.
+5. **Lock a detected line:** Click a detected/matched line in the plot or table, then click **Lock Other Line**.
+6. **View the pairwise metrics** that appear automatically: angle difference, perpendicular distance, endpoint distances (start↔start, start↔end, end↔start, end↔end), and length difference.
+7. **Repeat** with different pairs by locking a new GT or detected line at any time.
+8. Click **Reset** to clear locked selections, or **Stop Debug** to leave debug mode.
+
+### Analysis Mode — Before/After Comparison
+
+Use this workflow to compare detection results before and after an optimization step (e.g., Precision Optimizer):
+
+1. **Detect lines and compute correct lines** as in the Basic workflow.
+2. Switch to the **Analysis** page and click **Start Analysis**.
+3. **Freeze the current state:** Click **Freeze All** (calls `freezeAllLines()` on the ControlWindow). The current matched lines are saved as the "old" set.
+4. **Optimize:** Open the [Precision Optimizer](../precisionoptimizer/README.md) and run **Optimize All**, or apply any other modification to the lines.
+5. **Observe the update:** When ControlWindow emits `linesUpdated`, the panel automatically re-computes correct lines for the new set and populates two side-by-side tables:
+   - **Current** — the latest matched lines after optimization.
+   - **Old** — the frozen matched lines before optimization.
+   - Each row shows the percentage change in error metrics (▲ / ▼).
+6. **Click rows** in either table to highlight the corresponding line in the plot and compare visually.
+7. **Save the analysis** by clicking **Save** — exports a LaTeX-formatted `.txt` file with both tables for publications.
+8. Click **Stop Analysis** to leave analysis mode.
+
+### Exporting Results
+
+1. After computing correct lines (Basic workflow) or completing an analysis comparison, click **Save**.
+2. Choose a filename and location in the file dialog.
+3. The export file contains all per-segment error metrics in LaTeX table format, ready for inclusion in papers.
 
 ## Bundled Examples
 

@@ -39,45 +39,8 @@ LineAnalyser2D::LineAnalyser2D(QWidget* parent)
   initPlotWindow();
   initConnections();
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Line Analyser 2D"),
-                tr("<h3>Line Analyser 2D</h3>"
-                   "<p>Advanced per-segment ground truth comparison with "
-                   "interactive visualization, debug, and analysis modes.</p>"
-                   "<h4>Ground Truth</h4>"
-                   "<ul>"
-                   "<li><b>Select Text File:</b> Choose a plain-text GT file "
-                   "(<code>x1,y1,x2,y2</code> per line).</li>"
-                   "<li><b>Options:</b> Configure coordinate transforms "
-                   "(image size, scale, offset) for normalized [0,1] data.</li>"
-                   "<li><b>Load:</b> Parse the selected file and populate the "
-                   "GT table.</li>"
-                   "<li><b>Easy / Hard:</b> Load bundled synthetic examples "
-                   "with matching images.</li>"
-                   "</ul>"
-                   "<h4>Main Tab</h4>"
-                   "<p>Shows GT segments and matched (correct) lines in two "
-                   "tables.  Click a row to highlight the segment in the plot.</p>"
-                   "<h4>Image View</h4>"
-                   "<p>Toggle visibility of the image, grid, GT lines, all "
-                   "detected lines, and correct lines.  Choose image source "
-                   "(gray, magnitude, etc.) and color map.</p>"
-                   "<h4>Test Tab</h4>"
-                   "<p>Configure matching thresholds and compute correct lines:</p>"
-                   "<ul>"
-                   "<li><b>Distance:</b> Max perpendicular distance (px).</li>"
-                   "<li><b>Angle:</b> Max angle difference (\xc2\xb0).</li>"
-                   "<li><b>Error:</b> Max combined endpoint error.</li>"
-                   "</ul>"
-                   "<h4>Debug Tab</h4>"
-                   "<p>Lock a GT line and a detected line to inspect their "
-                   "geometric relationship in detail (distances, angles, "
-                   "miscalculation).</p>"
-                   "<h4>Analysis Tab</h4>"
-                   "<p>Compare two detection runs (current vs. saved). "
-                   "Tables show per-segment deltas; use <b>Save</b> to "
-                   "export results and <b>Optimizer</b> for precision "
-                   "refinement.</p>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/lineanalyser2d/README.md");
 }
 
 LineAnalyser2D::~LineAnalyser2D() { delete ui; }

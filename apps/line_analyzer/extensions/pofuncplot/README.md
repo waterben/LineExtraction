@@ -55,6 +55,38 @@ The plot evaluates the mean gradient response on a 2D grid around the current li
 | **Fit Rotation** | Side view emphasizing the rotation (angle) dimension |
 | **Reset View** | Restore default 3D perspective |
 
+## Workflows
+
+### Visualizing the Optimization Landscape
+
+1. **Detect lines** in the ControlWindow.
+2. **Select a line** by clicking it in the main plot or table. If **Auto** (`chb_auto`) is checked, the 3D plot updates immediately.
+3. **Choose a data source** from the dropdown (gradient magnitude image).
+4. **Set the axis ranges:**
+   - *Profile Range* — X-axis half-range (±pixels). Wider range shows more of the landscape.
+   - *Rotation Range* — Y-axis half-range (±degrees). Wider range reveals multiple peaks.
+5. **Increase Subdivisions** for a smoother surface (at the cost of computation time).
+6. **Read the surface:**
+   - A **single sharp peak** near the center → the optimizer will converge reliably and the current line position is close to optimal.
+   - A **flat surface** → weak edge, the optimizer has no gradient signal to follow.
+   - A **ridge** (elongated peak) → the line position is well-defined in one dimension but ambiguous in the other.
+   - **Multiple peaks** → neighboring edges compete; the optimizer might snap to the wrong one.
+
+### Comparing Views
+
+1. **Click "Fit Profile"** to see the surface from the side, emphasizing the profile (offset) dimension. This is like looking at the [Profile Analyzer](../profileanalyzer/README.md) in 3D.
+2. **Click "Fit Rotation"** to see the surface from the orthogonal side, emphasizing angular sensitivity.
+3. **Click "Reset View"** to return to the default 3D perspective.
+4. **Rotate the surface freely** by clicking and dragging inside the 3D plot.
+
+### Diagnosing Optimization Problems
+
+1. **Run the [Precision Optimizer](../precisionoptimizer/README.md)** on a line and observe that it does not converge or converges to an unexpected position.
+2. **Open the PO Function Plot** for that line and check the surface shape:
+   - If the surface is flat → increase the profile range or check the data source.
+   - If there are multiple peaks → the line is near parallel edges; consider narrowing the search range so the optimizer stays on the correct peak.
+   - If the peak is at the edge of the range → increase the range so the true optimum falls within the search window.
+
 ## Use Case
 
 Understand the optimization landscape before or after running the [Precision Optimizer](../precisionoptimizer/README.md). Use the "Fit Profile" and "Fit Rotation" views to inspect each dimension independently.

@@ -54,37 +54,8 @@ POFuncPlot::POFuncPlot(QWidget* parent)
   ui->cb_coord_style->setToolTip(tr("Coordinate frame style for the 3D plot."));
   ui->cb_plot_style->setToolTip(tr("Rendering style for the 3D surface."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 PO Function Plot"),
-                tr("<h3>PO Function Plot</h3>"
-                   "<p>3D surface visualization of the Precision Optimization "
-                   "objective function. Shows how the mean gradient response "
-                   "varies with profile offset (X) and rotation angle (Y).</p>"
-                   "<p>The optimal line position corresponds to the peak of "
-                   "this surface.</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Select Source:</b> Gradient magnitude source.</li>"
-                   "<li><b>Rotation Range:</b> \xc2\xb1"
-                   "degrees for the rotation axis.</li>"
-                   "<li><b>Profile Range:</b> \xc2\xb1"
-                   "pixels for profile offset.</li>"
-                   "<li><b>Line Distance:</b> Support pixel count.</li>"
-                   "<li><b>Use Line Distance as Line Samples:</b> Discrete mode.</li>"
-                   "<li><b>Subdivisions:</b> Mesh resolution per unit range.</li>"
-                   "<li><b>Interpolation:</b> Pixel sampling method.</li>"
-                   "<li><b>Fast Interpolation:</b> Approximate mode.</li>"
-                   "<li><b>Plot Style:</b> Surface rendering "
-                   "(wireframe, filled, points, etc.).</li>"
-                   "<li><b>Coordinate Style:</b> Frame around the plot.</li>"
-                   "<li><b>Interactive Plot:</b> Auto-replot on line changes.</li>"
-                   "</ul>"
-                   "<h4>Actions</h4>"
-                   "<ul>"
-                   "<li><b>Plot Function:</b> Compute and display the surface.</li>"
-                   "<li><b>Reset View:</b> Reset 3D camera.</li>"
-                   "<li><b>Fit Profile / Fit Rotation:</b> Zoom to axis range.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/pofuncplot/README.md");
 }
 
 POFuncPlot::~POFuncPlot() {

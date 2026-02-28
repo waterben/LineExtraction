@@ -34,28 +34,8 @@ ConnectionOptimizer::ConnectionOptimizer(QWidget* parent)
          "rejected."));
   ui->pb_coprun->setToolTip(tr("Run the connection algorithm on the currently detected lines."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Connection Optimizer"),
-                tr("<h3>Connection Optimizer</h3>"
-                   "<p>Connects nearby line segment endpoints by sampling the "
-                   "gradient magnitude along the shortest path between them.</p>"
-                   "<h4>How it works</h4>"
-                   "<ol>"
-                   "<li>For each pair of endpoints within the search radius, "
-                   "the algorithm samples the gradient magnitude along the "
-                   "straight line connecting them.</li>"
-                   "<li>If the average magnitude exceeds the threshold, the "
-                   "segments are connected into a single longer segment.</li>"
-                   "</ol>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Max. Radius:</b> Search radius in pixels. Only "
-                   "endpoint pairs closer than this are considered.</li>"
-                   "<li><b>Accuracy:</b> Sampling step (px) along the connecting "
-                   "path. Smaller = more samples = more accurate but slower.</li>"
-                   "<li><b>Threshold:</b> Minimum average gradient magnitude. "
-                   "Increase to reject weak connections.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/connectionoptimizer/README.md");
 }
 
 ConnectionOptimizer::~ConnectionOptimizer() { delete ui; }

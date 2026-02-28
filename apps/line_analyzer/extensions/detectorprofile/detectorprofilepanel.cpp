@@ -47,41 +47,8 @@ DetectorProfilePanel::DetectorProfilePanel(QWidget* parent)
   ui->lbl_img_edge_density->setToolTip(tr("Fraction of edge pixels relative to total pixels."));
   ui->lbl_img_dynamic_range->setToolTip(tr("Ratio of usable intensity range to theoretical maximum."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Detector Profile"),
-                tr("<h3>Detector Profile Panel</h3>"
-                   "<p>High-level control for tuning line detector parameters "
-                   "through intuitive percentage-based knobs and adaptive factors.</p>"
-                   "<h4>Profile Knobs (0\xe2\x80\x93"
-                   "100%%)</h4>"
-                   "<ul>"
-                   "<li><b>Detail:</b> Detection granularity. Higher = more segments, "
-                   "including shorter and fainter ones.</li>"
-                   "<li><b>Gap Tolerance:</b> Tolerance of gaps in edge chains. "
-                   "Higher = bridges larger gaps.</li>"
-                   "<li><b>Min Length:</b> Minimum segment length threshold. "
-                   "Higher = discards shorter segments.</li>"
-                   "<li><b>Precision:</b> Sub-pixel fitting strictness. "
-                   "Higher = tighter fitting tolerances.</li>"
-                   "</ul>"
-                   "<h4>Adaptive Factors</h4>"
-                   "<ul>"
-                   "<li><b>Contrast:</b> Multiplier for contrast-dependent thresholds. "
-                   "&gt;1 raises thresholds; &lt;1 lowers them.</li>"
-                   "<li><b>Noise:</b> Multiplier for noise-related thresholds. "
-                   "Increase for noisier images.</li>"
-                   "</ul>"
-                   "<h4>Image Properties</h4>"
-                   "<p>Automatically analyzed: contrast, noise level, edge density, "
-                   "dynamic range of the current source image.</p>"
-                   "<h4>Buttons</h4>"
-                   "<ul>"
-                   "<li><b>Auto from Image:</b> Set all knobs/factors from "
-                   "ImageAnalyzer suggestions.</li>"
-                   "<li><b>Apply to Detector:</b> Push current profile to the "
-                   "active detector.</li>"
-                   "<li><b>Reset:</b> Return knobs to 50%% and factors to 1.0.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/detectorprofile/README.md");
 }
 
 DetectorProfilePanel::~DetectorProfilePanel() { delete ui; }

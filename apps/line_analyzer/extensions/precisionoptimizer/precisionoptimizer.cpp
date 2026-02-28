@@ -76,51 +76,8 @@ PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
   ui->pb_line->setToolTip(tr("Optimize the currently selected line segment."));
   ui->pb_all->setToolTip(tr("Optimize all detected line segments."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Precision Optimizer"),
-                tr("<h3>Precision Optimizer</h3>"
-                   "<p>Refines sub-pixel line positions by maximizing the mean "
-                   "gradient response along each segment's profile using numerical "
-                   "optimization (dlib library).</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Select Source:</b> Gradient magnitude image to evaluate.</li>"
-                   "<li><b>Rotation Range:</b> \xc2\xb1"
-                   "degrees around the current orientation. "
-                   "Use <b>Auto Rotation</b> to derive this automatically "
-                   "from the gradient kernel size.</li>"
-                   "<li><b>Profile Range:</b> \xc2\xb1"
-                   "pixels perpendicular to the line.</li>"
-                   "<li><b>Line Distance:</b> Support pixel count for mean computation.</li>"
-                   "<li><b>Use Line Distance as Line Samples:</b> Discrete sampling mode.</li>"
-                   "<li><b>Interpolation:</b> Pixel sampling method (nearest, bilinear, bicubic).</li>"
-                   "<li><b>Fast Interpolation:</b> Approximate interpolation.</li>"
-                   "<li><b>Search Strategy:</b> BFGS (quasi-Newton), L-BFGS (limited-memory), "
-                   "CG (conjugate gradient).</li>"
-                   "<li><b>Stop Strategy:</b> Delta (function value change) or "
-                   "Gradient Norm.</li>"
-                   "<li><b>Stop Delta/Norm:</b> Convergence threshold.</li>"
-                   "<li><b>Max Iterations:</b> Upper limit on iterations.</li>"
-                   "<li><b>Derivative Delta:</b> Step size for numerical derivatives.</li>"
-                   "</ul>"
-                   "<h4>Auto Rotation</h4>"
-                   "<p>When checked, the rotation range is derived from the "
-                   "active detector\xe2\x80\x99"
-                   "s gradient kernel size <i>k</i>:  "
-                   "\xc2\xb1"
-                   "atan(1 / \xe2\x8c\x8a"
-                   "<i>k</i>/2\xe2\x8c\x8b)\xc2\xb0. "
-                   "For k=3: \xc2\xb1"
-                   "45\xc2\xb0, k=5: \xc2\xb1"
-                   "26.6\xc2\xb0, "
-                   "k=7: \xc2\xb1"
-                   "18.4\xc2\xb0, k=9: \xc2\xb1"
-                   "14.0\xc2\xb0.</p>"
-                   "<h4>Actions</h4>"
-                   "<ul>"
-                   "<li><b>Optimize Line:</b> Optimize the selected line only.</li>"
-                   "<li><b>Optimize All Lines:</b> Batch-optimize every detected segment.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/precisionoptimizer/README.md");
 }
 
 PrecisionOptimizer::~PrecisionOptimizer() { delete ui; }

@@ -40,34 +40,8 @@ Quiver::Quiver(QWidget* parent)
   ui->pb_apply->setToolTip(tr("Apply the current settings and recompute the quiver overlay."));
   ui->pb_delete->setToolTip(tr("Remove all arrows from the image."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Quiver Visualization"),
-                tr("<h3>Quiver Visualization</h3>"
-                   "<p>Displays gradient vector fields as arrows overlaid on the "
-                   "image. Useful for inspecting gradient directions and magnitudes "
-                   "computed by the edge detector.</p>"
-                   "<h4>Mode</h4>"
-                   "<ul>"
-                   "<li><b>Gx and Gy:</b> Raw horizontal/vertical gradient components.</li>"
-                   "<li><b>Direction:</b> Edge direction vectors (perpendicular to gradient).</li>"
-                   "<li><b>Phase:</b> Gradient phase angles as arrows.</li>"
-                   "<li><b>Phase + Direction:</b> Both phase and direction overlaid.</li>"
-                   "</ul>"
-                   "<h4>Options</h4>"
-                   "<ul>"
-                   "<li><b>Use Thresholding:</b> Only show arrows above the threshold.</li>"
-                   "<li><b>Threshold:</b> Minimum magnitude for display.</li>"
-                   "<li><b>Use Scaling:</b> Arrow length proportional to magnitude.</li>"
-                   "<li><b>Pixel Area:</b> Averaging area per arrow.</li>"
-                   "<li><b>Interpolation Mode:</b> OpenCV interpolation method.</li>"
-                   "</ul>"
-                   "<h4>Controls</h4>"
-                   "<ul>"
-                   "<li><b>Select Color:</b> Arrow color.</li>"
-                   "<li><b>Display Quivers:</b> Toggle visibility.</li>"
-                   "<li><b>Apply:</b> Recompute arrows with current settings.</li>"
-                   "<li><b>Delete Quivers:</b> Remove all arrows.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "README.md", "visualization-options");
 }
 
 Quiver::~Quiver() { delete ui; }

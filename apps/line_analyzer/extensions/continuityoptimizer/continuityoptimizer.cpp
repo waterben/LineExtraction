@@ -39,30 +39,8 @@ ContinuityOptimizer::ContinuityOptimizer(QWidget* parent)
          "averaged geometry."));
   ui->pb_corun->setToolTip(tr("Run the merge algorithm on the currently detected lines."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Continuity Optimizer"),
-                tr("<h3>Continuity Optimizer</h3>"
-                   "<p>Merges near-collinear line segments that likely belong "
-                   "to the same physical edge but were split during detection.</p>"
-                   "<h4>How it works</h4>"
-                   "<p>For each pair of segments, geometric compatibility is "
-                   "checked (angle, distance, parallelism). Compatible pairs "
-                   "are merged into a single longer segment.</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Max. Distance:</b> Maximum endpoint distance (px) "
-                   "between two candidate segments.</li>"
-                   "<li><b>Angle Error:</b> Maximum direction difference (rad). "
-                   "Smaller = stricter collinearity.</li>"
-                   "<li><b>Distance Error:</b> Maximum perpendicular distance (px) "
-                   "from endpoints of one segment to the supporting line of "
-                   "the other.</li>"
-                   "<li><b>Parallel Error:</b> Lateral gap tolerance. Controls "
-                   "overlap/overshoot allowance along the line direction.</li>"
-                   "<li><b>Merge Type:</b> 'Endpoints' uses the outermost "
-                   "endpoints; 'Average' fits a new segment to the averaged "
-                   "geometry.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/continuityoptimizer/README.md");
 }
 
 ContinuityOptimizer::~ContinuityOptimizer() { delete ui; }

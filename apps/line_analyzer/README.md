@@ -111,26 +111,88 @@ cmake --build . -j$(nproc)
 
 ## Usage
 
-### Basic Workflow
+### Workflow 1 — First Detection (Getting Started)
 
-1. **Load Image:**
-   - File → Open Image
-   - Or use default test image
+1. **Launch the application:**
 
-2. **Select Detector:**
-   - Choose from detector dropdown
-   - Multiple detector configurations can be tested
+   ```bash
+   bazel run //apps/line_analyzer:app_line_analyzer
+   ```
 
-3. **Adjust Parameters:**
-   - **Quick start:** Select a preset (Fast / Balanced / Accurate) from the Preset dropdown
-   - Use sliders for real-time tuning
-   - Or use Detector Profile for high-level control
-   - Or manually edit values in the parameter table
+   The main ControlWindow opens with the default windmill test image pre-loaded.
+2. **Load an image** (optional — skip if you want to use the windmill):
+   - Click **Select Image** → browse the filesystem, *or*
+   - Use the **Test Images** dropdown row: pick a category (General, BSDS500, Noise, York Urban, …) and then an image from that dataset.
+3. **Click "Options"** to open the PreProcessing dialog (optional):
+   - Adjust scale, apply Gaussian noise, or set blur parameters.
+   - Close the dialog when done.
+4. **Click "Load"** to read the image into memory. The plot window shows the loaded image and gradient sources become available for all panels.
+5. **Select a detector** from the *Select Line Segment Detector* dropdown (e.g., "LSD EL"). The parameter table below populates with the detector's parameters.
+6. **Choose a preset** (optional): Pick *Fast*, *Balanced*, or *Accurate* from the Preset dropdown — parameters are applied instantly and the table updates.
+7. **Click "Process"** to run detection. Detected lines are drawn in the plot; the line table at the bottom fills with per-line geometry (angle, distance, start/end coordinates, length).
+8. **Explore results:**
+   - Click a line in the plot or a row in the table to select it. The selected line turns red; the spin/slider controls show its modification offsets.
+   - Change the image source dropdown (original, gradient magnitude, gradient direction, edge map) to overlay lines on different visualizations.
+   - Toggle quiver plots to show the gradient vector field.
 
-4. **Analyze Results:**
-   - View detected lines in main window
-   - Open analysis tools for detailed inspection
-   - Compare different detector configurations
+### Workflow 2 — Comparing Detectors
+
+1. **Load an image and run detection** with detector A (e.g., "LSD EL") as in Workflow 1.
+2. **Note the results** (line count, visual coverage).
+3. **Switch the detector** dropdown to detector B (e.g., "LSD FGioi"). The parameter table updates.
+4. **Click "Process"** again. The previous lines are replaced with new detections.
+5. **Compare visually.** For quantitative comparison:
+   - Open the [Accuracy Measure](extensions/accuracy/README.md) panel, load a ground truth CSV, and click **Evaluate** after each detector run.
+   - Or open the [Detector Profile](extensions/detectorprofile/README.md) panel and use **Auto from Image** for each detector to see how their profiles differ.
+
+### Workflow 3 — Interactive Parameter Tuning
+
+1. **Load an image and select a detector** (Workflow 1, steps 1–5).
+2. **Edit parameters directly** in the parameter table: double-click a value cell, type a new value, press Enter. Detection re-runs on the next "Process" click.
+3. **Click "Process"** to see the effect of your change.
+4. **Iterate:** Adjust one parameter at a time and re-process to understand each parameter's impact.
+5. **Reset** if needed: Click **Reset Detector** to restore factory defaults, or **Reset All** to reset every detector.
+
+### Workflow 4 — Preset-Based Tuning
+
+1. **Load an image and select a detector.**
+2. **Apply the "Balanced" preset** from the Preset dropdown — this applies an optimized parameter set targeting the best F1 score.
+3. **Click "Process"** to detect lines.
+4. **Switch to "Fast" or "Accurate"** and re-process to compare optimization targets:
+   - *Fast* = high precision (few false positives, may miss some lines).
+   - *Balanced* = best F1 score (good precision + recall).
+   - *Accurate* = high recall (finds most lines, may include false positives).
+5. **Fine-tune:** After applying a preset, manually adjust individual parameters in the table and re-process. The preset is a starting point, not a constraint.
+
+### Workflow 5 — Line Manipulation and Freezing
+
+1. **Detect lines** (Workflow 1).
+2. **Select a line** by clicking it in the plot or table.
+3. **Adjust the line** using the spin boxes / sliders:
+   - *Rotation* — rotate the line around its center.
+   - *Ortho Translation* — shift the line perpendicular to its direction.
+   - *Start / End Translation* — move individual endpoints along the line direction.
+4. **Observe** the modified line in the plot (drawn in cyan to distinguish from the original blue).
+5. **Freeze the modification:** Click **Freeze** to bake the current offsets into the line's base geometry (the line turns blue again, offsets reset to 0).
+6. **Freeze All:** Click **Freeze All** to batch-freeze every modified line. This emits `linesUpdated` which triggers the [Line Analyser 2D](extensions/lineanalyser2d/README.md) analysis workflow.
+7. **Flip operations:**
+   - **Flip Normals** — reverses the normal direction of all lines (useful when the detector assigned inconsistent orientations).
+   - **Flip Endpoints** — swaps start↔end for all lines.
+
+### Workflow 6 — Full Evaluation Pipeline
+
+This is the recommended end-to-end workflow for publication-quality evaluation:
+
+1. **Load an image** (ideally from a standard dataset like BSDS500 or York Urban).
+2. **Select a detector and apply a preset** (or use Detector Profile's **Auto from Image**).
+3. **Click "Process"** to detect lines.
+4. **Open Accuracy Measure** → load GT CSV → **Evaluate** → note P/R/F1/sAP.
+5. **Open Precision Optimizer** → **Optimize All** → lines shift to sub-pixel optimal positions.
+6. **Open Continuity Optimizer** → **Merge** → reduce over-segmentation.
+7. **Open Connection Optimizer** → **Connect** → bridge small gaps.
+8. **Re-evaluate in Accuracy Measure** → compare metrics before/after post-processing.
+9. **Open Line Analyser 2D** → load GT TXT → **Compute Correct Lines** → inspect per-segment errors.
+10. **Use Analysis Mode** in Line Analyser 2D to create a before/after comparison table and export it for your paper.
 
 ### Keyboard Shortcuts
 

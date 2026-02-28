@@ -55,6 +55,27 @@ Based on the computed image properties, the panel suggests values for the [Detec
 |--------|--------|
 | **Analyze** | Run image analysis and update all property and suggestion fields |
 
+## Workflows
+
+### Automatic Analysis (on Image Load)
+
+1. **Load an image** in the ControlWindow and click **"Load"**.
+2. The Image Analyzer **automatically runs** when `sourcesChanged` fires. All four image properties (contrast, noise level, edge density, dynamic range) and the six suggested profile values update without any user action.
+3. **Read** the results to understand the image characteristics before configuring detector parameters.
+
+### Manual One-Shot Analysis
+
+1. **Open the Image Analyzer panel** after loading an image.
+2. **Click "Analyze"** (`pb_analyze`) to explicitly trigger the analysis. This is useful if you changed the preprocessing options (scale, noise, blur) after the initial load and want to re-analyze.
+3. **Read** the image properties and profile suggestions.
+
+### Using Suggestions with Detector Profile
+
+1. **Open the Image Analyzer** and note the suggested values (Detail, Gap Tolerance, Min Length, Precision, Contrast Factor, Noise Factor).
+2. **Open the [Detector Profile](../detectorprofile/README.md) panel.**
+3. **Manually enter** the suggested values into the corresponding knobs and factor fields. Alternatively, click **"Auto from Image"** in the Detector Profile panel, which performs the same analysis internally and sets the values automatically.
+4. **Apply** and **Process** as described in the Detector Profile workflow.
+
 ## Use Case
 
 Understand the characteristics of the current image before configuring detector parameters. The suggested profile values can be manually entered into the Detector Profile panel, or you can use the Detector Profile panel's **Auto from Image** button which performs the same analysis internally.

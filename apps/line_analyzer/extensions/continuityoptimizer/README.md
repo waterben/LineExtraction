@@ -101,6 +101,38 @@ If the segments overlap along the direction, the gap is 0 and the check always p
 - **Merge:** Run the merge algorithm on all current line segments
 - **Undo:** Revert to the previous line set
 
+## Workflows
+
+### Basic Merge
+
+1. **Detect lines** in the ControlWindow.
+2. **Open the Continuity Optimizer** panel.
+3. **Set the merge parameters:**
+   - *Max. Distance* — maximum endpoint distance (px) between merge candidates. Start with the default (10) and increase for scenes with larger gaps.
+   - *Angle Error* — maximum angle difference (deg). Keep low (e.g., 0.03–5°) for strict collinearity; increase for looser merging.
+   - *Distance Error* — maximum perpendicular distance (px) between the midpoint of one segment and the line through the other.
+   - *Parallel Error* — maximum gap along the line direction (px). 0 means segments must overlap or touch.
+   - *Merge Type* — "Endpoints" connects the outermost points; "Average" fits a new segment to averaged geometry.
+4. **Click "Merge"** (`pb_corun`). The algorithm iteratively merges qualifying pairs until convergence. The line count decreases as fragments are consolidated.
+5. **Inspect the result** in the main plot — merged segments are typically longer and fewer.
+6. **Undo** if the merging was too aggressive — click **Undo** to revert.
+
+### Iterative Refinement
+
+1. **Start with conservative parameters** (small angle error, small parallel error).
+2. **Merge** → inspect → increase one parameter slightly → **Merge** again.
+3. **Repeat** until the desired level of consolidation is reached. Each merge pass only affects the current line set, so you can chain multiple passes with progressively looser thresholds.
+
+### Combined Post-Processing Pipeline
+
+Merging is most effective as part of a pipeline:
+
+1. **Detect lines** in the ControlWindow.
+2. **Optimize** with the [Precision Optimizer](../precisionoptimizer/README.md) → better alignment makes merges more accurate.
+3. **Merge** with the Continuity Optimizer → collinear fragments become single segments.
+4. **Connect** with the [Connection Optimizer](../connectionoptimizer/README.md) → bridge remaining gaps.
+5. **Evaluate** in [Accuracy Measure](../accuracy/README.md).
+
 ## Use Case
 
 Reduce over-segmentation where a single edge is detected as multiple short segments. Particularly useful for:

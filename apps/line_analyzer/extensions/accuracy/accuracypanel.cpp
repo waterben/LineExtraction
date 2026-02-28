@@ -42,37 +42,8 @@ AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", paren
   ui->lbl_counts->setToolTip(tr("True Positives / False Positives / False Negatives."));
   ui->lbl_gt_count->setToolTip(tr("Total number of ground truth segments loaded from the CSV."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Accuracy Measure"),
-                tr("<h3>Accuracy Measure</h3>"
-                   "<p>Evaluates the quality of detected line segments by "
-                   "comparing them against ground truth annotations loaded "
-                   "from a CSV file.</p>"
-                   "<h4>Ground Truth</h4>"
-                   "<ul>"
-                   "<li><b>Browse:</b> Load a CSV with GT segment annotations "
-                   "(x1, y1, x2, y2 columns, optionally per image name).</li>"
-                   "<li><b>Easy:</b> Load the easy example (single hexagon, "
-                   "6 GT segments, no noise).</li>"
-                   "<li><b>Hard:</b> Load the challenge example (8 shapes, "
-                   "31 GT segments, varying contrast, Gaussian noise).</li>"
-                   "</ul>"
-                   "<h4>Settings</h4>"
-                   "<ul>"
-                   "<li><b>Match Threshold:</b> Maximum endpoint distance (px) "
-                   "for a true positive match.</li>"
-                   "<li><b>Image Name Filter:</b> Select GT entry by image name. "
-                   "Leave empty to auto-select (single-entry CSV).</li>"
-                   "</ul>"
-                   "<h4>Results</h4>"
-                   "<ul>"
-                   "<li><b>Precision:</b> TP / (TP + FP).</li>"
-                   "<li><b>Recall:</b> TP / (TP + FN).</li>"
-                   "<li><b>F1 Score:</b> Harmonic mean of precision and recall.</li>"
-                   "<li><b>sAP:</b> Structural Average Precision.</li>"
-                   "<li><b>TP / FP / FN:</b> Match count breakdown.</li>"
-                   "<li><b>GT Segments:</b> Total ground truth count.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/accuracy/README.md");
 }
 
 AccuracyPanel::~AccuracyPanel() { delete ui; }

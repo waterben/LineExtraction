@@ -26,6 +26,7 @@ QT5_COPTS = [
 # Core application sources (src/)
 CORE_SRCS = [
     "src/controlwindow.cpp",
+    "src/help_viewer.cpp",
     "src/helpers.cpp",
     "src/main.cpp",
     "src/preprocessing.cpp",
@@ -35,8 +36,10 @@ CORE_SRCS = [
 CORE_HDRS = [
     "src/controlwindow.h",
     "src/help_button.hpp",
+    "src/help_viewer.h",
     "src/helpers.h",
     "src/latool.h",
+    "src/markdown_converter.hpp",
     "src/preprocessing.h",
     "src/quiver.h",
 ]
@@ -71,6 +74,7 @@ EXTENSION_HDRS = [
 # Headers requiring MOC processing (Q_OBJECT macro)
 MOC_HEADERS = [
     "src/controlwindow.h",
+    "src/help_viewer.h",
     "src/helpers.h",
     "src/preprocessing.h",
     "src/quiver.h",
@@ -169,7 +173,10 @@ cc_binary(
         "//resources:presets",
         "//resources:windmill",
         "//resources/datasets:ground_truth",
-    ],
+    ] + glob([
+        "README.md",
+        "extensions/*/README.md",
+    ]),
     linkopts = [
         "-lGL",
     ],

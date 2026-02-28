@@ -37,31 +37,8 @@ ImageAnalyzerPanel::ImageAnalyzerPanel(QWidget* parent)
   ui->lbl_noise_factor->setToolTip(tr("Suggested noise-dependent threshold multiplier."));
   ui->pb_analyze->setToolTip(tr("Run image analysis and update all property fields."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Image Analyzer"),
-                tr("<h3>Image Analyzer</h3>"
-                   "<p>Analyzes the loaded source image to compute quantitative "
-                   "properties and suggest optimal detector profile settings.</p>"
-                   "<h4>Image Properties</h4>"
-                   "<ul>"
-                   "<li><b>Contrast:</b> Michelson contrast (max\xe2\x88\x92min)/(max+min). "
-                   "Range 0\xe2\x80\x93"
-                   "1.</li>"
-                   "<li><b>Noise Level:</b> Estimated noise \xcf\x83 via Median "
-                   "Absolute Deviation of wavelet coefficients.</li>"
-                   "<li><b>Edge Density:</b> Fraction of edge pixels vs. total.</li>"
-                   "<li><b>Dynamic Range:</b> Effective intensity range / 255.</li>"
-                   "</ul>"
-                   "<h4>Suggested Profile</h4>"
-                   "<p>Values derived from image properties to configure the "
-                   "Detector Profile Panel:</p>"
-                   "<ul>"
-                   "<li><b>Detail / Gap Tolerance / Min Length / Precision:</b> "
-                   "Percentage knobs (0\xe2\x80\x93"
-                   "100%%).</li>"
-                   "<li><b>Contrast Factor / Noise Factor:</b> Adaptive "
-                   "multipliers for threshold tuning.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/imageanalyzer/README.md");
 }
 
 ImageAnalyzerPanel::~ImageAnalyzerPanel() { delete ui; }

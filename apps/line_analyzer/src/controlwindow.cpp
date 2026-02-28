@@ -1,5 +1,6 @@
 #include "controlwindow.h"
 
+#include "help_viewer.h"
 #include "ui_controlwindow.h"
 #include <algorithm/preset_store.hpp>
 #include <imgproc/image_operator.hpp>
@@ -49,6 +50,16 @@ ControlWindow::ControlWindow(QWidget* parent)
       iPen{} {
   setWindowTitle("Line Analyzer");
   ui->setupUi(this);
+
+  // --- Main Help Button ---
+  // Add a "?" button at the end of the image-select row (after Load).
+  {
+    auto* btn_help = new QPushButton("?", this);
+    btn_help->setFixedSize(24, 24);
+    btn_help->setToolTip(tr("Open Line Analyzer help"));
+    ui->layout_image_select->addWidget(btn_help);
+    connect(btn_help, &QPushButton::clicked, this, []() { HelpViewer::showHelp("README.md"); });
+  }
 
   file->setFileMode(QFileDialog::ExistingFile);
   file->setAcceptMode(QFileDialog::AcceptOpen);

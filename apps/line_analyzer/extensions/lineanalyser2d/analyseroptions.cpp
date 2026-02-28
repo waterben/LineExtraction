@@ -20,22 +20,8 @@ AnalyserOptions::AnalyserOptions(QWidget* parent) : QMainWindow(parent), ui(new 
       tr("Sub-pixel coordinate offset applied when mapping "
          "between scaled and original coordinates."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Analyser Options"),
-                tr("<h3>Analyser Options</h3>"
-                   "<p>Configure parameters for the 2D line analyzer "
-                   "accuracy evaluation.</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Orig. Image Width / Height:</b> The original image "
-                   "dimensions before any scaling. Used to correctly map line "
-                   "coordinates back to full resolution.</li>"
-                   "<li><b>Reduced Scale:</b> The downscale factor applied to "
-                   "the working image. Combined with image dimensions for "
-                   "accuracy metrics at original scale.</li>"
-                   "<li><b>Offset:</b> Sub-pixel coordinate offset applied "
-                   "when mapping between scaled and original coordinates.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "extensions/lineanalyser2d/README.md", "workflow");
 }
 
 AnalyserOptions::~AnalyserOptions() { delete ui; }
