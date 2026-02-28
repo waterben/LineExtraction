@@ -28,6 +28,23 @@ Advanced ground truth comparison tool with interactive visualization. Unlike the
 6. Use **Debug Mode** to lock pairs for detailed geometric inspection
 7. Use **Analysis Mode** to compare against a saved detection run
 
+## Bundled Examples
+
+Two synthetic datasets are included so you can try the panel without external
+data.  Click the toolbar buttons to load them:
+
+| Button | Dataset | Description |
+|--------|---------|-------------|
+| **Easy** | `example_lines.png` / `example_gt.txt` | Single hexagon, 6 segments, no noise — trivially detectable |
+| **Hard** | `example_challenge.png` / `example_challenge_gt.txt` | 8 shapes, 31 segments, varying contrast (13–88), Gaussian noise σ = 5 |
+
+The buttons load both the ground truth file **and** the matching image into the
+main window, so detection can be run immediately afterward.
+
+The same images are also used by the [Accuracy Measure](../accuracy/README.md)
+panel (CSV format).  The TXT files used here contain plain `x1,y1,x2,y2` lines
+without a header.
+
 ## How Matching Works
 
 Each detected segment is matched to its closest ground truth segment based on combined geometric error (angle, distance, endpoint proximity). The result is a detailed per-segment error table:
@@ -47,7 +64,7 @@ Each detected segment is matched to its closest ground truth segment based on co
   │  Angle difference:    0.3°      │
   │  Endpoint distance₁:  1.2 px    │
   │  Endpoint distance₂:  0.8 px    │
-  │  Length difference:    2.1 px    │
+  │  Length difference:    2.1 px   │
   └─────────────────────────────────┘
 ```
 

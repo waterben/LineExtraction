@@ -16,6 +16,7 @@ class PrecisionOptimizer : public LATool {
   typedef ControlWindow::Line Line;
 
   Ui::PrecisionOptimizer* ui{nullptr};
+  ControlWindow* ctrl{nullptr};
   const ImageSources* sources{nullptr};
   LineVector* lines{nullptr};
   int lineSel = -1;
@@ -29,6 +30,7 @@ class PrecisionOptimizer : public LATool {
  public slots:
   void updateSources(const ImageSources& src);
   void updateMaxIter();
+  void updateAutoRotation();
 
   void setLineSel(int sel);
 
@@ -40,6 +42,9 @@ class PrecisionOptimizer : public LATool {
   void linesOptimized();
 
  private:
+  /// @brief Recompute rotation range from current detector's gradient kernel size.
+  void computeAutoRotation();
+
   template <class mat_type, class search_strategy_type, class stop_strategy_type>
   inline void optimize(const cv::Mat& mag,
                        double d_lower,

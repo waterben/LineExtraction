@@ -39,7 +39,8 @@ The objective function is the average gradient magnitude along the line's suppor
 | **Stop Value** | Threshold for the stopping criterion | 1e-7 |
 | **Max Iterations** | Maximum number of optimizer iterations (capped for responsiveness) | 1000 |
 | **Profile Range** | Orthogonal search half-range (±pixels) | 1.0 |
-| **Rotation Range** | Angular search half-range (±degrees) | 1.0 |
+| **Rotation Range** | Angular search half-range (±degrees). Disabled when auto-rotation is active. | 1.0 |
+| **Auto Rotation** | Derive rotation range from the detector's gradient kernel size: ±atan(1 / ⌊k/2⌋)° | Off |
 | **Interpolation** | Sub-pixel gradient sampling method (nearest, bilinear, bicubic) | Bilinear |
 | **Fast Interpolation** | Trade accuracy for speed in sub-pixel sampling | On |
 | **Data Source** | Gradient magnitude source to evaluate | — |
@@ -54,6 +55,25 @@ The objective function is the average gradient magnitude along the line's suppor
 ## Use Case
 
 Improve endpoint precision of detected lines. Particularly useful when the detector provides good coarse localization but sub-pixel accuracy matters (e.g., for 3D reconstruction or precise measurement applications).
+
+## Auto Rotation
+
+When **Auto Rotation from kernel size** is checked, the rotation search range is
+automatically derived from the active detector's `grad_kernel_size` parameter:
+
+$$\text{range} = \pm\arctan\!\left(\frac{1}{\lfloor k/2 \rfloor}\right)°$$
+
+| Kernel size | Half-width | Auto range |
+|:-----------:|:----------:|:----------:|
+| 3 | 1 | ±45.0° |
+| 5 | 2 | ±26.6° |
+| 7 | 3 | ±18.4° |
+| 9 | 4 | ±14.0° |
+| 11 | 5 | ±11.3° |
+
+The value is refreshed when the detector changes and also right before each
+optimization run, so manual parameter edits in ControlWindow's table are always
+picked up.
 
 ## Algorithm
 

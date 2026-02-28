@@ -1,5 +1,7 @@
 #include "lineanalyser2d.h"
 
+#include "help_button.hpp"
+
 #include <QMessageBox>
 #include <QTableWidgetItem>
 #include <fstream>
@@ -36,11 +38,52 @@ LineAnalyser2D::LineAnalyser2D(QWidget* parent)
   initUISetup();
   initPlotWindow();
   initConnections();
+
+  // Help button.
+  addHelpButton(this, tr("Help \xe2\x80\x94 Line Analyser 2D"),
+                tr("<h3>Line Analyser 2D</h3>"
+                   "<p>Advanced per-segment ground truth comparison with "
+                   "interactive visualization, debug, and analysis modes.</p>"
+                   "<h4>Ground Truth</h4>"
+                   "<ul>"
+                   "<li><b>Select Text File:</b> Choose a plain-text GT file "
+                   "(<code>x1,y1,x2,y2</code> per line).</li>"
+                   "<li><b>Options:</b> Configure coordinate transforms "
+                   "(image size, scale, offset) for normalized [0,1] data.</li>"
+                   "<li><b>Load:</b> Parse the selected file and populate the "
+                   "GT table.</li>"
+                   "<li><b>Easy / Hard:</b> Load bundled synthetic examples "
+                   "with matching images.</li>"
+                   "</ul>"
+                   "<h4>Main Tab</h4>"
+                   "<p>Shows GT segments and matched (correct) lines in two "
+                   "tables.  Click a row to highlight the segment in the plot.</p>"
+                   "<h4>Image View</h4>"
+                   "<p>Toggle visibility of the image, grid, GT lines, all "
+                   "detected lines, and correct lines.  Choose image source "
+                   "(gray, magnitude, etc.) and color map.</p>"
+                   "<h4>Test Tab</h4>"
+                   "<p>Configure matching thresholds and compute correct lines:</p>"
+                   "<ul>"
+                   "<li><b>Distance:</b> Max perpendicular distance (px).</li>"
+                   "<li><b>Angle:</b> Max angle difference (\xc2\xb0).</li>"
+                   "<li><b>Error:</b> Max combined endpoint error.</li>"
+                   "</ul>"
+                   "<h4>Debug Tab</h4>"
+                   "<p>Lock a GT line and a detected line to inspect their "
+                   "geometric relationship in detail (distances, angles, "
+                   "miscalculation).</p>"
+                   "<h4>Analysis Tab</h4>"
+                   "<p>Compare two detection runs (current vs. saved). "
+                   "Tables show per-segment deltas; use <b>Save</b> to "
+                   "export results and <b>Optimizer</b> for precision "
+                   "refinement.</p>"));
 }
 
 LineAnalyser2D::~LineAnalyser2D() { delete ui; }
 
 void LineAnalyser2D::connectTools(ControlWindow* w) {
+  this->ctrl = w;
   this->lines = &w->getLines();
   this->sources = &w->getSources();
   this->srcImg = &w->getSrcImg();
@@ -69,40 +112,113 @@ void LineAnalyser2D::initQPens() {
  *          Setup UI
  */
 void LineAnalyser2D::initUISetup() {
-  // Settings
+  // -- Panel-level tooltip --
+  setToolTip(
+      tr("Per-segment ground truth comparison with interactive "
+         "visualization, debug mode, and run-to-run analysis."));
+
+  // -- Ground-truth loading row --
+  ui->pb_select->setToolTip(
+      tr("Open a file dialog to select a plain-text GT file "
+         "(x1,y1,x2,y2 per line)."));
+  ui->le_file_path->setToolTip(tr("Path to the currently selected ground truth file."));
+  ui->pb_options->setToolTip(
+      tr("Configure coordinate transforms for normalized [0,1] data "
+         "(image height/width, scale, offset)."));
+  ui->pb_load->setToolTip(tr("Parse the selected GT file and populate the tables."));
+  ui->pb_load_easy->setToolTip(
+      tr("Load the easy example: single hexagon, no noise, 6 GT segments "
+         "(example_gt.txt + example_lines.png)."));
+  ui->pb_load_hard->setToolTip(
+      tr("Load the challenge example: 8 shapes, varying contrast, noise, "
+         "31 GT segments (example_challenge_gt.txt + example_challenge.png)."));
+
+  // -- Display row --
+  ui->cb_uniform_data->setToolTip(
+      tr("When checked, treat GT coordinates as normalized [0,1] and "
+         "transform them using the Options settings."));
+  ui->pushButton->setToolTip(tr("Open the plot window to visualize GT and detected lines."));
+
+  // -- Settings tab (checkboxes & visibility) --
   ui->cb_image->setDisabled(true);
+  ui->cb_image->setToolTip(tr("Toggle background image visibility in the plot."));
   ui->cb_grid->setDisabled(true);
+  ui->cb_grid->setToolTip(tr("Toggle grid overlay in the plot."));
   ui->cb_all_lines->setDisabled(true);
+  ui->cb_all_lines->setToolTip(tr("Toggle display of all detected lines."));
   ui->cb_correct_lines->setDisabled(true);
+  ui->cb_correct_lines->setToolTip(tr("Toggle display of correctly matched lines."));
   ui->cb_gt_data->setDisabled(true);
+  ui->cb_gt_data->setToolTip(tr("Toggle display of ground truth lines."));
   ui->cb_image_source->setDisabled(true);
+  ui->cb_image_source->setToolTip(tr("Select the image source (gray, magnitude, etc.)."));
   ui->cb_image_mode->setDisabled(true);
+  ui->cb_image_mode->setToolTip(tr("Select the color map (hot, cold, etc.)."));
   ui->cb_gtline_plus_clines->setDisabled(true);
-  // Tables
+  ui->cb_gtline_plus_clines->setToolTip(tr("When checked, clicking a GT row also draws its matched lines."));
+
+  // -- Tables --
   ui->tw_gt_data->setSelectionBehavior(QAbstractItemView::SelectRows);
+  ui->tw_gt_data->setToolTip(
+      tr("Ground truth segments. Click a row to highlight "
+         "it in the plot and show matched lines."));
   ui->tw_cl_data->setSelectionBehavior(QAbstractItemView::SelectRows);
+  ui->tw_cl_data->setToolTip(
+      tr("Matched (correct) lines for the selected GT segment, "
+         "with per-segment error metrics."));
   ui->tw_debug_gtline_info->setSelectionBehavior(QAbstractItemView::SelectRows);
   ui->tw_debug_lines_info->setSelectionBehavior(QAbstractItemView::SelectRows);
   ui->tw_debug_result_info->setSelectionBehavior(QAbstractItemView::SelectRows);
-  // Test Page
+
+  // -- Test Page --
   ui->dsb_distance_threshold->setDisabled(true);
+  ui->dsb_distance_threshold->setToolTip(
+      tr("Maximum perpendicular distance (px) for a detected "
+         "segment to match a GT segment."));
   ui->dsb_angle_threshold->setDisabled(true);
+  ui->dsb_angle_threshold->setToolTip(tr("Maximum angle difference (\xc2\xb0) for a match."));
   ui->dsb_error_threshold->setDisabled(true);
+  ui->dsb_error_threshold->setToolTip(tr("Maximum combined endpoint error for a match."));
   ui->pb_compute_clines->setDisabled(true);
+  ui->pb_compute_clines->setToolTip(tr("Compute correct (matched) lines using the current thresholds."));
   ui->cb_check_distance->setDisabled(true);
+  ui->cb_check_distance->setToolTip(tr("Enable/disable distance criterion for matching."));
   ui->cb_check_angle->setDisabled(true);
+  ui->cb_check_angle->setToolTip(tr("Enable/disable angle criterion for matching."));
   ui->cb_check_error_value->setDisabled(true);
+  ui->cb_check_error_value->setToolTip(tr("Enable/disable error-value criterion for matching."));
   ui->cb_check_distance->setChecked(true);
   ui->cb_check_angle->setChecked(true);
   ui->cb_check_error_value->setChecked(true);
-  // Debug Page
+
+  // -- Debug Page --
   ui->pb_debug_start->setDisabled(true);
+  ui->pb_debug_start->setToolTip(tr("Enter debug mode to lock GT/detected pairs for inspection."));
+  ui->pb_debug_disable->setToolTip(tr("Leave debug mode and return to normal view."));
+  ui->pb_debug_lockin_gtline->setToolTip(tr("Lock the currently selected GT line for comparison."));
+  ui->pb_debug_lockin_lines->setToolTip(tr("Lock the currently selected detected line for comparison."));
+  ui->pb_debug_process->setToolTip(tr("Compute detailed geometric metrics for the locked line pair."));
+  ui->pb_debug_reset->setToolTip(tr("Reset the locked debug selections."));
   manageDebugSettings(true);
-  // Analysis Page
+
+  // -- Analysis Page --
   ui->pb_analysis_start->setDisabled(true);
+  ui->pb_analysis_start->setToolTip(tr("Enter analysis mode to compare current vs. previous detection run."));
+  ui->pb_analysis_disable->setToolTip(tr("Leave analysis mode."));
+  ui->cb_analysis_cur_lines->setToolTip(tr("Toggle display of current-run matched lines."));
+  ui->cb_analysis_old_lines->setToolTip(tr("Toggle display of previous-run matched lines."));
+  ui->cb_analysis_gt_lines->setToolTip(tr("Toggle display of GT lines in analysis view."));
+  ui->pb_analysis_optimizer->setToolTip(tr("Open the precision optimizer dialog."));
+  ui->pb_analysis_freez_all->setToolTip(tr("Freeze all currently detected lines for later comparison."));
+  ui->pb_analysis_save->setToolTip(tr("Export the analysis results to a text file."));
   ui->tw_analysis_cur->setSelectionBehavior(QAbstractItemView::SelectRows);
+  ui->tw_analysis_cur->setToolTip(tr("Per-segment results for the current detection run."));
   ui->tw_analysis_old->setSelectionBehavior(QAbstractItemView::SelectRows);
+  ui->tw_analysis_old->setToolTip(tr("Per-segment results for the previous (frozen) detection run."));
   manageAnalysisSettings(true);
+
+  // -- Clear button --
+  ui->pb_clear_all->setToolTip(tr("Clear all GT data, matched lines, and reset the tables."));
 }
 
 /**
@@ -147,6 +263,9 @@ void LineAnalyser2D::initConnections() {
   connect(ui->tw_analysis_old, SIGNAL(cellClicked(int, int)), this, SLOT(showOldLineReference(int, int)));
   connect(ui->tw_analysis_cur->verticalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(showCurLineReference(int)));
   connect(ui->tw_analysis_old->verticalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(showOldLineReference(int)));
+  // Connect bundled example buttons
+  connect(ui->pb_load_easy, SIGNAL(clicked()), this, SLOT(loadEasyExample()));
+  connect(ui->pb_load_hard, SIGNAL(clicked()), this, SLOT(loadHardExample()));
 }
 
 /**
@@ -501,6 +620,86 @@ void LineAnalyser2D::loadGroundTruthDataFromFile(std::string file_path) {
     gtLines.push_back(GTData(lsfm::LineSegment2d(p1, p2), posGT));
     ++posGT;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Bundled example helpers
+// ---------------------------------------------------------------------------
+
+void LineAnalyser2D::loadEasyExample() {
+  loadBundledExample("datasets/ground_truth/example_gt.txt", "example_lines.png", "Easy example");
+}
+
+void LineAnalyser2D::loadHardExample() {
+  loadBundledExample("datasets/ground_truth/example_challenge_gt.txt", "example_challenge.png", "Challenge example");
+}
+
+/**
+ * @brief  Load a bundled ground truth / image pair from the resources directory.
+ * @param  txt_relative   Path to the TXT file relative to ``resources/``.
+ * @param  image_relative Path to the image relative to ``resources/``.
+ * @param  label          Human-readable label used in status messages.
+ */
+void LineAnalyser2D::loadBundledExample(const std::string& txt_relative,
+                                        const std::string& image_relative,
+                                        const std::string& label) {
+  std::string txt_path = findResourcePath(txt_relative);
+  if (txt_path.empty()) {
+    QMessageBox::warning(this, tr("Example Ground Truth"),
+                         tr("Could not locate the bundled %1.\n"
+                            "Make sure you are running from the workspace directory "
+                            "or via 'bazel run'.")
+                             .arg(QString::fromStdString(txt_relative)));
+    return;
+  }
+
+  // Load the matching image into the ControlWindow first so that srcImg is
+  // populated when loadGroundTruthDataFromFile checks image dimensions.
+  if (ctrl != nullptr) {
+    std::string img_path = findResourcePath(image_relative);
+    if (!img_path.empty()) {
+      ctrl->setImagePath(QString::fromStdString(img_path));
+    }
+  }
+
+  ui->le_file_path->setText(QString::fromStdString(txt_path));
+  loadGroundTruthData();
+}
+
+// ---------------------------------------------------------------------------
+// Resource path resolution
+// ---------------------------------------------------------------------------
+
+std::string LineAnalyser2D::findResourcePath(const std::string& relative_path) {
+  namespace fs = std::filesystem;
+
+  // Candidate base directories relative to cwd.
+  const std::vector<std::string> candidates = {
+      "resources",
+      "../resources",
+      "../../resources",
+      "../../../resources",
+  };
+  for (const auto& base : candidates) {
+    fs::path p = fs::absolute(fs::path(base) / relative_path);
+    if (fs::exists(p)) return p.string();
+  }
+
+  // Bazel: BUILD_WORKSPACE_DIRECTORY (set by `bazel run`).
+  if (const char* ws_dir = std::getenv("BUILD_WORKSPACE_DIRECTORY")) {
+    fs::path p = fs::path(ws_dir) / "resources" / relative_path;
+    if (fs::exists(p)) return p.string();
+  }
+
+  // Bazel: RUNFILES_DIR (hermetic builds).
+  if (const char* rd = std::getenv("RUNFILES_DIR")) {
+    for (const auto& repo : {"_main", "line_extraction"}) {
+      fs::path p = fs::path(rd) / repo / "resources" / relative_path;
+      if (fs::exists(p)) return p.string();
+    }
+  }
+
+  return {};
 }
 
 /******************************************************* COMPUTE CORRECT LINES

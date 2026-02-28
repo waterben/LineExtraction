@@ -48,6 +48,26 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="pb_load_easy">
+        <property name="toolTip">
+         <string>Load bundled easy example (single hexagon, no noise)</string>
+        </property>
+        <property name="text">
+         <string>Easy</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_load_hard">
+        <property name="toolTip">
+         <string>Load bundled challenge example (8 shapes, noise, varying contrast)</string>
+        </property>
+        <property name="text">
+         <string>Hard</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
@@ -1681,5 +1701,7 @@
   <slot>displayGTLinesAnalysis()</slot>
   <slot>saveAnalysis()</slot>
   <slot>openAnalyserOptions()</slot>
+  <slot>loadEasyExample()</slot>
+  <slot>loadHardExample()</slot>
  </slots>
 </ui>

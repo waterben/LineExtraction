@@ -35,12 +35,18 @@ class AccuracyPanel : public LATool {
   /// @brief Open a file dialog to select a ground truth CSV.
   void browseGroundTruth();
 
-  /// @brief Load the bundled example ground truth (example_gt.csv).
+  /// @brief Load the bundled easy example ground truth (example_gt.csv).
   ///
   /// Searches standard resource locations (Bazel runfiles, relative paths)
-  /// for the shipped example CSV. Also loads the matching example image into
-  /// the ControlWindow if found.
+  /// for the shipped example CSV. Also loads the matching example_lines.png
+  /// image into the ControlWindow if found.
   void loadExampleGroundTruth();
+
+  /// @brief Load the bundled challenge ground truth (example_challenge_gt.csv).
+  ///
+  /// The challenge scene has 8 shapes with varying contrast plus noise.
+  /// Also loads the matching example_challenge.png into the ControlWindow.
+  void loadChallengeGroundTruth();
 
   /// @brief Evaluate detected lines against the loaded ground truth.
   void evaluate();
@@ -61,6 +67,12 @@ class AccuracyPanel : public LATool {
   /// @param app_lines Lines from ControlWindow (cv::Point_ based).
   /// @return Converted line segments.
   static std::vector<lsfm::LineSegment<double>> convertLines(const ControlWindow::LineVector& app_lines);
+
+  /// @brief Load a bundled example (CSV + image) by name.
+  /// @param csv_relative CSV path relative to resources/ (e.g., "datasets/ground_truth/example_gt.csv").
+  /// @param image_name Image filename in resources/ (e.g., "example_lines.png").
+  /// @param label Human-readable label for status messages (e.g., "easy example").
+  void loadBundledExample(const std::string& csv_relative, const std::string& image_name, const std::string& label);
 
   /// @brief Locate a resource file by searching standard paths.
   /// @param relative_path Path relative to the resources directory (e.g., "datasets/ground_truth/example_gt.csv").

@@ -133,27 +133,27 @@ ControlWindow::ControlWindow(QWidget* parent)
     };
 
     // Build category list.
-    // Search for resources/ directory the same way TestImages does — check
-    // relative paths from cwd (workspace root) and from the executable.
+    // Search for resources/ directory — prioritize BUILD_WORKSPACE_DIRECTORY
+    // (set by `bazel run`) so we find the real workspace with all datasets,
+    // not the limited Bazel runfiles tree.
     using ImgList = std::vector<std::pair<QString, QString>>;
     auto cats = std::make_shared<std::vector<std::pair<QString, ImgList>>>();
 
     auto findResources = []() -> std::pair<fs::path, fs::path> {
-      // Candidate relative paths (mirrors TestImages::detectSearchPaths).
-      const std::vector<std::string> candidates = {
-          "resources",
-          "../resources",
-          "../../resources",
-          "../../../resources",
-      };
-      for (const auto& rel : candidates) {
-        fs::path resDir = fs::absolute(rel);
-        fs::path dsDir = resDir / "datasets";
-        if (fs::exists(resDir) && fs::exists(dsDir)) {
-          return {resDir, dsDir};
+      // Helper: check whether a datasets/ directory has real image
+      // subdirectories (BSDS500, noise, …) rather than just ground-truth
+      // stubs.  The Bazel runfiles tree only contains files listed in the
+      // data attribute, so its datasets/ dir is almost empty.
+      auto hasDatasetsContent = [](const fs::path& dsDir) {
+        // Any of the well-known dataset subdirectories suffice.
+        for (const auto& sub : {"BSDS500", "noise", "MDB", "YorkUrban", "Wireframe"}) {
+          if (fs::exists(dsDir / sub)) return true;
         }
-      }
-      // Bazel sets BUILD_WORKSPACE_DIRECTORY when running via `bazel run`.
+        return false;
+      };
+
+      // Prefer BUILD_WORKSPACE_DIRECTORY (set by `bazel run`) — it always
+      // points to the real workspace with all datasets on disk.
       if (const char* wsDir = std::getenv("BUILD_WORKSPACE_DIRECTORY")) {
         fs::path resDir = fs::path(wsDir) / "resources";
         fs::path dsDir = resDir / "datasets";
@@ -161,26 +161,50 @@ ControlWindow::ControlWindow(QWidget* parent)
           return {resDir, dsDir};
         }
       }
+
+      // Candidate relative paths (mirrors TestImages::detectSearchPaths).
+      // Collect all matches and prefer the one with the richest datasets/.
+      const std::vector<std::string> candidates = {
+          "resources",
+          "../resources",
+          "../../resources",
+          "../../../resources",
+      };
+      std::pair<fs::path, fs::path> bestRelative;
+      for (const auto& rel : candidates) {
+        fs::path resDir = fs::absolute(rel);
+        fs::path dsDir = resDir / "datasets";
+        if (fs::exists(resDir) && fs::exists(dsDir)) {
+          if (hasDatasetsContent(dsDir)) return {resDir, dsDir};
+          if (bestRelative.first.empty()) bestRelative = {resDir, dsDir};
+        }
+      }
+
       // Fallback: try via RUNFILES_DIR environment variable.
       if (const char* rd = std::getenv("RUNFILES_DIR")) {
         for (const auto& repo : {"_main", "line_extraction"}) {
           fs::path resDir = fs::path(rd) / repo / "resources";
           fs::path dsDir = resDir / "datasets";
           if (fs::exists(resDir) && fs::exists(dsDir)) {
-            return {resDir, dsDir};
+            if (hasDatasetsContent(dsDir)) return {resDir, dsDir};
+            if (bestRelative.first.empty()) bestRelative = {resDir, dsDir};
           }
         }
       }
+
       // Last resort: derive from windmill.jpg path if it exists on disk.
       std::string wm = lsfm::TestImages::windmill();
       if (!wm.empty() && fs::exists(wm)) {
         fs::path resDir = fs::path(wm).parent_path();
         fs::path dsDir = resDir / "datasets";
         if (fs::exists(dsDir)) {
-          return {resDir, dsDir};
+          if (hasDatasetsContent(dsDir)) return {resDir, dsDir};
+          if (bestRelative.first.empty()) bestRelative = {resDir, dsDir};
         }
       }
-      return {{}, {}};
+
+      // Return best match even if it had no dataset subdirectories.
+      return bestRelative;
     };
 
     auto [res, ds] = findResources();

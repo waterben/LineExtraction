@@ -4,6 +4,9 @@
 #include "precisionoptimizer.h"
 #include "ui_lineanalyser2d.h"
 
+#include <filesystem>
+#include <string>
+
 namespace Ui {
 class LineAnalyser2D;
 }
@@ -77,6 +80,9 @@ class LineAnalyser2D : public LATool {
   const ImageSources* sources; /* Different Image Sources (Gray, Magnitude, etc.) */
   QCPColorMap* imgMap;         /* Different ColorMaps (Hot, Cold, etc.) */
 
+  // ControlWindow (for loading bundled examples)
+  ControlWindow* ctrl{nullptr};
+
   // File
   QFileDialog* file; /* File Dialog for file loading */
 
@@ -114,6 +120,8 @@ class LineAnalyser2D : public LATool {
   void displayImageView();
   void computeCorrectLines();
   void openAnalyserOptions();
+  void loadEasyExample();
+  void loadHardExample();
 
   // Display Functions
   void displaySource();
@@ -193,6 +201,8 @@ class LineAnalyser2D : public LATool {
   void loadImageSources();
   void loadGroundTruthDataIntoTable();
   void loadGroundTruthDataFromFile(std::string file_path);
+  void loadBundledExample(const std::string& txt_relative, const std::string& image_relative, const std::string& label);
+  static std::string findResourcePath(const std::string& relative_path);
   void computeCorrectLinesHelper(double& angle, double& threshold, double& error);
 
   bool checkDistance(const lsfm::LineSegment2d& gtline, const lsfm::LineSegment2d& line, double& distance);

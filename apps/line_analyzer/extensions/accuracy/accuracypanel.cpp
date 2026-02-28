@@ -19,8 +19,11 @@ AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", paren
   ui->edit_gt_path->setToolTip(tr("Path to the loaded ground truth CSV file."));
   ui->pb_browse->setToolTip(tr("Open a file dialog to select a ground truth CSV."));
   ui->pb_load_example->setToolTip(
-      tr("Load the bundled example ground truth (example_gt.csv) and "
-         "the matching example_lines.png image for quick evaluation."));
+      tr("Load the easy example: single hexagon, no noise, 6 GT segments "
+         "(example_gt.csv + example_lines.png)."));
+  ui->pb_load_challenge->setToolTip(
+      tr("Load the challenge example: 8 shapes, varying contrast, noise, "
+         "31 GT segments (example_challenge_gt.csv + example_challenge.png)."));
   ui->spin_threshold->setToolTip(
       tr("Maximum endpoint distance (px) for a detected segment "
          "to count as a true positive match against a GT segment."));
@@ -49,6 +52,10 @@ AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", paren
                    "<ul>"
                    "<li><b>Browse:</b> Load a CSV with GT segment annotations "
                    "(x1, y1, x2, y2 columns, optionally per image name).</li>"
+                   "<li><b>Easy:</b> Load the easy example (single hexagon, "
+                   "6 GT segments, no noise).</li>"
+                   "<li><b>Hard:</b> Load the challenge example (8 shapes, "
+                   "31 GT segments, varying contrast, Gaussian noise).</li>"
                    "</ul>"
                    "<h4>Settings</h4>"
                    "<ul>"
@@ -97,40 +104,11 @@ void AccuracyPanel::browseGroundTruth() {
 }
 
 void AccuracyPanel::loadExampleGroundTruth() {
-  // Locate the bundled example ground truth CSV.
-  std::string csv_path = findResourcePath("datasets/ground_truth/example_gt.csv");
-  if (csv_path.empty()) {
-    setStatus("Example ground truth not found.");
-    QMessageBox::warning(this, tr("Example Ground Truth"),
-                         tr("Could not locate the bundled example_gt.csv.\n"
-                            "Make sure you are running from the workspace directory "
-                            "or via 'bazel run'."));
-    return;
-  }
+  loadBundledExample("datasets/ground_truth/example_gt.csv", "example_lines.png", "easy example");
+}
 
-  try {
-    gt_entries = lsfm::GroundTruthLoader::load_csv(csv_path);
-    ui->edit_gt_path->setText(QString::fromStdString(csv_path));
-    ui->edit_image_name->setText("example_lines.png");
-
-    int total_segs = 0;
-    for (const auto& entry : gt_entries) {
-      total_segs += static_cast<int>(entry.segments.size());
-    }
-    setStatus(QString("Loaded example: %1 segments.").arg(total_segs));
-  } catch (const std::exception& ex) {
-    setStatus(QString("Load failed: %1").arg(ex.what()));
-    gt_entries.clear();
-    return;
-  }
-
-  // Also load the matching example image into the ControlWindow.
-  if (ctrl != nullptr) {
-    std::string img_path = findResourcePath("example_lines.png");
-    if (!img_path.empty()) {
-      ctrl->setImagePath(QString::fromStdString(img_path));
-    }
-  }
+void AccuracyPanel::loadChallengeGroundTruth() {
+  loadBundledExample("datasets/ground_truth/example_challenge_gt.csv", "example_challenge.png", "challenge example");
 }
 
 void AccuracyPanel::evaluate() {
@@ -196,6 +174,45 @@ void AccuracyPanel::clearResults() {
 // ---------------------------------------------------------------------------
 // Private helpers
 // ---------------------------------------------------------------------------
+
+void AccuracyPanel::loadBundledExample(const std::string& csv_relative,
+                                       const std::string& image_name,
+                                       const std::string& label) {
+  std::string csv_path = findResourcePath(csv_relative);
+  if (csv_path.empty()) {
+    setStatus(QString("Bundled %1 not found.").arg(QString::fromStdString(label)));
+    QMessageBox::warning(this, tr("Example Ground Truth"),
+                         tr("Could not locate the bundled %1.\n"
+                            "Make sure you are running from the workspace directory "
+                            "or via 'bazel run'.")
+                             .arg(QString::fromStdString(csv_relative)));
+    return;
+  }
+
+  try {
+    gt_entries = lsfm::GroundTruthLoader::load_csv(csv_path);
+    ui->edit_gt_path->setText(QString::fromStdString(csv_path));
+    ui->edit_image_name->setText(QString::fromStdString(image_name));
+
+    int total_segs = 0;
+    for (const auto& entry : gt_entries) {
+      total_segs += static_cast<int>(entry.segments.size());
+    }
+    setStatus(QString("Loaded %1: %2 segments.").arg(QString::fromStdString(label)).arg(total_segs));
+  } catch (const std::exception& ex) {
+    setStatus(QString("Load failed: %1").arg(ex.what()));
+    gt_entries.clear();
+    return;
+  }
+
+  // Also load the matching image into the ControlWindow.
+  if (ctrl != nullptr) {
+    std::string img_path = findResourcePath(image_name);
+    if (!img_path.empty()) {
+      ctrl->setImagePath(QString::fromStdString(img_path));
+    }
+  }
+}
 
 const std::vector<lsfm::LineSegment<double>>* AccuracyPanel::findGroundTruth() const {
   if (gt_entries.empty()) return nullptr;

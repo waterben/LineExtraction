@@ -3,6 +3,7 @@
 #include "help_button.hpp"
 
 #include <QMessageBox>
+#include <cmath>
 
 using namespace lsfm;
 using namespace std;
@@ -46,7 +47,14 @@ PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
   ui->spin_range_rot->setToolTip(
       tr("Half-range in degrees to search around the current "
          "line orientation. E.g. \xc2\xb1"
-         "1\xc2\xb0."));
+         "1\xc2\xb0. Disabled when auto-rotation is active."));
+  ui->chb_auto_rot->setToolTip(
+      tr("Automatically compute the rotation range from the "
+         "detector\xe2\x80\x99"
+         "s gradient kernel size: "
+         "\xc2\xb1"
+         "atan(1 / \xe2\x8c\x8a"
+         "kernel_size/2\xe2\x8c\x8b)\xc2\xb0"));
   ui->spin_range_prof->setToolTip(
       tr("Half-range in pixels to search perpendicular to "
          "the current line position."));
@@ -78,7 +86,9 @@ PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
                    "<ul>"
                    "<li><b>Select Source:</b> Gradient magnitude image to evaluate.</li>"
                    "<li><b>Rotation Range:</b> \xc2\xb1"
-                   "degrees around the current orientation.</li>"
+                   "degrees around the current orientation. "
+                   "Use <b>Auto Rotation</b> to derive this automatically "
+                   "from the gradient kernel size.</li>"
                    "<li><b>Profile Range:</b> \xc2\xb1"
                    "pixels perpendicular to the line.</li>"
                    "<li><b>Line Distance:</b> Support pixel count for mean computation.</li>"
@@ -93,6 +103,19 @@ PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
                    "<li><b>Max Iterations:</b> Upper limit on iterations.</li>"
                    "<li><b>Derivative Delta:</b> Step size for numerical derivatives.</li>"
                    "</ul>"
+                   "<h4>Auto Rotation</h4>"
+                   "<p>When checked, the rotation range is derived from the "
+                   "active detector\xe2\x80\x99"
+                   "s gradient kernel size <i>k</i>:  "
+                   "\xc2\xb1"
+                   "atan(1 / \xe2\x8c\x8a"
+                   "<i>k</i>/2\xe2\x8c\x8b)\xc2\xb0. "
+                   "For k=3: \xc2\xb1"
+                   "45\xc2\xb0, k=5: \xc2\xb1"
+                   "26.6\xc2\xb0, "
+                   "k=7: \xc2\xb1"
+                   "18.4\xc2\xb0, k=9: \xc2\xb1"
+                   "14.0\xc2\xb0.</p>"
                    "<h4>Actions</h4>"
                    "<ul>"
                    "<li><b>Optimize Line:</b> Optimize the selected line only.</li>"
@@ -103,12 +126,17 @@ PrecisionOptimizer::PrecisionOptimizer(QWidget* parent)
 PrecisionOptimizer::~PrecisionOptimizer() { delete ui; }
 
 void PrecisionOptimizer::connectTools(ControlWindow* w) {
+  ctrl = w;
   lines = &w->getLines();
   sources = &w->getSources();
   connect(this, SIGNAL(lineOptimized(int)), w, SLOT(updateLine(int)));
   connect(this, SIGNAL(linesOptimized()), w, SLOT(updateLines()));
   connect(w, SIGNAL(lineSelChanged(int)), this, SLOT(setLineSel(int)));
   connect(w, SIGNAL(sourcesChanged(const ImageSources&)), this, SLOT(updateSources(const ImageSources&)));
+  // Auto-rotation: recompute when the user switches detectors.
+  connect(w, SIGNAL(detectorChanged(const QString&)), this, SLOT(updateAutoRotation()));
+  // Auto-rotation: toggling the checkbox enables/disables manual spin box.
+  connect(ui->chb_auto_rot, SIGNAL(toggled(bool)), this, SLOT(updateAutoRotation()));
 }
 
 void PrecisionOptimizer::updateSources(const ImageSources& src) {
@@ -140,6 +168,28 @@ void PrecisionOptimizer::updateMaxIter() { ui->spin_max_iter->setEnabled(ui->chb
 
 void PrecisionOptimizer::setLineSel(int sel) { lineSel = sel; }
 
+void PrecisionOptimizer::updateAutoRotation() {
+  bool auto_on = ui->chb_auto_rot->isChecked();
+  ui->spin_range_rot->setEnabled(!auto_on);
+  if (auto_on) computeAutoRotation();
+}
+
+void PrecisionOptimizer::computeAutoRotation() {
+  if (ctrl == nullptr) return;
+
+  DetectorPtr det = ctrl->getCurrentDetector();
+  if (!det || !det->lsd) return;
+
+  Value ks_val = det->lsd->value("grad_kernel_size");
+  if (!ks_val.type()) return;  // parameter not registered
+
+  int kernel_size = ks_val.getInt();
+  int half = kernel_size / 2;
+  if (half < 1) half = 1;
+
+  double range_deg = std::atan(1.0 / half) * 180.0 / CV_PI;
+  ui->spin_range_rot->setValue(range_deg);
+}
 
 template <class MT>
 typename lsfm::MeanHelper<double, cv::Point_>::func_type getMean(int idx, bool sampled, bool fast) {
@@ -183,6 +233,12 @@ typename lsfm::MeanHelper<double, cv::Point_>::func_type getMean(int idx, bool s
 
 void PrecisionOptimizer::optimizeLine() {
   if (lineSel < 0 || lines == nullptr || sources == nullptr) return;
+
+  // Lazy recompute: if auto-rotation is on, refresh the range now so that
+  // per-parameter kernel-size edits (which don't emit detectorChanged) are
+  // still picked up.
+  if (ui->chb_auto_rot->isChecked()) computeAutoRotation();
+
   try {
     float_type d = 0, a = 0;
     double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
@@ -458,6 +514,9 @@ void PrecisionOptimizer::optimizeLine() {
 
 void PrecisionOptimizer::optimizeAllLines() {
   if (lines == nullptr || sources == nullptr) return;
+
+  // Lazy recompute (see optimizeLine comment).
+  if (ui->chb_auto_rot->isChecked()) computeAutoRotation();
 
   try {
     double dr = ui->spin_range_prof->value(), ar = ui->spin_range_rot->value() / 180 * CV_PI;
