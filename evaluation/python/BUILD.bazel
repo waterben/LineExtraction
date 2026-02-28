@@ -1,0 +1,53 @@
+"""Python evaluation tools — preset optimization and ground truth conversion."""
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Parameter preset optimization script
+# Usage:
+#   bazel run //evaluation/python:optimize_presets -- \
+#       --ground-truth resources/datasets/ground_truth/york_urban_gt.csv \
+#       --image-dir resources/datasets/YorkUrban/images \
+#       --samples 300
+py_binary(
+    name = "optimize_presets",
+    srcs = ["tools/optimize_presets.py"],
+    data = [
+        "//resources/datasets:ground_truth",
+        "//resources/datasets:wireframe",
+        "//resources/datasets:york_urban",
+    ],
+    main = "tools/optimize_presets.py",
+    deps = [
+        "//libs/algorithm/python:le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)
+
+# Detector statistics — accuracy evaluation across datasets
+# Usage:
+#   bazel run //evaluation/python:detector_statistics -- \
+#       --ground-truth resources/datasets/ground_truth/york_urban_gt.csv \
+#       --image-dir resources/datasets/YorkUrban/images \
+#       --max-images 20
+py_binary(
+    name = "detector_statistics",
+    srcs = ["tools/detector_statistics.py"],
+    data = [
+        "//resources/datasets:ground_truth",
+        "//resources/datasets:wireframe",
+        "//resources/datasets:york_urban",
+    ],
+    main = "tools/detector_statistics.py",
+    deps = [
+        "//libs/algorithm/python:le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

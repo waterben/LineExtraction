@@ -2,7 +2,7 @@
 
 Mirrors the C++ ``TestImages`` utility (``libs/utility/include/utility/test_images.hpp``)
 and provides Pythonic access to the project's image datasets (windmill, BSDS500,
-MDB stereo pairs, noise images).
+MDB stereo pairs, noise images, York Urban, Wireframe).
 
 Typical usage::
 
@@ -127,6 +127,55 @@ class TestImages:
         subdir = f"BSDS500/{split}" if split else "BSDS500"
         return self._iter_images(subdir)
 
+    def york_urban(self, name: str | None = None) -> Path | Iterator[Path]:
+        """Access York Urban Line Segment Database images.
+
+        When *name* is given, return the single resolved path.
+        When *name* is ``None``, return an iterator over **all** images.
+
+        :param name: Image filename, e.g. ``"P1010001.jpg"``.  ``None`` to iterate.
+        :type name: str or None
+        :return: Resolved path or iterator of paths.
+        :rtype: Path or Iterator[Path]
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_york_urban.sh``
+        """
+        if name is not None:
+            return self.get(f"YorkUrban/images/{name}")
+        return self._iter_images("YorkUrban/images")
+
+    def wireframe(self, name: str | None = None) -> Path | Iterator[Path]:
+        """Access Wireframe dataset images (Huang et al., CVPR 2018).
+
+        When *name* is given, return the single resolved path.
+        When *name* is ``None``, return an iterator over **all** images.
+
+        :param name: Image filename, e.g. ``"00031546.jpg"``.  ``None`` to iterate.
+        :type name: str or None
+        :return: Resolved path or iterator of paths.
+        :rtype: Path or Iterator[Path]
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_wireframe.sh``
+        """
+        if name is not None:
+            return self.get(f"Wireframe/images/{name}")
+        return self._iter_images("Wireframe/images")
+
+    def ground_truth_csv(self, name: str) -> Path:
+        """Return the path to a ground truth CSV file.
+
+        :param name: CSV filename, e.g. ``"york_urban_gt.csv"``
+            or ``"wireframe_gt.csv"``.
+        :type name: str
+        :return: Resolved path to the CSV file.
+        :rtype: Path
+        """
+        return self.get(f"ground_truth/{name}")
+
     def stereo_pair(self, scene: str, resolution: str = "H") -> tuple[Path, Path]:
         """Return the left/right image paths for an MDB stereo scene.
 
@@ -229,7 +278,7 @@ class TestImages:
                 self._add_if_exists(rd / "bsds500" / "BSDS500" / "data" / "images")
                 # Local resources (windmill.jpg, etc.)
                 self._add_if_exists(rd / "line_extraction" / "resources")
-                # Local datasets
+                # Local datasets (noise, MDB, YorkUrban, Wireframe, ground_truth)
                 self._add_if_exists(rd / "line_extraction" / "resources" / "datasets")
             else:
                 # Manifest-only mode (common on Windows): parse

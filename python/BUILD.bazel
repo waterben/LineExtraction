@@ -18,6 +18,7 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "_wheel_stubs",
     srcs = [
+        "//libs/algorithm/python:le_algorithm_pyi",
         "//libs/edge/python:le_edge_pyi",
         "//libs/eval/python:le_eval_pyi",
         "//libs/geometry/python:le_geometry_pyi",
@@ -46,6 +47,7 @@ py_wheel(
         "numpy>=1.24.0",
     ],
     strip_path_prefixes = [
+        "libs/algorithm/python",
         "libs/imgproc/python",
         "libs/edge/python",
         "libs/geometry/python",
@@ -61,6 +63,7 @@ py_wheel(
         ":_wheel_py_typed",
 
         # ── Native extension modules (.so) ─────────────────────────────
+        "//libs/algorithm/python:le_algorithm",
         "//libs/imgproc/python:le_imgproc",
         "//libs/edge/python:le_edge",
         "//libs/geometry/python:le_geometry",

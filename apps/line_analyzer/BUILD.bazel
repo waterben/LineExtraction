@@ -2,14 +2,6 @@
 
 Note: This application requires Qt5 and OpenGL.
 Build with: bazel build //apps/line_analyzer:app_line_analyzer
-
-The build excludes some files that depend on missing headers:
-- connectionoptimizer.cpp (requires utility/line_connect.hpp)
-- continuityoptimizer.cpp (requires utility/line_merge.hpp)
-- lineanalyser2d.cpp (type mismatches)
-- analyseroptions.cpp (depends on lineanalyser2d)
-
-This matches the CMake build configuration.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
@@ -28,26 +20,106 @@ QT5_COPTS = [
     "-fPIC",
 ]
 
-# Headers that contain Q_OBJECT and need MOC processing
+# ---------------------------------------------------------------------------
+# Source file organization
+# ---------------------------------------------------------------------------
+# Core application sources (src/)
+CORE_SRCS = [
+    "src/controlwindow.cpp",
+    "src/helpers.cpp",
+    "src/main.cpp",
+    "src/preprocessing.cpp",
+    "src/quiver.cpp",
+]
+
+CORE_HDRS = [
+    "src/controlwindow.h",
+    "src/help_button.hpp",
+    "src/helpers.h",
+    "src/latool.h",
+    "src/preprocessing.h",
+    "src/quiver.h",
+]
+
+# Extension sources (extensions/*/)
+EXTENSION_SRCS = [
+    "extensions/accuracy/accuracypanel.cpp",
+    "extensions/connectionoptimizer/connectionoptimizer.cpp",
+    "extensions/continuityoptimizer/continuityoptimizer.cpp",
+    "extensions/detectorprofile/detectorprofilepanel.cpp",
+    "extensions/imageanalyzer/imageanalyzerpanel.cpp",
+    "extensions/lineanalyser2d/analyseroptions.cpp",
+    "extensions/lineanalyser2d/lineanalyser2d.cpp",
+    "extensions/pofuncplot/pofuncplot.cpp",
+    "extensions/precisionoptimizer/precisionoptimizer.cpp",
+    "extensions/profileanalyzer/profileanalyzer.cpp",
+]
+
+EXTENSION_HDRS = [
+    "extensions/accuracy/accuracypanel.h",
+    "extensions/connectionoptimizer/connectionoptimizer.h",
+    "extensions/continuityoptimizer/continuityoptimizer.h",
+    "extensions/detectorprofile/detectorprofilepanel.h",
+    "extensions/imageanalyzer/imageanalyzerpanel.h",
+    "extensions/lineanalyser2d/analyseroptions.h",
+    "extensions/lineanalyser2d/lineanalyser2d.h",
+    "extensions/pofuncplot/pofuncplot.h",
+    "extensions/precisionoptimizer/precisionoptimizer.h",
+    "extensions/profileanalyzer/profileanalyzer.h",
+]
+
+# Headers requiring MOC processing (Q_OBJECT macro)
 MOC_HEADERS = [
-    "controlwindow.h",
-    "helpers.h",
-    "preprocessing.h",
-    "profileanalyzer.h",
-    "precisionoptimizer.h",
-    "pofuncplot.h",
-    "quiver.h",
+    "src/controlwindow.h",
+    "src/helpers.h",
+    "src/preprocessing.h",
+    "src/quiver.h",
+    "extensions/accuracy/accuracypanel.h",
+    "extensions/connectionoptimizer/connectionoptimizer.h",
+    "extensions/continuityoptimizer/continuityoptimizer.h",
+    "extensions/detectorprofile/detectorprofilepanel.h",
+    "extensions/imageanalyzer/imageanalyzerpanel.h",
+    "extensions/lineanalyser2d/analyseroptions.h",
+    "extensions/lineanalyser2d/lineanalyser2d.h",
+    "extensions/pofuncplot/pofuncplot.h",
+    "extensions/precisionoptimizer/precisionoptimizer.h",
+    "extensions/profileanalyzer/profileanalyzer.h",
 ]
 
 # UI files for UIC processing
 UI_FILES = [
-    "controlwindow.ui",
-    "preprocessing.ui",
-    "profileanalyzer.ui",
-    "precisionoptimizer.ui",
-    "pofuncplot.ui",
-    "quiver.ui",
+    "ui/controlwindow.ui",
+    "ui/preprocessing.ui",
+    "ui/quiver.ui",
+    "extensions/accuracy/accuracypanel.ui",
+    "extensions/connectionoptimizer/connectionoptimizer.ui",
+    "extensions/continuityoptimizer/continuityoptimizer.ui",
+    "extensions/detectorprofile/detectorprofilepanel.ui",
+    "extensions/imageanalyzer/imageanalyzerpanel.ui",
+    "extensions/lineanalyser2d/analyseroptions.ui",
+    "extensions/lineanalyser2d/lineanalyser2d.ui",
+    "extensions/pofuncplot/pofuncplot.ui",
+    "extensions/precisionoptimizer/precisionoptimizer.ui",
+    "extensions/profileanalyzer/profileanalyzer.ui",
 ]
+
+# Include paths so that #include "foo.h" works across directories
+INCLUDE_PATHS = [
+    "-Iapps/line_analyzer/src",
+    "-Iapps/line_analyzer/extensions/accuracy",
+    "-Iapps/line_analyzer/extensions/connectionoptimizer",
+    "-Iapps/line_analyzer/extensions/continuityoptimizer",
+    "-Iapps/line_analyzer/extensions/detectorprofile",
+    "-Iapps/line_analyzer/extensions/imageanalyzer",
+    "-Iapps/line_analyzer/extensions/lineanalyser2d",
+    "-Iapps/line_analyzer/extensions/pofuncplot",
+    "-Iapps/line_analyzer/extensions/precisionoptimizer",
+    "-Iapps/line_analyzer/extensions/profileanalyzer",
+]
+
+# ---------------------------------------------------------------------------
+# Qt code generation
+# ---------------------------------------------------------------------------
 
 # Generate moc_*.cpp files from headers with Q_OBJECT
 qt5_moc(
@@ -55,9 +127,22 @@ qt5_moc(
     hdrs = MOC_HEADERS,
     includes = [
         ".",
-        "apps/line_analyzer",
+        "apps/line_analyzer/extensions/accuracy",
+        "apps/line_analyzer/extensions/connectionoptimizer",
+        "apps/line_analyzer/extensions/continuityoptimizer",
+        "apps/line_analyzer/extensions/detectorprofile",
+        "apps/line_analyzer/extensions/imageanalyzer",
+        "apps/line_analyzer/extensions/lineanalyser2d",
+        "apps/line_analyzer/extensions/pofuncplot",
+        "apps/line_analyzer/extensions/precisionoptimizer",
+        "apps/line_analyzer/extensions/profileanalyzer",
+        "apps/line_analyzer/src",
     ],
-    deps = glob(["*.h"]),
+    deps = glob([
+        "src/*.h",
+        "src/*.hpp",
+        "extensions/**/*.h",
+    ]),
 )
 
 # Generate ui_*.h files from .ui files
@@ -66,29 +151,23 @@ qt5_uic(
     srcs = UI_FILES,
 )
 
-# Main application binary
+# ---------------------------------------------------------------------------
+# Application binary
+# ---------------------------------------------------------------------------
+
 cc_binary(
     name = "app_line_analyzer",
-    srcs = [
-        "main.cpp",
-        "helpers.cpp",
-        "controlwindow.cpp",
-        "preprocessing.cpp",
-        "profileanalyzer.cpp",
-        "precisionoptimizer.cpp",
-        "pofuncplot.cpp",
-        "quiver.cpp",
-        # Headers
-        "latool.h",
-    ] + MOC_HEADERS + [
-        # MOC-generated files
+    srcs = CORE_SRCS + EXTENSION_SRCS + CORE_HDRS + EXTENSION_HDRS + [
         ":line_analyzer_moc",
     ],
-    copts = QT5_COPTS + [
+    copts = QT5_COPTS + INCLUDE_PATHS + [
         "-I$(GENDIR)/apps/line_analyzer",  # For ui_*.h files
     ],
     data = [
+        "//resources:example_lines",
+        "//resources:presets",
         "//resources:windmill",
+        "//resources/datasets:ground_truth",
     ],
     linkopts = [
         "-lGL",
@@ -99,6 +178,7 @@ cc_binary(
     ],
     deps = [
         ":line_analyzer_uic",
+        "//libs/algorithm:lib_algorithm",
         "//libs/edge:lib_edge",
         "//libs/imgproc:lib_imgproc",
         "//libs/lsd:lib_lsd",

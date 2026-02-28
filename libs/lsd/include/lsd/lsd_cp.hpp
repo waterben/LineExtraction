@@ -372,7 +372,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   /// @param min_pix Minimum supporting pixels per line region (range [2..X])
   /// @param max_gap Maximum gap search distance in pixels (range [0..X])
   /// @param err_dist Error distance for pattern merge/split in pixels (range (0..X])
-  /// @param pat_tol Pattern tolerance: allowed pixel count change in primitives (range [0..X])
+  /// @param pat_tol Pattern tolerance: allowed pixel count change in primitives (range [1..X])
   /// @param flags Detection flags bitmask:
   ///   - CP_FIND_NEAR_COMPLEX: Use complex near-pixel decision algorithm
   ///   - CP_CORNER_RULE: Enable corner rule
@@ -390,7 +390,7 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
         max_gap_(max_gap),
         pat_tol_(pat_tol),
         err_dist_(err_dist) {
-    CV_Assert(pat_tol >= 0 && max_gap >= 0 && min_pix > 1 && th_high <= 1 && th_high > 0 && th_low <= 1 && th_low > 0 &&
+    CV_Assert(pat_tol > 0 && max_gap >= 0 && min_pix > 1 && th_high <= 1 && th_high > 0 && th_low <= 1 && th_low > 0 &&
               th_high >= th_low && err_dist > 0);
     init();
   }
@@ -472,8 +472,8 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
   int tolerance() const { return pat_tol_; }
 
   //! @brief Set the pattern tolerance for primitive matching.
-  //! @param pt The new pattern tolerance value. Must be >= 0. Typical range [0..X].
-  void tolerance(int pt) { pat_tol_ = pt; }
+  //! @param pt The new pattern tolerance value. Must be >= 1. Typical range [1..5].
+  void tolerance(int pt) { pat_tol_ = std::max(1, pt); }
 
   //! @brief Get or set the detection flags controlling algorithm behavior.
   //! @param f The new flags value, or Value::NAV() to only query.
@@ -618,7 +618,9 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
     points_.clear();
     points_.reserve(size);
     patterns_.clear();
-    patterns_.reserve(size / static_cast<size_t>(2 * pat_tol_));
+    if (pat_tol_ > 0) {
+      patterns_.reserve(size / static_cast<size_t>(2 * pat_tol_));
+    }
 
     short dmapStore[28][4] = {{-1, -1, 0, 0},
                               {static_cast<short>(-1 - cols_), -1, -1, 1},
@@ -783,8 +785,11 @@ class LsdCP : public LsdCCBase<FT, LPT, PT, GRAD, FIT> {
       return find_near(fs, edir);
     };
 
-    auto move_idx = [&pemap, &pdmap](int& idx, char ndir) {
+    auto move_idx = [&pemap, &pdmap, this](int& idx, char ndir) -> char {
       idx += pdmap[static_cast<int>(ndir)][0];
+      if (idx < 0 || idx >= this->size_) {
+        return -2;
+      }
       return pemap[idx];
     };
 

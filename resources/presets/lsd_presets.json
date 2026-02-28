@@ -1,0 +1,349 @@
+{
+  "metadata": {
+    "ground_truth_files": [
+      "resources/datasets/ground_truth/york_urban_gt.csv"
+    ],
+    "num_images": 102,
+    "num_gt_segments": 12122,
+    "num_samples": 10,
+    "match_threshold": 5.0,
+    "seed": 42,
+    "refine": false,
+    "total_duration_seconds": 4911.0
+  },
+  "detectors": {
+    "LsdCC": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.002239,
+          "nms_th_high": 0.047399,
+          "edge_min_pixels": 20,
+          "edge_max_gap": 3,
+          "split_error_distance": 2.234374
+        },
+        "score": 0.093704,
+        "configs_evaluated": 10,
+        "duration_seconds": 173.3
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.002239,
+          "nms_th_high": 0.047399,
+          "edge_min_pixels": 20,
+          "edge_max_gap": 3,
+          "split_error_distance": 2.234374
+        },
+        "score": 0.139819,
+        "configs_evaluated": 10,
+        "duration_seconds": 170.4
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.018894,
+          "nms_th_high": 0.005035,
+          "edge_min_pixels": 6,
+          "edge_max_gap": 5,
+          "split_error_distance": 3.278667
+        },
+        "score": 0.491296,
+        "configs_evaluated": 10,
+        "duration_seconds": 169.7
+      }
+    },
+    "LsdCP": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "edge_max_gap": 5,
+          "split_error_distance": 4.137788,
+          "edge_pattern_tolerance": 2
+        },
+        "score": 0.082775,
+        "configs_evaluated": 10,
+        "duration_seconds": 133.9
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "edge_max_gap": 5,
+          "split_error_distance": 4.137788,
+          "edge_pattern_tolerance": 2
+        },
+        "score": 0.126078,
+        "configs_evaluated": 10,
+        "duration_seconds": 133.5
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.019698,
+          "nms_th_high": 0.026004,
+          "edge_min_pixels": 3,
+          "edge_max_gap": 5,
+          "split_error_distance": 3.561384,
+          "edge_pattern_tolerance": 1
+        },
+        "score": 0.464934,
+        "configs_evaluated": 10,
+        "duration_seconds": 133.9
+      }
+    },
+    "LsdBurns": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.013716,
+          "nms_th_high": 0.007539,
+          "edge_min_pixels": 20,
+          "edge_partitions": 19
+        },
+        "score": 0.049871,
+        "configs_evaluated": 10,
+        "duration_seconds": 259.9
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.013716,
+          "nms_th_high": 0.007539,
+          "edge_min_pixels": 20,
+          "edge_partitions": 19
+        },
+        "score": 0.081686,
+        "configs_evaluated": 10,
+        "duration_seconds": 258.7
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.012743,
+          "nms_th_high": 0.025062,
+          "edge_min_pixels": 5,
+          "edge_partitions": 6
+        },
+        "score": 0.501891,
+        "configs_evaluated": 10,
+        "duration_seconds": 261.9
+      }
+    },
+    "LsdFBW": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.019458,
+          "nms_th_high": 0.04246,
+          "edge_min_pixels": 19,
+          "angle_th": 10.027257
+        },
+        "score": 0.064638,
+        "configs_evaluated": 10,
+        "duration_seconds": 264.7
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.019458,
+          "nms_th_high": 0.04246,
+          "edge_min_pixels": 19,
+          "angle_th": 10.027257
+        },
+        "score": 0.108412,
+        "configs_evaluated": 10,
+        "duration_seconds": 266.1
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.01986,
+          "nms_th_high": 0.032787,
+          "edge_min_pixels": 6,
+          "angle_th": 28.366475
+        },
+        "score": 0.513717,
+        "configs_evaluated": 10,
+        "duration_seconds": 264.5
+      }
+    },
+    "LsdFGioi": {
+      "fast": {
+        "params": {
+          "quant_error": 2.148628,
+          "angle_th": 25.96245,
+          "log_eps": 2.85176,
+          "density_th": 0.439772,
+          "bins": 941
+        },
+        "score": 0.094939,
+        "configs_evaluated": 10,
+        "duration_seconds": 170.2
+      },
+      "balanced": {
+        "params": {
+          "quant_error": 2.148628,
+          "angle_th": 25.96245,
+          "log_eps": 2.85176,
+          "density_th": 0.439772,
+          "bins": 941
+        },
+        "score": 0.144872,
+        "configs_evaluated": 10,
+        "duration_seconds": 169.9
+      },
+      "accurate": {
+        "params": {
+          "quant_error": 0.603781,
+          "angle_th": 28.367113,
+          "log_eps": -1.00139,
+          "density_th": 0.332666,
+          "bins": 779
+        },
+        "score": 0.461251,
+        "configs_evaluated": 10,
+        "duration_seconds": 166.2
+      }
+    },
+    "LsdEDLZ": {
+      "fast": {
+        "params": {
+          "grad_th": 20.45965,
+          "anchor_th": 2.529848,
+          "scan_int": 3,
+          "min_len": 30,
+          "fit_error": 2.600433,
+          "validate": false
+        },
+        "score": 0.115222,
+        "configs_evaluated": 10,
+        "duration_seconds": 63.1
+      },
+      "balanced": {
+        "params": {
+          "grad_th": 20.45965,
+          "anchor_th": 2.529848,
+          "scan_int": 3,
+          "min_len": 30,
+          "fit_error": 2.600433,
+          "validate": false
+        },
+        "score": 0.137912,
+        "configs_evaluated": 10,
+        "duration_seconds": 63.1
+      },
+      "accurate": {
+        "params": {
+          "grad_th": 14.635413,
+          "anchor_th": 1.063865,
+          "scan_int": 1,
+          "min_len": 11,
+          "fit_error": 1.584615,
+          "validate": false
+        },
+        "score": 0.380833,
+        "configs_evaluated": 10,
+        "duration_seconds": 63.2
+      }
+    },
+    "LsdEL": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "split_error_distance": 3.034797
+        },
+        "score": 0.035836,
+        "configs_evaluated": 10,
+        "duration_seconds": 217.9
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "split_error_distance": 3.034797
+        },
+        "score": 0.063601,
+        "configs_evaluated": 10,
+        "duration_seconds": 217.6
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.00284,
+          "nms_th_high": 0.048819,
+          "edge_min_pixels": 9,
+          "split_error_distance": 2.552315
+        },
+        "score": 0.465597,
+        "configs_evaluated": 10,
+        "duration_seconds": 217.6
+      }
+    },
+    "LsdEP": {
+      "fast": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "split_error_distance": 3.034797
+        },
+        "score": 0.036806,
+        "configs_evaluated": 10,
+        "duration_seconds": 176.7
+      },
+      "balanced": {
+        "params": {
+          "nms_th_low": 0.003171,
+          "nms_th_high": 0.0477,
+          "edge_min_pixels": 19,
+          "split_error_distance": 3.034797
+        },
+        "score": 0.065158,
+        "configs_evaluated": 10,
+        "duration_seconds": 178.4
+      },
+      "accurate": {
+        "params": {
+          "nms_th_low": 0.00284,
+          "nms_th_high": 0.048819,
+          "edge_min_pixels": 9,
+          "split_error_distance": 2.552315
+        },
+        "score": 0.463524,
+        "configs_evaluated": 10,
+        "duration_seconds": 177.4
+      }
+    },
+    "LsdHoughP": {
+      "fast": {
+        "params": {
+          "hough_rho": 1.334272,
+          "hough_vote_th": 200,
+          "edge_min_len": 22.701814,
+          "edge_max_gap": 1.18526
+        },
+        "score": 0.034028,
+        "configs_evaluated": 10,
+        "duration_seconds": 178.7
+      },
+      "balanced": {
+        "params": {
+          "hough_rho": 1.334272,
+          "hough_vote_th": 200,
+          "edge_min_len": 22.701814,
+          "edge_max_gap": 1.18526
+        },
+        "score": 0.023848,
+        "configs_evaluated": 10,
+        "duration_seconds": 180.3
+      },
+      "accurate": {
+        "params": {
+          "hough_rho": 0.662629,
+          "hough_vote_th": 53,
+          "edge_min_len": 28.555044,
+          "edge_max_gap": 6.069594
+        },
+        "score": 0.039488,
+        "configs_evaluated": 10,
+        "duration_seconds": 180.1
+      }
+    }
+  }
+}

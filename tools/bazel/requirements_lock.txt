@@ -20,6 +20,7 @@ numpy==2.4.2
     #   contourpy
     #   matplotlib
     #   rerun-sdk
+    #   scipy
 packaging==24.2
     # via
     #   matplotlib
@@ -41,7 +42,11 @@ pytest==8.3.4
     # via -r tools/bazel/requirements.in
 python-dateutil==2.9.0.post0
     # via matplotlib
+pyyaml==6.0.3
+    # via -r tools/bazel/requirements.in
 rerun-sdk==0.29.2
+    # via -r tools/bazel/requirements.in
+scipy==1.17.0
     # via -r tools/bazel/requirements.in
 six==1.17.0
     # via python-dateutil
