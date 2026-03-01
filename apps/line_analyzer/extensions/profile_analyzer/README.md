@@ -16,6 +16,7 @@ The analyzer samples the gradient magnitude along a cross-section perpendicular 
   Image with a vertical edge:
 
         dark │ bright
+             |
         ░░░░░│▓▓▓▓▓
         ░░░░░│▓▓▓▓▓
         ░░░░░│▓▓▓▓▓    ← detected line segment (vertical)
@@ -91,6 +92,7 @@ A **strong, narrow peak** at 0 confirms a well-localized edge. A **flat or noisy
 
 Verify that a detected line sits on a true edge (sharp peak in the profile) and diagnose false positives (flat or noisy profiles). A strong, narrow peak indicates a well-localized edge; a broad or noisy profile suggests the line may not correspond to a meaningful image feature.
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -104,3 +106,4 @@ Verify that a detected line sits on a true edge (sharp peak in the profile) and 
 - **Analyzer** — line selection, image sources, indicator overlay
 - **QCustomPlot** — 2D plot rendering
 - **libs/imgproc** — gradient computation and interpolation
+<!-- help:end-ignore -->

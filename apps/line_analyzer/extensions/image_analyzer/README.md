@@ -80,6 +80,7 @@ Based on the computed image properties, the panel suggests values for the [Detec
 
 Understand the characteristics of the current image before configuring detector parameters. The suggested profile values can be manually entered into the Detector Profile panel, or you can use the Detector Profile panel's **Auto from Image** button which performs the same analysis internally.
 
+<!-- help:start-ignore -->
 ## Algorithm
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#imageanalyzer) for the full `ImageAnalyzer` API, property derivation logic, and `ProfileHints` suggestion heuristics.
@@ -96,3 +97,4 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#i
 
 - **Analyzer** — source image access, image change signals
 - **libs/algorithm** — [`ImageAnalyzer`](../../../../libs/algorithm/README.md#imageanalyzer), `ImageProperties`, `ProfileHints`
+<!-- help:end-ignore -->

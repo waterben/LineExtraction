@@ -1,6 +1,6 @@
 # Algorithm Library
 
-Post-processing, accuracy evaluation, and parameter optimisation toolkit for
+Post-processing, accuracy evaluation, and parameter optimization toolkit for
 line segment detection pipelines. Provides merging, connecting, precision
 refinement, ground truth handling, and automated hyperparameter search — all
 usable from C++ and Python.
@@ -32,7 +32,7 @@ ValueManager (from libs/utility)
   ├── LineContinuityOptimizer<FT> — unified merge + gradient-assisted bridging
   ├── LineMerge<FT>           — merge collinear segments (legacy)
   ├── LineConnect<FT>         — gradient-guided connection (legacy)
-  └── PrecisionOptimize       — dlib-based sub-pixel optimisation
+  └── PrecisionOptimize       — dlib-based sub-pixel optimization
 
 AccuracyMeasure<FT>           — detection quality metrics
 GroundTruthLoader             — CSV I/O for ground truth segments
@@ -65,7 +65,7 @@ mechanism `ParamOptimizer` uses to inject configurations during search.
 | `libs/utility` | `Value`, `ValueManager` |
 | `libs/eval` | Performance task infrastructure |
 | OpenCV | `cv::Mat`, gradient computation |
-| dlib | BFGS / L-BFGS / CG optimisation (PrecisionOptimize) |
+| dlib | BFGS / L-BFGS / CG optimization (PrecisionOptimize) |
 
 ## Components
 
@@ -346,7 +346,7 @@ auto detect_fn = [&](const cv::Mat& src,
 auto gt = lsfm::GroundTruthLoader::load_csv("ground_truth.csv");
 std::vector<std::pair<std::string, cv::Mat>> images = { ... };
 
-// 4. Run optimisation
+// 4. Run optimization
 lsfm::ParamOptimizer optimizer(lsfm::OptimMetric::F1,
                                /*match_threshold=*/5.0,
                                /*verbose=*/true);
@@ -399,9 +399,9 @@ result.sort_by_score();
 ### PrecisionOptimize
 
 Sub-pixel refinement of line segment positions using gradient-based
-numerical optimisation (BFGS / L-BFGS / Conjugate Gradient via dlib).
+numerical optimization (BFGS / L-BFGS / Conjugate Gradient via dlib).
 
-Searches over orthogonal translation and rotation to maximise the
+Searches over orthogonal translation and rotation to maximize the
 mean gradient response along the segment.
 
 ```
@@ -439,7 +439,7 @@ lsfm::PrecisionOptimize optimizer;
 optimizer.value("search_strategy", 0);  // BFGS
 optimizer.value("interpolation", 2);    // bilinear
 
-// Optimise in place
+// Optimize in place
 auto errors = optimizer.optimize_all(gradient_magnitude, segments);
 
 // Or produce a refined copy
@@ -509,7 +509,7 @@ std::cout << "Suggested detail:    " << hints.detail         << "%\n"
 
 Translates 4 intuitive percentage sliders into concrete detector parameters
 for all 9 supported LSD detectors.  This abstraction lets users control
-detection behaviour without knowing the internal parameter names of each
+detection behavior without knowing the internal parameter names of each
 algorithm.
 
 > **GUI:** The [Detector Profile](../../apps/line_analyzer/extensions/detector_profile/README.md) panel in the Line Analyzer app provides an interactive UI with sliders for this algorithm.
@@ -534,7 +534,7 @@ two multiplicative factors that modulate the parameter translation:
 | `noise_factor` | 0.5–2.0 | Scales threshold-like parameters. >1 for noisy images. |
 
 These factors are multiplied into threshold / gradient parameters during
-`to_params()` so that the same slider settings produce adapted behaviour
+`to_params()` so that the same slider settings produce adapted behavior
 on different image types.
 
 #### How the Slider Mapping Works
@@ -690,7 +690,7 @@ params = profile.to_params_by_name("LsdFGioi")           # by name
 for p in params:
     print(f"  {p['name']} = {p['value']}")
 
-# --- Parameter optimisation ---
+# --- Parameter optimization ---
 space = [alg.ParamRange("sensitivity", 0.0, 1.0, 0.1)]
 strategy = alg.GridSearchStrategy()
 
@@ -839,7 +839,7 @@ libs/algorithm/
 | `AccuracyMeasureTest` | 7 | Perfect match, no detections, all FP, partial, both empty, reversed, sAP |
 | `GridSearchTest` | 5 | Single param, two params, empty space, int, bool |
 | `RandomSearchTest` | 3 | Correct count, reproducible, within bounds |
-| `ParamOptimizerTest` | 3 | Basic optimisation, progress callback, cancellation |
+| `ParamOptimizerTest` | 3 | Basic optimization, progress callback, cancellation |
 | `GroundTruthTest` | 1 | make_entry |
 | `SearchResultTest` | 1 | top_n |
 
@@ -861,7 +861,7 @@ libs/algorithm/
 | `TestAccuracyMeasure` | 4 | Perfect match, no detections, threshold property, sAP |
 | `TestGroundTruth` | 2 | make_entry, repr |
 | `TestSearchStrategy` | 4 | Grid single param, grid bool, random count, reproducible |
-| `TestParamOptimizer` | 2 | Construction, basic optimisation |
+| `TestParamOptimizer` | 2 | Construction, basic optimization |
 | `TestEnums` | 3 | MergeType, OptimMetric, DetectorId |
 | `TestImageAnalyzer` | 6 | Uniform, noisy, high contrast, repr, suggest_profile, hints clamp |
 | `TestDetectorProfile` | 12 | Construction, from_hints, from_image, supported_detectors, to_params, all detectors, name conversion, setters, repr, detail affects thresholds |

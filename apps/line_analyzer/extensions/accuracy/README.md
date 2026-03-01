@@ -153,6 +153,7 @@ To regenerate or customize: `python tools/scripts/generate_example_gt.py`
 
 Quick quantitative comparison of different detector configurations or parameter presets. Use this panel when you need P/R/F1 numbers for a report or to compare before/after. For detailed per-segment analysis, use the [GT Inspector](../ground_truth_inspector/README.md) extension instead.
 
+<!-- help:start-ignore -->
 ## Algorithm
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#accuracymeasure) for the full `AccuracyMeasure` API, structural AP computation, and C++/Python usage examples.
@@ -169,3 +170,4 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#a
 
 - **Analyzer** — detected line data, image sources
 - **libs/algorithm** — [`AccuracyMeasure`](../../../../libs/algorithm/README.md#accuracymeasure), [`GroundTruthLoader`](../../../../libs/algorithm/README.md#groundtruthloader)
+<!-- help:end-ignore -->

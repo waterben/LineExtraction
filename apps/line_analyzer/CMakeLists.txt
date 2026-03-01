@@ -31,6 +31,7 @@ le_add_executable(app_line_analyzer
         src/helpers.cpp
         src/analyzer.cpp
         src/preprocessing.cpp
+        src/help_viewer.cpp
         # Extensions
         extensions/accuracy/accuracypanel.cpp
         extensions/continuity_optimizer/continuity_optimizer.cpp
@@ -46,7 +47,11 @@ le_add_executable(app_line_analyzer
         # Core
         src/helpers.h
         src/analyzer.h
+        src/help_viewer.h
+        src/help_button.hpp
+        src/markdown_converter.hpp
         src/preprocessing.h
+        src/latool.h
         # Extensions
         extensions/accuracy/accuracypanel.h
         extensions/continuity_optimizer/continuity_optimizer.h
@@ -83,5 +88,33 @@ le_add_executable(app_line_analyzer
         dlib::dlib
 )
 
-# Re-enable warnings to fix them properly
-# target_compile_options(app_line_analyzer PRIVATE -Wno-old-style-cast)
+# Copy README files to the binary output directory so the help viewer
+# can find them at runtime when running the CMake-built executable.
+file(GLOB _ext_readmes "${CMAKE_CURRENT_SOURCE_DIR}/extensions/*/README.md")
+set(_all_readmes "${CMAKE_CURRENT_SOURCE_DIR}/README.md" ${_ext_readmes})
+
+add_custom_command(TARGET app_line_analyzer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer"
+    COMMENT "Copying help viewer README files"
+)
+
+# Copy the top-level README.
+add_custom_command(TARGET app_line_analyzer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
+        "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/README.md"
+)
+
+# Copy each extension README, preserving the directory structure.
+foreach(_readme ${_ext_readmes})
+    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_readme}")
+    get_filename_component(_rel_dir "${_rel}" DIRECTORY)
+    add_custom_command(TARGET app_line_analyzer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/${_rel_dir}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${_readme}"
+            "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/${_rel}"
+    )
+endforeach()

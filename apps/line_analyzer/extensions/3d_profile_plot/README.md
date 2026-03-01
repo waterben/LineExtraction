@@ -91,6 +91,7 @@ The plot evaluates the mean gradient response on a 2D grid around the current li
 
 Understand the optimization landscape before or after running the [Precision Optimizer](../precision_optimizer/README.md). Use the "Fit Profile" and "Fit Rotation" views to inspect each dimension independently.
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -98,6 +99,7 @@ Understand the optimization landscape before or after running the [Precision Opt
 | [3d_profile_plot.h](3d_profile_plot.h) | Panel class declaration (inherits `LATool`) |
 | [3d_profile_plot.cpp](3d_profile_plot.cpp) | 3D surface computation and rendering |
 | [3d_profile_plot.ui](3d_profile_plot.ui) | Qt Designer layout |
+<!-- help:end-ignore -->
 
 ## Dependencies
 

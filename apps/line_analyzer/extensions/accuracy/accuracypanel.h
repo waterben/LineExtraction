@@ -18,6 +18,7 @@
 /// can be loaded via the **Example** button for quick out-of-the-box testing.
 class AccuracyPanel : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(AccuracyPanel)
 
   Ui::AccuracyPanel* ui{nullptr};
   Analyzer* ctrl{nullptr};

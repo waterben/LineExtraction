@@ -15,6 +15,51 @@ The `edge` library is a modular, header-only C++ library designed for efficient 
 
 All code resides in the `lsfm` namespace.
 
+### Edge Detection Pipeline
+
+```
+                          Edge Detection Pipeline
+  ┌─────────┐     ┌──────────┐     ┌─────────────┐     ┌───────────┐
+  │  Input   │────→│ Gradient │────→│  Edge Thin   │────→│   Edge    │
+  │  Image   │     │(Gx, Gy) │     │  (NMS / ZC)  │     │  Linking  │
+  └─────────┘     └──────────┘     └─────────────┘     └───────────┘
+                        │                  │                   │
+                        ▼                  ▼                   ▼
+                  magnitude +        thin edgel map      connected edge
+                  direction          (1-pixel wide)       segments
+```
+
+### Non-Maximum Suppression (NMS)
+
+NMS thins gradient ridges to single-pixel edges by suppressing non-maximum responses along the gradient direction:
+
+```
+  Input gradient magnitude:        After NMS (4-directional):
+
+  0  3  5  3  0                    0  0  5  0  0
+  0  4  8  4  0       ──NMS──→     0  0  8  0  0
+  0  3  5  3  0                    0  0  5  0  0
+  0  1  2  1  0                    0  0  0  0  0
+
+  (gradient ridge)              (only peaks kept along
+                                 gradient direction)
+```
+
+4-directional NMS checks neighbors in the nearest of 4 compass directions; 8-directional checks all 8 neighbors with interpolation.
+
+### Edge Linking Strategies
+
+```
+  Simple:            Continuity:           Pattern:
+  Follow chain       Bridge small gaps     Detect edge patterns
+  strictly           using magnitude       and fill gaps
+
+  ●─●─●─●           ●─●─●─●─●─●          ●─●─●─●─●─●
+       ●─●─●             ↗                     ↗
+                    ●─●─●                 ●─●─●
+  (breaks at gap)   (bridged, maxGap=3)   (pattern-matched)
+```
+
 ## Key Components
 
 ### Edge Response & Extraction
@@ -333,8 +378,10 @@ void processEdges(const cv::Mat& dir, const cv::Mat& mag, Detector& detector) {
 
 - [imgproc](../imgproc/README.md) - Image processing and gradient computation
 - [geometry](../geometry/README.md) - Geometric primitives and line representation
+- [algorithm](../algorithm/README.md) - Parameter optimization and continuity optimization
 - [lsd](../lsd/README.md) - Line Segment Detection algorithms
 - [eval](../eval/README.md) - Evaluation and benchmarking framework
+- [Resources](../../resources/README.md) - Datasets, presets, and ground-truth data
 
 ## Evaluation & Benchmarks
 

@@ -11,6 +11,7 @@
 /// geometric parameters controls both operations.
 class ContinuityOptimizer : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(ContinuityOptimizer)
 
   Ui::ContinuityOptimizer* ui{nullptr};
   const Analyzer::LineVector* lines{nullptr};

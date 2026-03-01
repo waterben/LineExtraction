@@ -10,9 +10,10 @@
  */
 class AnalyserOptions : public QMainWindow {
   Q_OBJECT
+  Q_DISABLE_COPY(AnalyserOptions)
 
  public:
-  explicit AnalyserOptions(QWidget* parent = 0);
+  explicit AnalyserOptions(QWidget* parent = nullptr);
   ~AnalyserOptions();
 
   Ui::AnalyserOptions* ui; /* Analyser Options UI */

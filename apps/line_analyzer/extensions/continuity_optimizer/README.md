@@ -198,6 +198,7 @@ Process repeats until convergence (no more merges possible).
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#linecontinuityoptimizer) for full API details.
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -210,3 +211,4 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#l
 
 - **Analyzer** — line data, image sources (gradient magnitude)
 - **libs/algorithm** — [`LineContinuityOptimizer`](../../../../libs/algorithm/README.md#linecontinuityoptimizer) unified algorithm
+<!-- help:end-ignore -->

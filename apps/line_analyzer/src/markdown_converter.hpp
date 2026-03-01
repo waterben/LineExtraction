@@ -30,9 +30,11 @@ inline std::string markdownToHtml(const std::string& md) {
   // State tracking.
   bool in_code_block = false;
   bool in_list = false;
+  bool in_ordered_list = false;
   bool in_table = false;
   bool in_blockquote = false;
   bool need_paragraph_close = false;
+  bool in_ignore_block = false;
 
   // Close any open paragraph.
   auto closeParagraph = [&]() {
@@ -42,11 +44,19 @@ inline std::string markdownToHtml(const std::string& md) {
     }
   };
 
-  // Close an open list.
+  // Close an open unordered list.
   auto closeList = [&]() {
     if (in_list) {
       html << "</ul>\n";
       in_list = false;
+    }
+  };
+
+  // Close an open ordered list.
+  auto closeOrderedList = [&]() {
+    if (in_ordered_list) {
+      html << "</ol>\n";
+      in_ordered_list = false;
     }
   };
 
@@ -165,12 +175,29 @@ th { background: #f0f0f0; font-weight: bold; }
 blockquote { border-left: 3px solid #ccc; margin: 8px 0; padding: 4px 12px; color: #555; }
 a { color: #0366d6; }
 hr { border: none; border-top: 1px solid #ccc; margin: 12px 0; }
-ul { margin: 4px 0 4px 20px; }
+ul, ol { margin: 4px 0 4px 20px; }
+ol { list-style-type: decimal; }
 img { max-width: 100%; }
 </style></head><body>
 )";
 
+  // Regex for ordered list items: optional leading spaces, digit(s), dot, space.
+  static const std::regex ordered_list_re(R"(^(\s*)(\d+)\.\s(.*))");
+
   while (std::getline(stream, line)) {
+    // --- Help-ignore blocks ---
+    // Sections between <!-- help:start-ignore --> and <!-- help:end-ignore -->
+    // are stripped from the viewer output but remain visible in GitHub/editors.
+    if (line.find("<!-- help:start-ignore -->") != std::string::npos) {
+      in_ignore_block = true;
+      continue;
+    }
+    if (line.find("<!-- help:end-ignore -->") != std::string::npos) {
+      in_ignore_block = false;
+      continue;
+    }
+    if (in_ignore_block) continue;
+
     // --- Fenced code blocks ---
     if (line.substr(0, 3) == "```") {
       if (!in_code_block) {
@@ -212,6 +239,7 @@ img { max-width: 100%; }
     if (line.empty() || line.find_first_not_of(' ') == std::string::npos) {
       closeParagraph();
       closeList();
+      closeOrderedList();
       closeBlockquote();
       // Don't close table on blank lines (some tables have them).
       continue;
@@ -240,6 +268,7 @@ img { max-width: 100%; }
         if (is_hr) {
           closeParagraph();
           closeList();
+          closeOrderedList();
           closeTable();
           closeBlockquote();
           html << "<hr />\n";
@@ -252,6 +281,7 @@ img { max-width: 100%; }
     if (line[0] == '#') {
       closeParagraph();
       closeList();
+      closeOrderedList();
       closeTable();
       closeBlockquote();
       int level = 0;
@@ -297,6 +327,7 @@ img { max-width: 100%; }
       if (pipes >= 2) {
         closeParagraph();
         closeList();
+        closeOrderedList();
         closeBlockquote();
 
         // Check if this is a separator row (---|---|---).
@@ -358,11 +389,32 @@ img { max-width: 100%; }
     // If we were in a table and this line is not a table row, close it.
     if (in_table) closeTable();
 
+    // --- Ordered lists (1. 2. etc.) ---
+    {
+      std::smatch ol_match;
+      if (std::regex_match(line, ol_match, ordered_list_re)) {
+        closeParagraph();
+        closeList();
+        closeTable();
+        closeBlockquote();
+        if (!in_ordered_list) {
+          html << "<ol>\n";
+          in_ordered_list = true;
+        }
+        std::string content = ol_match[3].str();
+        html << "  <li>" << inlineFormat(content) << "</li>\n";
+        continue;
+      }
+    }
+    // If we were in an ordered list and this is not a list item, close it.
+    if (in_ordered_list) closeOrderedList();
+
     // --- Unordered lists ---
     if ((line.size() > 2 && (line[0] == '-' || line[0] == '*' || line[0] == '+') && line[1] == ' ') ||
         (line.size() > 4 && line.substr(0, 2) == "  " && (line[2] == '-' || line[2] == '*' || line[2] == '+') &&
          line[3] == ' ')) {
       closeParagraph();
+      closeOrderedList();
       closeTable();
       closeBlockquote();
       if (!in_list) {
@@ -394,6 +446,7 @@ img { max-width: 100%; }
   // Close any remaining open elements.
   closeParagraph();
   closeList();
+  closeOrderedList();
   closeTable();
   closeBlockquote();
 
@@ -415,6 +468,7 @@ inline std::vector<TocEntry> extractToc(const std::string& md) {
   std::string line;
   std::vector<TocEntry> toc;
   bool in_code_block = false;
+  bool in_ignore_block = false;
 
   auto slugify = [](const std::string& text) -> std::string {
     std::string slug;
@@ -447,6 +501,16 @@ inline std::vector<TocEntry> extractToc(const std::string& md) {
   };
 
   while (std::getline(stream, line)) {
+    if (line.find("<!-- help:start-ignore -->") != std::string::npos) {
+      in_ignore_block = true;
+      continue;
+    }
+    if (line.find("<!-- help:end-ignore -->") != std::string::npos) {
+      in_ignore_block = false;
+      continue;
+    }
+    if (in_ignore_block) continue;
+
     if (line.substr(0, 3) == "```") {
       in_code_block = !in_code_block;
       continue;

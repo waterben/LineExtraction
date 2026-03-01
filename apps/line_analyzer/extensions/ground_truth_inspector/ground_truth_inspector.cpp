@@ -9,6 +9,8 @@
 LineAnalyser2D::LineAnalyser2D(QWidget* parent)
     : LATool("GT Inspector", parent),
       lines(nullptr),
+      gtLines(),
+      cLines(),
       srcImg(nullptr),
       sources(nullptr),
       imgMap(nullptr),
@@ -19,12 +21,21 @@ LineAnalyser2D::LineAnalyser2D(QWidget* parent)
       ao(new AnalyserOptions(this)),
       clDataTemp(nullptr),
       gtDataTemp(nullptr),
+      lockedGTLine_storage(),
       lockedGTLine(nullptr),
+      lockedOtherLine_storage(),
       lockedOtherLine(nullptr),
       displayMode(false),
       debugMode(false),
       curSelMode(0),
-      analysisMode(false) {
+      red(),
+      green(),
+      blue(),
+      yellow(),
+      orange(),
+      selPen(),
+      analysisMode(false),
+      cLinesOld() {
   ui->setupUi(this);
 
   file->setFileMode(QFileDialog::ExistingFile);
@@ -244,14 +255,14 @@ void LineAnalyser2D::lplotSelChange() {
 
     if (layer->name() == "lines") {
       index = items.front()->property("lines").toInt();
-      if (debugMode) loadLineInformationIntoTable(lines->at(index));
+      if (debugMode) loadLineInformationIntoTable(lines->at(static_cast<size_t>(index)));
     } else if (layer->name() == "gtlines") {
       index = items.front()->property("gtlines").toInt();
-      if (debugMode) loadLineInformationIntoTable(gtLines.at(index));
+      if (debugMode) loadLineInformationIntoTable(gtLines.at(static_cast<size_t>(index)));
       showCLines(index);
     } else if (layer->name() == "clines") {
       index = items.front()->property("clines").toInt();
-      if (debugMode) loadLineInformationIntoTable(cLines.at(index));
+      if (debugMode) loadLineInformationIntoTable(cLines.at(static_cast<size_t>(index)));
       if (analysisMode) markTableRow(index);
       showSelectedCLineFromPlotWindow(index);
     } else if (layer->name() == "oldlines") {
@@ -290,11 +301,11 @@ void LineAnalyser2D::loadCLineInfo() {
  * @param   y   Table Row
  * @param   x   Table Colum
  */
-void LineAnalyser2D::showCLines(int y, int x) {
+void LineAnalyser2D::showCLines(int y, int /*x*/) {
   // (1) Load and Select Table Information
   displayMode = true;
   ui->tw_gt_data->selectRow(y);
-  gtDataTemp = &gtLines.at(y);
+  gtDataTemp = &gtLines.at(static_cast<size_t>(y));
   loadCLineInfo();
   // (2) Handle and Display Lines in Plot Window
   manageGTLineVisibility(true);
@@ -324,8 +335,8 @@ void LineAnalyser2D::showSelectedCLine(int row) { this->showSelectedCLine(row, 0
  * @param   y   Table row
  * @param   x   Table colum
  */
-void LineAnalyser2D::showSelectedCLine(int y, int x) {
-  CLData* clTemp = &gtDataTemp->clData.at(y);
+void LineAnalyser2D::showSelectedCLine(int y, int /*x*/) {
+  CLData* clTemp = &gtDataTemp->clData.at(static_cast<size_t>(y));
   displayMode = true;
   // (2) Handle and Display Lines in Plot Window
   if (ui->cb_gtline_plus_clines->isChecked()) displaySelCLine(clTemp);
@@ -338,8 +349,8 @@ void LineAnalyser2D::showSelectedCLine(int y, int x) {
  */
 void LineAnalyser2D::showSelectedCLineFromPlotWindow(int index) {
   // (1) Load and Select Table Information
-  CLData* clTemp = &cLines.at(index);
-  gtDataTemp = &gtLines.at(clTemp->posGT);
+  CLData* clTemp = &cLines.at(static_cast<size_t>(index));
+  gtDataTemp = &gtLines.at(static_cast<size_t>(clTemp->posGT));
   displayMode = true;
   loadCLineInfo();
   ui->tw_gt_data->selectRow(clTemp->posGT);
@@ -568,8 +579,8 @@ void LineAnalyser2D::loadGroundTruthDataFromFile(std::string file_path) {
   // uniform or calculated
   while (std::getline(txt_file, tempLine)) {
     tempList = QString::fromStdString(tempLine).split(",");
-    cv::Point2d p1(tempList[0].toDouble(0), tempList[1].toDouble(0));
-    cv::Point2d p2(tempList[2].toDouble(0), tempList[3].toDouble(0));
+    cv::Point2d p1(tempList[0].toDouble(nullptr), tempList[1].toDouble(nullptr));
+    cv::Point2d p2(tempList[2].toDouble(nullptr), tempList[3].toDouble(nullptr));
 
     if (this->ui->cb_uniform_data->isChecked() && !srcImg->empty()) {
       p1.x = ((imgWidth * p1.x) / div) - offset / div;
@@ -604,7 +615,7 @@ void LineAnalyser2D::loadHardExample() {
  */
 void LineAnalyser2D::loadBundledExample(const std::string& txt_relative,
                                         const std::string& image_relative,
-                                        const std::string& label) {
+                                        const std::string& /*label*/) {
   std::string txt_path = findResourcePath(txt_relative);
   if (txt_path.empty()) {
     QMessageBox::warning(this, tr("Example Ground Truth"),
@@ -755,59 +766,59 @@ void LineAnalyser2D::loadGroundTruthDataIntoTable() {
 }
 
 template <class T>
-void LineAnalyser2D::loadLineInfo(T& data, QTableWidget*& widget, int& row) {
-  QTableWidgetItem* item = new QTableWidgetItem(QString::number(data.segment.angle() * 180 / CV_PI));
+void LineAnalyser2D::loadLineInfo(T& items, QTableWidget*& widget, int& row) {
+  QTableWidgetItem* item = new QTableWidgetItem(QString::number(items.segment.angle() * 180 / CV_PI));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 0, item);
-  item = new QTableWidgetItem(QString::number(data.segment.length()));
+  item = new QTableWidgetItem(QString::number(items.segment.length()));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 1, item);
-  item = new QTableWidgetItem(QString::number(lsfm::getX(data.segment.startPoint())));
+  item = new QTableWidgetItem(QString::number(lsfm::getX(items.segment.startPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 2, item);
-  item = new QTableWidgetItem(QString::number(lsfm::getY(data.segment.startPoint())));
+  item = new QTableWidgetItem(QString::number(lsfm::getY(items.segment.startPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 3, item);
-  item = new QTableWidgetItem(QString::number(lsfm::getX(data.segment.endPoint())));
+  item = new QTableWidgetItem(QString::number(lsfm::getX(items.segment.endPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 4, item);
-  item = new QTableWidgetItem(QString::number(lsfm::getY(data.segment.endPoint())));
+  item = new QTableWidgetItem(QString::number(lsfm::getY(items.segment.endPoint())));
   item->setTextAlignment(Qt::AlignCenter);
   widget->setItem(row, 5, item);
 }
 
 template <class T>
-void LineAnalyser2D::loadErrorInfo(T& data, QTableWidget*& widget, int& row, bool add_at_front) {
+void LineAnalyser2D::loadErrorInfo(T& items, QTableWidget*& widget, int& row, bool add_at_front) {
   if (add_at_front) {
-    QTableWidgetItem* item = new QTableWidgetItem(QString::number(data.error));
+    QTableWidgetItem* item = new QTableWidgetItem(QString::number(items.error));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 0, item);
-    item = new QTableWidgetItem(QString::number(data.angle_diff));
+    item = new QTableWidgetItem(QString::number(items.angle_diff));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 1, item);
-    item = new QTableWidgetItem(QString::number(data.length_diff));
+    item = new QTableWidgetItem(QString::number(items.length_diff));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 2, item);
-    item = new QTableWidgetItem(QString::number(data.dist_start));
+    item = new QTableWidgetItem(QString::number(items.dist_start));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 3, item);
-    item = new QTableWidgetItem(QString::number(data.dist_end));
+    item = new QTableWidgetItem(QString::number(items.dist_end));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 4, item);
   } else {
-    QTableWidgetItem* item = new QTableWidgetItem(QString::number(data.error));
+    QTableWidgetItem* item = new QTableWidgetItem(QString::number(items.error));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 6, item);
-    item = new QTableWidgetItem(QString::number(data.angle_diff));
+    item = new QTableWidgetItem(QString::number(items.angle_diff));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 7, item);
-    item = new QTableWidgetItem(QString::number(data.length_diff));
+    item = new QTableWidgetItem(QString::number(items.length_diff));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 8, item);
-    item = new QTableWidgetItem(QString::number(data.dist_start));
+    item = new QTableWidgetItem(QString::number(items.dist_start));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 9, item);
-    item = new QTableWidgetItem(QString::number(data.dist_end));
+    item = new QTableWidgetItem(QString::number(items.dist_end));
     item->setTextAlignment(Qt::AlignCenter);
     widget->setItem(row, 10, item);
   }
@@ -817,13 +828,13 @@ void LineAnalyser2D::loadErrorInfo(T& data, QTableWidget*& widget, int& row, boo
  * *********************************************************/
 
 template <class T>
-void LineAnalyser2D::drawLines(T& data, QPen& pen, QPen& selPen, const char* name, const QVariant& value) {
-  data.line = lplot->line(data.segment, false);
-  data.line->setHead(QCPLineEnding(QCPLineEnding::esSpikeArrow, 4, 8));
-  data.line->setPen(pen);
-  data.line->setSelectedPen(selPen);
-  data.line->setSelectable(true);
-  data.line->setProperty(name, value);
+void LineAnalyser2D::drawLines(T& items, QPen& pen, QPen& sel_pen, const char* name, const QVariant& value) {
+  items.line = lplot->line(items.segment, false);
+  items.line->setHead(QCPLineEnding(QCPLineEnding::esSpikeArrow, 4, 8));
+  items.line->setPen(pen);
+  items.line->setSelectedPen(sel_pen);
+  items.line->setSelectable(true);
+  items.line->setProperty(name, value);
 }
 
 /**
@@ -873,7 +884,7 @@ void LineAnalyser2D::drawCLData() {
   lplot->hold(true);
   for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
     drawLines(cl, green, selPen, "clines", clineIndex);
-    gtLines.at(cl.posGT).clData.at(cl.posCL).line = cl.line;
+    gtLines.at(static_cast<size_t>(cl.posGT)).clData.at(static_cast<size_t>(cl.posCL)).line = cl.line;
     cl.isDrawn = true;
     ++clineIndex;
   });
@@ -926,7 +937,7 @@ void LineAnalyser2D::addSourceItems() {
 void LineAnalyser2D::addModeItems() {
   this->ui->cb_image_mode->blockSignals(true);
   this->ui->cb_image_mode->clear();
-  const ImageSource s = sources->at(ui->cb_image_source->currentIndex());
+  const ImageSource s = sources->at(static_cast<size_t>(ui->cb_image_source->currentIndex()));
   for_each(s.modes.begin(), s.modes.end(), [&](const ImageMode& m) { this->ui->cb_image_mode->addItem(m.name); });
   this->ui->cb_image_mode->blockSignals(false);
   ui->cb_image_mode->setDisabled(false);
@@ -939,7 +950,7 @@ void LineAnalyser2D::addModeItems() {
 void LineAnalyser2D::updateModes() {
   this->ui->cb_image_mode->blockSignals(true);
   this->ui->cb_image_mode->clear();
-  const ImageSource& s = sources->at(ui->cb_image_source->currentIndex());
+  const ImageSource& s = sources->at(static_cast<size_t>(ui->cb_image_source->currentIndex()));
   for_each(s.modes.begin(), s.modes.end(), [&](const ImageMode& m) { this->ui->cb_image_mode->addItem(m.name); });
   this->ui->cb_image_mode->setCurrentIndex(0);
   this->ui->cb_image_mode->blockSignals(false);
@@ -951,8 +962,8 @@ void LineAnalyser2D::updateModes() {
  */
 void LineAnalyser2D::updateSourceOptions() {
   if (!imgMap) return;
-  const ImageSource& s = sources->at(ui->cb_image_source->currentIndex());
-  const ImageMode& m = s.modes.at(ui->cb_image_mode->currentIndex());
+  const ImageSource& s = sources->at(static_cast<size_t>(ui->cb_image_source->currentIndex()));
+  const ImageMode& m = s.modes.at(static_cast<size_t>(ui->cb_image_mode->currentIndex()));
   if (m.name != "RGB") imgMap->setGradient(m.grad);
   this->setLayerVisibility("image", true);
 }
@@ -1044,9 +1055,9 @@ void LineAnalyser2D::displayImageView() {
 void LineAnalyser2D::displaySource() {
   try {
     this->ui->cb_image_source->blockSignals(true);
-    const ImageSource& s = sources->at(ui->cb_image_source->currentIndex());
+    const ImageSource& s = sources->at(static_cast<size_t>(ui->cb_image_source->currentIndex()));
     this->updateModes();
-    const ImageMode& m = s.modes.at(ui->cb_image_mode->currentIndex());
+    const ImageMode& m = s.modes.at(static_cast<size_t>(ui->cb_image_mode->currentIndex()));
     this->lplot->qplot->setCurrentLayer("image");
     this->lplot->qplot->clearPlottables();
     // Plot Image
@@ -1517,10 +1528,10 @@ void LineAnalyser2D::showOldLineReference(int row) { showOldLineReference(row, 0
  * @param   row
  * @param   col
  */
-void LineAnalyser2D::showCurLineReference(int row, int col) {
+void LineAnalyser2D::showCurLineReference(int row, int /*col*/) {
   if (clDataTemp) clDataTemp->line->setSelected(false);
   manageCLineVisibility(true);
-  clDataTemp = &cLines.at(row);
+  clDataTemp = &cLines.at(static_cast<size_t>(row));
   clDataTemp->line->setSelected(true);
   ui->cb_correct_lines->setChecked(true);
   ui->cb_analysis_cur_lines->setChecked(true);
@@ -1532,10 +1543,10 @@ void LineAnalyser2D::showCurLineReference(int row, int col) {
  * @param   row
  * @param   col
  */
-void LineAnalyser2D::showOldLineReference(int row, int col) {
+void LineAnalyser2D::showOldLineReference(int row, int /*col*/) {
   if (clDataTemp) clDataTemp->line->setSelected(false);
   manageOldLineVisibility(true);
-  clDataTemp = &cLinesOld.at(row);
+  clDataTemp = &cLinesOld.at(static_cast<size_t>(row));
   clDataTemp->line->setSelected(true);
   ui->cb_analysis_old_lines->setChecked(true);
   setLayerVisibility("oldlines", true);
@@ -1627,10 +1638,11 @@ void LineAnalyser2D::loadPercentageVarianceHeader(QTextStream& outStream) {
  * @param   i
  */
 void LineAnalyser2D::loadPercentageVarianceContent(QTextStream& outStream, int& i) {
+  auto idx = static_cast<size_t>(i);
   outStream << "\t" << "\t";
   outStream << i + 1 << "\t" << "&" << "\t";
-  outStream << "$" << cLinesOld.at(i).error << "$" << "\t" << "&" << "\t";
-  outStream << "$" << cLines.at(i).error << "$" << "\t" << "&" << "\t";
+  outStream << "$" << cLinesOld.at(idx).error << "$" << "\t" << "&" << "\t";
+  outStream << "$" << cLines.at(idx).error << "$" << "\t" << "&" << "\t";
   outStream << "$" << calculatePercentage(i) << "$" << "\t" << "\\\\" << "\n";
   outStream << "\t" << "\t" << "\\hline" << "\n";
 }
@@ -1642,7 +1654,8 @@ void LineAnalyser2D::loadPercentageVarianceContent(QTextStream& outStream, int& 
  * @return
  */
 double LineAnalyser2D::calculatePercentage(int& i) {
-  return ((cLinesOld.at(i).error - cLines.at(i).error) / cLinesOld.at(i).error) * 100;
+  auto idx = static_cast<size_t>(i);
+  return ((cLinesOld.at(idx).error - cLines.at(idx).error) / cLinesOld.at(idx).error) * 100;
 }
 
 /**
@@ -1677,7 +1690,7 @@ void LineAnalyser2D::saveAnalysis() {
       if (static_cast<int>(cLinesOld.size()) == static_cast<int>(cLines.size())) {
         index = 0;
         loadPercentageVarianceHeader(outStream);
-        for_each(cLines.begin(), cLines.end(), [&](CLData& cl) {
+        for_each(cLines.begin(), cLines.end(), [&](CLData& /*cl*/) {
           loadPercentageVarianceContent(outStream, index);
           ++index;
         });

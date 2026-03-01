@@ -12,9 +12,12 @@ A comprehensive C++ library for line detection and analysis in digital images, f
   - [`lsd/`](libs/lsd/README.md) - Line Segment Detector implementation
   - [`utility/`](libs/utility/README.md) - Common utilities (option managers, data structures)
   - [`eval/`](libs/eval/README.md) - Evaluation framework with test image support
+  - [`algorithm/`](libs/algorithm/README.md) - Post-processing, accuracy evaluation, parameter optimization
 
-- **`resources/`** - Data resources:
-  - `datasets/` - Image datasets (BSDS500 auto-download, MDB manual setup)
+- **[`resources/`](resources/README.md)** - Data resources:
+  - [`datasets/`](resources/README.md#datasets) - Image datasets (BSDS500, York Urban, Wireframe, MDB, noise)
+  - [`presets/`](resources/README.md#presets) - Optimized detector parameter presets
+  - [`ground_truth/`](resources/README.md#ground-truth-format) - CSV ground truth annotations
 
 - **`apps/`** - [Applications](apps/README.md):
   - [`line_analyzer/`](apps/line_analyzer/README.md) - Qt-based interactive GUI for line analysis
@@ -195,6 +198,7 @@ providing access to all major algorithms from Python with NumPy integration:
 | `le_geometry` | `libs/geometry` | [README](libs/geometry/python/README.md) | Line, LineSegment, Polygon, drawing, LineOptimizer |
 | `le_eval` | `libs/eval` | [README](libs/eval/python/README.md) | Performance benchmarking framework |
 | `le_lsd` | `libs/lsd` | [README](libs/lsd/python/README.md) | 9 line segment detection algorithms |
+| `le_algorithm` | `libs/algorithm` | [README](libs/algorithm/python/README.md) | Post-processing, accuracy, parameter optimization |
 
 ```python
 import numpy as np
@@ -209,7 +213,7 @@ det = le_lsd.LsdCC()
 det.detect(img)
 segments = det.line_segments()
 
-# Visualise
+# Visualize
 vis = np.stack([img, img, img], axis=-1)
 result = geo.draw_lines_random(vis, segments)
 ```
@@ -238,20 +242,25 @@ bazel run //examples/imgproc/python:filter_demo
 ```
 le_imgproc       le_geometry       le_eval
 (filters)        (primitives)      (benchmarks)
-    │                 │
-    ▼                 │
- le_edge              │
-(NMS, ESD)            │
-    │                 │
-    ▼                 ▼
-         le_lsd
-    (9 LSD detectors)
+    │                 │                 │
+    ▼                 │                 │
+ le_edge              │                 │
+(NMS, ESD)            │                 │
+    │                 │                 │
+    ▼                 ▼                 │
+         le_lsd                         │
+    (9 LSD detectors)                   │
+              │                         │
+              ▼                         ▼
+                  le_algorithm
+         (post-processing, optimization,
+          accuracy, presets)
 ```
 
 ### Pip Package (Wheel)
 
 The Python bindings can be packaged as a pip-installable wheel — a single `.whl` file
-containing all 5 native modules with no external C++ dependencies:
+containing all 6 native modules with no external C++ dependencies:
 
 ```bash
 # Build the wheel
@@ -299,6 +308,8 @@ All dependencies are automatically managed by both build systems:
 | [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
 | [`docs/JUPYTER.md`](docs/JUPYTER.md) | Jupyter Notebook tutorials and Python onboarding |
 | [`docs/RERUN.md`](docs/RERUN.md) | Rerun visualization — viewer setup, C++ SDK, Python SDK, Jupyter |
+| [`docs/NextSteps.md`](docs/NextSteps.md) | Feature roadmap and implementation status |
+| [`resources/README.md`](resources/README.md) | Datasets, ground truth, presets, data sources |
 
 ### API Documentation
 

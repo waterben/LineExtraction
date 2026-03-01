@@ -9,7 +9,8 @@
 #include <filesystem>
 #include <iostream>
 
-AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", parent), ui(new Ui::AccuracyPanel) {
+AccuracyPanel::AccuracyPanel(QWidget* parent)
+    : LATool("Accuracy Measure", parent), ui(new Ui::AccuracyPanel), gt_entries() {
   ui->setupUi(this);
 
   // Tooltips for the panel and its controls.

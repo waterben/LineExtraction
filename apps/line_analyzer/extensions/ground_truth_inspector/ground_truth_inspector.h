@@ -13,6 +13,7 @@ class LineAnalyser2D;
 
 class LineAnalyser2D : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(LineAnalyser2D)
 
   // Typedef
   typedef Analyzer::LineVector LineVector;
@@ -20,6 +21,11 @@ class LineAnalyser2D : public LATool {
 
   // Correct Line Data
   struct CLData {
+    CLData(const CLData&) = default;
+    CLData& operator=(const CLData&) = default;
+    CLData(CLData&&) = default;
+    CLData& operator=(CLData&&) = default;
+
     const lsfm::LineSegment2d segment; /* Correct Line Segment */
     QCPItemLine* line;                 /* Pointer on line segment in Plot Window */
     double error;                      /* Computed error value */
@@ -32,38 +38,43 @@ class LineAnalyser2D : public LATool {
     bool isDrawn = false;              /* Check if line is already drawn in plot window */
 
     CLData(const lsfm::LineSegment2d cline,
-           double error,
-           double angle_diff,
-           double length_diff,
-           double dist_start,
-           double dist_end,
-           int posGT,
-           int posCL,
-           bool isDrawn = false)
+           double err,
+           double ang_diff,
+           double len_diff,
+           double d_start,
+           double d_end,
+           int pos_gt,
+           int pos_cl,
+           bool drawn = false)
         : segment(cline),
           line(nullptr),
-          error(error),
-          angle_diff(angle_diff),
-          length_diff(length_diff),
-          dist_start(dist_start),
-          dist_end(dist_end),
-          posGT(posGT),
-          posCL(posCL),
-          isDrawn(isDrawn) {}
+          error(err),
+          angle_diff(ang_diff),
+          length_diff(len_diff),
+          dist_start(d_start),
+          dist_end(d_end),
+          posGT(pos_gt),
+          posCL(pos_cl),
+          isDrawn(drawn) {}
   };
 
   typedef std::vector<CLData> CLDataVector;
 
   // Ground Truth Data
   struct GTData {
+    GTData(const GTData&) = default;
+    GTData& operator=(const GTData&) = default;
+    GTData(GTData&&) = default;
+    GTData& operator=(GTData&&) = default;
+
     const lsfm::LineSegment2d segment; /* Ground Truth Line Segment */
     QCPItemLine* line;                 /* Pointer on GT line segment in Plot Window */
     CLDataVector clData;               /* CLines which fit to GT Segment */
     int posGT;                         /* Index position in gtlines */
     bool isDrawn = false;              /* Check if line is already drawn in plot window */
 
-    GTData(const lsfm::LineSegment2d gtline, int posGT, bool isDrawn = false)
-        : segment(gtline), line(nullptr), posGT(posGT), isDrawn(isDrawn) {}
+    GTData(const lsfm::LineSegment2d gtline, int pos_gt, bool drawn = false)
+        : segment(gtline), line(nullptr), clData(), posGT(pos_gt), isDrawn(drawn) {}
   };
 
   typedef std::vector<GTData> GTDataVector;
@@ -244,9 +255,9 @@ class LineAnalyser2D : public LATool {
   template <class T>
   void loadOtherLineInformation(T& line);
   template <class T>
-  void drawLines(T& data, QPen& pen, QPen& selPen, const char* name, const QVariant& value);
+  void drawLines(T& items, QPen& pen, QPen& sel_pen, const char* name, const QVariant& value);
   template <class T>
-  void loadLineInfo(T& data, QTableWidget*& widget, int& row);
+  void loadLineInfo(T& items, QTableWidget*& widget, int& row);
   template <class T>
-  void loadErrorInfo(T& data, QTableWidget*& widget, int& row, bool add_at_front);
+  void loadErrorInfo(T& items, QTableWidget*& widget, int& row, bool add_at_front);
 };

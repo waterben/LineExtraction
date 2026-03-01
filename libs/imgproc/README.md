@@ -14,6 +14,44 @@ The `imgproc` library provides foundational image processing components:
 - **Phase Congruency**: Multi-scale edge detection invariant to contrast
 - **Special Filters**: SUSAN, RCMG color gradient, steerable filters
 
+### Gradient Pipeline
+
+```
+  ┌──────────┐     ┌────────────┐     ┌─────────────┐
+  │  Input    │────→│ Derivative │────→│  Magnitude   │
+  │  Image    │     │  (Gx, Gy)  │     │  & Direction │
+  └──────────┘     └────────────┘     └─────────────┘
+                    Sobel/Scharr/            │
+                    Gauss/Prewitt       ┌────┴────┐
+                                        │         │
+                                        ▼         ▼
+                                   magnitude  direction
+                                   (strength) (angle)
+```
+
+### Derivative Operators
+
+Each operator uses a different convolution kernel to approximate the image derivative:
+
+```
+  Sobel (3×3):         Scharr (3×3):        Gaussian:
+  ┌────────────┐       ┌────────────┐       Smooth then
+  │ -1  0  +1  │       │ -3   0  +3 │       differentiate
+  │ -2  0  +2  │       │ -10  0 +10 │       (scale-space)
+  │ -1  0  +1  │       │ -3   0  +3 │
+  └────────────┘       └────────────┘
+  (standard, any       (optimized for       (σ-parameterized,
+   kernel size)         rotational sym.)     multi-scale)
+```
+
+### Magnitude Norms
+
+```
+  Euclidean:   |∇I| = √(Gx² + Gy²)     — true magnitude
+  Quadratic:   |∇I| = Gx² + Gy²         — faster (no sqrt)
+  Absolute:    |∇I| = |Gx| + |Gy|       — L1 norm (fastest)
+```
+
 ## Components
 
 ### Derivative Operators
@@ -333,7 +371,9 @@ cmake --build build --target lib_imgproc
 - [edge](../edge/README.md) - Edge detection using gradient operators
 - [lsd](../lsd/README.md) - Line segment detection
 - [geometry](../geometry/README.md) - Geometric primitives
+- [algorithm](../algorithm/README.md) - Parameter optimization and continuity optimization
 - [utility](../utility/README.md) - Core utilities
+- [Resources](../../resources/README.md) - Datasets, presets, and ground-truth data
 - [Image Processing Examples](../../examples/imgproc/README.md) - Usage examples
 - [Main README](../../README.md) - Project overview
 

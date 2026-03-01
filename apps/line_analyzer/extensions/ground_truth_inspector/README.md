@@ -128,6 +128,7 @@ Detailed investigation of detection quality for research and publication:
 - Compare two detector configurations side-by-side with delta tables
 - Generate per-segment error data for statistical analysis
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -145,3 +146,4 @@ Detailed investigation of detection quality for research and publication:
 - **[Precision Optimizer](../precision_optimizer/README.md)** — imports `PrecisionOptimizer` for optional line refinement
 - **libs/algorithm** — [`GroundTruthLoader`](../../../../libs/algorithm/README.md#groundtruthloader), matching algorithms
 - **QCustomPlot** — 2D plot rendering for GT/detected line overlay
+<!-- help:end-ignore -->

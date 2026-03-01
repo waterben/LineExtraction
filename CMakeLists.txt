@@ -87,6 +87,9 @@ if(NOT TARGET dlib::dlib)
     )
 endif()
 
+# nlohmann/json (header-only)
+include(extern_nlohmann_json)
+
 # OpenCV
 include(extern_opencv)
 if(NOT TARGET le_opencv)

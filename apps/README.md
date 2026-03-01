@@ -58,4 +58,6 @@ make
 - [Examples](../examples/README.md) - Command-line examples
 - [libs/lsd](../libs/lsd/README.md) - Line Segment Detection library
 - [libs/edge](../libs/edge/README.md) - Edge detection library
+- [libs/algorithm](../libs/algorithm/README.md) - Post-processing, accuracy, parameter optimization
+- [Resources](../resources/README.md) - Datasets, ground truth, presets
 - [docs/BAZEL.md](../docs/BAZEL.md) - Build system documentation

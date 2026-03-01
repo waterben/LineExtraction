@@ -38,6 +38,7 @@ Analyzer::Analyzer(QWidget* parent)
       lineSel(-1),
       inputSourcesSize(0),
       detectors{},
+      presetStore{},
       indicator(nullptr),
       lines{},
       ui(new Ui::Analyzer),

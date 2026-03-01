@@ -107,4 +107,5 @@ Dependencies are managed in the project's [pyproject.toml](../../pyproject.toml)
 - [evaluation/thesis](../thesis/) — C++ precision evaluations (generates CSV and image results)
 - [libs/algorithm](../../libs/algorithm/) — C++ parameter optimizer library
 - [libs/algorithm/python](../../libs/algorithm/python/) — Python bindings for the optimizer
+- [Resources](../../resources/README.md) — Datasets, ground truth annotations, presets
 - [Main README](../../README.md) — Project overview

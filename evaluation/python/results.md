@@ -6,7 +6,7 @@ Evaluation of all 9 LSD detectors on the **York Urban** dataset (102 images,
 | Strategy     | Description |
 |:-------------|:------------|
 | **default**  | Detector's built-in defaults (no `DetectorProfile`). |
-| **profile**  | `DetectorProfile(50, 50, 50, 50)` — neutral knobs, no adaptive factors. |
+| **profile**  | `DetectorProfile(50, 50, 50, 50)` — neutral sliders, no adaptive factors. |
 | **adaptive** | `DetectorProfile.from_image(img)` — image-adaptive profile. |
 
 Matching threshold: 10 px (endpoint distance).

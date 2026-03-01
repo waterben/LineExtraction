@@ -265,7 +265,7 @@ mag[50, :] = 1.0   # strong horizontal edge at row 50
 # Initial estimate (slightly off)
 seg = geo.LineSegment.from_endpoints(10.0, 48.0, 90.0, 48.0)
 
-# Optimise single segment (returns error, distance, rotation)
+# Optimize single segment (returns error, distance, rotation)
 error, d, r = geo.optimize_line_segment(mag, seg)
 print(f"Error: {error:.4f}, shift: {d:.2f}, rotation: {r:.4f}")
 
@@ -284,7 +284,7 @@ for s, e in zip(optimized, errors):
 ```python
 import le_geometry as geo
 
-# Colour-code an NMS edge map
+# Color-code an NMS edge map
 nms_map = np.zeros((100, 100), dtype=np.int8)
 color_img = geo.create_nms_color(nms_map)
 
@@ -312,7 +312,7 @@ Each class is available in single and double precision:
 | `Polygon` | `Polygon_f64` | Polygon |
 | `draw_lines` | `draw_lines_f64` | Drawing (f64 segments) |
 | `trim_to_box` | `trim_to_box_f64` | Clipping (f64 line) |
-| `optimize_line_segment` | `optimize_line_segment_f64` | Optimiser (f64) |
+| `optimize_line_segment` | `optimize_line_segment_f64` | Optimizer (f64) |
 
 ## Build & Test
 

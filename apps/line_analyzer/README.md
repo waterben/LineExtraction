@@ -2,7 +2,9 @@
 
 Interactive Qt-based GUI application for comprehensive line detection analysis, algorithm comparison, and parameter optimization.
 
+<!-- help:start-ignore -->
 [← Back to Apps](../README.md)
+<!-- help:end-ignore -->
 
 ## Overview
 
@@ -66,6 +68,7 @@ Each tool opens as a separate dockable window and connects to the main Analyzer 
 | [Image Analyzer](extensions/image_analyzer/README.md) | Image property analysis and profile suggestions |
 | [Accuracy Measure](extensions/accuracy/README.md) | P/R/F1/sAP evaluation against ground truth |
 | [GT Inspector](extensions/ground_truth_inspector/README.md) | Interactive per-segment GT comparison |
+| [Quivers](extensions/quivers/README.md) | Gradient vector field (quiver) visualization |
 
 ### Visualization Options
 
@@ -270,6 +273,7 @@ Analyzer (main controller)
   ├─ PrecisionOptimizer (parameter optimization)
   ├─ POFuncPlot (3D profile visualization)
   ├─ ContinuityOptimizer (segment merging + gradient-assisted gap bridging)
+  ├─ QuiverPanel (gradient vector field visualization)
   ├─ DetectorProfilePanel (high-level tuning + image analysis)
   ├─ AccuracyPanel (P/R/F1/sAP evaluation)
   └─ LineAnalyser2D (GT inspector)
@@ -277,6 +281,7 @@ Analyzer (main controller)
 
 ### Key Components
 
+<!-- help:start-ignore -->
 **Core (`src/`):**
 
 - [analyzer.h](src/analyzer.h) / [analyzer.cpp](src/analyzer.cpp) — Main application window, detector management, preset loading, signal hub
@@ -326,6 +331,8 @@ apps/line_analyzer/
 - [libs/imgproc](../../libs/imgproc/README.md) - Image processing
 - [examples/lsd](../../examples/lsd/README.md) - LSD examples
 - [docs/BAZEL.md](../../docs/BAZEL.md) - Build documentation
+- [resources/README.md](../../resources/README.md) - Datasets, ground truth, presets
+<!-- help:end-ignore -->
 
 ## License
 
@@ -361,8 +368,10 @@ The **core LineExtraction libraries** (`libs/`) remain **MIT licensed** and can 
 
 You can build your own custom GUI using MIT-compatible visualization libraries.
 
+<!-- help:start-ignore -->
 **See Also:**
 
 - [QCustomPlot License](../../third-party/qplot/README.md)
 - [Main Project License](../../README.md#license)
 - [Qt Licensing](https://www.qt.io/licensing/)
+<!-- help:end-ignore -->

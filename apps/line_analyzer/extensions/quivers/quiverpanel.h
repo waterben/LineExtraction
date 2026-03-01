@@ -18,6 +18,7 @@ class QCPCurve;
 /// individual QCPItemLine objects for each arrow.
 class QuiverPanel : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(QuiverPanel)
 
   Ui::QuiverPanel* ui{nullptr};
   Analyzer* ctrl{nullptr};

@@ -1,6 +1,6 @@
 # LineExtraction — Next Steps
 
-Feature overview and implementation status (as of February 2026).
+Feature overview and implementation status (as of July 2026).
 
 ---
 
@@ -21,13 +21,8 @@ Feature overview and implementation status (as of February 2026).
 | 12 | [PyPI Package](#12-pypi-package) | Bazel `py_wheel` → `pip install lsfm-*.whl` |
 | 13 | [Type Stubs](#13-type-stubs) | pybind11-stubgen `.pyi` stubs for IDE support (Pylance, Pyright) |
 | 17 | [Rerun.io Integration](#17-rerunio-integration) | Interactive visualization of line detection results via [rerun.io](https://rerun.io) (C++ + Python SDK, Jupyter, WSL docs) |
-
-### 🔧 In Progress
-
-| # | Feature | Effort | Description |
-|---|---------|--------|-------------|
-| 2 | [Param Optimizer](#2-param-optimizer) | 🟡 | Automated LSD parameter optimization over image databases |
-| 14 | [Pre-trained Presets](#14-pre-trained-presets) | 🟡 | Optimized parameter sets (Fast/Accurate/Balanced) |
+| 2 | [Param Optimizer](#2-param-optimizer) | Automated LSD parameter optimization over image databases |
+| 14 | [Pre-trained Presets](#14-pre-trained-presets) | Optimized parameter sets (Fast/Accurate/Balanced) |
 
 ### 🚀 Next Steps
 
@@ -108,10 +103,6 @@ GUI separation (`lib_utility` headless + `lib_utility_gui` optional), granular O
 
 Bazel `py_wheel` target (`//python:lsfm_wheel`) produces a pip-installable wheel. Contains all 5 native modules (.so), type stubs (.pyi), PEP 561 marker, and the `lsfm` Python package. Build: `bazel build //python:lsfm_wheel`, Install: `pip install bazel-bin/python/lsfm-*.whl`.
 
----
-
-## In Progress
-
 ### 2. Param Optimizer
 
 Automated parameter optimization for LSD algorithms over image databases. Implemented as `libs/algorithm/` with a C++ header-only library and Python bindings (`le_algorithm`). Components: `ParamOptimizer` (grid/random search), `AccuracyMeasure` (P/R/F1), `GroundTruthLoader` (CSV), `LineContinuityOptimizer` (unified merge + gradient-assisted bridging), `LineMerge` (legacy), `LineConnect` (legacy), `PrecisionOptimize` (dlib BFGS). 30 C++ tests, 20 Python tests. York Urban DB + Wireframe datasets with automatic GT conversion.
@@ -176,13 +167,13 @@ Clean up legacy CMake workarounds, create migration guide, remove long-term.
 
 ### Phase 1: Foundations ✅
 
-Bazel Data Deps, Google Benchmark, Doxygen, Test-Coverage, Lizenz-Reorganisation, GUI-Separation.
+Bazel Data Deps, Google Benchmark, Doxygen, Test-Coverage, License Reorganization, GUI Separation.
 
 ### Phase 2: Python Ecosystem ✅
 
-Python Bindings (5 Module, 70+ Tests), Jupyter Tutorial-Serie + PyTorch Demo, Type Stubs, PyPI Wheel.
+Python Bindings (5 Modules, 70+ Tests), Jupyter Tutorial Series + PyTorch Demo, Type Stubs, PyPI Wheel.
 
-### Phase 3: Algorithm & Optimization 🔧
+### Phase 3: Algorithm & Optimization ✅
 
 Param Optimizer, Pre-trained Presets (Fast/Balanced/Accurate).
 

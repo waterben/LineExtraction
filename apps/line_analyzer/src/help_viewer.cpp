@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QHeaderView>
 #include <QIcon>
+#include <QMouseEvent>
 #include <QScrollBar>
 #include <QShortcut>
 #include <cstdlib>
@@ -41,7 +42,8 @@ void HelpViewer::showHelp(const QString& readme_relative, const QString& anchor,
 // Construction
 // ---------------------------------------------------------------------------
 
-HelpViewer::HelpViewer(QWidget* parent) : QDialog(parent) {
+HelpViewer::HelpViewer(QWidget* parent)
+    : QDialog(parent), base_path_(), current_relative_(), current_markdown_(), history_(), cache_() {
   setWindowTitle(tr("Line Analyzer — Help"));
   setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint);
   resize(860, 640);
@@ -112,6 +114,13 @@ HelpViewer::HelpViewer(QWidget* parent) : QDialog(parent) {
   connect(shortcut_back, &QShortcut::activated, this, &HelpViewer::goBack);
   auto* shortcut_fwd = new QShortcut(QKeySequence(Qt::ALT | Qt::Key_Right), this);
   connect(shortcut_fwd, &QShortcut::activated, this, &HelpViewer::goForward);
+
+  auto* shortcut_backspace = new QShortcut(QKeySequence(Qt::Key_Backspace), this);
+  connect(shortcut_backspace, &QShortcut::activated, this, &HelpViewer::goBack);
+
+  // Install event filter on browser for mouse back/forward buttons.
+  browser_->viewport()->installEventFilter(this);
+  browser_->installEventFilter(this);
 
   // Resolve the base path for README files.
   resolveBasePath();
@@ -305,12 +314,61 @@ void HelpViewer::handleAnchorClicked(const QUrl& url) {
     fs::path current_dir = fs::path(current_relative_.toStdString()).parent_path();
     fs::path target = (current_dir / path.toStdString()).lexically_normal();
     QString new_relative = QString::fromStdString(target.string());
+
+    // Check if the resolved file actually exists before navigating.
+    fs::path full_path = base_path_ / target;
+    if (!fs::exists(full_path)) {
+      // Show a non-intrusive inline message instead of navigating.
+      browser_->setHtml(
+          "<html><body>"
+          "<h2>Document not available</h2>"
+          "<p>The linked document <code>" +
+          new_relative +
+          "</code> is not available in the current deployment.</p>"
+          "<p>This documentation is part of the project source tree. To view it, "
+          "open the file directly in your editor or run the Line Analyzer from "
+          "the workspace root with <code>bazel run</code>.</p>"
+          "<p><a href=\"javascript:void(0)\" "
+          "style=\"color:#0366d6\">Use the Back button to return.</a></p>"
+          "</body></html>");
+      return;
+    }
+
     loadReadme(new_relative, url.fragment());
     return;
   }
 
-  // Anything else — try to open with system handler.
-  QDesktopServices::openUrl(url);
+  // Non-.md file links (source files, etc.) — ignore silently.
+  // These are typically references to .cpp/.hpp files that can't be rendered.
+}
+
+void HelpViewer::mousePressEvent(QMouseEvent* event) {
+  if (event->button() == Qt::BackButton) {
+    goBack();
+    event->accept();
+    return;
+  }
+  if (event->button() == Qt::ForwardButton) {
+    goForward();
+    event->accept();
+    return;
+  }
+  QDialog::mousePressEvent(event);
+}
+
+bool HelpViewer::eventFilter(QObject* obj, QEvent* event) {
+  if (event->type() == QEvent::MouseButtonPress) {
+    auto* me = static_cast<QMouseEvent*>(event);
+    if (me->button() == Qt::BackButton) {
+      goBack();
+      return true;
+    }
+    if (me->button() == Qt::ForwardButton) {
+      goForward();
+      return true;
+    }
+  }
+  return QDialog::eventFilter(obj, event);
 }
 
 void HelpViewer::goBack() {

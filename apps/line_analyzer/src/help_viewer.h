@@ -10,6 +10,7 @@
 #include <QDialog>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QSplitter>
 #include <QTextBrowser>
@@ -32,6 +33,7 @@
 /// the viewer.  External links are opened in the system browser.
 class HelpViewer : public QDialog {
   Q_OBJECT
+  Q_DISABLE_COPY(HelpViewer)
 
  public:
   /// @brief Show the help viewer at a specific README and optional anchor.
@@ -65,6 +67,12 @@ class HelpViewer : public QDialog {
   /// @brief Private constructor — use showHelp() or instance().
   explicit HelpViewer(QWidget* parent = nullptr);
 
+  /// @brief Handle mouse back/forward buttons.
+  void mousePressEvent(QMouseEvent* event) override;
+
+  /// @brief Event filter for mouse navigation on child widgets.
+  bool eventFilter(QObject* obj, QEvent* event) override;
+
   /// @brief Resolve the base directory containing the READMEs.
   ///
   /// Searches BUILD_WORKSPACE_DIRECTORY, relative paths, and runfiles
@@ -97,8 +105,8 @@ class HelpViewer : public QDialog {
 
   // --- Navigation history ---
   struct HistoryEntry {
-    QString relative;
-    QString anchor;
+    QString relative{};
+    QString anchor{};
   };
   std::vector<HistoryEntry> history_;
   int history_pos_{-1};

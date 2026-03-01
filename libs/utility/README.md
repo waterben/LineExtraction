@@ -206,6 +206,8 @@ cmake --build build --target lib_utility
 - [imgproc](../imgproc/README.md) - Image processing and gradient computation
 - [lsd](../lsd/README.md) - Line Segment Detection algorithms
 - [eval](../eval/README.md) - Uses TestImages for evaluation
+- [algorithm](../algorithm/README.md) - Post-processing, accuracy evaluation, parameter optimization
+- [Resources](../../resources/README.md) - Datasets, ground truth, presets (TestImages resolves paths here)
 - [Examples](../../examples/README.md) - Usage examples (all categories use TestImages)
 - [Evaluation](../../evaluation/README.md) - Performance benchmarks and precision evaluations
 - [Main README](../../README.md) - Project overview

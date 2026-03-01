@@ -114,6 +114,7 @@ The [`PrecisionOptimize`](../../../../libs/algorithm/README.md#precisionoptimize
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#precisionoptimize) for the full API and C++/Python usage examples.
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -127,3 +128,4 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#p
 - **Analyzer** — line data, image sources, line modification signals
 - **libs/algorithm** — [`PrecisionOptimize`](../../../../libs/algorithm/README.md#precisionoptimize) numerical optimization framework
 - **QCustomPlot** — convergence plot
+<!-- help:end-ignore -->

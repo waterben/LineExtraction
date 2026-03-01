@@ -12,6 +12,7 @@
 /// profile derivation from the current source image via ImageAnalyzer.
 class DetectorProfilePanel : public LATool {
   Q_OBJECT
+  Q_DISABLE_COPY(DetectorProfilePanel)
 
   Ui::DetectorProfilePanel* ui{nullptr};
   Analyzer* ctrl{nullptr};

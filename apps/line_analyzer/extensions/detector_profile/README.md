@@ -108,6 +108,7 @@ Variant detectors (e.g., LSD EL QFSt Odd, LSD EL SUSAN) share the base detector'
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#detectorprofile) for the full slider-to-parameter mapping tables for all 9 detectors.
 
+<!-- help:start-ignore -->
 ## Files
 
 | File | Purpose |
@@ -120,3 +121,4 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#d
 
 - **Analyzer** — detector access, image source signals
 - **libs/algorithm** — [`DetectorProfile`](../../../../libs/algorithm/README.md#detectorprofile), [`ImageAnalyzer`](../../../../libs/algorithm/README.md#imageanalyzer), `DetectorId`
+<!-- help:end-ignore -->
