@@ -98,5 +98,50 @@ void bind_derivative_gradient(py::module_& m, const std::string& suffix);
 template <class IT, class GT, class MT, class DT, class LT>
 void bind_filter_preset(py::module_& m, const std::string& suffix);
 
+// ============================================================================
+// Concrete Laplacian filters (laplace_binding.cpp)
+// ============================================================================
+
+/// @brief Bind LaplaceSimple<IT,LT> (3x3 Laplacian).
+template <class IT, class LT>
+void bind_laplace_simple(py::module_& m, const std::string& suffix);
+
+/// @brief Bind LoG<IT,LT> (Laplacian of Gaussian).
+template <class IT, class LT>
+void bind_log(py::module_& m, const std::string& suffix);
+
+/// @brief Bind LaplaceCV<IT,LT> (OpenCV Laplacian wrapper).
+template <class IT, class LT>
+void bind_laplace_cv(py::module_& m, const std::string& suffix);
+
+/// @brief Convenience: bind all concrete Laplacian filters for one preset.
+template <class IT, class LT>
+void bind_laplace_preset(py::module_& m, const std::string& suffix);
+
+// ============================================================================
+// Extra gradient operators (gradient_extra_binding.cpp)
+// ============================================================================
+
+/// @brief Bind SusanGradient (uchar only, non-templated call).
+void bind_susan_gradient(py::module_& m);
+
+/// @brief Bind RCMGradient<uchar,3,...> (3-channel color RCMG).
+void bind_rcmg_gradient_color(py::module_& m);
+
+/// @brief Bind RCMGradient<IT,1,...> (single-channel RCMG).
+template <class IT, class GT, class MT, class DT>
+void bind_rcmg_gradient_gray(py::module_& m, const std::string& suffix);
+
+// ============================================================================
+// ImageOperator hierarchy (image_operator_binding.cpp)
+// ============================================================================
+
+/// @brief Bind ImageOperator base and all non-templated concrete operators.
+void bind_image_operators(py::module_& m);
+
+/// @brief Bind templated geometric operators (Rotate, Scale, Translate).
+template <class T>
+void bind_geometric_operators(py::module_& m, const std::string& suffix);
+
 }  // namespace python
 }  // namespace lsfm

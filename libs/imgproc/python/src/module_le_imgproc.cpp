@@ -54,15 +54,33 @@ PYBIND11_MODULE(le_imgproc, m) {
   // Shared core types (Range variants, Value, ValueManager, FilterData).
   lsfm::python::bind_core_types(m);
 
+  // Image operators (non-templated: blur, noise, resize, etc.).
+  lsfm::python::bind_image_operators(m);
+
+  // SUSAN gradient (uchar only).
+  lsfm::python::bind_susan_gradient(m);
+
+  // RCMG color gradient (uchar, 3-channel).
+  lsfm::python::bind_rcmg_gradient_color(m);
+
   // Default preset: 8-bit unsigned (no suffix — backwards compatible).
   lsfm::python::bind_filter_preset<uchar, short, float, float, int>(m, "");
+  lsfm::python::bind_laplace_preset<uchar, int>(m, "");
+  lsfm::python::bind_rcmg_gradient_gray<uchar, short, int, float>(m, "");
+  lsfm::python::bind_geometric_operators<float>(m, "");
 
   // 16-bit unsigned preset.
   lsfm::python::bind_filter_preset<ushort, float, float, float, int>(m, "_16u");
+  lsfm::python::bind_laplace_preset<ushort, int>(m, "_16u");
 
   // 32-bit float preset.
   lsfm::python::bind_filter_preset<float, float, float, float, float>(m, "_f32");
+  lsfm::python::bind_laplace_preset<float, float>(m, "_f32");
+  lsfm::python::bind_rcmg_gradient_gray<float, float, float, float>(m, "_f32");
 
   // 64-bit double preset.
   lsfm::python::bind_filter_preset<double, double, double, double, double>(m, "_f64");
+  lsfm::python::bind_laplace_preset<double, double>(m, "_f64");
+  lsfm::python::bind_rcmg_gradient_gray<double, double, double, double>(m, "_f64");
+  lsfm::python::bind_geometric_operators<double>(m, "_f64");
 }
