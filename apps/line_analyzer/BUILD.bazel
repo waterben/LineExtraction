@@ -5,6 +5,7 @@ Build with: bazel build //apps/line_analyzer:app_line_analyzer
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//tools/bazel:copts.bzl", "LE_COPTS_COMPAT")
 load("//tools/bazel:qt5.bzl", "qt5_moc", "qt5_uic")
 
 package(default_visibility = ["//visibility:public"])
@@ -160,7 +161,7 @@ cc_binary(
     srcs = CORE_SRCS + EXTENSION_SRCS + CORE_HDRS + EXTENSION_HDRS + [
         ":line_analyzer_moc",
     ],
-    copts = QT5_COPTS + INCLUDE_PATHS + [
+    copts = LE_COPTS_COMPAT + QT5_COPTS + INCLUDE_PATHS + [
         "-I$(GENDIR)/apps/line_analyzer",  # For ui_*.h files
     ],
     data = [
