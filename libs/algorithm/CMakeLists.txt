@@ -19,6 +19,7 @@ if(NOT SOURCES)
         lib_imgproc
         lib_eval
         dlib::dlib
+        nlohmann_json::nlohmann_json
         ${OpenCV_LIBS}
     )
 else()
@@ -33,6 +34,7 @@ else()
         lib_imgproc
         lib_eval
         dlib::dlib
+        nlohmann_json::nlohmann_json
         ${OpenCV_LIBS}
     )
 endif()

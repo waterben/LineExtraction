@@ -62,10 +62,20 @@
        <item>
         <widget class="QPushButton" name="pb_load_example">
          <property name="text">
-          <string>Example</string>
+          <string>Easy</string>
          </property>
          <property name="toolTip">
-          <string>Load the bundled example ground truth (example_lines.png)</string>
+          <string>Load the easy example (single hexagon, no noise, 6 GT segments)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pb_load_challenge">
+         <property name="text">
+          <string>Hard</string>
+         </property>
+         <property name="toolTip">
+          <string>Load the challenge example (8 shapes, varying contrast, noise, 31 GT segments)</string>
          </property>
         </widget>
        </item>
@@ -311,11 +321,28 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pb_load_challenge</sender>
+   <signal>clicked()</signal>
+   <receiver>AccuracyPanel</receiver>
+   <slot>loadChallengeGroundTruth()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>340</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>180</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>browseGroundTruth()</slot>
   <slot>evaluate()</slot>
   <slot>clearResults()</slot>
   <slot>loadExampleGroundTruth()</slot>
+  <slot>loadChallengeGroundTruth()</slot>
  </slots>
 </ui>

@@ -57,18 +57,103 @@ Each row defines one ground truth line segment with sub-pixel endpoints. Multipl
 | **TP / FP / FN** | Raw counts | True/false positives and false negatives |
 | **GT Segments** | — | Total number of ground truth segments |
 
-## Workflow
+## Workflows
 
-1. Load an image and run detection
-2. Click **Browse...** to load a ground truth CSV
-3. (Optional) Enter an image name filter
-4. Click **Evaluate** to compute metrics
-5. Adjust detector parameters and re-evaluate for comparison
+### Quick Evaluation with Bundled Examples
+
+1. **Open the Accuracy Measure panel** from the toolbar / menu.
+2. **Click "Easy"** to load the bundled hexagon example. This loads both the ground truth CSV and the matching image into the main Analyzer automatically.
+3. **Run detection** in the Analyzer (select a detector, click **Process**).
+4. **Click "Evaluate"** in the Accuracy panel. Precision, Recall, F1, sAP, and raw counts (TP/FP/FN) are displayed.
+5. **Try "Hard"** to load the multi-shape challenge scene (31 GT segments, varying contrast, noise). Re-detect and evaluate to see how the detector handles harder conditions.
+
+### Evaluation with Custom Ground Truth
+
+1. **Load an image** in the Analyzer and **run detection**.
+2. **Click "Browse..."** in the Accuracy panel to open a file dialog.
+3. **Select a ground truth CSV file.** The format is `image_name,x1,y1,x2,y2` with a header row. Multiple images can be stored in one CSV.
+4. **(Optional) Enter an image name filter** in the text field — this selects which image entry from the CSV to use. Leave empty for auto-selection (first entry, or match by filename).
+5. **Adjust the Match Threshold** (default 5.0 px) — this is the maximum endpoint distance for a detected segment to count as a true positive.
+6. **Click "Evaluate"** to compute all metrics.
+7. **Iterate:** Change detector parameters or apply a preset in the Analyzer, click **Process** again, then click **Evaluate** again to compare.
+
+### Comparing Detector Configurations
+
+1. **Load a GT file** (bundled or custom) as above.
+2. **Select detector A**, run detection, click **Evaluate** — note the F1 and sAP scores.
+3. **Switch to detector B** (or apply a different preset), run detection, click **Evaluate** — compare the new scores.
+4. **Repeat** for as many configurations as needed. For a more detailed per-segment comparison, use the [GT Inspector](../ground_truth_inspector/README.md) panel instead.
+
+### Post-Processing Evaluation
+
+1. **Detect lines** and **Evaluate** to establish a baseline.
+2. **Open the [Precision Optimizer](../precision_optimizer/README.md)** and run **Optimize All** to refine line positions.
+3. **Re-evaluate** in the Accuracy panel — compare P/R/F1/sAP before and aft opti4. **Apply [Continuity Optimizer](../continuity_optimizer/README.md)** (merge and optionally gradient connection), then re-evaluate again to measure the effect of post-processing.## Bundled Example Datasets
+
+Two bundled synthetic datasets are available for quick evaluation without external files.
+
+### Easy — Single Hexagon
+
+Click **Easy** to load a clean, noise-free image ideal for verifying basic detector functionality.
+
+- **`example_lines.png`** — 320x320 grayscale, single hexagon, no noise
+- **`example_gt.csv`** — 6 ground truth segments
+
+```
+        V0 ──────────── V1          Single polygon (gray=180)
+       ╱                  ╲         on black background.
+      ╱      180           V2       6 long edges, very high
+     ╱                    ╱         contrast. Most detectors
+    V4 ──────────── V3              achieve near-perfect scores.
+         V5
+```
+
+### Challenge — Multi-Shape Scene
+
+Click **Hard** to load a scene with varying difficulty that exposes detector weaknesses.
+
+- **`example_challenge.png`** — 320x320 grayscale, 8 shapes, Gaussian noise (sigma=5)
+- **`example_challenge_gt.csv`** — 31 ground truth segments
+
+```
+  ┌──────────────────────────────────────┐
+  │              [15x15]    ╱╲           │
+  │  ┌──────────┐ gray    ╱    ╲         │
+  │  │          │  200  ╱ tri   ╲        │
+  │  │  large   │      ╱ gray=60 ╲       │  <- HIGH contrast
+  │  │  rect    │     ╱────────────╲     │
+  │  │  gray=40 │                        │
+  │  └──────────┘                        │
+  │ ┌┐           ◇ diamond  ┌──────────┐ │
+  │ ││tall       gray=95    │parallelo-│ │  <- LOW contrast
+  │ ││narrow    (low!)      │gram  50  │ │
+  │ ││rect                  └──────────┘ │
+  │ ││gray=200  △tiny                    │
+  │ ││          gray=115    ╱────────╲   │  <- VERY LOW contrast
+  │ ││          (v.low!)   │pentagon  │  │     (nearly invisible
+  │ ││                     │gray=175  │  │      with noise)
+  │ └┘                      ╲────────╱   │
+  └──────────────────────────────────────┘
+```
+
+| Difficulty | Shapes | Contrast |
+|---|---|---|
+| **High** (easy) | large_rect, small_square, large_triangle, tall_narrow, parallelogram | 68–88 |
+| **Moderate** | pentagon | 47 |
+| **Low** (hard) | diamond | 33 |
+| **Very low** (likely missed) | tiny_triangle | 13 (SNR ≈ 2.6) |
+
+### Rendering Approach
+
+Both images use the thesis approach (Chapter 6): polygons rasterized at ultra-high resolution (32000x32000), Gaussian-blurred, and downscaled 100x. This produces clean single-gradient step edges — unlike drawn lines which create double gradient ridges.
+
+To regenerate or customize: `python tools/scripts/generate_example_gt.py`
 
 ## Use Case
 
-Quick quantitative comparison of different detector configurations or parameter presets. Use this panel when you need P/R/F1 numbers for a report or to compare before/after. For detailed per-segment analysis, use the [Line Analyser 2D](../lineanalyser2d/README.md) extension instead.
+Quick quantitative comparison of different detector configurations or parameter presets. Use this panel when you need P/R/F1 numbers for a report or to compare before/after. For detailed per-segment analysis, use the [GT Inspector](../ground_truth_inspector/README.md) extension instead.
 
+<!-- help:start-ignore -->
 ## Algorithm
 
 See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#accuracymeasure) for the full `AccuracyMeasure` API, structural AP computation, and C++/Python usage examples.
@@ -83,5 +168,6 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#a
 
 ## Dependencies
 
-- **ControlWindow** — detected line data, image sources
+- **Analyzer** — detected line data, image sources
 - **libs/algorithm** — [`AccuracyMeasure`](../../../../libs/algorithm/README.md#accuracymeasure), [`GroundTruthLoader`](../../../../libs/algorithm/README.md#groundtruthloader)
+<!-- help:end-ignore -->

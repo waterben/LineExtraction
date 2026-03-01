@@ -11,6 +11,35 @@ The `lsd` library provides implementations of various line segment detection alg
 - **FGioi (LsdFGioi)** - Fusion of Global and Local Information with NFA-based validation
 - **Burns (LsdBurns)** - Classic gradient-based line extraction with directional partitioning
 
+### LSD Pipeline
+
+All detectors follow a common pipeline, differing in how each stage is implemented:
+
+```
+  ┌─────────┐     ┌──────────┐     ┌─────────────┐     ┌───────────┐     ┌────────────┐
+  │  Input   │────→│ Gradient │────→│   Edge /     │────→│  Segment  │────→│  Validate  │
+  │  Image   │     │ (Gx, Gy)│     │  Region Grow │     │  Fitting  │     │  (NFA/len) │
+  └─────────┘     └──────────┘     └─────────────┘     └───────────┘     └────────────┘
+                                                              │                  │
+                                                              ▼                  ▼
+                                                      line segment         accepted /
+                                                      candidates           rejected
+```
+
+### Algorithm Comparison
+
+| Algorithm | Edge Method | Grouping | Validation | Speed | Strengths |
+|-----------|-------------|----------|------------|-------|-----------|
+| **LsdCC** | NMS + Linking | Connected components | Length | ★★★★★ | Fast, good general-purpose |
+| **LsdCP** | NMS + Pattern | Pattern matching | Length + gap | ★★★★ | Handles fragmented edges |
+| **LsdEDLZ** | Anchor + Drawing | Edge drawing | Helmholtz | ★★★★ | Few parameters, robust |
+| **LsdFGioi** | Region growing | Directional regions | NFA (Helmholtz) | ★★★ | Statistically principled |
+| **LsdBurns** | Gradient partition | Directional buckets | Length | ★★★★ | Classic, well-understood |
+| **LsdFBW** | Fast Burns | Directional buckets | Length | ★★★★★ | Optimized Burns variant |
+| **LsdEL** | NMS + Linking | Edge linking | Length | ★★★★ | Simple, configurable |
+| **LsdEP** | NMS + Pattern | Edge patterns | Length | ★★★★ | Pattern-aware linking |
+| **LsdHoughP** | Sobel thresh | Probabilistic Hough | Votes | ★★★★★ | OpenCV-based, very fast |
+
 ## Architecture
 
 The library uses a template-based class hierarchy:
@@ -496,7 +525,9 @@ Complete examples are available in:
 - [Edge Library](../edge/README.md) - Edge detection and NMS algorithms
 - [Geometry Library](../geometry/README.md) - Line representation and transformations
 - [Image Processing Library](../imgproc/README.md) - Low-level image operations
+- [Algorithm Library](../algorithm/README.md) - Parameter optimization and continuity optimization
 - [Eval Library](../eval/README.md) - Performance measurement framework
+- [Resources](../../resources/README.md) - Datasets, presets, and ground-truth data
 - [LSD Examples](../../examples/lsd/README.md) - Demonstration programs
 - [Line Analyzer App](../../apps/line_analyzer/README.md) - Interactive analysis tool
 - [Main README](../../README.md) - Project overview

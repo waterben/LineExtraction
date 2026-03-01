@@ -12,14 +12,14 @@ endif()
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/accuracy
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/connectionoptimizer
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/continuityoptimizer
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/detectorprofile
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/imageanalyzer
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/lineanalyser2d
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/pofuncplot
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/precisionoptimizer
-    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/profileanalyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/continuity_optimizer
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/detector_profile
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/image_analyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/ground_truth_inspector
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/3d_profile_plot
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/precision_optimizer
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/profile_analyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/quivers
 )
 
 # Line Analyzer Qt Application
@@ -29,51 +29,53 @@ le_add_executable(app_line_analyzer
         # Core
         src/main.cpp
         src/helpers.cpp
-        src/controlwindow.cpp
+        src/analyzer.cpp
         src/preprocessing.cpp
-        src/quiver.cpp
+        src/help_viewer.cpp
         # Extensions
         extensions/accuracy/accuracypanel.cpp
-        extensions/connectionoptimizer/connectionoptimizer.cpp
-        extensions/continuityoptimizer/continuityoptimizer.cpp
-        extensions/detectorprofile/detectorprofilepanel.cpp
-        extensions/imageanalyzer/imageanalyzerpanel.cpp
-        extensions/lineanalyser2d/analyseroptions.cpp
-        extensions/lineanalyser2d/lineanalyser2d.cpp
-        extensions/pofuncplot/pofuncplot.cpp
-        extensions/precisionoptimizer/precisionoptimizer.cpp
-        extensions/profileanalyzer/profileanalyzer.cpp
+        extensions/continuity_optimizer/continuity_optimizer.cpp
+        extensions/detector_profile/detector_profile_panel.cpp
+        extensions/image_analyzer/image_analyzer_panel.cpp
+        extensions/ground_truth_inspector/analyser_options.cpp
+        extensions/ground_truth_inspector/ground_truth_inspector.cpp
+        extensions/3d_profile_plot/3d_profile_plot.cpp
+        extensions/precision_optimizer/precision_optimizer.cpp
+        extensions/profile_analyzer/profile_analyzer.cpp
+        extensions/quivers/quiverpanel.cpp
     HEADERS
         # Core
         src/helpers.h
-        src/controlwindow.h
+        src/analyzer.h
+        src/help_viewer.h
+        src/help_button.hpp
+        src/markdown_converter.hpp
         src/preprocessing.h
-        src/quiver.h
+        src/latool.h
         # Extensions
         extensions/accuracy/accuracypanel.h
-        extensions/connectionoptimizer/connectionoptimizer.h
-        extensions/continuityoptimizer/continuityoptimizer.h
-        extensions/detectorprofile/detectorprofilepanel.h
-        extensions/imageanalyzer/imageanalyzerpanel.h
-        extensions/lineanalyser2d/analyseroptions.h
-        extensions/lineanalyser2d/lineanalyser2d.h
-        extensions/pofuncplot/pofuncplot.h
-        extensions/precisionoptimizer/precisionoptimizer.h
-        extensions/profileanalyzer/profileanalyzer.h
+        extensions/continuity_optimizer/continuity_optimizer.h
+        extensions/detector_profile/detector_profile_panel.h
+        extensions/image_analyzer/image_analyzer_panel.h
+        extensions/ground_truth_inspector/analyser_options.h
+        extensions/ground_truth_inspector/ground_truth_inspector.h
+        extensions/3d_profile_plot/3d_profile_plot.h
+        extensions/precision_optimizer/precision_optimizer.h
+        extensions/profile_analyzer/profile_analyzer.h
+        extensions/quivers/quiverpanel.h
         # UI files
-        ui/controlwindow.ui
+        ui/analyzer.ui
         ui/preprocessing.ui
-        ui/quiver.ui
         extensions/accuracy/accuracypanel.ui
-        extensions/connectionoptimizer/connectionoptimizer.ui
-        extensions/continuityoptimizer/continuityoptimizer.ui
-        extensions/detectorprofile/detectorprofilepanel.ui
-        extensions/imageanalyzer/imageanalyzerpanel.ui
-        extensions/lineanalyser2d/analyseroptions.ui
-        extensions/lineanalyser2d/lineanalyser2d.ui
-        extensions/pofuncplot/pofuncplot.ui
-        extensions/precisionoptimizer/precisionoptimizer.ui
-        extensions/profileanalyzer/profileanalyzer.ui
+        extensions/continuity_optimizer/continuity_optimizer.ui
+        extensions/detector_profile/detector_profile_panel.ui
+        extensions/image_analyzer/image_analyzer_panel.ui
+        extensions/ground_truth_inspector/analyser_options.ui
+        extensions/ground_truth_inspector/ground_truth_inspector.ui
+        extensions/3d_profile_plot/3d_profile_plot.ui
+        extensions/precision_optimizer/precision_optimizer.ui
+        extensions/profile_analyzer/profile_analyzer.ui
+        extensions/quivers/quiverpanel.ui
     QT_MODULES Core Gui Widgets PrintSupport OpenGL
     DEPS
         lib_algorithm
@@ -86,5 +88,33 @@ le_add_executable(app_line_analyzer
         dlib::dlib
 )
 
-# Re-enable warnings to fix them properly
-# target_compile_options(app_line_analyzer PRIVATE -Wno-old-style-cast)
+# Copy README files to the binary output directory so the help viewer
+# can find them at runtime when running the CMake-built executable.
+file(GLOB _ext_readmes "${CMAKE_CURRENT_SOURCE_DIR}/extensions/*/README.md")
+set(_all_readmes "${CMAKE_CURRENT_SOURCE_DIR}/README.md" ${_ext_readmes})
+
+add_custom_command(TARGET app_line_analyzer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer"
+    COMMENT "Copying help viewer README files"
+)
+
+# Copy the top-level README.
+add_custom_command(TARGET app_line_analyzer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
+        "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/README.md"
+)
+
+# Copy each extension README, preserving the directory structure.
+foreach(_readme ${_ext_readmes})
+    file(RELATIVE_PATH _rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_readme}")
+    get_filename_component(_rel_dir "${_rel}" DIRECTORY)
+    add_custom_command(TARGET app_line_analyzer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/${_rel_dir}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${_readme}"
+            "$<TARGET_FILE_DIR:app_line_analyzer>/apps/line_analyzer/${_rel}"
+    )
+endforeach()

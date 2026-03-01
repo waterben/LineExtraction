@@ -53,6 +53,12 @@ void bind_precision_optimize(pybind11::module_& m);
 /// @brief Bind PresetStore class for loading optimized detector presets.
 void bind_preset_store(pybind11::module_& m);
 
+/// @brief Bind LineContinuityOptimizer class.
+/// @param m pybind11 module.
+/// @param suffix Type suffix (empty for double, "_f32" for float).
+template <class FT>
+void bind_line_continuity_optimizer(pybind11::module_& m, const std::string& suffix);
+
 /// @brief Bind all algorithm types for a given floating-point type.
 /// @param m pybind11 module.
 /// @param suffix Type suffix.

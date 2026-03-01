@@ -11,6 +11,7 @@
 #include <algorithm/ground_truth.hpp>
 #include <algorithm/image_analyzer.hpp>
 #include <algorithm/line_connect.hpp>
+#include <algorithm/line_continuity.hpp>
 #include <algorithm/line_merge.hpp>
 #include <algorithm/param_search.hpp>
 #include <algorithm/precision_optimize.hpp>
@@ -769,6 +770,152 @@ void bind_preset_store(py::module_& m) {
 }
 
 // ============================================================================
+// LineContinuityOptimizer binding
+// ============================================================================
+
+template <class FT>
+void bind_line_continuity_optimizer(py::module_& m, const std::string& suffix) {
+  using LCO = LineContinuityOptimizer<FT>;
+  using LST = LineSegment<FT, Vec2>;
+  const std::string cls = "LineContinuityOptimizer" + suffix;
+
+  // ContinuityMergeType enum (only bind once for the primary suffix)
+  if (suffix.empty()) {
+    py::enum_<ContinuityMergeType>(m, "ContinuityMergeType", "Merge strategy for LineContinuityOptimizer.")
+        .value("STANDARD", ContinuityMergeType::STANDARD, "Use furthest endpoints of the pair.")
+        .value("AVG", ContinuityMergeType::AVG, "Average endpoint positions.");
+  }
+
+  py::class_<LCO>(m, cls.c_str(),
+                  ("Unified line segment continuity optimizer" + suffix +
+                   ".\n\n"
+                   "Provides two modes that share the same geometric constraints:\n\n"
+                   "**Mode 1 — geometry-only merge** (``optimize`` without magnitude):\n"
+                   "Merges collinear segment pairs passing angle, endpoint distance,\n"
+                   "perpendicular distance, and parallel gap checks.\n\n"
+                   "**Mode 2 — gradient-assisted merge** (``optimize`` with magnitude):\n"
+                   "Same geometric loop but pairs can also be merged when gradient\n"
+                   "evidence along the connecting path meets the threshold.")
+                      .c_str())
+      .def(py::init<>(), "Construct with default parameters.")
+      .def(py::init<FT, FT, FT, FT, ContinuityMergeType>(), py::arg("max_dist") = FT(20),
+           py::arg("angle_error") = FT(5), py::arg("distance_error") = FT(3), py::arg("parallel_error") = FT(10),
+           py::arg("merge_type") = ContinuityMergeType::STANDARD, "Construct with geometry-only parameters.")
+      .def(py::init<FT, FT, FT, FT, ContinuityMergeType, FT, FT>(), py::arg("max_dist"), py::arg("angle_error"),
+           py::arg("distance_error"), py::arg("parallel_error"), py::arg("merge_type"), py::arg("accuracy"),
+           py::arg("threshold"), "Construct with full parameters (merge + gradient).")
+      .def(py::init([](const py::dict& params) {
+             auto opt = std::make_unique<LCO>();
+             for (const auto& item : params) {
+               auto name = item.first.cast<std::string>();
+               py::object val = py::reinterpret_borrow<py::object>(item.second);
+               if (py::isinstance<py::bool_>(val)) {
+                 opt->value(name, Value(val.cast<bool>()));
+               } else if (py::isinstance<py::int_>(val)) {
+                 opt->value(name, Value(val.cast<int>()));
+               } else {
+                 opt->value(name, Value(val.cast<double>()));
+               }
+             }
+             return opt;
+           }),
+           py::arg("params"), "Construct from a dict of parameter names to values.")
+      // Parameter access (dict-based, matching PrecisionOptimize style)
+      .def(
+          "get_params",
+          [](const LCO& self) {
+            py::dict result;
+            for (const auto& nv : self.values()) {
+              switch (nv.value.type()) {
+                case Value::INT:
+                  result[py::str(nv.name)] = nv.value.getInt();
+                  break;
+                case Value::BOOL:
+                  result[py::str(nv.name)] = nv.value.getBool();
+                  break;
+                default:
+                  result[py::str(nv.name)] = nv.value.getDouble();
+                  break;
+              }
+            }
+            return result;
+          },
+          "Get all parameters as a dict.")
+      .def(
+          "set_params",
+          [](LCO& self, const py::dict& params) {
+            for (const auto& item : params) {
+              auto name = item.first.cast<std::string>();
+              py::object val = py::reinterpret_borrow<py::object>(item.second);
+              if (py::isinstance<py::bool_>(val)) {
+                self.value(name, Value(val.cast<bool>()));
+              } else if (py::isinstance<py::int_>(val)) {
+                self.value(name, Value(val.cast<int>()));
+              } else {
+                self.value(name, Value(val.cast<double>()));
+              }
+            }
+          },
+          py::arg("params"), "Set parameters from a dict.")
+      .def(
+          "param_descriptions",
+          [](const LCO& self) {
+            py::dict result;
+            for (const auto& nv : self.values()) {
+              result[py::str(nv.name)] = nv.description;
+            }
+            return result;
+          },
+          "Get parameter descriptions as a dict.")
+      // Variant 1: geometry-only merge
+      .def(
+          "optimize",
+          [](const LCO& self, const std::vector<LST>& input) {
+            std::vector<LST> output;
+            self.optimize(input, output);
+            return output;
+          },
+          py::arg("input"),
+          "Merge line segments using geometry constraints only.\n\n"
+          "Args:\n"
+          "    input: Input line segments.\n\n"
+          "Returns:\n"
+          "    List of merged line segments.")
+      // Variant 2: gradient-assisted merge
+      .def(
+          "optimize",
+          [](const LCO& self, const std::vector<LST>& input, const cv::Mat& magnitude) {
+            std::vector<LST> output;
+            self.optimize(input, output, magnitude);
+            return output;
+          },
+          py::arg("input"), py::arg("magnitude"),
+          "Merge line segments with gradient-assisted bridging.\n\n"
+          "Args:\n"
+          "    input: Input line segments.\n"
+          "    magnitude: Gradient magnitude image (float32/float64).\n\n"
+          "Returns:\n"
+          "    List of merged line segments.")
+      // Variant 3: gradient-assisted with auto magnitude
+      .def(
+          "optimize_with_image",
+          [](const LCO& self, const std::vector<LST>& input, const cv::Mat& src) {
+            std::vector<LST> output;
+            cv::Mat magnitude;
+            self.optimize(input, output, src, magnitude);
+            return py::make_tuple(output, magnitude);
+          },
+          py::arg("input"), py::arg("src"),
+          "Merge with gradient-assisted bridging, computing magnitude from image.\n\n"
+          "Args:\n"
+          "    input: Input line segments.\n"
+          "    src: Source grayscale image.\n\n"
+          "Returns:\n"
+          "    Tuple of (merged_lines, magnitude_image).")
+      .def("__repr__", [cls](const LCO&) { return "<" + cls + ">"; });
+}
+
+// ============================================================================
 // Combined binding
 // ============================================================================
 
@@ -777,6 +924,7 @@ void bind_algorithm(py::module_& m, const std::string& suffix) {
   bind_line_merge<FT>(m, suffix);
   bind_line_connect<FT>(m, suffix);
   bind_accuracy_measure<FT>(m, suffix);
+  bind_line_continuity_optimizer<FT>(m, suffix);
 }
 
 // Explicit template instantiations
@@ -786,6 +934,8 @@ template void bind_line_connect<float>(py::module_&, const std::string&);
 template void bind_line_connect<double>(py::module_&, const std::string&);
 template void bind_accuracy_measure<float>(py::module_&, const std::string&);
 template void bind_accuracy_measure<double>(py::module_&, const std::string&);
+template void bind_line_continuity_optimizer<float>(py::module_&, const std::string&);
+template void bind_line_continuity_optimizer<double>(py::module_&, const std::string&);
 template void bind_algorithm<float>(py::module_&, const std::string&);
 template void bind_algorithm<double>(py::module_&, const std::string&);
 

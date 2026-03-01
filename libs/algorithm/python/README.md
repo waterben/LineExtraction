@@ -5,14 +5,14 @@ Python bindings for the `libs/algorithm` C++ library using [pybind11](https://py
 ## Overview
 
 This module provides post-processing, accuracy evaluation, and automated
-parameter optimisation for line segment detection pipelines:
+parameter optimization for line segment detection pipelines:
 
 - **LineMerge** — merge collinear / near-collinear line segments
 - **LineConnect** — connect nearby segments via gradient evidence
 - **AccuracyMeasure** — precision, recall, F1, and structural AP (sAP)
 - **GroundTruthLoader** — load / save ground truth annotations (CSV)
 - **ImageAnalyzer** — image property analysis (contrast, noise, edges, range)
-- **DetectorProfile** — intuitive 4-knob parameter profiles for all 9 LSD detectors
+- **DetectorProfile** — intuitive 4-slider parameter profiles for all 9 LSD detectors
 - **ParamOptimizer** — automated hyperparameter search (grid + random)
 - **AccuracyResult**, **EvalResult**, **SearchResult** — result containers
 - **ParamRange** — search space definition helpers
@@ -240,7 +240,7 @@ print(f"Noise level:   {props.noise_level:.3f}")
 print(f"Edge density:  {props.edge_density:.3f}")
 print(f"Dynamic range: {props.dynamic_range:.3f}")
 
-# Suggest profile knobs based on image properties
+# Suggest profile sliders based on image properties
 hints = props.suggest_profile()
 print(f"Suggested detail:    {hints.detail:.0f}%")
 print(f"Suggested gap_tol:   {hints.gap_tolerance:.0f}%")
@@ -261,7 +261,7 @@ print(f"Noise factor:        {hints.noise_factor:.2f}")
 
 ### ProfileHints
 
-Returned by `ImageProperties.suggest_profile()`. Contains suggested knob
+Returned by `ImageProperties.suggest_profile()`. Contains suggested slider
 values and adaptive scaling factors.
 
 | Field | Type | Range | Description |
@@ -277,18 +277,18 @@ Methods:
 
 | Method | Description |
 |--------|-------------|
-| `clamp()` | Clamp knobs to [0, 100] and factors to [0.5, 2.0] |
+| `clamp()` | Clamp sliders to [0, 100] and factors to [0.5, 2.0] |
 
 ## DetectorProfile
 
-Translates 4 intuitive percentage knobs (0–100%) into concrete detector
+Translates 4 intuitive percentage sliders (0–100%) into concrete detector
 parameters for all 9 supported LSD detectors. Supports adaptive scaling
 via `ImageAnalyzer`-produced hints.
 
 ### Construction
 
 ```python
-# Manual knob values (defaults: all 50%)
+# Manual slider values (defaults: all 50%)
 profile = alg.DetectorProfile()
 profile = alg.DetectorProfile(
     detail=70,           # 0=coarse, 100=fine
@@ -380,7 +380,7 @@ print(f"Image: contrast={props.contrast:.2f}, noise={props.noise_level:.2f}")
 hints = props.suggest_profile()
 print(f"Suggested: detail={hints.detail:.0f}%, precision={hints.precision:.0f}%")
 
-# 4. Create profile (optionally override knobs)
+# 4. Create profile (optionally override sliders)
 profile = alg.DetectorProfile.from_hints(hints)
 profile.detail = 80  # bump detail
 
@@ -491,7 +491,7 @@ def detect_fn(src: np.ndarray, params: list[dict]) -> list[geo.LineSegment_f64]:
     return detected_segments
 ```
 
-### Full Optimisation Example
+### Full Optimization Example
 
 ```python
 import numpy as np
@@ -523,7 +523,7 @@ def detect_fn(src, params):
         return gt_segments  # simplified — return perfect detections
     return []
 
-# 5. Run optimisation
+# 5. Run optimization
 optimizer = alg.ParamOptimizer(metric=alg.OptimMetric.F1, match_threshold=5.0)
 strategy = alg.GridSearchStrategy()
 
@@ -565,8 +565,8 @@ result = optimizer.optimize(strategy, space, images, gt, detect_fn,
 | Value | Description |
 |-------|-------------|
 | `OptimMetric.F1` | F1 score (harmonic mean of precision/recall) |
-| `OptimMetric.PRECISION` | Optimise for precision only |
-| `OptimMetric.RECALL` | Optimise for recall only |
+| `OptimMetric.PRECISION` | Optimize for precision only |
+| `OptimMetric.RECALL` | Optimize for recall only |
 
 ### SearchResult
 
@@ -584,7 +584,7 @@ result = optimizer.optimize(strategy, space, images, gt, detect_fn,
 |------------------|------|-------------|
 | `params` | list[dict] | Parameter configuration (read-only) |
 | `accuracy` | AccuracyResult | Full accuracy metrics |
-| `score` | float | Optimised metric value |
+| `score` | float | Optimized metric value |
 
 ## Parameter Dict Convention
 

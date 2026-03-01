@@ -266,7 +266,7 @@ set(CMAKE_AUTOUIC ON)  # Enable Qt UIC
 set(CMAKE_AUTORCC ON)  # Enable Qt RCC
 
 le_add_executable(app_line_analyzer
-    SOURCES main.cpp controlwindow.cpp ...
+    SOURCES main.cpp analyzer.cpp ...
     DEPS lib_lsd lib_lfd qplot qplot3d Qt5::Widgets Qt5::Gui
 )
 ```
@@ -315,6 +315,7 @@ int main(int argc, char** argv) {
 ```
 
 For CMake, the code searches relative to the working directory:
+
 - `resources/datasets/` (from workspace root)
 - `../resources/datasets/` (from build/bin directory)
 

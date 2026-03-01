@@ -368,5 +368,7 @@ The library is designed for extension:
 - [LSD Library](../lsd/README.md) - Line segment detection methods
 - [LFD Library](../lfd/README.md) - Feature matching and descriptors
 - [Utility Library](../utility/README.md) - TestImages and core utilities
+- [Algorithm Library](../algorithm/README.md) - Post-processing, accuracy evaluation, parameter optimization
+- [Resources](../../resources/README.md) - Datasets, ground truth data, presets
 - [Evaluation Examples](../../evaluation/README.md) - Performance benchmarks
 - [Main README](../../README.md) - Project overview
