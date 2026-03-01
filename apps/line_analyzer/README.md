@@ -54,19 +54,18 @@ The application supports multiple Line Segment Detector (LSD) variants:
 
 ### Analysis Tools
 
-Each tool opens as a separate dockable window and connects to the main ControlWindow via signals and slots. Hover over any control for a tooltip explaining its purpose. See the individual extension READMEs for detailed documentation:
+Each tool opens as a separate dockable window and connects to the main Analyzer via signals and slots. Hover over any control for a tooltip explaining its purpose. See the individual extension READMEs for detailed documentation:
 
 | Extension | Description |
 |-----------|-------------|
-| [Profile Analyzer](extensions/profileanalyzer/README.md) | Edge gradient profile visualization |
-| [Precision Optimizer](extensions/precisionoptimizer/README.md) | Sub-pixel line localization via numerical optimization |
-| [PO Function Plot](extensions/pofuncplot/README.md) | 3D surface plot of optimization objective |
-| [Continuity Optimizer](extensions/continuityoptimizer/README.md) | Merge near-collinear line segments |
-| [Connection Optimizer](extensions/connectionoptimizer/README.md) | Bridge endpoint gaps using gradient evidence |
-| [Detector Profile](extensions/detectorprofile/README.md) | High-level parameter tuning via percentage knobs |
-| [Image Analyzer](extensions/imageanalyzer/README.md) | Image property analysis and profile suggestions |
+| [Profile Analyzer](extensions/profile_analyzer/README.md) | Edge gradient profile visualization |
+| [Precision Optimizer](extensions/precision_optimizer/README.md) | Sub-pixel line localization via numerical optimization |
+| [3D Profile Plot](extensions/3d_profile_plot/README.md) | 3D surface plot of optimization objective |
+| [Continuity Optimizer](extensions/continuity_optimizer/README.md) | Merge collinear fragments and bridge endpoint gaps |
+| [Detector Profile](extensions/detector_profile/README.md) | High-level parameter tuning via percentage knobs |
+| [Image Analyzer](extensions/image_analyzer/README.md) | Image property analysis and profile suggestions |
 | [Accuracy Measure](extensions/accuracy/README.md) | P/R/F1/sAP evaluation against ground truth |
-| [Line Analyser 2D](extensions/lineanalyser2d/README.md) | Interactive per-segment GT comparison |
+| [GT Inspector](extensions/ground_truth_inspector/README.md) | Interactive per-segment GT comparison |
 
 ### Visualization Options
 
@@ -119,7 +118,7 @@ cmake --build . -j$(nproc)
    bazel run //apps/line_analyzer:app_line_analyzer
    ```
 
-   The main ControlWindow opens with the default windmill test image pre-loaded.
+   The main Analyzer opens with the default windmill test image pre-loaded.
 2. **Load an image** (optional — skip if you want to use the windmill):
    - Click **Select Image** → browse the filesystem, *or*
    - Use the **Test Images** dropdown row: pick a category (General, BSDS500, Noise, York Urban, …) and then an image from that dataset.
@@ -143,7 +142,7 @@ cmake --build . -j$(nproc)
 4. **Click "Process"** again. The previous lines are replaced with new detections.
 5. **Compare visually.** For quantitative comparison:
    - Open the [Accuracy Measure](extensions/accuracy/README.md) panel, load a ground truth CSV, and click **Evaluate** after each detector run.
-   - Or open the [Detector Profile](extensions/detectorprofile/README.md) panel and use **Auto from Image** for each detector to see how their profiles differ.
+   - Or open the [Detector Profile](extensions/detector_profile/README.md) panel and use **Auto from Image** for each detector to see how their profiles differ.
 
 ### Workflow 3 — Interactive Parameter Tuning
 
@@ -174,7 +173,7 @@ cmake --build . -j$(nproc)
    - *Start / End Translation* — move individual endpoints along the line direction.
 4. **Observe** the modified line in the plot (drawn in cyan to distinguish from the original blue).
 5. **Freeze the modification:** Click **Freeze** to bake the current offsets into the line's base geometry (the line turns blue again, offsets reset to 0).
-6. **Freeze All:** Click **Freeze All** to batch-freeze every modified line. This emits `linesUpdated` which triggers the [Line Analyser 2D](extensions/lineanalyser2d/README.md) analysis workflow.
+6. **Freeze All:** Click **Freeze All** to batch-freeze every modified line. This emits `linesUpdated` which triggers the [GT Inspector](extensions/ground_truth_inspector/README.md) analysis workflow.
 7. **Flip operations:**
    - **Flip Normals** — reverses the normal direction of all lines (useful when the detector assigned inconsistent orientations).
    - **Flip Endpoints** — swaps start↔end for all lines.
@@ -188,11 +187,10 @@ This is the recommended end-to-end workflow for publication-quality evaluation:
 3. **Click "Process"** to detect lines.
 4. **Open Accuracy Measure** → load GT CSV → **Evaluate** → note P/R/F1/sAP.
 5. **Open Precision Optimizer** → **Optimize All** → lines shift to sub-pixel optimal positions.
-6. **Open Continuity Optimizer** → **Merge** → reduce over-segmentation.
-7. **Open Connection Optimizer** → **Connect** → bridge small gaps.
-8. **Re-evaluate in Accuracy Measure** → compare metrics before/after post-processing.
-9. **Open Line Analyser 2D** → load GT TXT → **Compute Correct Lines** → inspect per-segment errors.
-10. **Use Analysis Mode** in Line Analyser 2D to create a before/after comparison table and export it for your paper.
+6. **Open Continuity Optimizer** → **Run** (with optional gradient connection) → reduce over-segmentation and bridge small gaps.
+7. **Re-evaluate in Accuracy Measure** → compare metrics before/after post-processing.
+8. **Open GT Inspector** → load GT TXT → **Compute Correct Lines** → inspect per-segment errors.
+9. **Use Analysis Mode** in GT Inspector to create a before/after comparison table and export it for your paper.
 
 ### Keyboard Shortcuts
 
@@ -263,31 +261,29 @@ Presets are stored in `resources/presets/lsd_presets.json`. The file is loaded a
 The application follows Qt's Model-View-Controller pattern:
 
 ```
-ControlWindow (main controller)
+Analyzer (main controller)
   ├─ PreProcessing (image preprocessing)
   ├─ DetectorVector (detector management)
   │   └─ DetectorES<LsdVariant> (detector instances)
   ├─ PresetStore (optimized parameter presets from JSON)
   ├─ ProfileAnalyzer (profile analysis tool)
   ├─ PrecisionOptimizer (parameter optimization)
-  ├─ POFuncPlot (3D function visualization)
-  ├─ ContinuityOptimizer (segment merging)
-  ├─ ConnectionOptimizer (endpoint connection)
+  ├─ POFuncPlot (3D profile visualization)
+  ├─ ContinuityOptimizer (segment merging + gradient-assisted gap bridging)
   ├─ DetectorProfilePanel (high-level tuning + image analysis)
   ├─ AccuracyPanel (P/R/F1/sAP evaluation)
-  └─ LineAnalyser2D (detailed GT comparison)
+  └─ LineAnalyser2D (GT inspector)
 ```
 
 ### Key Components
 
 **Core (`src/`):**
 
-- [controlwindow.h](src/controlwindow.h) / [controlwindow.cpp](src/controlwindow.cpp) — Main application window, detector management, preset loading, signal hub
+- [analyzer.h](src/analyzer.h) / [analyzer.cpp](src/analyzer.cpp) — Main application window, detector management, preset loading, signal hub
 - [helpers.h](src/helpers.h) / [helpers.cpp](src/helpers.cpp) — Detector creation helpers, type definitions
 - [latool.h](src/latool.h) — Abstract base class for all tool panels
 - [help_button.hpp](src/help_button.hpp) — Reusable help button utility
 - [preprocessing.h](src/preprocessing.h) / [preprocessing.cpp](src/preprocessing.cpp) — Image loading, format conversion, scaling
-- [quiver.h](src/quiver.h) / [quiver.cpp](src/quiver.cpp) — Gradient vector field visualization
 - [main.cpp](src/main.cpp) — Application entry point, detector registration
 
 **Extensions (`extensions/`):** See [Analysis Tools](#analysis-tools) above for the full list with links to individual READMEs.
@@ -301,32 +297,30 @@ apps/line_analyzer/
 ├── README.md                   # This file
 ├── src/                        # Core application sources
 │   ├── main.cpp                # Entry point and detector registration
-│   ├── controlwindow.{h,cpp}   # Main window controller
+│   ├── analyzer.{h,cpp}   # Main window controller
 │   ├── helpers.{h,cpp}         # Detector creation helpers
 │   ├── latool.h                # Tool panel interface
 │   ├── help_button.hpp         # Help button utility
-│   ├── preprocessing.{h,cpp}   # Image preprocessing
-│   └── quiver.{h,cpp}         # Vector field display
+│   └── preprocessing.{h,cpp}   # Image preprocessing
 ├── ui/                         # Core UI layouts
-│   ├── controlwindow.ui
-│   ├── preprocessing.ui
-│   └── quiver.ui
+│   ├── analyzer.ui
+│   └── preprocessing.ui
 └── extensions/                 # Tool panel extensions
-    ├── profileanalyzer/        # Edge profile visualization
-    ├── precisionoptimizer/     # Sub-pixel optimization
-    ├── pofuncplot/             # 3D objective function plot
-    ├── continuityoptimizer/    # Segment merging
-    ├── connectionoptimizer/    # Endpoint connection
-    ├── detectorprofile/        # High-level parameter tuning
-    ├── imageanalyzer/          # Image property analysis
+    ├── profile_analyzer/        # Edge profile visualization
+    ├── precision_optimizer/     # Sub-pixel optimization
+    ├── 3d_profile_plot/        # 3D objective function plot
+    ├── continuity_optimizer/    # Continuity optimization (merge + gradient connection)
+    ├── quivers/                # Gradient vector field (quiver) visualization
+    ├── detector_profile/        # High-level parameter tuning
+    ├── image_analyzer/          # Image property analysis
     ├── accuracy/               # P/R/F1/sAP evaluation
-    └── lineanalyser2d/         # Detailed GT comparison
+    └── ground_truth_inspector/         # GT inspector
 ```
 
 ## Related Documentation
 
 - [Main README](../../README.md) - Project overview and licensing
-- [libs/algorithm](../../libs/algorithm/README.md) - Algorithm library (LineMerge, LineConnect, DetectorProfile, AccuracyMeasure)
+- [libs/algorithm](../../libs/algorithm/README.md) - Algorithm library (LineContinuityOptimizer, LineMerge, LineConnect, DetectorProfile, AccuracyMeasure)
 - [libs/lsd](../../libs/lsd/README.md) - LSD algorithms
 - [libs/edge](../../libs/edge/README.md) - Edge detection
 - [libs/imgproc](../../libs/imgproc/README.md) - Image processing

@@ -1,4 +1,5 @@
 #include "ground_truth_inspector.h"
+
 #include "help_button.hpp"
 
 #include <QMessageBox>

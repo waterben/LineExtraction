@@ -114,7 +114,7 @@ Bazel `py_wheel` target (`//python:lsfm_wheel`) produces a pip-installable wheel
 
 ### 2. Param Optimizer
 
-Automated parameter optimization for LSD algorithms over image databases. Implemented as `libs/algorithm/` with a C++ header-only library and Python bindings (`le_algorithm`). Components: `ParamOptimizer` (grid/random search), `AccuracyMeasure` (P/R/F1), `GroundTruthLoader` (CSV), `LineMerge`, `LineConnect`, `PrecisionOptimize` (dlib BFGS). 30 C++ tests, 20 Python tests. York Urban DB + Wireframe datasets with automatic GT conversion.
+Automated parameter optimization for LSD algorithms over image databases. Implemented as `libs/algorithm/` with a C++ header-only library and Python bindings (`le_algorithm`). Components: `ParamOptimizer` (grid/random search), `AccuracyMeasure` (P/R/F1), `GroundTruthLoader` (CSV), `LineContinuityOptimizer` (unified merge + gradient-assisted bridging), `LineMerge` (legacy), `LineConnect` (legacy), `PrecisionOptimize` (dlib BFGS). 30 C++ tests, 20 Python tests. York Urban DB + Wireframe datasets with automatic GT conversion.
 
 ### 14. Pre-trained Presets
 

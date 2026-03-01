@@ -1,0 +1,1707 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineAnalyser2D</class>
+ <widget class="QMainWindow" name="LineAnalyser2D">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>543</width>
+    <height>606</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>GT Inspector</string>
+  </property>
+  <widget class="QWidget" name="widget_main">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QHBoxLayout" name="layout_load_gt">
+      <item>
+       <widget class="QPushButton" name="pb_select">
+        <property name="text">
+         <string>Select Text File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="le_file_path">
+        <property name="text">
+         <string>None</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_options">
+        <property name="text">
+         <string>Options</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_load">
+        <property name="text">
+         <string>Load</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_load_easy">
+        <property name="toolTip">
+         <string>Load bundled easy example (single hexagon, no noise)</string>
+        </property>
+        <property name="text">
+         <string>Easy</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_load_hard">
+        <property name="toolTip">
+         <string>Load bundled challenge example (8 shapes, noise, varying contrast)</string>
+        </property>
+        <property name="text">
+         <string>Hard</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="layout_display">
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cb_uniform_data">
+        <property name="text">
+         <string>Uniform Data [0,1]</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Display</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="layout_tab">
+      <item>
+       <widget class="QTabWidget" name="tw_settings">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="tab_01_main">
+         <attribute name="title">
+          <string>Main</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLabel" name="gt_line_data">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>GT Line Data</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tw_gt_data">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <column>
+             <property name="text">
+              <string>angle</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>length</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>start_x</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>start_y</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>end_x</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>end_y</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="c_line_data">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Correct Line Data</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tw_cl_data">
+            <column>
+             <property name="text">
+              <string>angle</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>length</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>start_x</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>start_y</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>end_x</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>end_y</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>error</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>angle_diff</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>length_diff</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>dist_start</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>dist_end</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="layout_bottom">
+            <item>
+             <spacer name="spacer_bottom">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_gtline_plus_clines">
+              <property name="text">
+               <string>GTLine + CLine(s)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_clear_all">
+              <property name="text">
+               <string>Clear All</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_02_settings">
+         <attribute name="title">
+          <string>Settings</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <layout class="QVBoxLayout" name="layout_image_view">
+            <item>
+             <widget class="QLabel" name="label_image_view">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Image View:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_image">
+              <property name="text">
+               <string>Image</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_grid">
+              <property name="text">
+               <string>Grid</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_gt_data">
+              <property name="text">
+               <string>Ground Truth Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_all_lines">
+              <property name="text">
+               <string>Computed Lines</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_correct_lines">
+              <property name="text">
+               <string>Correct Lines</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="spacer_image_view">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="layout_image_source">
+            <item>
+             <widget class="QLabel" name="label_image_source">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Image Source:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cb_image_source"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_image_mode">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Image Mode:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cb_image_mode"/>
+            </item>
+            <item>
+             <spacer name="spacer_image_source">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_03_test">
+         <attribute name="title">
+          <string>CLData</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <layout class="QVBoxLayout" name="test_page">
+            <item>
+             <widget class="QLabel" name="label_threshold">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Threshold Distance (px):</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="dsb_distance_threshold">
+              <property name="maximum">
+               <double>500000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.500000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.500000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="layout_angle">
+              <item>
+               <widget class="QLabel" name="label_angle">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>Arial</family>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Angle (deg):</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="dsb_angle_threshold">
+                <property name="maximum">
+                 <double>180.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.500000000000000</double>
+                </property>
+                <property name="value">
+                 <double>4.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="layout_error">
+                <item>
+                 <layout class="QVBoxLayout" name="layout_inner_error">
+                  <item>
+                   <widget class="QLabel" name="label_error">
+                    <property name="font">
+                     <font>
+                      <family>Arial</family>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Error Value:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QDoubleSpinBox" name="dsb_error_threshold">
+                    <property name="maximum">
+                     <double>500000.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="layout_threshold_settings">
+                  <item>
+                   <widget class="QLabel" name="label_threshold_settings">
+                    <property name="font">
+                     <font>
+                      <family>Arial</family>
+                      <weight>75</weight>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Threshold Settings:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_check_distance">
+                    <property name="font">
+                     <font>
+                      <family>Ubuntu</family>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Check Distance</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_check_angle">
+                    <property name="font">
+                     <font>
+                      <family>Ubuntu</family>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Check Angle</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="cb_check_error_value">
+                    <property name="font">
+                     <font>
+                      <family>Ubuntu</family>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Check Error Value</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pb_compute_clines">
+                    <property name="text">
+                     <string>Compute Correct Lines</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="spacer_test_page">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_03_debug">
+         <attribute name="title">
+          <string>Debug</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+           <layout class="QHBoxLayout" name="layout_start_stop">
+            <item>
+             <spacer name="spacer_start_stop">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_debug_start">
+              <property name="text">
+               <string>Start Debug</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_debug_disable">
+              <property name="text">
+               <string>Disable Debug</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="layout_sel_gt_line">
+            <item>
+             <widget class="QLabel" name="label_sel_gt_line">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Select one Line as GT Line:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tw_debug_gtline_info">
+              <column>
+               <property name="text">
+                <string>angle</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_y</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="layout_lockin_gt">
+              <item>
+               <spacer name="spacer_lockin_gt">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pb_debug_lockin_gtline">
+                <property name="text">
+                 <string>Lock in Line</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="layout_sel_other_line">
+            <item>
+             <widget class="QLabel" name="label_sel_other_line">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Select one Other Line:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tw_debug_lines_info">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <column>
+               <property name="text">
+                <string>angle</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_y</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="layout_lockin_other_line">
+              <item>
+               <spacer name="spacer_other_line">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pb_debug_lockin_lines">
+                <property name="text">
+                 <string>Lock in Line</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="layout_result">
+            <item>
+             <widget class="QLabel" name="label_result">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Result:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tw_debug_result_info">
+              <column>
+               <property name="text">
+                <string>error</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>angle_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_start</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_end</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="layout_reset_process">
+            <item>
+             <spacer name="spacer_reset_process">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_debug_reset">
+              <property name="text">
+               <string>Reset</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_debug_process">
+              <property name="text">
+               <string>Process</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_04_analyse">
+         <attribute name="title">
+          <string>Analysis</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <layout class="QHBoxLayout" name="layout_analysis_start_disable">
+            <item>
+             <spacer name="spacer_analysis_start_disable">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_analysis_start">
+              <property name="text">
+               <string>Start Analysis</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_analysis_disable">
+              <property name="text">
+               <string>Disable Analysis</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="layout_analysis_settings">
+            <item>
+             <widget class="QCheckBox" name="cb_analysis_cur_lines">
+              <property name="text">
+               <string>Current Lines</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_analysis_old_lines">
+              <property name="text">
+               <string>Old Lines</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="cb_analysis_gt_lines">
+              <property name="text">
+               <string>Ground Truth</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="layout_analysis_line_info">
+            <item>
+             <widget class="QLabel" name="label_old_line_info">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Old CLines Info:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tw_analysis_old">
+              <column>
+               <property name="text">
+                <string>angle</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>error</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>angle_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_start</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_end</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_cur_line_info">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Current CLines Info:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="tw_analysis_cur">
+              <column>
+               <property name="text">
+                <string>angle</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>start_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_x</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>end_y</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>error</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>angle_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>length_diff</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_start</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>dist_end</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="layout_bottom_buttons">
+            <item>
+             <spacer name="spacer_bottom_buttons">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_analysis_optimizer">
+              <property name="text">
+               <string>Optimizer</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_analysis_freez_all">
+              <property name="text">
+               <string>Freez All</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_analysis_save">
+              <property name="text">
+               <string>Save Information</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayImageView()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>532</x>
+     <y>71</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>320</x>
+     <y>78</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_select</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>selectGroundTruthData()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>14</x>
+     <y>18</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>21</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_load</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>loadGroundTruthData()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>532</x>
+     <y>36</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>326</x>
+     <y>8</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_image_mode</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>updateSourceOptions()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>164</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>391</x>
+     <y>333</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dsb_distance_threshold</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>computeCorrectLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>157</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_clear_all</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>clearOtherLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>520</x>
+     <y>583</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>560</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_gt_data</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayGTLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>259</x>
+     <y>267</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_image</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayImage()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>125</x>
+     <y>131</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_grid</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayGrid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>185</x>
+     <y>156</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_compute_clines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>computeCorrectLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>439</x>
+     <y>252</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dsb_angle_threshold</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>computeCorrectLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>215</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_correct_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayCorrectLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>220</x>
+     <y>211</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dsb_error_threshold</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>computeCorrectLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>440</x>
+     <y>306</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_image_source</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displaySource()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>164</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>439</x>
+     <y>146</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_all_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayAllLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>184</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_start</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>enableDebugSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>441</x>
+     <y>129</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_lockin_gtline</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>lockInGTLine()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>153</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>460</x>
+     <y>269</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_lockin_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>lockInOtherLine()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>157</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>443</x>
+     <y>393</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_process</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>processDebugData()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>165</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>452</x>
+     <y>544</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_reset</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>resetDebugSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>165</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>444</x>
+     <y>496</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_debug_disable</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>disableDebugSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>441</x>
+     <y>101</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_gtline_plus_clines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>manageGTandCLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>284</x>
+     <y>580</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>443</x>
+     <y>486</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_check_distance</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>manageThresholdSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>446</x>
+     <y>353</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_check_angle</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>manageThresholdSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>441</x>
+     <y>388</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_check_error_value</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>manageThresholdSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>446</x>
+     <y>418</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_analysis_start</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>enableAnalysisSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>438</x>
+     <y>95</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_analysis_disable</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>disableAnalysisSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>149</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>443</x>
+     <y>82</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_analysis_old_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayOldCLines()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>154</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>93</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_analysis_cur_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayCLinesAnalysis()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>42</x>
+     <y>154</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>170</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cb_analysis_gt_lines</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>displayGTLinesAnalysis()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>154</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>442</x>
+     <y>185</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_analysis_optimizer</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>showOptimizer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>164</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>199</x>
+     <y>601</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_analysis_save</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>saveAnalysis()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>164</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>446</x>
+     <y>524</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_options</sender>
+   <signal>clicked()</signal>
+   <receiver>LineAnalyser2D</receiver>
+   <slot>openAnalyserOptions()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>421</x>
+     <y>27</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>451</x>
+     <y>2</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>selectGroundTruthData()</slot>
+  <slot>loadGroundTruthData()</slot>
+  <slot>displayImageView()</slot>
+  <slot>calculateUniformData()</slot>
+  <slot>computeCorrectLines()</slot>
+  <slot>showCLinesInTable()</slot>
+  <slot>displayGrid()</slot>
+  <slot>displayAllLines()</slot>
+  <slot>displayCorrectLines()</slot>
+  <slot>displayGTLines()</slot>
+  <slot>clearSelection()</slot>
+  <slot>displayImage()</slot>
+  <slot>clearOtherLines()</slot>
+  <slot>displaySource()</slot>
+  <slot>updateSourceOptions()</slot>
+  <slot>enableDebugSettings()</slot>
+  <slot>lockInGTLine()</slot>
+  <slot>lockInOtherLine()</slot>
+  <slot>processDebugData()</slot>
+  <slot>resetDebugSettings()</slot>
+  <slot>disableDebugSettings()</slot>
+  <slot>manageGTandCLines()</slot>
+  <slot>manageThresholdSettings()</slot>
+  <slot>enableAnalysisSettings()</slot>
+  <slot>disableAnalysisSettings()</slot>
+  <slot>showOptimizer()</slot>
+  <slot>displayOldCLines()</slot>
+  <slot>displayCLinesAnalysis()</slot>
+  <slot>displayGTLinesAnalysis()</slot>
+  <slot>saveAnalysis()</slot>
+  <slot>openAnalyserOptions()</slot>
+  <slot>loadEasyExample()</slot>
+  <slot>loadHardExample()</slot>
+ </slots>
+</ui>

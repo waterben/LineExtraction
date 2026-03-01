@@ -34,14 +34,16 @@ class LineConnect : public ValueManager {
   using LineSegmentVector = std::vector<LineSegmentType>;
 
   /// @brief Construct with default parameters.
-  LineConnect() : ValueManager(), max_radius_(15), accuracy_(2), threshold_(10) { init(); }
+  LineConnect() : ValueManager(), max_radius_(15), accuracy_(2), threshold_(10), max_angle_(0) { init(); }
 
   /// @brief Construct with explicit parameters.
   /// @param max_radius Maximum distance between endpoints to consider connection.
   /// @param accuracy Sampling step along the connecting path.
   /// @param threshold Minimum average gradient magnitude along the connection.
-  LineConnect(FT max_radius, FT accuracy, FT threshold)
-      : ValueManager(), max_radius_(max_radius), accuracy_(accuracy), threshold_(threshold) {
+  /// @param max_angle Maximum angle difference in degrees between two segments
+  ///        to consider connection. 0 disables the check (default).
+  LineConnect(FT max_radius, FT accuracy, FT threshold, FT max_angle = 0)
+      : ValueManager(), max_radius_(max_radius), accuracy_(accuracy), threshold_(threshold), max_angle_(max_angle) {
     init();
   }
 
@@ -132,6 +134,7 @@ class LineConnect : public ValueManager {
   FT max_radius_;  ///< Maximum endpoint distance for connection candidates.
   FT accuracy_;    ///< Sampling step along the connecting path.
   FT threshold_;   ///< Minimum average gradient magnitude for connection.
+  FT max_angle_;   ///< Maximum angle difference in degrees (0 = disabled).
 
   /// @brief Register parameters with ValueManager.
   void init() {
@@ -156,6 +159,13 @@ class LineConnect : public ValueManager {
           return Value(static_cast<double>(threshold_));
         },
         "Minimum average gradient magnitude for connection");
+    this->add(
+        "max_angle",
+        [this](const Value& v) -> Value {
+          if (v.type()) max_angle_ = static_cast<FT>(v.getDouble());
+          return Value(static_cast<double>(max_angle_));
+        },
+        "Maximum angle difference in degrees (0 = disabled)");
   }
 
   /// @brief Evaluate the gradient response along a potential connection.
@@ -174,6 +184,24 @@ class LineConnect : public ValueManager {
                          const cv::Mat& magnitude,
                          int& config) const {
     using point_type = typename LineSegmentType::point_type;
+
+    // Angle check: reject pairs whose directions differ too much.
+    // Direction is undirected (normalized to 0..PI/2).
+    if (max_angle_ > static_cast<FT>(0)) {
+      FT angle_a = std::atan2(getY(a.endPoint()) - getY(a.startPoint()), getX(a.endPoint()) - getX(a.startPoint()));
+      FT angle_b = std::atan2(getY(b.endPoint()) - getY(b.startPoint()), getX(b.endPoint()) - getX(b.startPoint()));
+      FT angle_diff = std::abs(angle_a - angle_b);
+      if (angle_diff > static_cast<FT>(CV_PI)) {
+        angle_diff = static_cast<FT>(2 * CV_PI) - angle_diff;
+      }
+      // Normalize to 0..PI/2 (undirected segments)
+      if (angle_diff > static_cast<FT>(CV_PI / 2)) {
+        angle_diff = static_cast<FT>(CV_PI) - angle_diff;
+      }
+      FT angle_deg = angle_diff * static_cast<FT>(180.0 / CV_PI);
+      if (angle_deg > max_angle_) return static_cast<FT>(0);
+    }
+
     struct PointPair {
       point_type first;
       point_type second;

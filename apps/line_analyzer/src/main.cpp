@@ -1,13 +1,11 @@
+#include "3d_profile_plot.h"
 #include "accuracypanel.h"
-#include "connectionoptimizer.h"
-#include "continuityoptimizer.h"
-#include "controlwindow.h"
-#include "detectorprofilepanel.h"
+#include "analyzer.h"
+#include "continuity_optimizer.h"
+#include "ground_truth_inspector.h"
 #include "helpers.h"
-#include "lineanalyser2d.h"
-#include "pofuncplot.h"
-#include "precisionoptimizer.h"
-#include "profileanalyzer.h"
+#include "precision_optimizer.h"
+#include "profile_analyzer.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -72,7 +70,7 @@ class SafeApplication : public QApplication {
 
 int main(int argc, char* argv[]) {
   SafeApplication a(argc, argv);
-  ControlWindow w;
+  Analyzer w;
 
   w.addDetector(createDetectorES<lsfm::LsdEL<float_type, cv::Point_>>("LSD EL", D_MAG_SQR));
   w.addDetector(
@@ -219,12 +217,10 @@ int main(int argc, char* argv[]) {
                           lsfm::NonMaximaSuppression<short, int, float_type, lsfm::FastNMS4<short, int, float_type>>>>>(
           "LSD EL RCMG", D_COLOR_INPUT));
 
-  w.addTool<ProfileAnalyzer>();
   w.addTool<PrecisionOptimizer>();
-  w.addTool<POFuncPlot>();
   w.addTool<ContinuityOptimizer>();
-  w.addTool<ConnectionOptimizer>();
-  w.addTool<DetectorProfilePanel>();
+  w.addTool<ProfileAnalyzer>();
+  w.addTool<POFuncPlot>();
   w.addTool<AccuracyPanel>();
   w.addTool<LineAnalyser2D>();
 

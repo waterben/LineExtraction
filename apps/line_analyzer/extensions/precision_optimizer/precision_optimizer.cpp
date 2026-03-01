@@ -1,5 +1,6 @@
-#include "help_button.hpp"
 #include "precision_optimizer.h"
+
+#include "help_button.hpp"
 
 #include <QMessageBox>
 #include <cmath>

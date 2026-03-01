@@ -1,6 +1,7 @@
+#include "profile_analyzer.h"
+
 #include "analyzer.h"
 #include "help_button.hpp"
-#include "profile_analyzer.h"
 #include "ui_profile_analyzer.h"
 #include <imgproc/mean.hpp>
 

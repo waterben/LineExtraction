@@ -1,5 +1,6 @@
-#include "help_button.hpp"
 #include "image_analyzer_panel.h"
+
+#include "help_button.hpp"
 #include <algorithm/image_analyzer.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 

@@ -62,36 +62,33 @@ Each row defines one ground truth line segment with sub-pixel endpoints. Multipl
 ### Quick Evaluation with Bundled Examples
 
 1. **Open the Accuracy Measure panel** from the toolbar / menu.
-2. **Click "Easy"** to load the bundled hexagon example. This loads both the ground truth CSV and the matching image into the main ControlWindow automatically.
-3. **Run detection** in the ControlWindow (select a detector, click **Process**).
+2. **Click "Easy"** to load the bundled hexagon example. This loads both the ground truth CSV and the matching image into the main Analyzer automatically.
+3. **Run detection** in the Analyzer (select a detector, click **Process**).
 4. **Click "Evaluate"** in the Accuracy panel. Precision, Recall, F1, sAP, and raw counts (TP/FP/FN) are displayed.
 5. **Try "Hard"** to load the multi-shape challenge scene (31 GT segments, varying contrast, noise). Re-detect and evaluate to see how the detector handles harder conditions.
 
 ### Evaluation with Custom Ground Truth
 
-1. **Load an image** in the ControlWindow and **run detection**.
+1. **Load an image** in the Analyzer and **run detection**.
 2. **Click "Browse..."** in the Accuracy panel to open a file dialog.
 3. **Select a ground truth CSV file.** The format is `image_name,x1,y1,x2,y2` with a header row. Multiple images can be stored in one CSV.
 4. **(Optional) Enter an image name filter** in the text field — this selects which image entry from the CSV to use. Leave empty for auto-selection (first entry, or match by filename).
 5. **Adjust the Match Threshold** (default 5.0 px) — this is the maximum endpoint distance for a detected segment to count as a true positive.
 6. **Click "Evaluate"** to compute all metrics.
-7. **Iterate:** Change detector parameters or apply a preset in the ControlWindow, click **Process** again, then click **Evaluate** again to compare.
+7. **Iterate:** Change detector parameters or apply a preset in the Analyzer, click **Process** again, then click **Evaluate** again to compare.
 
 ### Comparing Detector Configurations
 
 1. **Load a GT file** (bundled or custom) as above.
 2. **Select detector A**, run detection, click **Evaluate** — note the F1 and sAP scores.
 3. **Switch to detector B** (or apply a different preset), run detection, click **Evaluate** — compare the new scores.
-4. **Repeat** for as many configurations as needed. For a more detailed per-segment comparison, use the [Line Analyser 2D](../lineanalyser2d/README.md) panel instead.
+4. **Repeat** for as many configurations as needed. For a more detailed per-segment comparison, use the [GT Inspector](../ground_truth_inspector/README.md) panel instead.
 
 ### Post-Processing Evaluation
 
 1. **Detect lines** and **Evaluate** to establish a baseline.
-2. **Open the [Precision Optimizer](../precisionoptimizer/README.md)** and run **Optimize All** to refine line positions.
-3. **Re-evaluate** in the Accuracy panel — compare P/R/F1/sAP before and after optimization.
-4. **Apply [Continuity Optimizer](../continuityoptimizer/README.md)** (merge) and/or **[Connection Optimizer](../connectionoptimizer/README.md)** (connect), then re-evaluate again to measure the effect of each post-processing step.
-
-## Bundled Example Datasets
+2. **Open the [Precision Optimizer](../precision_optimizer/README.md)** and run **Optimize All** to refine line positions.
+3. **Re-evaluate** in the Accuracy panel — compare P/R/F1/sAP before and aft opti4. **Apply [Continuity Optimizer](../continuity_optimizer/README.md)** (merge and optionally gradient connection), then re-evaluate again to measure the effect of post-processing.## Bundled Example Datasets
 
 Two bundled synthetic datasets are available for quick evaluation without external files.
 
@@ -154,7 +151,7 @@ To regenerate or customize: `python tools/scripts/generate_example_gt.py`
 
 ## Use Case
 
-Quick quantitative comparison of different detector configurations or parameter presets. Use this panel when you need P/R/F1 numbers for a report or to compare before/after. For detailed per-segment analysis, use the [Line Analyser 2D](../lineanalyser2d/README.md) extension instead.
+Quick quantitative comparison of different detector configurations or parameter presets. Use this panel when you need P/R/F1 numbers for a report or to compare before/after. For detailed per-segment analysis, use the [GT Inspector](../ground_truth_inspector/README.md) extension instead.
 
 ## Algorithm
 
@@ -170,5 +167,5 @@ See the [Algorithm Library documentation](../../../../libs/algorithm/README.md#a
 
 ## Dependencies
 
-- **ControlWindow** — detected line data, image sources
+- **Analyzer** — detected line data, image sources
 - **libs/algorithm** — [`AccuracyMeasure`](../../../../libs/algorithm/README.md#accuracymeasure), [`GroundTruthLoader`](../../../../libs/algorithm/README.md#groundtruthloader)

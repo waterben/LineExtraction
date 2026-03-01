@@ -1,4 +1,5 @@
 #include "detector_profile_panel.h"
+
 #include "help_button.hpp"
 #include <algorithm/image_analyzer.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

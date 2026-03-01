@@ -1,4 +1,5 @@
 #include "analyser_options.h"
+
 #include "help_button.hpp"
 
 AnalyserOptions::AnalyserOptions(QWidget* parent) : QMainWindow(parent), ui(new Ui::AnalyserOptions) {

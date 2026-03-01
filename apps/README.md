@@ -49,7 +49,8 @@ make
 
 - **Profile Analyzer** - Analyze edge profiles and sub-pixel precision
 - **Precision Optimizer** - Optimize detector parameters for precision
-- **PO Function Plot** - Visualize optimization functions
+- **3D Profile Plot** - Visualize optimization functions
+- **Continuity Optimizer** - Merge and connect line segments
 
 ## Related Documentation
 

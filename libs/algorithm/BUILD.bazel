@@ -1,8 +1,9 @@
 """lib_algorithm - Algorithm utilities library
 
 Provides general-purpose algorithm tools:
-- LineMerge: Merge collinear/near-collinear line segments
-- LineConnect: Connect nearby line segments using gradient evidence
+- LineContinuityOptimizer: Unified continuity optimizer (merge + gradient)
+- LineMerge: Merge collinear/near-collinear line segments (legacy)
+- LineConnect: Connect nearby line segments using gradient evidence (legacy)
 - AccuracyMeasure: Precision/Recall/F1 for line segment evaluation
 - GroundTruthLoader: Load ground truth annotations (CSV format)
 - ParamOptimizer: Parameter search framework (Grid + Random search)

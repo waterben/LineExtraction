@@ -48,7 +48,7 @@ AccuracyPanel::AccuracyPanel(QWidget* parent) : LATool("Accuracy Measure", paren
 
 AccuracyPanel::~AccuracyPanel() { delete ui; }
 
-void AccuracyPanel::connectTools(ControlWindow* w) { ctrl = w; }
+void AccuracyPanel::connectTools(Analyzer* w) { ctrl = w; }
 
 // ---------------------------------------------------------------------------
 // Slots
@@ -122,6 +122,10 @@ void AccuracyPanel::evaluate() {
         QString("%1 / %2 / %3").arg(result.true_positives).arg(result.false_positives).arg(result.false_negatives));
     ui->lbl_gt_count->setText(QString::number(gt_segs->size()));
 
+    std::cout << "Accuracy evaluation: P=" << result.precision << " R=" << result.recall << " F1=" << result.f1
+              << " sAP=" << sap << " (TP/FP/FN=" << result.true_positives << "/" << result.false_positives << "/"
+              << result.false_negatives << ")" << std::endl;
+
     setStatus(QString("Evaluated %1 detected vs %2 GT segments.").arg(detected.size()).arg(gt_segs->size()));
   } catch (const std::exception& ex) {
     std::cerr << "Evaluation failed: " << ex.what() << std::endl;
@@ -176,7 +180,7 @@ void AccuracyPanel::loadBundledExample(const std::string& csv_relative,
     return;
   }
 
-  // Also load the matching image into the ControlWindow.
+  // Also load the matching image into the Analyzer.
   if (ctrl != nullptr) {
     std::string img_path = findResourcePath(image_name);
     if (!img_path.empty()) {
@@ -209,7 +213,7 @@ const std::vector<lsfm::LineSegment<double>>* AccuracyPanel::findGroundTruth() c
   return nullptr;
 }
 
-std::vector<lsfm::LineSegment<double>> AccuracyPanel::convertLines(const ControlWindow::LineVector& app_lines) {
+std::vector<lsfm::LineSegment<double>> AccuracyPanel::convertLines(const Analyzer::LineVector& app_lines) {
   std::vector<lsfm::LineSegment<double>> result;
   result.reserve(app_lines.size());
   for (const auto& line : app_lines) {
@@ -228,7 +232,7 @@ void AccuracyPanel::setStatus(const QString& msg) { ui->lbl_status->setText(msg)
 std::string AccuracyPanel::findResourcePath(const std::string& relative_path) {
   namespace fs = std::filesystem;
 
-  // Candidate base directories relative to cwd (mirrors ControlWindow::findResources).
+  // Candidate base directories relative to cwd (mirrors Analyzer::findResources).
   const std::vector<std::string> candidates = {
       "resources",
       "../resources",

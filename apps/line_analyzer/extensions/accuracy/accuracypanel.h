@@ -1,6 +1,6 @@
 #pragma once
 
-#include "controlwindow.h"
+#include "analyzer.h"
 #include "ui_accuracypanel.h"
 #include <algorithm/accuracy_measure.hpp>
 #include <algorithm/ground_truth.hpp>
@@ -11,7 +11,7 @@
 /// @brief Tool panel for evaluating line detection accuracy.
 ///
 /// Loads ground truth line segments from a CSV file and compares them
-/// against the currently detected lines from the ControlWindow.
+/// against the currently detected lines from the Analyzer.
 /// Displays precision, recall, F1-score, sAP, and match counts.
 ///
 /// A bundled example ground truth (example_gt.csv for example_lines.png)
@@ -20,7 +20,7 @@ class AccuracyPanel : public LATool {
   Q_OBJECT
 
   Ui::AccuracyPanel* ui{nullptr};
-  ControlWindow* ctrl{nullptr};
+  Analyzer* ctrl{nullptr};
 
   /// @brief Loaded ground truth entries (one per image in the CSV).
   std::vector<lsfm::GroundTruthEntry> gt_entries;
@@ -29,7 +29,7 @@ class AccuracyPanel : public LATool {
   explicit AccuracyPanel(QWidget* parent = nullptr);
   ~AccuracyPanel();
 
-  void connectTools(ControlWindow* w) override;
+  void connectTools(Analyzer* w) override;
 
  public slots:
   /// @brief Open a file dialog to select a ground truth CSV.
@@ -39,13 +39,13 @@ class AccuracyPanel : public LATool {
   ///
   /// Searches standard resource locations (Bazel runfiles, relative paths)
   /// for the shipped example CSV. Also loads the matching example_lines.png
-  /// image into the ControlWindow if found.
+  /// image into the Analyzer if found.
   void loadExampleGroundTruth();
 
   /// @brief Load the bundled challenge ground truth (example_challenge_gt.csv).
   ///
   /// The challenge scene has 8 shapes with varying contrast plus noise.
-  /// Also loads the matching example_challenge.png into the ControlWindow.
+  /// Also loads the matching example_challenge.png into the Analyzer.
   void loadChallengeGroundTruth();
 
   /// @brief Evaluate detected lines against the loaded ground truth.
@@ -64,9 +64,9 @@ class AccuracyPanel : public LATool {
   const std::vector<lsfm::LineSegment<double>>* findGroundTruth() const;
 
   /// @brief Convert app line segments to the Vec2-based type used by AccuracyMeasure.
-  /// @param app_lines Lines from ControlWindow (cv::Point_ based).
+  /// @param app_lines Lines from Analyzer (cv::Point_ based).
   /// @return Converted line segments.
-  static std::vector<lsfm::LineSegment<double>> convertLines(const ControlWindow::LineVector& app_lines);
+  static std::vector<lsfm::LineSegment<double>> convertLines(const Analyzer::LineVector& app_lines);
 
   /// @brief Load a bundled example (CSV + image) by name.
   /// @param csv_relative CSV path relative to resources/ (e.g., "datasets/ground_truth/example_gt.csv").
