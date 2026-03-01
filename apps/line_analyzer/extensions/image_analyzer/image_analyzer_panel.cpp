@@ -29,10 +29,10 @@ ImageAnalyzerPanel::ImageAnalyzerPanel(QWidget* parent)
   ui->lbl_dynamic_range->setToolTip(
       tr("Ratio of the effective intensity range to the "
          "theoretical maximum (typically 255)."));
-  ui->lbl_detail->setToolTip(tr("Suggested Detail knob value for the Detector Profile."));
-  ui->lbl_gap_tolerance->setToolTip(tr("Suggested Gap Tolerance knob value."));
-  ui->lbl_min_length->setToolTip(tr("Suggested Min Length knob value."));
-  ui->lbl_precision->setToolTip(tr("Suggested Precision knob value."));
+  ui->lbl_detail->setToolTip(tr("Suggested Detail slider value for the Detector Profile."));
+  ui->lbl_gap_tolerance->setToolTip(tr("Suggested Gap Tolerance slider value."));
+  ui->lbl_min_length->setToolTip(tr("Suggested Min Length slider value."));
+  ui->lbl_precision->setToolTip(tr("Suggested Precision slider value."));
   ui->lbl_contrast_factor->setToolTip(tr("Suggested contrast-dependent threshold multiplier."));
   ui->lbl_noise_factor->setToolTip(tr("Suggested noise-dependent threshold multiplier."));
   ui->pb_analyze->setToolTip(tr("Run image analysis and update all property fields."));

@@ -15,7 +15,7 @@ DetectorProfilePanel::DetectorProfilePanel(QWidget* parent)
 
   // Tooltips for the panel and its controls.
   setToolTip(
-      tr("High-level detector tuning via 4 percentage knobs and 2 "
+      tr("High-level detector tuning via 4 percentage sliders and 2 "
          "adaptive factors. Use 'Auto from Image' to derive settings "
          "from the current image, then 'Apply to Detector' to push them."));
   ui->slider_detail->setToolTip(
@@ -37,10 +37,10 @@ DetectorProfilePanel::DetectorProfilePanel(QWidget* parent)
       tr("Multiplier for noise-related thresholds. Increase for "
          "noisier images; decrease for clean images."));
   ui->pb_auto->setToolTip(
-      tr("Analyze the current source image and set all knobs and "
+      tr("Analyze the current source image and set all sliders and "
          "factors to values suggested by ImageAnalyzer."));
   ui->pb_apply->setToolTip(tr("Apply the current profile to the active detector."));
-  ui->pb_reset->setToolTip(tr("Reset all knobs to 50%% and factors to 1.0."));
+  ui->pb_reset->setToolTip(tr("Reset all sliders to 50%% and factors to 1.0."));
 
   // Image Properties group tooltips.
   ui->lbl_img_contrast->setToolTip(tr("Michelson contrast of the source image."));
@@ -76,7 +76,7 @@ void DetectorProfilePanel::autoFromImage() {
     auto hints = props.suggest_profile();
     double elapsed = (double(cv::getTickCount()) - stime) * 1000 / cv::getTickFrequency();
 
-    // Push knob values to the UI (slider<->spinbox are already connected).
+    // Push slider values to the UI (slider<->spinbox are already connected).
     ui->slider_detail->setValue(static_cast<int>(hints.detail));
     ui->slider_gap_tolerance->setValue(static_cast<int>(hints.gap_tolerance));
     ui->slider_min_length->setValue(static_cast<int>(hints.min_length));

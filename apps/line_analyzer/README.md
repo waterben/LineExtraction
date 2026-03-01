@@ -62,7 +62,7 @@ Each tool opens as a separate dockable window and connects to the main Analyzer 
 | [Precision Optimizer](extensions/precision_optimizer/README.md) | Sub-pixel line localization via numerical optimization |
 | [3D Profile Plot](extensions/3d_profile_plot/README.md) | 3D surface plot of optimization objective |
 | [Continuity Optimizer](extensions/continuity_optimizer/README.md) | Merge collinear fragments and bridge endpoint gaps |
-| [Detector Profile](extensions/detector_profile/README.md) | High-level parameter tuning via percentage knobs |
+| [Detector Profile](extensions/detector_profile/README.md) | High-level parameter tuning via percentage sliders |
 | [Image Analyzer](extensions/image_analyzer/README.md) | Image property analysis and profile suggestions |
 | [Accuracy Measure](extensions/accuracy/README.md) | P/R/F1/sAP evaluation against ground truth |
 | [GT Inspector](extensions/ground_truth_inspector/README.md) | Interactive per-segment GT comparison |

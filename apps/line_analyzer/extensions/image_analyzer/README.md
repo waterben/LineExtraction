@@ -73,7 +73,7 @@ Based on the computed image properties, the panel suggests values for the [Detec
 
 1. **Open the Image Analyzer** and note the suggested values (Detail, Gap Tolerance, Min Length, Precision, Contrast Factor, Noise Factor).
 2. **Open the [Detector Profile](../detector_profile/README.md) panel.**
-3. **Manually enter** the suggested values into the corresponding knobs and factor fields. Alternatively, click **"Auto from Image"** in the Detector Profile panel, which performs the same analysis internally and sets the values automatically.
+3. **Manually enter** the suggested values into the corresponding sliders and factor fields. Alternatively, click **"Auto from Image"** in the Detector Profile panel, which performs the same analysis internally and sets the values automatically.
 4. **Apply** and **Process** as described in the Detector Profile workflow.
 
 ## Use Case

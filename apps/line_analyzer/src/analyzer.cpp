@@ -323,7 +323,7 @@ Analyzer::Analyzer(QWidget* parent)
     pbDetectorProfile = new QPushButton(tr("Profile"), this);
     pbDetectorProfile->setToolTip(
         tr("Open the Detector Profile panel for high-level\n"
-           "detector tuning via percentage knobs and adaptive factors."));
+           "detector tuning via percentage sliders and adaptive factors."));
     pbDetectorProfile->setEnabled(false);
     const int reset_idx = ui->layout_detector_params->indexOf(ui->pb_detector_params_reset);
     ui->layout_detector_params->insertWidget(reset_idx, pbDetectorProfile);

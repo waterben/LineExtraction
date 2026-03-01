@@ -42,9 +42,12 @@
     <item>
      <widget class="QGroupBox" name="group_knobs">
       <property name="title">
-       <string>Profile Knobs</string>
+       <string>Profile Sliders</string>
       </property>
       <layout class="QFormLayout" name="formLayout_knobs">
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label_detail">
          <property name="text">

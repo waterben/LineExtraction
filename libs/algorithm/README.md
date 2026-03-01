@@ -45,9 +45,9 @@ ParamOptimizer                — orchestrates search + evaluation
 
 ImageAnalyzer                 — contrast/noise/edge/range analysis
 ImageProperties               — measured image characteristics
-ProfileHints                  — suggested knob values + adaptive factors
+ProfileHints                  — suggested slider values + adaptive factors
 
-DetectorProfile               — 4 percentage knobs → detector parameters
+DetectorProfile               — 4 percentage sliders → detector parameters
   └── maps to all 9 LSD detectors (CC, CP, Burns, FBW, FGioi,
                                     EDLZ, EL, EP, HoughP)
 ```
@@ -451,7 +451,7 @@ auto errors = optimizer.optimize_copy(gradient_magnitude, segments, refined);
 
 Analyzes an image to extract measurable properties (contrast, noise level,
 edge density, dynamic range), all normalized to [0, 1]. These properties
-can be used to suggest adaptive detector profile knob values via
+can be used to suggest adaptive detector profile slider values via
 `suggest_profile()`.
 
 The analyzer accepts both grayscale and color images (auto-converted
@@ -471,7 +471,7 @@ to 8-bit grayscale internally).
 #### Profile Hints
 
 `ImageProperties::suggest_profile()` returns a `ProfileHints` struct
-with heuristic knob suggestions and adaptive scaling factors:
+with heuristic slider suggestions and adaptive scaling factors:
 
 | Field | Range | Derivation Logic |
 |-------|-------|------------------|
@@ -495,7 +495,7 @@ std::cout << "Contrast:      " << props.contrast      << "\n"
           << "Edge density:  " << props.edge_density   << "\n"
           << "Dynamic range: " << props.dynamic_range  << "\n";
 
-// Get suggested profile knobs based on image analysis
+// Get suggested profile sliders based on image analysis
 lsfm::ProfileHints hints = props.suggest_profile();
 std::cout << "Suggested detail:    " << hints.detail         << "%\n"
           << "Suggested gap_tol:   " << hints.gap_tolerance  << "%\n"
@@ -507,16 +507,16 @@ std::cout << "Suggested detail:    " << hints.detail         << "%\n"
 
 ### DetectorProfile
 
-Translates 4 intuitive percentage knobs into concrete detector parameters
+Translates 4 intuitive percentage sliders into concrete detector parameters
 for all 9 supported LSD detectors.  This abstraction lets users control
 detection behaviour without knowing the internal parameter names of each
 algorithm.
 
 > **GUI:** The [Detector Profile](../../apps/line_analyzer/extensions/detector_profile/README.md) panel in the Line Analyzer app provides an interactive UI with sliders for this algorithm.
 
-#### Knob Semantics
+#### Slider Semantics
 
-| Knob | Range | Low (0%) | High (100%) |
+| Slider | Range | Low (0%) | High (100%) |
 |------|-------|----------|-------------|
 | `detail` | 0–100 | Coarse / salient edges only | Fine details included |
 | `gap_tolerance` | 0–100 | No gaps allowed — strict chaining | Very tolerant of gaps |
@@ -534,16 +534,16 @@ two multiplicative factors that modulate the parameter translation:
 | `noise_factor` | 0.5–2.0 | Scales threshold-like parameters. >1 for noisy images. |
 
 These factors are multiplied into threshold / gradient parameters during
-`to_params()` so that the same knob settings produce adapted behaviour
+`to_params()` so that the same slider settings produce adapted behaviour
 on different image types.
 
-#### How the Knob Mapping Works
+#### How the Slider Mapping Works
 
 Each of the 9 detectors has its own mapping function (`map_lsd_cc()`, etc.)
-that translates the 4 human-readable knobs to a `ParamConfig` vector:
+that translates the 4 human-readable sliders to a `ParamConfig` vector:
 
-1. The knob percentage is normalized to `[0, 1]`.
-2. Linear interpolation (`lerp`) maps each knob to the detector-specific
+1. The slider percentage is normalized to `[0, 1]`.
+2. Linear interpolation (`lerp`) maps each slider to the detector-specific
    parameter range (e.g., `detail 0%→100%` maps `quant_error 3.0→0.5`
    for LsdFGioi).
 3. Threshold-related parameters are multiplied by the combined adaptive
@@ -570,7 +570,7 @@ that translates the 4 human-readable knobs to a `ParamConfig` vector:
 ```cpp
 #include <algorithm/detector_profile.hpp>
 
-// Option 1: Manual knob values
+// Option 1: Manual slider values
 lsfm::DetectorProfile profile(/*detail=*/70, /*gap_tolerance=*/30,
                                /*min_length=*/50, /*precision=*/80);
 
@@ -603,13 +603,13 @@ The typical image-adaptive workflow is:
 // 1. Analyze the image
 auto props = lsfm::ImageAnalyzer::analyze(image);
 
-// 2. Get suggested knobs + adaptive factors
+// 2. Get suggested sliders + adaptive factors
 auto hints = props.suggest_profile();
 
 // 3. Create profile (carries factors automatically)
 auto profile = lsfm::DetectorProfile::from_hints(hints);
 
-// 4. (Optional) Override individual knobs
+// 4. (Optional) Override individual sliders
 profile.set_detail(80);  // user wants more detail
 
 // 5. Apply to any number of detectors
@@ -675,7 +675,7 @@ img = np.random.randint(0, 255, (480, 640), dtype=np.uint8)
 props = alg.ImageAnalyzer.analyze(img)
 print(f"Contrast={props.contrast:.2f}, Noise={props.noise_level:.2f}")
 
-# Suggest adaptive profile knobs
+# Suggest adaptive profile sliders
 hints = props.suggest_profile()
 print(f"Suggested detail: {hints.detail:.0f}%")
 
