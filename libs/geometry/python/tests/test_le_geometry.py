@@ -8,6 +8,8 @@ Tests cover:
   - Drawing utilities
   - Visualization helpers
   - LineOptimizer functions
+  - 3D geometry: Line3, LineSegment3, Plane, Pose
+  - Camera models: Camera, CameraHom, CameraPluecker, Camera2P, CameraCV
   - Float (default) and double (_f64) presets
 """
 
@@ -560,3 +562,492 @@ class TestF64Preset:
     def test_optimizer_f64(self) -> None:
         assert hasattr(le_geometry, "optimize_line_segment_f64")
         assert hasattr(le_geometry, "optimize_line_segments_f64")
+
+
+# =============================================================================
+# 3D Geometry: Line3
+# =============================================================================
+
+
+class TestLine3:
+    """Test Line3 (3D infinite line)."""
+
+    def test_default_construction(self) -> None:
+        line = le_geometry.Line3()
+        assert line.empty()
+
+    def test_point_direction_construction(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        assert not line.empty()
+        assert line.valid()
+        assert line.direction == pytest.approx((1.0, 0.0, 0.0))
+        assert line.origin == pytest.approx((0.0, 0.0, 0.0))
+
+    def test_two_point(self) -> None:
+        line = le_geometry.Line3.two_point(0, 0, 0, 3, 0, 0)
+        assert line.direction == pytest.approx((1.0, 0.0, 0.0))
+
+    def test_distance_to_point(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        # Point at (0, 5, 0) is 5 units from x-axis
+        assert line.distance_to_point(0, 5, 0) == pytest.approx(5.0)
+
+    def test_nearest_point(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        np_ = line.nearest_point(3, 5, 7)
+        assert np_ == pytest.approx((3.0, 0.0, 0.0))
+
+    def test_distance_origin(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 0, 0, 1)
+        pt = line.distance_origin(10.0)
+        assert pt == pytest.approx((0.0, 0.0, 10.0))
+
+    def test_angle(self) -> None:
+        l1 = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        l2 = le_geometry.Line3(0, 0, 0, 0, 1, 0)
+        assert l1.angle_to(l2) == pytest.approx(math.pi / 2)
+
+    def test_momentum(self) -> None:
+        # p = (0,0,0), v = (1,0,0) => m = p x v = (0,0,0)
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        assert line.momentum == pytest.approx((0.0, 0.0, 0.0))
+
+    def test_translate(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        line.translate(0, 5, 0)
+        assert line.origin[1] == pytest.approx(5.0)
+
+    def test_cayley_roundtrip(self) -> None:
+        line = le_geometry.Line3(1, 2, 3, 0, 0, 1)
+        w, s0, s1, s2 = line.cayley
+        reconstructed = le_geometry.Line3.from_cayley(w, s0, s1, s2)
+        assert reconstructed.direction == pytest.approx(line.direction, abs=1e-5)
+
+    def test_repr(self) -> None:
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)
+        assert "Line3" in repr(line)
+
+
+# =============================================================================
+# 3D Geometry: LineSegment3
+# =============================================================================
+
+
+class TestLineSegment3:
+    """Test LineSegment3 (3D line segment)."""
+
+    def test_default_construction(self) -> None:
+        seg = le_geometry.LineSegment3()
+        assert seg.empty()
+
+    def test_from_endpoints(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        assert seg.length == pytest.approx(10.0)
+
+    def test_start_end_points(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(1, 2, 3, 4, 5, 6)
+        assert seg.start_point() == pytest.approx((1.0, 2.0, 3.0))
+        assert seg.end_point() == pytest.approx((4.0, 5.0, 6.0))
+
+    def test_center_point(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        assert seg.center_point() == pytest.approx((5.0, 0.0, 0.0))
+
+    def test_flip(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        original_start = seg.start_point()
+        seg.flip()
+        assert seg.end_point() == pytest.approx(original_start)
+
+    def test_endpoint_swap(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        sp = seg.start_point()
+        ep = seg.end_point()
+        seg.endpoint_swap()
+        assert seg.start_point() == pytest.approx(ep)
+        assert seg.end_point() == pytest.approx(sp)
+
+    def test_inherits_line3(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        assert seg.direction == pytest.approx((1.0, 0.0, 0.0))
+        assert seg.distance_to_point(0, 5, 0) == pytest.approx(5.0)
+
+    def test_repr(self) -> None:
+        seg = le_geometry.LineSegment3.from_endpoints(0, 0, 0, 10, 0, 0)
+        assert "LineSegment3" in repr(seg)
+
+
+# =============================================================================
+# 3D Geometry: Plane
+# =============================================================================
+
+
+class TestPlane:
+    """Test Plane (3D plane in Hesse normal form)."""
+
+    def test_default_construction(self) -> None:
+        plane = le_geometry.Plane()
+        assert plane.empty()
+
+    def test_point_normal_construction(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        assert not plane.empty()
+        assert plane.valid()
+        assert plane.normal == pytest.approx((0.0, 0.0, 1.0))
+
+    def test_from_three_points(self) -> None:
+        plane = le_geometry.Plane.from_three_points(
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+        )
+        # Normal should be (0, 0, ±1)
+        assert abs(plane.normal[2]) == pytest.approx(1.0)
+
+    def test_distance(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        assert plane.distance(0, 0, 5) == pytest.approx(5.0)
+
+    def test_nearest_point(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        np_ = plane.nearest_point(3, 4, 5)
+        assert np_ == pytest.approx((3.0, 4.0, 0.0))
+
+    def test_intersection_with_line(self) -> None:
+        plane = le_geometry.Plane(0, 0, 5, 0, 0, 1)  # z = 5
+        line = le_geometry.Line3(0, 0, 0, 0, 0, 1)  # along z-axis
+        pt = plane.intersection_with_line(line)
+        assert pt is not None
+        assert pt == pytest.approx((0.0, 0.0, 5.0))
+
+    def test_intersection_with_parallel_line(self) -> None:
+        plane = le_geometry.Plane(0, 0, 5, 0, 0, 1)  # z = 5
+        line = le_geometry.Line3(0, 0, 0, 1, 0, 0)  # along x-axis
+        pt = plane.intersection_with_line(line)
+        assert pt is None
+
+    def test_intersection_with_plane(self) -> None:
+        p1 = le_geometry.Plane(0, 0, 0, 0, 0, 1)  # xy-plane
+        p2 = le_geometry.Plane(0, 0, 0, 0, 1, 0)  # xz-plane
+        result = p1.intersection_with_plane(p2)
+        assert result is not None  # Should return a Line3 along x-axis
+
+    def test_translate(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        plane.translate(0, 0, 5)
+        assert plane.dist_to_origin == pytest.approx(5.0)
+
+    def test_flip(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        original_normal = plane.normal
+        plane.flip()
+        assert plane.normal[2] == pytest.approx(-original_normal[2])
+
+    def test_repr(self) -> None:
+        plane = le_geometry.Plane(0, 0, 0, 0, 0, 1)
+        assert "Plane" in repr(plane)
+
+
+# =============================================================================
+# 3D Geometry: Pose
+# =============================================================================
+
+
+class TestPose:
+    """Test Pose (6-DOF rigid body pose)."""
+
+    def test_default_construction(self) -> None:
+        pose = le_geometry.Pose()
+        assert pose.origin == pytest.approx((0.0, 0.0, 0.0))
+        assert pose.orientation == pytest.approx((0.0, 0.0, 0.0))
+
+    def test_parameterized_construction(self) -> None:
+        pose = le_geometry.Pose(tx=1, ty=2, tz=3, rx=0.1, ry=0.2, rz=0.3)
+        assert pose.origin == pytest.approx((1.0, 2.0, 3.0))
+        assert pose.orientation == pytest.approx((0.1, 0.2, 0.3))
+
+    def test_origin_property_setter(self) -> None:
+        pose = le_geometry.Pose()
+        pose.origin = (5.0, 6.0, 7.0)
+        assert pose.origin == pytest.approx((5.0, 6.0, 7.0))
+
+    def test_orientation_property_setter(self) -> None:
+        pose = le_geometry.Pose()
+        pose.orientation = (0.1, 0.2, 0.3)
+        assert pose.orientation == pytest.approx((0.1, 0.2, 0.3))
+
+    def test_rot_matrix(self) -> None:
+        pose = le_geometry.Pose()  # Identity rotation
+        rm = pose.rot_matrix()
+        assert len(rm) == 3
+        # Identity rotation matrix
+        assert rm[0] == pytest.approx((1.0, 0.0, 0.0), abs=1e-6)
+        assert rm[1] == pytest.approx((0.0, 1.0, 0.0), abs=1e-6)
+        assert rm[2] == pytest.approx((0.0, 0.0, 1.0), abs=1e-6)
+
+    def test_hom_matrix(self) -> None:
+        pose = le_geometry.Pose(tx=1, ty=2, tz=3)
+        hm = pose.hom_matrix()
+        assert len(hm) == 4
+        # Last column contains translation
+        assert hm[0][3] == pytest.approx(1.0, abs=1e-6)
+        assert hm[1][3] == pytest.approx(2.0, abs=1e-6)
+        assert hm[2][3] == pytest.approx(3.0, abs=1e-6)
+
+    def test_translate(self) -> None:
+        pose = le_geometry.Pose()
+        pose.translate(1, 2, 3)
+        assert pose.origin == pytest.approx((1.0, 2.0, 3.0))
+
+    def test_repr(self) -> None:
+        pose = le_geometry.Pose(tx=1, ty=2, tz=3)
+        assert "Pose" in repr(pose)
+
+
+# =============================================================================
+# Camera Models
+# =============================================================================
+
+
+class TestCamera:
+    """Test Camera (pinhole camera model)."""
+
+    def test_default_construction(self) -> None:
+        cam = le_geometry.Camera()
+        assert cam.empty
+
+    def test_parameterized_construction(self) -> None:
+        cam = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        assert not cam.empty
+        assert cam.focal == pytest.approx((500.0, 500.0))
+        assert cam.offset == pytest.approx((320.0, 240.0))
+        assert cam.width == pytest.approx(640.0)
+        assert cam.height == pytest.approx(480.0)
+
+    def test_image_size(self) -> None:
+        cam = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        assert cam.image_size == pytest.approx((640.0, 480.0))
+
+    def test_focal_length(self) -> None:
+        cam = le_geometry.Camera(focal_x=400, focal_y=400)
+        assert cam.focal_length == pytest.approx(400.0)
+
+    def test_inherits_pose(self) -> None:
+        cam = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+            tx=1,
+            ty=2,
+            tz=3,
+        )
+        assert cam.origin == pytest.approx((1.0, 2.0, 3.0))
+
+    def test_repr(self) -> None:
+        cam = le_geometry.Camera(focal_x=500, focal_y=500)
+        assert "Camera" in repr(cam)
+
+
+class TestCameraHom:
+    """Test CameraHom (projection via cached matrix)."""
+
+    def _make_cam(self) -> object:
+        return le_geometry.CameraHom(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+
+    def test_construction(self) -> None:
+        cam = self._make_cam()
+        assert not cam.empty
+
+    def test_from_base_camera(self) -> None:
+        base = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        cam = le_geometry.CameraHom(base)
+        assert not cam.empty
+
+    def test_project_point(self) -> None:
+        cam = self._make_cam()
+        # Point on optical axis at z=1 should project near principal point
+        u, v = cam.project_point(0, 0, 1)
+        assert u == pytest.approx(320.0, abs=1.0)
+        assert v == pytest.approx(240.0, abs=1.0)
+
+    def test_project_points(self) -> None:
+        cam = self._make_cam()
+        pts = [(0, 0, 1), (0, 0, 2)]
+        results = cam.project_points(pts)
+        assert len(results) == 2
+
+
+class TestCameraPluecker:
+    """Test CameraPluecker (Plücker line projection)."""
+
+    def _make_cam(self) -> object:
+        return le_geometry.CameraPluecker(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+
+    def test_construction(self) -> None:
+        cam = self._make_cam()
+        assert not cam.empty
+
+    def test_project_line(self) -> None:
+        cam = self._make_cam()
+        # Vertical line at (1, 0, z) in front of camera
+        line3 = le_geometry.Line3(1, 0, 5, 0, 0, 1)
+        line2d = cam.project_line(line3)
+        # Should get a valid 2D line
+        assert hasattr(line2d, "normal_x")
+
+    def test_project_line_segment(self) -> None:
+        cam = self._make_cam()
+        seg3 = le_geometry.LineSegment3.from_endpoints(1, 0, 5, 1, 0, 10)
+        seg2d = cam.project_line_segment(seg3)
+        assert hasattr(seg2d, "length")
+
+    def test_project_lines_batch(self) -> None:
+        cam = self._make_cam()
+        lines = [
+            le_geometry.Line3(1, 0, 5, 0, 0, 1),
+            le_geometry.Line3(-1, 0, 5, 0, 0, 1),
+        ]
+        results = cam.project_lines(lines)
+        assert len(results) == 2
+
+
+class TestCamera2P:
+    """Test Camera2P (two-point projection)."""
+
+    def _make_cam(self) -> object:
+        return le_geometry.Camera2P(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+
+    def test_construction(self) -> None:
+        cam = self._make_cam()
+        assert not cam.empty
+
+    def test_project_line_segment(self) -> None:
+        cam = self._make_cam()
+        seg3 = le_geometry.LineSegment3.from_endpoints(1, 0, 5, 1, 0, 10)
+        seg2d = cam.project_line_segment(seg3)
+        assert hasattr(seg2d, "length")
+
+
+class TestCameraCV:
+    """Test CameraCV (OpenCV projection)."""
+
+    def _make_cam(self) -> object:
+        return le_geometry.CameraCV(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+
+    def test_construction(self) -> None:
+        cam = self._make_cam()
+        assert not cam.empty
+
+    def test_project_point(self) -> None:
+        cam = self._make_cam()
+        u, v = cam.project_point(0, 0, 1)
+        assert u == pytest.approx(320.0, abs=1.0)
+        assert v == pytest.approx(240.0, abs=1.0)
+
+
+# =============================================================================
+# 3D Geometry: f64 presets
+# =============================================================================
+
+
+class TestGeometry3dF64:
+    """Test double-precision presets for 3D geometry types."""
+
+    def test_line3_f64(self) -> None:
+        line = le_geometry.Line3_f64(0, 0, 0, 1, 0, 0)
+        assert line.direction == pytest.approx((1.0, 0.0, 0.0))
+
+    def test_line_segment3_f64(self) -> None:
+        seg = le_geometry.LineSegment3_f64.from_endpoints(0, 0, 0, 10, 0, 0)
+        assert seg.length == pytest.approx(10.0)
+
+    def test_plane_f64(self) -> None:
+        plane = le_geometry.Plane_f64(0, 0, 0, 0, 0, 1)
+        assert plane.normal == pytest.approx((0.0, 0.0, 1.0))
+
+    def test_pose_f64(self) -> None:
+        pose = le_geometry.Pose_f64(tx=1.0, ty=2.0, tz=3.0)
+        assert pose.origin == pytest.approx((1.0, 2.0, 3.0))
+
+    def test_camera_f64(self) -> None:
+        cam = le_geometry.Camera_f64(focal_x=500, focal_y=500)
+        assert not cam.empty
+
+    def test_camera_hom_f64(self) -> None:
+        cam = le_geometry.CameraHom_f64(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        u, v = cam.project_point(0, 0, 1)
+        assert u == pytest.approx(320.0, abs=1.0)
+
+    def test_camera_pluecker_f64(self) -> None:
+        assert hasattr(le_geometry, "CameraPluecker_f64")
+
+    def test_camera_2p_f64(self) -> None:
+        assert hasattr(le_geometry, "Camera2P_f64")
+
+    def test_camera_cv_f64(self) -> None:
+        assert hasattr(le_geometry, "CameraCV_f64")
