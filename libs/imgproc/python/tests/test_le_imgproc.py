@@ -1103,10 +1103,19 @@ class TestQuadratureLGF:
         assert q.phase().shape == (h, w)
         assert q.direction().shape == (h, w)
 
+    def test_oddx_oddy(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        ox = q.oddx()
+        oy = q.oddy()
+        assert ox.shape == oy.shape == (64, 64)
+
     def test_odd_xy_tuple(self) -> None:
         q = le_imgproc.QuadratureLGF()
         q.process(_quad_test_image_u8())
         ox, oy = q.odd_xy()
+        assert isinstance(ox, np.ndarray)
+        assert isinstance(oy, np.ndarray)
         assert ox.shape == oy.shape == (64, 64)
 
     def test_results_dict(self) -> None:
@@ -1120,8 +1129,63 @@ class TestQuadratureLGF:
     def test_ranges(self) -> None:
         q = le_imgproc.QuadratureLGF()
         q.process(_quad_test_image_u8())
-        assert q.energy_range().upper >= 0
+        er = q.even_range()
+        assert hasattr(er, "lower") and hasattr(er, "upper")
         assert q.odd_range().upper >= 0
+        assert q.energy_range().upper >= 0
+        pr = q.phase_range()
+        assert pr.upper > pr.lower
+        dr = q.direction_range()
+        assert dr.upper > dr.lower
+
+    def test_odd_grad_range(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        ogr = q.odd_grad_range()
+        assert hasattr(ogr, "lower") and hasattr(ogr, "upper")
+
+    def test_thresholds(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        et = q.even_threshold(0.5)
+        ot = q.odd_threshold(0.5)
+        ent = q.energy_threshold(0.5)
+        assert isinstance(et, float)
+        assert isinstance(ot, float)
+        assert isinstance(ent, float)
+
+    def test_laplace_aliases(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        lap = q.laplace()
+        ev = q.even()
+        np.testing.assert_array_equal(lap, ev)
+
+    def test_laplace_range(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        lr = q.laplace_range()
+        er = q.even_range()
+        assert abs(lr.lower - er.lower) < 1e-5
+        assert abs(lr.upper - er.upper) < 1e-5
+
+    def test_laplace_threshold(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        lt = q.laplace_threshold(0.5)
+        et = q.even_threshold(0.5)
+        assert abs(lt - et) < 1e-5
+
+    def test_intensity_range(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        ir = q.intensity_range()
+        assert ir.lower == 0
+        assert ir.upper == 255
+
+    def test_norm_type(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        nt = q.norm_type()
+        assert isinstance(nt, int)
 
     def test_energy_nonzero_at_edge(self) -> None:
         q = le_imgproc.QuadratureLGF()
@@ -1200,10 +1264,19 @@ class TestQuadratureS:
         assert q.phase().shape == (h, w)
         assert q.direction().shape == (h, w)
 
+    def test_oddx_oddy(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        ox = q.oddx()
+        oy = q.oddy()
+        assert ox.shape == oy.shape == (64, 64)
+
     def test_odd_xy_tuple(self) -> None:
         q = le_imgproc.QuadratureS()
         q.process(_quad_test_image_u8())
         ox, oy = q.odd_xy()
+        assert isinstance(ox, np.ndarray)
+        assert isinstance(oy, np.ndarray)
         assert ox.shape == oy.shape == (64, 64)
 
     def test_results_dict(self) -> None:
@@ -1217,8 +1290,63 @@ class TestQuadratureS:
     def test_ranges(self) -> None:
         q = le_imgproc.QuadratureS()
         q.process(_quad_test_image_u8())
-        assert q.energy_range().upper >= 0
+        er = q.even_range()
+        assert hasattr(er, "lower") and hasattr(er, "upper")
         assert q.odd_range().upper >= 0
+        assert q.energy_range().upper >= 0
+        pr = q.phase_range()
+        assert pr.upper > pr.lower
+        dr = q.direction_range()
+        assert dr.upper > dr.lower
+
+    def test_odd_grad_range(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        ogr = q.odd_grad_range()
+        assert hasattr(ogr, "lower") and hasattr(ogr, "upper")
+
+    def test_thresholds(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        et = q.even_threshold(0.5)
+        ot = q.odd_threshold(0.5)
+        ent = q.energy_threshold(0.5)
+        assert isinstance(et, float)
+        assert isinstance(ot, float)
+        assert isinstance(ent, float)
+
+    def test_laplace_aliases(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        lap = q.laplace()
+        ev = q.even()
+        np.testing.assert_array_equal(lap, ev)
+
+    def test_laplace_range(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        lr = q.laplace_range()
+        er = q.even_range()
+        assert abs(lr.lower - er.lower) < 1e-5
+        assert abs(lr.upper - er.upper) < 1e-5
+
+    def test_laplace_threshold(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        lt = q.laplace_threshold(0.5)
+        et = q.even_threshold(0.5)
+        assert abs(lt - et) < 1e-5
+
+    def test_intensity_range(self) -> None:
+        q = le_imgproc.QuadratureS()
+        ir = q.intensity_range()
+        assert ir.lower == 0
+        assert ir.upper == 255
+
+    def test_norm_type(self) -> None:
+        q = le_imgproc.QuadratureS()
+        nt = q.norm_type()
+        assert isinstance(nt, int)
 
     def test_energy_nonzero_at_edge(self) -> None:
         q = le_imgproc.QuadratureS()
@@ -1284,10 +1412,19 @@ class TestQuadratureSF:
         assert q.phase().shape == (h, w)
         assert q.direction().shape == (h, w)
 
+    def test_oddx_oddy(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        ox = q.oddx()
+        oy = q.oddy()
+        assert ox.shape == oy.shape == (64, 64)
+
     def test_odd_xy_tuple(self) -> None:
         q = le_imgproc.QuadratureSF()
         q.process(_quad_test_image_u8())
         ox, oy = q.odd_xy()
+        assert isinstance(ox, np.ndarray)
+        assert isinstance(oy, np.ndarray)
         assert ox.shape == oy.shape == (64, 64)
 
     def test_results_dict(self) -> None:
@@ -1301,8 +1438,63 @@ class TestQuadratureSF:
     def test_ranges(self) -> None:
         q = le_imgproc.QuadratureSF()
         q.process(_quad_test_image_u8())
-        assert q.energy_range().upper >= 0
+        er = q.even_range()
+        assert hasattr(er, "lower") and hasattr(er, "upper")
         assert q.odd_range().upper >= 0
+        assert q.energy_range().upper >= 0
+        pr = q.phase_range()
+        assert pr.upper > pr.lower
+        dr = q.direction_range()
+        assert dr.upper > dr.lower
+
+    def test_odd_grad_range(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        ogr = q.odd_grad_range()
+        assert hasattr(ogr, "lower") and hasattr(ogr, "upper")
+
+    def test_thresholds(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        et = q.even_threshold(0.5)
+        ot = q.odd_threshold(0.5)
+        ent = q.energy_threshold(0.5)
+        assert isinstance(et, float)
+        assert isinstance(ot, float)
+        assert isinstance(ent, float)
+
+    def test_laplace_aliases(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        lap = q.laplace()
+        ev = q.even()
+        np.testing.assert_array_equal(lap, ev)
+
+    def test_laplace_range(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        lr = q.laplace_range()
+        er = q.even_range()
+        assert abs(lr.lower - er.lower) < 1e-5
+        assert abs(lr.upper - er.upper) < 1e-5
+
+    def test_laplace_threshold(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        lt = q.laplace_threshold(0.5)
+        et = q.even_threshold(0.5)
+        assert abs(lt - et) < 1e-5
+
+    def test_intensity_range(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        ir = q.intensity_range()
+        assert ir.lower == 0
+        assert ir.upper == 255
+
+    def test_norm_type(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        nt = q.norm_type()
+        assert isinstance(nt, int)
 
     def test_energy_nonzero_at_edge(self) -> None:
         q = le_imgproc.QuadratureSF()
