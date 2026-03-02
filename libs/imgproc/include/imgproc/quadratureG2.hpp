@@ -555,7 +555,7 @@ class QuadratureG2 : public Quadrature<IT, FT, FT, FT, FT> {
   void steer(const cv::Mat& theta, cv::Mat& g2, cv::Mat& h2) const {
     // Create the steering coefficients, then compute G2 and H2 at orientation theta:
     cv::Mat ct, ct2, ct3, st, st2, st3;
-    P<FT, FT>::polarToCart(-theta, ct, st);
+    P<FT, FT>::polar2Cart(-theta, ct, st);
     ct2 = ct.mul(ct), ct3 = ct2.mul(ct), st2 = st.mul(st), st3 = st2.mul(st);
     g2 = ct2.mul(m_g2a) + (-2.0 * ct.mul(st).mul(m_g2b)) + (st2.mul(m_g2c));
     h2 = ct3.mul(m_h2a) + (-3.0 * ct2.mul(st).mul(m_h2b)) + (3.0 * ct.mul(st2).mul(m_h2c)) + (-st3.mul(m_h2d));

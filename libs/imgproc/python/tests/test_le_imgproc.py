@@ -891,3 +891,438 @@ class TestFastNlMeansOperator:
         img = np.random.randint(0, 256, (32, 32), dtype=np.uint8)
         result = op.apply_copy(img)
         assert result.shape == (32, 32)
+
+
+# =====================================================================
+# Phase 3: Quadrature filter tests
+# =====================================================================
+
+
+def _quad_test_image_u8() -> np.ndarray:  # type: ignore[type-arg]
+    """Create a 64x64 step-edge image (uint8)."""
+    img = np.zeros((64, 64), dtype=np.uint8)
+    img[:, 32:] = 255
+    return img
+
+
+def _quad_test_image_f32() -> np.ndarray:  # type: ignore[type-arg]
+    """Create a 64x64 step-edge image (float32)."""
+    img = np.zeros((64, 64), dtype=np.float32)
+    img[:, 32:] = 1.0
+    return img
+
+
+def _quad_test_image_f64() -> np.ndarray:  # type: ignore[type-arg]
+    """Create a 64x64 step-edge image (float64)."""
+    img = np.zeros((64, 64), dtype=np.float64)
+    img[:, 32:] = 1.0
+    return img
+
+
+class TestQuadratureG2:
+    """Tests for QuadratureG2 (steerable G2/H2 quadrature filter)."""
+
+    def test_construction_default(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        assert q.kernel_size() == 9
+        assert q.name() == "quadratureG2"
+
+    def test_construction_custom(self) -> None:
+        q = le_imgproc.QuadratureG2(kernel_size=13, kernel_spacing=1.0)
+        assert q.kernel_size() == 13
+
+    def test_kernel_size_getset(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.set_kernel_size(7)
+        assert q.kernel_size() == 7
+
+    def test_kernel_spacing_getset(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.set_kernel_spacing(1.0)
+        assert abs(q.kernel_spacing() - 1.0) < 1e-5
+
+    def test_kernel_returns_mat(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        k = q.kernel()
+        assert isinstance(k, np.ndarray)
+        assert k.ndim == 2
+
+    def test_process_and_outputs(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        img = _quad_test_image_u8()
+        q.process(img)
+        h, w = img.shape
+        assert q.even().shape == (h, w)
+        assert q.odd().shape == (h, w)
+        assert q.energy().shape == (h, w)
+        assert q.phase().shape == (h, w)
+        assert q.direction().shape == (h, w)
+
+    def test_oddx_oddy(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        ox = q.oddx()
+        oy = q.oddy()
+        assert ox.shape == oy.shape
+
+    def test_odd_xy_tuple(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        ox, oy = q.odd_xy()
+        assert isinstance(ox, np.ndarray)
+        assert isinstance(oy, np.ndarray)
+
+    def test_ranges(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        er = q.even_range()
+        assert hasattr(er, "lower") and hasattr(er, "upper")
+        assert q.odd_range().upper >= 0
+        assert q.energy_range().upper >= 0
+        pr = q.phase_range()
+        assert pr.upper > pr.lower
+        dr = q.direction_range()
+        assert dr.upper > dr.lower
+
+    def test_thresholds(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        et = q.even_threshold(0.5)
+        ot = q.odd_threshold(0.5)
+        ent = q.energy_threshold(0.5)
+        assert isinstance(et, float)
+        assert isinstance(ot, float)
+        assert isinstance(ent, float)
+
+    def test_results_dict(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        r = q.results()
+        assert isinstance(r, dict)
+        for key in ("even", "odd", "oddx", "oddy", "dir", "energy", "phase"):
+            assert key in r
+
+    def test_laplace_aliases(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        lap = q.laplace()
+        ev = q.even()
+        np.testing.assert_array_equal(lap, ev)
+
+    def test_intensity_range(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        ir = q.intensity_range()
+        assert ir.lower == 0
+        assert ir.upper == 255
+
+    def test_norm_type(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        nt = q.norm_type()
+        assert isinstance(nt, int)
+
+    def test_energy_phase_helper(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        en, ph = q.energy_phase()
+        assert en.shape == (64, 64)
+        assert ph.shape == (64, 64)
+
+    def test_steer_with_theta(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        img = _quad_test_image_u8()
+        q.process(img)
+        theta = q.direction()
+        g2, h2 = q.steer(theta)
+        assert g2.shape == img.shape
+        assert h2.shape == img.shape
+
+    def test_steer_xy_with_gradients(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        img = _quad_test_image_u8()
+        q.process(img)
+        ox, oy = q.odd_xy()
+        g2, h2 = q.steer_xy(ox, oy)
+        assert g2.shape == img.shape
+        assert h2.shape == img.shape
+
+    def test_energy_nonzero_at_edge(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        q.process(_quad_test_image_u8())
+        energy = q.energy()
+        assert np.max(energy[:, 30:34]) > 0
+
+    def test_value_manager(self) -> None:
+        q = le_imgproc.QuadratureG2()
+        vals = q.values()
+        assert "grad_kernel_size" in vals
+        assert "grad_kernel_spacing" in vals
+
+    def test_f32_preset(self) -> None:
+        q = le_imgproc.QuadratureG2_f32(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f32())
+        assert q.energy().shape == (64, 64)
+
+    def test_f64_preset(self) -> None:
+        q = le_imgproc.QuadratureG2_f64(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f64())
+        assert q.energy().shape == (64, 64)
+
+
+class TestQuadratureLGF:
+    """Tests for QuadratureLGF (Log-Gabor quadrature, frequency domain)."""
+
+    def test_construction_default(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        assert abs(q.wave_length() - 5.0) < 1e-5
+        assert abs(q.sigma_onf() - 0.55) < 1e-5
+        assert q.name() == "quadratureLGF"
+
+    def test_construction_custom(self) -> None:
+        q = le_imgproc.QuadratureLGF(wave_length=3.0, sigma_onf=0.4)
+        assert abs(q.wave_length() - 3.0) < 1e-5
+        assert abs(q.sigma_onf() - 0.4) < 1e-5
+
+    def test_wave_length_getset(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.set_wave_length(8.0)
+        assert abs(q.wave_length() - 8.0) < 1e-5
+
+    def test_sigma_onf_getset(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.set_sigma_onf(0.3)
+        assert abs(q.sigma_onf() - 0.3) < 1e-5
+
+    def test_process_and_outputs(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        img = _quad_test_image_u8()
+        q.process(img)
+        h, w = img.shape
+        assert q.even().shape == (h, w)
+        assert q.odd().shape == (h, w)
+        assert q.energy().shape == (h, w)
+        assert q.phase().shape == (h, w)
+        assert q.direction().shape == (h, w)
+
+    def test_odd_xy_tuple(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        ox, oy = q.odd_xy()
+        assert ox.shape == oy.shape == (64, 64)
+
+    def test_results_dict(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        r = q.results()
+        assert isinstance(r, dict)
+        for key in ("even", "odd", "oddx", "oddy", "dir", "energy", "phase"):
+            assert key in r
+
+    def test_ranges(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        assert q.energy_range().upper >= 0
+        assert q.odd_range().upper >= 0
+
+    def test_energy_nonzero_at_edge(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        q.process(_quad_test_image_u8())
+        energy = q.energy()
+        assert np.max(energy[:, 30:34]) > 0
+
+    def test_value_manager(self) -> None:
+        q = le_imgproc.QuadratureLGF()
+        vals = q.values()
+        assert "grad_waveLength" in vals
+        assert "grad_sigmaOnf" in vals
+
+    def test_f32_preset(self) -> None:
+        q = le_imgproc.QuadratureLGF_f32(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f32())
+        assert q.energy().shape == (64, 64)
+
+    def test_f64_preset(self) -> None:
+        q = le_imgproc.QuadratureLGF_f64(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f64())
+        assert q.energy().shape == (64, 64)
+
+
+class TestQuadratureS:
+    """Tests for QuadratureS (spatial-domain Difference of Poisson)."""
+
+    def test_construction_default(self) -> None:
+        q = le_imgproc.QuadratureS()
+        assert q.kernel_size() == 5
+        assert q.name() == "quadratureS"
+
+    def test_construction_custom(self) -> None:
+        q = le_imgproc.QuadratureS(scale=2.0, muls=4.0, kernel_size=7)
+        assert q.kernel_size() == 7
+
+    def test_kernel_size_getset(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.set_kernel_size(9)
+        assert q.kernel_size() == 9
+
+    def test_kernel_spacing_getset(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.set_kernel_spacing(2.0)
+        assert abs(q.kernel_spacing() - 2.0) < 1e-5
+
+    def test_kernel_scale_getset(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.set_kernel_scale(2.0)
+        assert abs(q.kernel_scale() - 2.0) < 1e-5
+
+    def test_scale_getset(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.set_scale(3.0)
+        assert abs(q.scale() - 3.0) < 1e-5
+
+    def test_muls_getset(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.set_muls(5.0)
+        assert abs(q.muls() - 5.0) < 1e-5
+
+    def test_kernel_returns_mat(self) -> None:
+        q = le_imgproc.QuadratureS()
+        k = q.kernel()
+        assert isinstance(k, np.ndarray)
+        assert k.ndim == 2
+
+    def test_process_and_outputs(self) -> None:
+        q = le_imgproc.QuadratureS()
+        img = _quad_test_image_u8()
+        q.process(img)
+        h, w = img.shape
+        assert q.even().shape == (h, w)
+        assert q.odd().shape == (h, w)
+        assert q.energy().shape == (h, w)
+        assert q.phase().shape == (h, w)
+        assert q.direction().shape == (h, w)
+
+    def test_odd_xy_tuple(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        ox, oy = q.odd_xy()
+        assert ox.shape == oy.shape == (64, 64)
+
+    def test_results_dict(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        r = q.results()
+        assert isinstance(r, dict)
+        for key in ("even", "odd", "oddx", "oddy", "dir", "energy", "phase"):
+            assert key in r
+
+    def test_ranges(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        assert q.energy_range().upper >= 0
+        assert q.odd_range().upper >= 0
+
+    def test_energy_nonzero_at_edge(self) -> None:
+        q = le_imgproc.QuadratureS()
+        q.process(_quad_test_image_u8())
+        energy = q.energy()
+        assert np.max(energy[:, 30:34]) > 0
+
+    def test_value_manager(self) -> None:
+        q = le_imgproc.QuadratureS()
+        vals = q.values()
+        assert "grad_kernel_size" in vals
+        assert "grad_scale" in vals
+        assert "grad_muls" in vals
+
+    def test_f32_preset(self) -> None:
+        q = le_imgproc.QuadratureS_f32(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f32())
+        assert q.energy().shape == (64, 64)
+
+    def test_f64_preset(self) -> None:
+        q = le_imgproc.QuadratureS_f64(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f64())
+        assert q.energy().shape == (64, 64)
+
+
+class TestQuadratureSF:
+    """Tests for QuadratureSF (frequency-domain Difference of Poisson)."""
+
+    def test_construction_default(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        assert abs(q.scale() - 1.0) < 1e-5
+        assert abs(q.muls() - 2.0) < 1e-5
+        assert q.name() == "quadratureSF"
+
+    def test_construction_custom(self) -> None:
+        q = le_imgproc.QuadratureSF(scale=2.0, muls=3.0, kernel_spacing=0.5)
+        assert abs(q.scale() - 2.0) < 1e-5
+        assert abs(q.muls() - 3.0) < 1e-5
+
+    def test_kernel_spacing_getset(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.set_kernel_spacing(2.0)
+        assert abs(q.kernel_spacing() - 2.0) < 1e-5
+
+    def test_scale_getset(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.set_scale(3.0)
+        assert abs(q.scale() - 3.0) < 1e-5
+
+    def test_muls_getset(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.set_muls(5.0)
+        assert abs(q.muls() - 5.0) < 1e-5
+
+    def test_process_and_outputs(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        img = _quad_test_image_u8()
+        q.process(img)
+        h, w = img.shape
+        assert q.even().shape == (h, w)
+        assert q.odd().shape == (h, w)
+        assert q.energy().shape == (h, w)
+        assert q.phase().shape == (h, w)
+        assert q.direction().shape == (h, w)
+
+    def test_odd_xy_tuple(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        ox, oy = q.odd_xy()
+        assert ox.shape == oy.shape == (64, 64)
+
+    def test_results_dict(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        r = q.results()
+        assert isinstance(r, dict)
+        for key in ("even", "odd", "oddx", "oddy", "dir", "energy", "phase"):
+            assert key in r
+
+    def test_ranges(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        assert q.energy_range().upper >= 0
+        assert q.odd_range().upper >= 0
+
+    def test_energy_nonzero_at_edge(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        q.process(_quad_test_image_u8())
+        energy = q.energy()
+        assert np.max(energy[:, 30:34]) > 0
+
+    def test_value_manager(self) -> None:
+        q = le_imgproc.QuadratureSF()
+        vals = q.values()
+        assert "grad_kernel_spacing" in vals
+        assert "grad_scale" in vals
+        assert "grad_muls" in vals
+
+    def test_f32_preset(self) -> None:
+        q = le_imgproc.QuadratureSF_f32(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f32())
+        assert q.energy().shape == (64, 64)
+
+    def test_f64_preset(self) -> None:
+        q = le_imgproc.QuadratureSF_f64(int_lower=0.0, int_upper=1.0)
+        q.process(_quad_test_image_f64())
+        assert q.energy().shape == (64, 64)

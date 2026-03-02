@@ -143,5 +143,21 @@ void bind_image_operators(py::module_& m);
 template <class T>
 void bind_geometric_operators(py::module_& m, const std::string& suffix);
 
+// ============================================================================
+// Quadrature filters (quadrature_binding.cpp)
+// ============================================================================
+
+/// @brief Bind all four quadrature filter classes for one type preset.
+///
+/// Registers QuadratureG2, QuadratureLGF, QuadratureS, and QuadratureSF
+/// with the given input/float type combination and Python name suffix.
+///
+/// @tparam IT Input image pixel type (uchar, float, double)
+/// @tparam FT Floating‑point type for filter outputs
+/// @param m      pybind11 module
+/// @param suffix Python class name suffix (e.g. "" or "_f32")
+template <class IT, class FT>
+void bind_quadrature_preset(py::module_& m, const std::string& suffix);
+
 }  // namespace python
 }  // namespace lsfm
