@@ -64,7 +64,7 @@ void bind_image_operators(py::module_& m) {
       "Operators are applied in order of addition.")
       .def(py::init<>(), "Construct an empty pipeline.")
       .def("push", static_cast<void (PipelineOperator::*)(const ImageOperatorPtr&)>(&PipelineOperator::push),
-           py::arg("op"), "Add an operator (shared_ptr) to the pipeline.")
+           py::arg("op"), py::keep_alive<1, 2>(), "Add an operator (shared_ptr) to the pipeline.")
       .def("pop", &PipelineOperator::pop, "Remove the last operator.")
       .def("clear", &PipelineOperator::clear, "Clear all operators.")
       .def("apply", static_cast<void (PipelineOperator::*)(cv::Mat&)>(&PipelineOperator::apply), py::arg("img"),

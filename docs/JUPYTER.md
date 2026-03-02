@@ -78,6 +78,10 @@ The tutorial series is the recommended way to learn the Python bindings. Work th
 | 1 | [`tutorial_1_fundamentals.ipynb`](../examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Foundational modules: gradient filters, geometry primitives (Line, LineSegment, Polygon), drawing utilities, ValueManager configuration, and test image loading. | `le_imgproc`, `le_geometry` |
 | 2 | [`tutorial_2_pipelines.ipynb`](../examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full detection pipeline from edge sources through NMS, ESD variants, all 9 LSD detectors, grand comparison, line optimization, and noise robustness analysis. | `le_edge`, `le_lsd`, `le_imgproc`, `le_geometry` |
 | 3 | [`tutorial_3_evaluation.ipynb`](../examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation Framework** — Deep dive into benchmarking: StringTable, performance primitives, data providers, custom tasks, CVPerformanceTest orchestrator, result analysis, and full benchmark runs. | `le_eval`, `le_lsd`, `le_edge` |
+| 4 | [`tutorial_4_algorithm.ipynb`](../examples/notebooks/tutorial_4_algorithm.ipynb) | **Algorithm Library** — Post-processing (LineMerge, LineConnect, LineContinuityOptimizer), accuracy evaluation, detector profiling, hyperparameter search (ParamOptimizer), sub-pixel refinement (PrecisionOptimize), and preset management (PresetStore). | `le_algorithm`, `le_geometry` |
+| 5 | [`tutorial_5_advanced_filters.ipynb`](../examples/notebooks/tutorial_5_advanced_filters.ipynb) | **Advanced Gradient & Quadrature Filters** — SUSAN gradient, RCMG color/grayscale morphological gradient, and all four quadrature filters (G2, LGF, S, SF) with parameter sweeps and comparative analysis. | `le_imgproc` |
+| 6 | [`tutorial_6_image_operators.ipynb`](../examples/notebooks/tutorial_6_image_operators.ipynb) | **Image Operators & Pipelines** — All 13 ImageOperator subclasses (blur, denoise, noise, geometric transforms), PipelineOperator composition, custom Python operators, and data augmentation workflows. | `le_imgproc` |
+| 7 | [`tutorial_7_3d_geometry.ipynb`](../examples/notebooks/tutorial_7_3d_geometry.ipynb) | **3D Geometry & Camera Models** — Line3, LineSegment3, Plane, Pose, Camera hierarchy (CameraCV, CameraPluecker, Camera2P), 3D-to-2D projection, and interactive Rerun 3D visualization. | `le_geometry`, Rerun |
 
 ### Additional Notebooks
 
@@ -101,6 +105,7 @@ import le_edge
 import le_geometry
 import le_eval
 import le_lsd
+import le_algorithm
 ```
 
 If imports fail, make sure you have built the bindings:
@@ -197,12 +202,12 @@ while workspace.name != "LineExtraction" and workspace != workspace.parent:
     workspace = workspace.parent
 
 # Add Bazel output paths
-for lib in ["imgproc", "edge", "geometry", "eval", "lsd"]:
+for lib in ["imgproc", "edge", "geometry", "eval", "lsd", "algorithm"]:
     p = workspace / f"bazel-bin/libs/{lib}/python"
     if p.exists():
         sys.path.insert(0, str(p))
 
-import le_imgproc, le_edge, le_geometry, le_eval, le_lsd
+import le_imgproc, le_edge, le_geometry, le_eval, le_lsd, le_algorithm
 ```
 
 ## Further Reading
@@ -214,5 +219,6 @@ import le_imgproc, le_edge, le_geometry, le_eval, le_lsd
 - [le_geometry API](../libs/geometry/python/README.md)
 - [le_eval API](../libs/eval/python/README.md)
 - [le_lsd API](../libs/lsd/python/README.md)
+- [le_algorithm API](../libs/algorithm/python/README.md)
 - [Docker Setup](DOCKER.md)
 - [WSL Setup](WSL.md)
