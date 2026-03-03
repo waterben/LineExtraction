@@ -4,8 +4,10 @@ Python bindings for the `libs/geometry` C++ library using [pybind11](https://pyb
 
 ## Overview
 
-This module provides 2D geometric primitives, drawing utilities, and line
+This module provides 2D and 3D geometric primitives, drawing utilities, and line
 optimization routines:
+
+**2D Geometry:**
 
 - **Line** — infinite line in Hesse normal form
 - **LineSegment** — finite line segment (extends Line)
@@ -13,6 +15,18 @@ optimization routines:
 - **Drawing** — render line segments onto images
 - **LineOptimizer** — refine segments against gradient magnitude (dlib-based)
 - **Visualization helpers** — edge coloring, border padding, normalized saving
+
+**3D Geometry:**
+
+- **Line3** — infinite line in 3D (point + direction)
+- **LineSegment3** — finite 3D line segment (extends Line3)
+- **Plane** — 3D plane (point + normal)
+- **Pose** — 6-DOF camera pose (translation + rotation)
+- **Camera** — pinhole camera model (intrinsics + pose)
+- **CameraHom** — homogeneous camera (projection matrix)
+- **CameraPluecker** — Pluecker line camera (line projection)
+- **Camera2P** — 2-point camera (vanishing point projection)
+- **CameraCV** — OpenCV-compatible camera (projection + distortion)
 
 Images are passed as NumPy arrays and automatically converted to/from `cv::Mat`.
 
@@ -265,7 +279,7 @@ mag[50, :] = 1.0   # strong horizontal edge at row 50
 # Initial estimate (slightly off)
 seg = geo.LineSegment.from_endpoints(10.0, 48.0, 90.0, 48.0)
 
-# Optimise single segment (returns error, distance, rotation)
+# Optimize single segment (returns error, distance, rotation)
 error, d, r = geo.optimize_line_segment(mag, seg)
 print(f"Error: {error:.4f}, shift: {d:.2f}, rotation: {r:.4f}")
 
@@ -284,7 +298,7 @@ for s, e in zip(optimized, errors):
 ```python
 import le_geometry as geo
 
-# Colour-code an NMS edge map
+# Color-code an NMS edge map
 nms_map = np.zeros((100, 100), dtype=np.int8)
 color_img = geo.create_nms_color(nms_map)
 
@@ -301,18 +315,135 @@ geo.save_edge(edge_map, "edges.png")
 r, g, b, a = geo.random_color()
 ```
 
+## 3D Geometry
+
+### Line3
+
+An infinite 3D line represented by a point and direction vector.
+
+```python
+# From point and direction
+l = geo.Line3(px=0, py=0, pz=0, vx=1, vy=0, vz=0)
+
+# Properties
+l.point()       # -> (px, py, pz)
+l.direction3d() # -> (vx, vy, vz)
+l.length3d      # direction vector magnitude
+l.valid3d       # True if direction is nonzero
+
+# Operations
+d = l.distance3d(x, y, z)          # distance from point to line
+proj = l.project3d(x, y, z)        # project point onto line -> (x, y, z)
+l.flip()                           # flip direction in-place
+l2 = l.translated3d(dx, dy, dz)    # new translated line
+l3 = l.rotated3d(angle, ax, ay, az)  # new rotated line
+```
+
+### LineSegment3
+
+A finite 3D line segment extending `Line3` with start/end distances.
+
+```python
+seg = geo.LineSegment3(px=0, py=0, pz=0, vx=1, vy=0, vz=0,
+                       start=0.0, end=10.0)
+
+# Endpoints
+seg.start_point3d()   # -> (x, y, z)
+seg.end_point3d()     # -> (x, y, z)
+seg.center_point3d()  # -> (x, y, z)
+seg.length3d          # segment length
+
+# Transformations
+seg.flip()
+seg.endpoint_swap()
+```
+
+### Plane
+
+A 3D plane represented by a point and normal vector.
+
+```python
+plane = geo.Plane(px=0, py=0, pz=0, nx=0, ny=0, nz=1)
+
+# Properties
+plane.point()     # -> (px, py, pz)
+plane.normal3d()  # -> (nx, ny, nz)
+plane.valid       # True if normal is unit length
+
+# Operations
+d = plane.distance(x, y, z)       # signed distance to plane
+p = plane.project(x, y, z)        # project point onto plane -> (x, y, z)
+plane.flip()                       # flip normal in-place
+plane2 = plane.translated(dx, dy, dz)
+plane3 = plane.rotated(angle, ax, ay, az)
+```
+
+### Pose
+
+A 6-DOF rigid-body transformation (translation + rotation).
+
+```python
+pose = geo.Pose(tx=0, ty=0, tz=1, rx=0, ry=0, rz=0)
+
+# Properties
+pose.translation()   # -> (tx, ty, tz)
+pose.rotation()      # -> (rx, ry, rz) Rodrigues angles
+
+# Transform points
+p = pose.transform(x, y, z)          # world -> camera
+p = pose.inverse_transform(x, y, z)  # camera -> world
+```
+
+### Camera Classes
+
+Camera models extend `Pose` with intrinsic parameters.
+
+```python
+# Pinhole camera
+cam = geo.Camera(focal_x=500, focal_y=500, cx=320, cy=240)
+
+# Project 3D -> 2D
+u, v = cam.project(x, y, z)
+
+# CameraHom: homogeneous projection matrix
+cam_h = geo.CameraHom(focal_x=500, focal_y=500, cx=320, cy=240)
+p_mat = cam_h.projection_matrix()  # 3x4 numpy array
+u, v = cam_h.project(x, y, z)
+
+# CameraPluecker: project 3D lines to 2D
+cam_p = geo.CameraPluecker(focal_x=500, focal_y=500, cx=320, cy=240)
+line2d = cam_p.project_line(line3d)
+
+# Camera2P: 2-point vanishing point projection
+cam_2p = geo.Camera2P(focal_x=500, focal_y=500, cx=320, cy=240)
+line2d = cam_2p.project_line(line3d)
+
+# CameraCV: OpenCV-compatible camera with distortion
+cam_cv = geo.CameraCV(focal_x=500, focal_y=500, cx=320, cy=240)
+u, v = cam_cv.project(x, y, z)
+```
+
 ## Precision Presets
 
 Each class is available in single and double precision:
 
 | Default (float) | Double precision | Description |
 |------------------|------------------|-------------|
-| `Line` | `Line_f64` | Infinite line |
-| `LineSegment` | `LineSegment_f64` | Finite segment |
-| `Polygon` | `Polygon_f64` | Polygon |
+| `Line` | `Line_f64` | Infinite 2D line |
+| `LineSegment` | `LineSegment_f64` | Finite 2D segment |
+| `Polygon` | `Polygon_f64` | 2D polygon |
+| `Line3` | `Line3_f64` | Infinite 3D line |
+| `LineSegment3` | `LineSegment3_f64` | Finite 3D segment |
+| `Plane` | `Plane_f64` | 3D plane |
+| `Pose` | `Pose_f64` | Camera pose |
+| `Camera` | `Camera_f64` | Pinhole camera |
+| `CameraHom` | `CameraHom_f64` | Homogeneous camera |
+| `CameraPluecker` | `CameraPluecker_f64` | Pluecker camera |
+| `Camera2P` | `Camera2P_f64` | 2-point camera |
+| `CameraCV` | `CameraCV_f64` | OpenCV camera |
 | `draw_lines` | `draw_lines_f64` | Drawing (f64 segments) |
 | `trim_to_box` | `trim_to_box_f64` | Clipping (f64 line) |
-| `optimize_line_segment` | `optimize_line_segment_f64` | Optimiser (f64) |
+| `optimize_line_segment` | `optimize_line_segment_f64` | Optimizer (f64) |
 
 ## Build & Test
 
@@ -333,7 +464,8 @@ bazel test //libs/geometry/...
 python/
 ├── src/
 │   ├── geometry_binding.hpp     # Binding declarations
-│   ├── geometry_binding.cpp     # All geometry/draw/optimizer bindings
+│   ├── geometry_binding.cpp     # 2D geometry/draw/optimizer bindings
+│   ├── geometry3d_binding.cpp   # 3D geometry bindings (Line3, cameras, etc.)
 │   └── module_le_geometry.cpp   # PYBIND11_MODULE entry
 ├── tests/
 │   └── test_le_geometry.py      # Python integration tests

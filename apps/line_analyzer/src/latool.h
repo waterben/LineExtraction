@@ -4,7 +4,7 @@
 
 #include <vector>
 
-class ControlWindow;
+class Analyzer;
 
 class LATool : public QMainWindow {
   QString name_;
@@ -12,7 +12,7 @@ class LATool : public QMainWindow {
  public:
   LATool(const QString& n, QWidget* parent = nullptr) : QMainWindow(parent), name_(n) {}
 
-  virtual void connectTools(ControlWindow* la) = 0;
+  virtual void connectTools(Analyzer* la) = 0;
   inline const QString name() const { return name_; }
 };
 

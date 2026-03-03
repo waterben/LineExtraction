@@ -298,5 +298,6 @@ filter.valueEpipolarThreshold(Value(1.0));  // Epipolar constraint tolerance
 - [Geometry Library](../geometry/README.md) - For geometric primitives
 - [Image Processing Library](../imgproc/README.md) - Image processing and gradient operators
 - [Evaluation Library](../eval/README.md) - Performance measurement
+- [Utility Library](../utility/README.md) - ValueManager and core utilities
 - [LFD Examples](../../examples/lfd/README.md) - Demonstration programs
 - [Main README](../../README.md) - Project overview

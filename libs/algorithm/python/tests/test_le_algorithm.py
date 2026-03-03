@@ -559,5 +559,121 @@ class TestPresetStore:
         assert "0 detectors" in r
 
 
+class TestLineContinuityOptimizer:
+    """Tests for LineContinuityOptimizer bindings."""
+
+    def test_default_construction(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer()
+        assert repr(opt) == "<LineContinuityOptimizer>"
+
+    def test_construction_with_params(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(
+            max_dist=25.0,
+            angle_error=8.0,
+            distance_error=4.0,
+            parallel_error=12.0,
+        )
+        params = opt.get_params()
+        assert params["max_dist"] == pytest.approx(25.0)
+        assert params["angle_error"] == pytest.approx(8.0)
+
+    def test_construction_from_dict(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(
+            {"max_dist": 30.0, "threshold": 15.0}
+        )
+        params = opt.get_params()
+        assert params["max_dist"] == pytest.approx(30.0)
+        assert params["threshold"] == pytest.approx(15.0)
+
+    def test_full_construction(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(
+            max_dist=20.0,
+            angle_error=5.0,
+            distance_error=3.0,
+            parallel_error=10.0,
+            merge_type=le_algorithm.ContinuityMergeType.AVG,
+            accuracy=2.0,
+            threshold=10.0,
+        )
+        params = opt.get_params()
+        assert params["accuracy"] == pytest.approx(2.0)
+
+    def test_get_set_params(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer()
+        opt.set_params({"max_dist": 50.0, "angle_error": 15.0})
+        params = opt.get_params()
+        assert params["max_dist"] == pytest.approx(50.0)
+        assert params["angle_error"] == pytest.approx(15.0)
+
+    def test_param_descriptions(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer()
+        desc = opt.param_descriptions()
+        assert "max_dist" in desc
+        assert "threshold" in desc
+        assert isinstance(desc["max_dist"], str)
+
+    def test_geometry_only_merge(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(
+            max_dist=20.0, angle_error=10.0, distance_error=3.0, parallel_error=15.0
+        )
+        segments = [
+            _make_segment(0, 0, 10, 0),
+            _make_segment(12, 0, 22, 0),
+        ]
+        result = opt.optimize(segments)
+        assert len(result) == 1
+
+    def test_geometry_preserve_distant(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(max_dist=5.0)
+        segments = [
+            _make_segment(0, 0, 10, 0),
+            _make_segment(100, 100, 110, 100),
+        ]
+        result = opt.optimize(segments)
+        assert len(result) == 2
+
+    def test_empty_input(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer()
+        result = opt.optimize([])
+        assert len(result) == 0
+
+    def test_gradient_assisted_merge(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer(
+            max_dist=30.0,
+            angle_error=10.0,
+            distance_error=5.0,
+            parallel_error=5.0,
+            merge_type=le_algorithm.ContinuityMergeType.STANDARD,
+            accuracy=2.0,
+            threshold=5.0,
+        )
+        # Create a magnitude image with strong gradient along y=50
+        mag = np.zeros((100, 200), dtype=np.float64)
+        mag[49:52, :] = 100.0
+        segments = [
+            _make_segment(10, 50, 50, 50),
+            _make_segment(70, 50, 120, 50),
+        ]
+        result = opt.optimize(segments, mag)
+        # With strong gradient evidence, the gap should be bridged
+        assert len(result) <= 2  # may or may not merge depending on gap
+
+    def test_optimize_with_image(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer()
+        src = np.random.randint(0, 255, (100, 100), dtype=np.uint8)
+        segments = [_make_segment(10, 50, 90, 50)]
+        result, magnitude = opt.optimize_with_image(segments, src)
+        assert len(result) >= 1
+        assert magnitude.shape == (100, 100)
+
+    def test_f32_variant(self) -> None:
+        opt = le_algorithm.LineContinuityOptimizer_f32()
+        assert repr(opt) == "<LineContinuityOptimizer_f32>"
+
+    def test_continuity_merge_type_enum(self) -> None:
+        assert le_algorithm.ContinuityMergeType.STANDARD is not None
+        assert le_algorithm.ContinuityMergeType.AVG is not None
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

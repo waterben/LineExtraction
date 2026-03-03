@@ -8,10 +8,15 @@ filegroup(
     srcs = ["windmill.jpg"],
 )
 
-# Synthetic example image with known line segments for accuracy evaluation
+# Synthetic example images with known line segments for accuracy evaluation
 filegroup(
     name = "example_lines",
     srcs = ["example_lines.png"],
+)
+
+filegroup(
+    name = "example_challenge",
+    srcs = ["example_challenge.png"],
 )
 
 # Optimized detector parameter presets (fast / balanced / accurate)

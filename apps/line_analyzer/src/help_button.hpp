@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include "help_viewer.h"
+
 #include <QHBoxLayout>
 #include <QMainWindow>
-#include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <algorithm>
@@ -13,15 +14,15 @@
 /// @brief Add a "?" help button at the top-right of a QMainWindow panel.
 ///
 /// Inserts a right-aligned "?" QPushButton at the top of the central widget's
-/// vertical layout.  Clicking it opens a QMessageBox with rich-text help.
-/// The window's size constraints and geometry are adjusted so the extra row
-/// does not clip existing content.
+/// vertical layout.  Clicking it opens the shared Markdown HelpViewer and
+/// navigates to the specified README file and (optional) heading anchor.
 ///
-/// @param parent The QMainWindow to add the button to.
-/// @param title  Window title for the help dialog.
-/// @param html   Rich-text (HTML) help content.
+/// @param parent          The QMainWindow to add the button to.
+/// @param readme_relative Path relative to `apps/line_analyzer/`,
+///                        e.g. "extensions/accuracy/README.md".
+/// @param anchor          Optional heading slug to scroll to, e.g. "settings".
 /// @return Pointer to the created QPushButton.
-inline QPushButton* addHelpButton(QMainWindow* parent, const QString& title, const QString& html) {
+inline QPushButton* addHelpButton(QMainWindow* parent, const QString& readme_relative, const QString& anchor = {}) {
   auto* btn = new QPushButton("?", parent);
   btn->setFixedSize(24, 24);
   btn->setToolTip(QObject::tr("Show detailed help for this tool"));
@@ -63,13 +64,8 @@ inline QPushButton* addHelpButton(QMainWindow* parent, const QString& title, con
   // Actually resize the window so the added row is visible immediately.
   parent->resize(parent->width(), newH);
 
-  QObject::connect(btn, &QPushButton::clicked, parent, [parent, title, html]() {
-    QMessageBox box(parent);
-    box.setWindowTitle(title);
-    box.setTextFormat(Qt::RichText);
-    box.setText(html);
-    box.exec();
-  });
+  QObject::connect(btn, &QPushButton::clicked, parent,
+                   [parent, readme_relative, anchor]() { HelpViewer::showHelp(readme_relative, anchor, parent); });
 
   return btn;
 }

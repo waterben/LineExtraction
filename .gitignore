@@ -45,6 +45,7 @@ docker/devenv/custom/**/*
 
 # other
 .clangd
+**/*no-git.md
 # Clang - compile commands and corresponding cache
 .cache/
 compile_commands.json

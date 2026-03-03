@@ -13,6 +13,10 @@ pybind_library(
     name = "imgproc_python_pybind",
     srcs = [
         "src/filter_binding.cpp",
+        "src/gradient_extra_binding.cpp",
+        "src/image_operator_binding.cpp",
+        "src/laplace_binding.cpp",
+        "src/quadrature_binding.cpp",
     ],
     hdrs = [
         "src/filter_binding.hpp",

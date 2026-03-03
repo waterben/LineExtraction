@@ -351,11 +351,33 @@ function(le_add_executable target_name)
 
     # Qt setup
     if(LE_QT_APP AND ENABLE_QT AND Qt5Widgets_FOUND)
+        # Collect unique directories that contain .ui files so AUTOUIC can
+        # locate them even when the including header lives elsewhere.
+        set(_ui_search_paths "")
+        foreach(_src ${LE_SOURCES} ${LE_HEADERS})
+            if(_src MATCHES "\\.ui$")
+                get_filename_component(_ui_dir "${_src}" DIRECTORY)
+                if(_ui_dir)
+                    # Resolve relative paths against the current source dir
+                    if(NOT IS_ABSOLUTE "${_ui_dir}")
+                        set(_ui_dir "${CMAKE_CURRENT_SOURCE_DIR}/${_ui_dir}")
+                    endif()
+                    list(APPEND _ui_search_paths "${_ui_dir}")
+                endif()
+            endif()
+        endforeach()
+        list(REMOVE_DUPLICATES _ui_search_paths)
+
         # Enable AUTOMOC/AUTOUIC only for Qt applications
         set_target_properties(${target_name} PROPERTIES
             AUTOMOC ON
             AUTOUIC ON
         )
+        if(_ui_search_paths)
+            set_target_properties(${target_name} PROPERTIES
+                AUTOUIC_SEARCH_PATHS "${_ui_search_paths}"
+            )
+        endif()
 
         if(LE_QT_MODULES)
             foreach(module ${LE_QT_MODULES})

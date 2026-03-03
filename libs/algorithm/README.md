@@ -1,6 +1,6 @@
 # Algorithm Library
 
-Post-processing, accuracy evaluation, and parameter optimisation toolkit for
+Post-processing, accuracy evaluation, and parameter optimization toolkit for
 line segment detection pipelines. Provides merging, connecting, precision
 refinement, ground truth handling, and automated hyperparameter search — all
 usable from C++ and Python.
@@ -13,8 +13,9 @@ The `algorithm` library sits on top of the detection modules (`lsd`, `lfd`,
 
 | Component | Header | Description |
 |-----------|--------|-------------|
-| **LineMerge** | `line_merge.hpp` | Merge collinear / near-collinear segments |
-| **LineConnect** | `line_connect.hpp` | Connect nearby segments via gradient evidence |
+| **LineContinuityOptimizer** | `line_continuity.hpp` | Unified collinear merge + gradient-assisted gap bridging |
+| **LineMerge** | `line_merge.hpp` | Merge collinear / near-collinear segments (legacy) |
+| **LineConnect** | `line_connect.hpp` | Connect nearby segments via gradient evidence (legacy) |
 | **AccuracyMeasure** | `accuracy_measure.hpp` | Precision, recall, F1, and sAP metrics |
 | **GroundTruthLoader** | `ground_truth.hpp` | Load / save ground truth in CSV format |
 | **ParamOptimizer** | `param_search.hpp` | Automated parameter search (grid + random) |
@@ -28,9 +29,10 @@ All code resides in the `lsfm` namespace.
 
 ```
 ValueManager (from libs/utility)
-  ├── LineMerge<FT>           — merge collinear segments
-  ├── LineConnect<FT>         — gradient-guided connection
-  └── PrecisionOptimize       — dlib-based sub-pixel optimisation
+  ├── LineContinuityOptimizer<FT> — unified merge + gradient-assisted bridging
+  ├── LineMerge<FT>           — merge collinear segments (legacy)
+  ├── LineConnect<FT>         — gradient-guided connection (legacy)
+  └── PrecisionOptimize       — dlib-based sub-pixel optimization
 
 AccuracyMeasure<FT>           — detection quality metrics
 GroundTruthLoader             — CSV I/O for ground truth segments
@@ -43,14 +45,14 @@ ParamOptimizer                — orchestrates search + evaluation
 
 ImageAnalyzer                 — contrast/noise/edge/range analysis
 ImageProperties               — measured image characteristics
-ProfileHints                  — suggested knob values + adaptive factors
+ProfileHints                  — suggested slider values + adaptive factors
 
-DetectorProfile               — 4 percentage knobs → detector parameters
+DetectorProfile               — 4 percentage sliders → detector parameters
   └── maps to all 9 LSD detectors (CC, CP, Burns, FBW, FGioi,
                                     EDLZ, EL, EP, HoughP)
 ```
 
-`LineMerge`, `LineConnect`, and `PrecisionOptimize` extend `ValueManager`,
+`LineContinuityOptimizer`, `LineMerge`, `LineConnect`, and `PrecisionOptimize` extend `ValueManager`,
 so their parameters can be read and set by name at runtime.  This is the
 mechanism `ParamOptimizer` uses to inject configurations during search.
 
@@ -63,11 +65,76 @@ mechanism `ParamOptimizer` uses to inject configurations during search.
 | `libs/utility` | `Value`, `ValueManager` |
 | `libs/eval` | Performance task infrastructure |
 | OpenCV | `cv::Mat`, gradient computation |
-| dlib | BFGS / L-BFGS / CG optimisation (PrecisionOptimize) |
+| dlib | BFGS / L-BFGS / CG optimization (PrecisionOptimize) |
 
 ## Components
 
-### LineMerge
+### LineContinuityOptimizer
+
+Unified line segment continuity optimizer that combines collinear merging
+with optional gradient-assisted gap bridging in a single iterative loop.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_dist` | 20 | Maximum endpoint distance (pixels) |
+| `angle_error` | 5 | Maximum angle difference (degrees) |
+| `distance_error` | 3 | Maximum perpendicular distance (pixels) |
+| `parallel_error` | 10 | Maximum parallel gap for pure geometry (pixels) |
+| `merge_type` | `STANDARD` | `STANDARD` (furthest endpoints) or `AVG` (average positions) |
+| `accuracy` | 2 | Gradient sampling step (pixels, variant 2 only) |
+| `threshold` | 10 | Minimum average gradient magnitude (variant 2 only) |
+
+Two variants share the same class and geometric constraint checks:
+
+**Variant 1 — geometry-only** (`optimize(input, output)`):
+Merges pairs that pass all four checks (angle, endpoint distance,
+perpendicular distance, parallel gap). Identical behavior to `LineMerge`.
+
+**Variant 2 — gradient-assisted** (`optimize(input, output, magnitude)`):
+Same loop, but adds a second acceptance path: when a pair passes the
+angle, endpoint distance, and perpendicular distance checks yet the
+parallel gap exceeds `parallel_error`, the pair can still be merged if
+gradient evidence along the connecting path meets `threshold`. This
+allows bridging larger gaps without giving up the geometric safeguards
+that prevent the aggressive false connections of standalone `LineConnect`.
+
+#### Decision Flow
+
+```
+  for each pair (A, B):
+
+      angle_diff > angle_error?          → skip
+      endpoint_dist > max_dist?          → skip
+      perpendicular_dist > distance_error? → skip
+
+      parallel_gap ≤ parallel_error?     → MERGE (geometry path)
+
+      gradient enabled?
+        avg_gradient ≥ threshold?        → MERGE (gradient path)
+        otherwise                        → skip
+```
+
+> **GUI:** The [Continuity Optimizer](../../apps/line_analyzer/extensions/continuity_optimizer/README.md) panel in the Line Analyzer app provides an interactive UI for this algorithm.
+
+```cpp
+#include <algorithm/line_continuity.hpp>
+
+// Variant 1: geometry-only merge
+lsfm::LineContinuityOptimizer<double> opt(/*max_dist=*/20, /*angle_error=*/5,
+                                          /*dist_error=*/3, /*parallel_error=*/10);
+std::vector<lsfm::LineSegment<double>> output;
+opt.optimize(input_segments, output);
+
+// Variant 2: gradient-assisted merge
+lsfm::LineContinuityOptimizer<double> opt2(/*max_dist=*/20, /*angle_error=*/5,
+                                           /*dist_error=*/3, /*parallel_error=*/10,
+                                           lsfm::ContinuityMergeType::STANDARD,
+                                           /*accuracy=*/2, /*threshold=*/10);
+std::vector<lsfm::LineSegment<double>> output2;
+opt2.optimize(input_segments, output2, gradient_magnitude);
+```
+
+### LineMerge (legacy)
 
 Iteratively merges pairs of line segments that satisfy four proximity
 criteria simultaneously:
@@ -117,7 +184,7 @@ Two segments A and B are merged when **all four** criteria pass:
 
 The process repeats until convergence (no more merges possible).
 
-> **GUI:** The [Continuity Optimizer](../../apps/line_analyzer/extensions/continuityoptimizer/README.md) in the Line Analyzer app provides an interactive UI for this algorithm.
+> **GUI:** The [Continuity Optimizer](../../apps/line_analyzer/extensions/continuity_optimizer/README.md) panel in the Line Analyzer app provides an interactive UI for this algorithm.
 
 ```cpp
 #include <algorithm/line_merge.hpp>
@@ -129,7 +196,7 @@ std::vector<lsfm::LineSegment<double>> output;
 merger.merge_lines(input_segments, output);
 ```
 
-### LineConnect
+### LineConnect (legacy)
 
 Joins nearby segment endpoints when the gradient magnitude along the
 connecting path is strong enough.
@@ -139,6 +206,7 @@ connecting path is strong enough.
 | `max_radius` | 15 | Maximum endpoint distance to consider (pixels) |
 | `accuracy` | 2 | Sampling step along the connecting path (pixels) |
 | `threshold` | 10 | Minimum average gradient magnitude |
+| `max_angle` | 0 | Maximum angle difference in degrees (0 = disabled) |
 
 The algorithm evaluates all four endpoint pairings (start–start,
 start–end, end–start, end–end) and picks the one with the highest
@@ -159,7 +227,7 @@ gradient response above the threshold.
   After:   A ●════════════════════● B   (endpoints extended)
 ```
 
-> **GUI:** The [Connection Optimizer](../../apps/line_analyzer/extensions/connectionoptimizer/README.md) in the Line Analyzer app provides an interactive UI for this algorithm.
+> **GUI:** The [Continuity Optimizer](../../apps/line_analyzer/extensions/continuity_optimizer/README.md) panel in the Line Analyzer app provides an interactive UI for this algorithm.
 
 ```cpp
 #include <algorithm/line_connect.hpp>
@@ -193,7 +261,7 @@ below the threshold.
                                                      GT not matched → FN
 ```
 
-> **GUI:** The [Accuracy Measure](../../apps/line_analyzer/extensions/accuracy/README.md) and [Line Analyser 2D](../../apps/line_analyzer/extensions/lineanalyser2d/README.md) panels in the Line Analyzer app provide interactive UIs for accuracy evaluation.
+> **GUI:** The [Accuracy Measure](../../apps/line_analyzer/extensions/accuracy/README.md) and [GT Inspector](../../apps/line_analyzer/extensions/ground_truth_inspector/README.md) panels in the Line Analyzer app provide interactive UIs for accuracy evaluation.
 
 ```cpp
 #include <algorithm/accuracy_measure.hpp>
@@ -278,7 +346,7 @@ auto detect_fn = [&](const cv::Mat& src,
 auto gt = lsfm::GroundTruthLoader::load_csv("ground_truth.csv");
 std::vector<std::pair<std::string, cv::Mat>> images = { ... };
 
-// 4. Run optimisation
+// 4. Run optimization
 lsfm::ParamOptimizer optimizer(lsfm::OptimMetric::F1,
                                /*match_threshold=*/5.0,
                                /*verbose=*/true);
@@ -331,9 +399,9 @@ result.sort_by_score();
 ### PrecisionOptimize
 
 Sub-pixel refinement of line segment positions using gradient-based
-numerical optimisation (BFGS / L-BFGS / Conjugate Gradient via dlib).
+numerical optimization (BFGS / L-BFGS / Conjugate Gradient via dlib).
 
-Searches over orthogonal translation and rotation to maximise the
+Searches over orthogonal translation and rotation to maximize the
 mean gradient response along the segment.
 
 ```
@@ -348,7 +416,7 @@ mean gradient response along the segment.
        ●══════════════════●   ← optimized position (max gradient)
 ```
 
-> **GUI:** The [Precision Optimizer](../../apps/line_analyzer/extensions/precisionoptimizer/README.md) and [PO Function Plot](../../apps/line_analyzer/extensions/pofuncplot/README.md) panels in the Line Analyzer app provide interactive UIs for this algorithm.
+> **GUI:** The [Precision Optimizer](../../apps/line_analyzer/extensions/precision_optimizer/README.md) and [3D Profile Plot](../../apps/line_analyzer/extensions/3d_profile_plot/README.md) panels in the Line Analyzer app provide interactive UIs for this algorithm.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -371,7 +439,7 @@ lsfm::PrecisionOptimize optimizer;
 optimizer.value("search_strategy", 0);  // BFGS
 optimizer.value("interpolation", 2);    // bilinear
 
-// Optimise in place
+// Optimize in place
 auto errors = optimizer.optimize_all(gradient_magnitude, segments);
 
 // Or produce a refined copy
@@ -383,13 +451,13 @@ auto errors = optimizer.optimize_copy(gradient_magnitude, segments, refined);
 
 Analyzes an image to extract measurable properties (contrast, noise level,
 edge density, dynamic range), all normalized to [0, 1]. These properties
-can be used to suggest adaptive detector profile knob values via
+can be used to suggest adaptive detector profile slider values via
 `suggest_profile()`.
 
 The analyzer accepts both grayscale and color images (auto-converted
 to 8-bit grayscale internally).
 
-> **GUI:** The [Image Analyzer](../../apps/line_analyzer/extensions/imageanalyzer/README.md) panel in the Line Analyzer app provides an interactive UI for this analysis.
+> **GUI:** The [Image Analyzer](../../apps/line_analyzer/extensions/image_analyzer/README.md) panel in the Line Analyzer app provides an interactive UI for this analysis.
 
 #### Measured Properties (`ImageProperties`)
 
@@ -403,7 +471,7 @@ to 8-bit grayscale internally).
 #### Profile Hints
 
 `ImageProperties::suggest_profile()` returns a `ProfileHints` struct
-with heuristic knob suggestions and adaptive scaling factors:
+with heuristic slider suggestions and adaptive scaling factors:
 
 | Field | Range | Derivation Logic |
 |-------|-------|------------------|
@@ -427,7 +495,7 @@ std::cout << "Contrast:      " << props.contrast      << "\n"
           << "Edge density:  " << props.edge_density   << "\n"
           << "Dynamic range: " << props.dynamic_range  << "\n";
 
-// Get suggested profile knobs based on image analysis
+// Get suggested profile sliders based on image analysis
 lsfm::ProfileHints hints = props.suggest_profile();
 std::cout << "Suggested detail:    " << hints.detail         << "%\n"
           << "Suggested gap_tol:   " << hints.gap_tolerance  << "%\n"
@@ -439,16 +507,16 @@ std::cout << "Suggested detail:    " << hints.detail         << "%\n"
 
 ### DetectorProfile
 
-Translates 4 intuitive percentage knobs into concrete detector parameters
+Translates 4 intuitive percentage sliders into concrete detector parameters
 for all 9 supported LSD detectors.  This abstraction lets users control
-detection behaviour without knowing the internal parameter names of each
+detection behavior without knowing the internal parameter names of each
 algorithm.
 
-> **GUI:** The [Detector Profile](../../apps/line_analyzer/extensions/detectorprofile/README.md) panel in the Line Analyzer app provides an interactive UI with sliders for this algorithm.
+> **GUI:** The [Detector Profile](../../apps/line_analyzer/extensions/detector_profile/README.md) panel in the Line Analyzer app provides an interactive UI with sliders for this algorithm.
 
-#### Knob Semantics
+#### Slider Semantics
 
-| Knob | Range | Low (0%) | High (100%) |
+| Slider | Range | Low (0%) | High (100%) |
 |------|-------|----------|-------------|
 | `detail` | 0–100 | Coarse / salient edges only | Fine details included |
 | `gap_tolerance` | 0–100 | No gaps allowed — strict chaining | Very tolerant of gaps |
@@ -466,16 +534,16 @@ two multiplicative factors that modulate the parameter translation:
 | `noise_factor` | 0.5–2.0 | Scales threshold-like parameters. >1 for noisy images. |
 
 These factors are multiplied into threshold / gradient parameters during
-`to_params()` so that the same knob settings produce adapted behaviour
+`to_params()` so that the same slider settings produce adapted behavior
 on different image types.
 
-#### How the Knob Mapping Works
+#### How the Slider Mapping Works
 
 Each of the 9 detectors has its own mapping function (`map_lsd_cc()`, etc.)
-that translates the 4 human-readable knobs to a `ParamConfig` vector:
+that translates the 4 human-readable sliders to a `ParamConfig` vector:
 
-1. The knob percentage is normalized to `[0, 1]`.
-2. Linear interpolation (`lerp`) maps each knob to the detector-specific
+1. The slider percentage is normalized to `[0, 1]`.
+2. Linear interpolation (`lerp`) maps each slider to the detector-specific
    parameter range (e.g., `detail 0%→100%` maps `quant_error 3.0→0.5`
    for LsdFGioi).
 3. Threshold-related parameters are multiplied by the combined adaptive
@@ -502,7 +570,7 @@ that translates the 4 human-readable knobs to a `ParamConfig` vector:
 ```cpp
 #include <algorithm/detector_profile.hpp>
 
-// Option 1: Manual knob values
+// Option 1: Manual slider values
 lsfm::DetectorProfile profile(/*detail=*/70, /*gap_tolerance=*/30,
                                /*min_length=*/50, /*precision=*/80);
 
@@ -535,13 +603,13 @@ The typical image-adaptive workflow is:
 // 1. Analyze the image
 auto props = lsfm::ImageAnalyzer::analyze(image);
 
-// 2. Get suggested knobs + adaptive factors
+// 2. Get suggested sliders + adaptive factors
 auto hints = props.suggest_profile();
 
 // 3. Create profile (carries factors automatically)
 auto profile = lsfm::DetectorProfile::from_hints(hints);
 
-// 4. (Optional) Override individual knobs
+// 4. (Optional) Override individual sliders
 profile.set_detail(80);  // user wants more detail
 
 // 5. Apply to any number of detectors
@@ -607,7 +675,7 @@ img = np.random.randint(0, 255, (480, 640), dtype=np.uint8)
 props = alg.ImageAnalyzer.analyze(img)
 print(f"Contrast={props.contrast:.2f}, Noise={props.noise_level:.2f}")
 
-# Suggest adaptive profile knobs
+# Suggest adaptive profile sliders
 hints = props.suggest_profile()
 print(f"Suggested detail: {hints.detail:.0f}%")
 
@@ -622,7 +690,7 @@ params = profile.to_params_by_name("LsdFGioi")           # by name
 for p in params:
     print(f"  {p['name']} = {p['value']}")
 
-# --- Parameter optimisation ---
+# --- Parameter optimization ---
 space = [alg.ParamRange("sensitivity", 0.0, 1.0, 0.1)]
 strategy = alg.GridSearchStrategy()
 
@@ -736,8 +804,9 @@ libs/algorithm/
 │   ├── detector_profile.hpp                 # DetectorProfile, DetectorId
 │   ├── ground_truth.hpp                     # GroundTruthEntry, GroundTruthLoader
 │   ├── image_analyzer.hpp                   # ImageAnalyzer, ImageProperties, ProfileHints
-│   ├── line_connect.hpp                     # LineConnect
-│   ├── line_merge.hpp                       # LineMerge, MergeType
+│   ├── line_connect.hpp                     # LineConnect (legacy)
+│   ├── line_continuity.hpp                  # LineContinuityOptimizer
+│   ├── line_merge.hpp                       # LineMerge, MergeType (legacy)
 │   ├── param_search.hpp                     # ParamOptimizer, SearchResult, EvalResult
 │   ├── precision_optimize.hpp               # PrecisionOptimize
 │   └── search_strategy.hpp                  # ParamRange, SearchStrategy, Grid, Random
@@ -770,7 +839,7 @@ libs/algorithm/
 | `AccuracyMeasureTest` | 7 | Perfect match, no detections, all FP, partial, both empty, reversed, sAP |
 | `GridSearchTest` | 5 | Single param, two params, empty space, int, bool |
 | `RandomSearchTest` | 3 | Correct count, reproducible, within bounds |
-| `ParamOptimizerTest` | 3 | Basic optimisation, progress callback, cancellation |
+| `ParamOptimizerTest` | 3 | Basic optimization, progress callback, cancellation |
 | `GroundTruthTest` | 1 | make_entry |
 | `SearchResultTest` | 1 | top_n |
 
@@ -792,7 +861,7 @@ libs/algorithm/
 | `TestAccuracyMeasure` | 4 | Perfect match, no detections, threshold property, sAP |
 | `TestGroundTruth` | 2 | make_entry, repr |
 | `TestSearchStrategy` | 4 | Grid single param, grid bool, random count, reproducible |
-| `TestParamOptimizer` | 2 | Construction, basic optimisation |
+| `TestParamOptimizer` | 2 | Construction, basic optimization |
 | `TestEnums` | 3 | MergeType, OptimMetric, DetectorId |
 | `TestImageAnalyzer` | 6 | Uniform, noisy, high contrast, repr, suggest_profile, hints clamp |
 | `TestDetectorProfile` | 12 | Construction, from_hints, from_image, supported_detectors, to_params, all detectors, name conversion, setters, repr, detail affects thresholds |

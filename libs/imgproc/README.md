@@ -14,6 +14,44 @@ The `imgproc` library provides foundational image processing components:
 - **Phase Congruency**: Multi-scale edge detection invariant to contrast
 - **Special Filters**: SUSAN, RCMG color gradient, steerable filters
 
+### Gradient Pipeline
+
+```
+  ┌──────────┐     ┌────────────┐     ┌─────────────┐
+  │  Input    │────→│ Derivative │────→│  Magnitude   │
+  │  Image    │     │  (Gx, Gy)  │     │  & Direction │
+  └──────────┘     └────────────┘     └─────────────┘
+                    Sobel/Scharr/            │
+                    Gauss/Prewitt       ┌────┴────┐
+                                        │         │
+                                        ▼         ▼
+                                   magnitude  direction
+                                   (strength) (angle)
+```
+
+### Derivative Operators
+
+Each operator uses a different convolution kernel to approximate the image derivative:
+
+```
+  Sobel (3×3):         Scharr (3×3):        Gaussian:
+  ┌────────────┐       ┌────────────┐       Smooth then
+  │ -1  0  +1  │       │ -3   0  +3 │       differentiate
+  │ -2  0  +2  │       │ -10  0 +10 │       (scale-space)
+  │ -1  0  +1  │       │ -3   0  +3 │
+  └────────────┘       └────────────┘
+  (standard, any       (optimized for       (σ-parameterized,
+   kernel size)         rotational sym.)     multi-scale)
+```
+
+### Magnitude Norms
+
+```
+  Euclidean:   |∇I| = √(Gx² + Gy²)     — true magnitude
+  Quadratic:   |∇I| = Gx² + Gy²         — faster (no sqrt)
+  Absolute:    |∇I| = |Gx| + |Gy|       — L1 norm (fastest)
+```
+
 ## Components
 
 ### Derivative Operators
@@ -125,23 +163,38 @@ float val = lsfm::LinearInterpolator<float, uchar>::get(
 Compute local energy using even/odd filter pairs (Hilbert transform pairs).
 
 ```cpp
+#include <imgproc/quadratureG2.hpp>
 #include <imgproc/quadratureLGF.hpp>
+#include <imgproc/quadratureS.hpp>
+#include <imgproc/quadratureSF.hpp>
 
-// Log-Gabor quadrature filter
-lsfm::QuadratureLGF<uchar, float, float, float, float> quad(
-    0, 255,     // intensity range
-    3,          // number of scales
-    0.65,       // sigma on frequency
-    0.55,       // mult factor
-    2.0         // min wavelength
-);
+// Steerable G2/H2 quadrature (spatial domain, separable)
+lsfm::QuadratureG2<uchar, float> g2(0, 255, 9, 0.67);
+//                                   ^    ^   ^   ^
+//                         int_lower  int_upper kernel_size kernel_spacing
 
-quad.process(image);
-cv::Mat even = quad.even();         // Even (symmetric) response
-cv::Mat odd = quad.odd();           // Odd (antisymmetric) magnitude
-cv::Mat energy = quad.energy();     // Local energy
-cv::Mat phase = quad.phase();       // Local phase
-cv::Mat dir = quad.direction();     // Orientation
+// Log-Gabor quadrature (frequency domain via FFT)
+lsfm::QuadratureLGF<uchar, float> lgf(0, 255, 5.0, 0.55);
+//                                     ^    ^   ^     ^
+//                           int_lower  int_upper waveLength sigmaOnf
+
+// Difference of Poisson quadrature (spatial domain)
+lsfm::QuadratureS<uchar, short, float> qs(0, 255, 5, 0.67, 1.0, 1.0, 2.0);
+//                                         ^    ^  ^   ^     ^    ^     ^
+//                               int_lower int_upper ks spacing scale scale muls
+
+// Difference of Poisson quadrature (frequency domain via FFT)
+lsfm::QuadratureSF<uchar, float> qsf(0, 255, 0.67, 1.0, 2.0);
+//                                    ^    ^   ^     ^    ^
+//                          int_lower int_upper spacing scale muls
+
+g2.process(image);
+cv::Mat even = g2.even();         // Even (symmetric) response
+cv::Mat odd = g2.odd();           // Odd (antisymmetric) magnitude
+cv::Mat energy = g2.energy();     // Local energy
+cv::Mat phase = g2.phase();       // Local phase
+cv::Mat dir = g2.direction();     // Orientation
+cv::Mat lap = g2.laplace();       // Laplacian (alias for even)
 ```
 
 ### Phase Congruency
@@ -265,10 +318,10 @@ cv::Mat_<float> g2 = lsfm::gaussianD2<float>(5, 3.0f);
 | Header | Description |
 |--------|-------------|
 | `quadrature.hpp` | Quadrature filter interface |
-| `quadratureLGF.hpp` | Log-Gabor quadrature filter |
-| `quadratureG2.hpp` | Second-order Gaussian quadrature |
-| `quadratureS.hpp` | Steerable quadrature filter |
-| `quadratureSF.hpp` | Steerable Freeman-Adelson filter |
+| `quadratureLGF.hpp` | Log-Gabor quadrature filter (frequency domain) |
+| `quadratureG2.hpp` | Steerable G2/H2 Gaussian quadrature (spatial domain) |
+| `quadratureS.hpp` | Difference of Poisson quadrature (spatial domain) |
+| `quadratureSF.hpp` | Difference of Poisson quadrature (frequency domain) |
 | `phase_congruency.hpp` | Phase congruency interface |
 | `pc_lgf.hpp` | Log-Gabor phase congruency |
 | `pc_sqf.hpp` | Steerable phase congruency |
@@ -333,7 +386,9 @@ cmake --build build --target lib_imgproc
 - [edge](../edge/README.md) - Edge detection using gradient operators
 - [lsd](../lsd/README.md) - Line segment detection
 - [geometry](../geometry/README.md) - Geometric primitives
+- [algorithm](../algorithm/README.md) - Parameter optimization and continuity optimization
 - [utility](../utility/README.md) - Core utilities
+- [Resources](../../resources/README.md) - Datasets, presets, and ground-truth data
 - [Image Processing Examples](../../examples/imgproc/README.md) - Usage examples
 - [Main README](../../README.md) - Project overview
 

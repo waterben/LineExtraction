@@ -5,18 +5,21 @@ Python bindings for the `libs/algorithm` C++ library using [pybind11](https://py
 ## Overview
 
 This module provides post-processing, accuracy evaluation, and automated
-parameter optimisation for line segment detection pipelines:
+parameter optimization for line segment detection pipelines:
 
 - **LineMerge** — merge collinear / near-collinear line segments
 - **LineConnect** — connect nearby segments via gradient evidence
 - **AccuracyMeasure** — precision, recall, F1, and structural AP (sAP)
 - **GroundTruthLoader** — load / save ground truth annotations (CSV)
 - **ImageAnalyzer** — image property analysis (contrast, noise, edges, range)
-- **DetectorProfile** — intuitive 4-knob parameter profiles for all 9 LSD detectors
+- **DetectorProfile** — intuitive 4-slider parameter profiles for all 9 LSD detectors
 - **ParamOptimizer** — automated hyperparameter search (grid + random)
 - **AccuracyResult**, **EvalResult**, **SearchResult** — result containers
 - **ParamRange** — search space definition helpers
-- **Enums**: `MergeType`, `OptimMetric`, `DetectorId`
+- **PrecisionOptimize** — headless line position optimizer (dlib-based)
+- **PresetStore** — load/query optimized detector parameter presets (JSON)
+- **LineContinuityOptimizer** — unified geometry + gradient-assisted merge
+- **Enums**: `MergeType`, `OptimMetric`, `DetectorId`, `PrecisionSearchStrategy`, `PrecisionStopStrategy`, `InterpolationMode`, `ContinuityMergeType`
 
 Images are passed as NumPy arrays and automatically converted to/from
 `cv::Mat`.  Line segments use `le_geometry.LineSegment_f64` (double
@@ -240,7 +243,7 @@ print(f"Noise level:   {props.noise_level:.3f}")
 print(f"Edge density:  {props.edge_density:.3f}")
 print(f"Dynamic range: {props.dynamic_range:.3f}")
 
-# Suggest profile knobs based on image properties
+# Suggest profile sliders based on image properties
 hints = props.suggest_profile()
 print(f"Suggested detail:    {hints.detail:.0f}%")
 print(f"Suggested gap_tol:   {hints.gap_tolerance:.0f}%")
@@ -261,7 +264,7 @@ print(f"Noise factor:        {hints.noise_factor:.2f}")
 
 ### ProfileHints
 
-Returned by `ImageProperties.suggest_profile()`. Contains suggested knob
+Returned by `ImageProperties.suggest_profile()`. Contains suggested slider
 values and adaptive scaling factors.
 
 | Field | Type | Range | Description |
@@ -277,18 +280,18 @@ Methods:
 
 | Method | Description |
 |--------|-------------|
-| `clamp()` | Clamp knobs to [0, 100] and factors to [0.5, 2.0] |
+| `clamp()` | Clamp sliders to [0, 100] and factors to [0.5, 2.0] |
 
 ## DetectorProfile
 
-Translates 4 intuitive percentage knobs (0–100%) into concrete detector
+Translates 4 intuitive percentage sliders (0–100%) into concrete detector
 parameters for all 9 supported LSD detectors. Supports adaptive scaling
 via `ImageAnalyzer`-produced hints.
 
 ### Construction
 
 ```python
-# Manual knob values (defaults: all 50%)
+# Manual slider values (defaults: all 50%)
 profile = alg.DetectorProfile()
 profile = alg.DetectorProfile(
     detail=70,           # 0=coarse, 100=fine
@@ -380,7 +383,7 @@ print(f"Image: contrast={props.contrast:.2f}, noise={props.noise_level:.2f}")
 hints = props.suggest_profile()
 print(f"Suggested: detail={hints.detail:.0f}%, precision={hints.precision:.0f}%")
 
-# 4. Create profile (optionally override knobs)
+# 4. Create profile (optionally override sliders)
 profile = alg.DetectorProfile.from_hints(hints)
 profile.detail = 80  # bump detail
 
@@ -491,7 +494,7 @@ def detect_fn(src: np.ndarray, params: list[dict]) -> list[geo.LineSegment_f64]:
     return detected_segments
 ```
 
-### Full Optimisation Example
+### Full Optimization Example
 
 ```python
 import numpy as np
@@ -523,7 +526,7 @@ def detect_fn(src, params):
         return gt_segments  # simplified — return perfect detections
     return []
 
-# 5. Run optimisation
+# 5. Run optimization
 optimizer = alg.ParamOptimizer(metric=alg.OptimMetric.F1, match_threshold=5.0)
 strategy = alg.GridSearchStrategy()
 
@@ -565,8 +568,8 @@ result = optimizer.optimize(strategy, space, images, gt, detect_fn,
 | Value | Description |
 |-------|-------------|
 | `OptimMetric.F1` | F1 score (harmonic mean of precision/recall) |
-| `OptimMetric.PRECISION` | Optimise for precision only |
-| `OptimMetric.RECALL` | Optimise for recall only |
+| `OptimMetric.PRECISION` | Optimize for precision only |
+| `OptimMetric.RECALL` | Optimize for recall only |
 
 ### SearchResult
 
@@ -584,7 +587,7 @@ result = optimizer.optimize(strategy, space, images, gt, detect_fn,
 |------------------|------|-------------|
 | `params` | list[dict] | Parameter configuration (read-only) |
 | `accuracy` | AccuracyResult | Full accuracy metrics |
-| `score` | float | Optimised metric value |
+| `score` | float | Optimized metric value |
 
 ## Parameter Dict Convention
 
@@ -605,21 +608,158 @@ This convention applies to:
 - `EvalResult.params`
 - Return values of `GridSearchStrategy.generate()` / `RandomSearchStrategy.generate()`
 
+## PrecisionOptimize
+
+Headless line segment position optimizer.  Refines line segments by
+maximizing gradient response along the segment using dlib optimization.
+All parameters are exposed via a dict-based interface.
+
+### Construction
+
+```python
+# Default parameters
+opt = alg.PrecisionOptimize()
+
+# From parameter dict
+opt = alg.PrecisionOptimize({
+    "search_range_d": 2.0,
+    "search_range_r": 1.5,
+    "interpolation": 2,       # 0=nearest, 1=nearest_round, 2=bilinear, 3=bicubic
+    "search_strategy": 0,     # 0=BFGS, 1=LBFGS, 2=CG
+    "stop_strategy": 0,       # 0=delta, 1=gradient_norm
+})
+```
+
+### Usage
+
+```python
+# Optimize single segment
+error, optimized = opt.optimize_line(magnitude, segment)
+
+# Optimize batch
+errors, optimized_list = opt.optimize_all(magnitude, segments)
+
+# Parameter inspection
+params = opt.get_params()         # dict of current values
+descs = opt.param_descriptions()  # dict of descriptions
+opt.set_params({"search_range_d": 3.0})
+```
+
+### Related Enums
+
+| Enum | Values | Description |
+|------|--------|-------------|
+| `PrecisionSearchStrategy` | `BFGS`, `LBFGS`, `CG` | Optimization algorithm |
+| `PrecisionStopStrategy` | `DELTA`, `GRAD_NORM` | Convergence criterion |
+| `InterpolationMode` | `NEAREST`, `NEAREST_ROUND`, `BILINEAR`, `BICUBIC` | Gradient sampling |
+
+## PresetStore
+
+Load and query optimized detector parameter presets from JSON files
+generated by `optimize_presets.py`.
+
+```python
+# Load from file
+store = alg.PresetStore("lsd_presets.json")
+
+# Or from JSON string
+store = alg.PresetStore.from_string(json_content)
+
+# Query by DetectorId enum
+params = store.get(alg.DetectorId.LSD_CC, "balanced")
+
+# Query by name string
+params = store.get_by_name("LsdCC", "balanced")
+
+# Inspect
+print(store.preset_names())    # ["fast", "balanced", "accurate"]
+print(store.detector_names())  # ["LsdCC", "LsdBurns", ...]
+print(store.has(alg.DetectorId.LSD_CC, "fast"))  # True
+score = store.score(alg.DetectorId.LSD_CC, "balanced")
+
+# Preset name constants
+alg.PresetStore.FAST       # "fast"
+alg.PresetStore.BALANCED   # "balanced"
+alg.PresetStore.ACCURATE   # "accurate"
+```
+
+## LineContinuityOptimizer
+
+Unified line segment continuity optimizer with two modes:
+
+1. **Geometry-only merge**: Merges collinear segments by angle, distance,
+   perpendicular distance, and parallel gap constraints.
+2. **Gradient-assisted merge**: Same geometric checks plus gradient evidence
+   along connecting paths.
+
+### Construction
+
+```python
+# Default parameters
+lco = alg.LineContinuityOptimizer()
+
+# Custom geometry-only parameters
+lco = alg.LineContinuityOptimizer(
+    max_dist=20.0,
+    angle_error=5.0,
+    distance_error=3.0,
+    parallel_error=10.0,
+    merge_type=alg.ContinuityMergeType.STANDARD,
+)
+
+# Full parameters (geometry + gradient)
+lco = alg.LineContinuityOptimizer(
+    max_dist=20.0, angle_error=5.0, distance_error=3.0,
+    parallel_error=10.0, merge_type=alg.ContinuityMergeType.STANDARD,
+    accuracy=2.0, threshold=10.0,
+)
+
+# From parameter dict
+lco = alg.LineContinuityOptimizer({"max_dist": 15.0, "angle_error": 3.0})
+```
+
+### Usage
+
+```python
+# Mode 1: geometry-only merge
+merged = lco.optimize(segments)
+
+# Mode 2: gradient-assisted merge
+merged = lco.optimize(segments, magnitude)
+
+# Mode 3: auto-compute magnitude from image
+merged, magnitude = lco.optimize_with_image(segments, grayscale_img)
+
+# Parameter access
+params = lco.get_params()
+lco.set_params({"max_dist": 25.0})
+descs = lco.param_descriptions()
+```
+
+### ContinuityMergeType Enum
+
+| Value | Description |
+|-------|-------------|
+| `ContinuityMergeType.STANDARD` | Keep the two furthest endpoints |
+| `ContinuityMergeType.AVG` | Average endpoint positions |
+
 ## Type Suffixes
 
 Templated classes are available in double (default) and float variants:
 
 | Python Class | C++ Type | Precision |
-|-------------|----------|-----------|
+|-------------|----------|----------|
 | `LineMerge` | `LineMerge<double>` | f64 |
 | `LineMerge_f32` | `LineMerge<float>` | f32 |
 | `LineConnect` | `LineConnect<double>` | f64 |
 | `LineConnect_f32` | `LineConnect<float>` | f32 |
 | `AccuracyMeasure` | `AccuracyMeasure<double>` | f64 |
 | `AccuracyMeasure_f32` | `AccuracyMeasure<float>` | f32 |
+| `LineContinuityOptimizer` | `LineContinuityOptimizer<double>` | f64 |
+| `LineContinuityOptimizer_f32` | `LineContinuityOptimizer<float>` | f32 |
 
-Non-templated classes (`GroundTruthLoader`, `ParamOptimizer`, search
-strategies, enums) have no suffix.
+Non-templated classes (`GroundTruthLoader`, `ParamOptimizer`, `PrecisionOptimize`,
+`PresetStore`, search strategies, enums) have no suffix.
 
 ## Build & Test
 

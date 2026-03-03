@@ -1,3 +1,6 @@
 tools/bazel/registry
 extern
 .venv
+build
+build_docs
+build_extern_only

@@ -33,25 +33,8 @@ PreProcessing::PreProcessing(QWidget* parent) : QMainWindow(parent), ui(new Ui::
          "sigma (0.3-1.0) suppresses pixel noise."));
   ui->spin_blur->setToolTip(tr("Gaussian blur sigma in pixels (0.1-10.0)."));
 
-  // Help button.
-  addHelpButton(this, tr("Help \xe2\x80\x94 Image Pre-Processing"),
-                tr("<h3>Image Pre-Processing</h3>"
-                   "<p>Configure how the loaded image is transformed before "
-                   "line detection.</p>"
-                   "<h4>Parameters</h4>"
-                   "<ul>"
-                   "<li><b>Scale:</b> Resize by the given factor. "
-                   "Useful for downscaling high-res images.</li>"
-                   "<li><b>Interpolation:</b> Method used for resizing "
-                   "(nearest, bilinear, area, bicubic, Lanczos).</li>"
-                   "<li><b>Convert to Grayscale:</b> Convert color images to "
-                   "single-channel grayscale, as required by most detectors.</li>"
-                   "<li><b>Gaussian Noise:</b> Add synthetic noise with the "
-                   "given standard deviation for robustness testing.</li>"
-                   "<li><b>Gaussian Blur:</b> Blur with the given sigma. "
-                   "A small blur (0.3\xe2\x80\x93"
-                   "1.0) suppresses pixel noise.</li>"
-                   "</ul>"));
+  // Help button — opens README in HelpViewer.
+  addHelpButton(this, "README.md", "usage");
 }
 
 PreProcessing::~PreProcessing() { delete ui; }

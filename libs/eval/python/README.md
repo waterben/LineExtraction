@@ -9,6 +9,9 @@ image processing algorithms:
 
 - **StringTable** — 2D table for collecting and exporting results
 - **Performance measures** — timing, per-megapixel throughput, statistics
+- **GenericInputData** — base input data container (name string)
+- **CVPerformanceData** — image data for benchmarks (extends GenericInputData)
+- **Measure** — base measurement class with source/task names and metadata
 - **Data providers** — load test images from the file system
 - **Task framework** — define, run, and compare benchmark tasks from Python
 - **CVPerformanceTest** — orchestrator for running multi-image benchmarks
@@ -134,6 +137,48 @@ m2 = le_eval.CVPerformanceMeasure("src", "task", 640, 480)
 m2.append_duration(2000)
 
 combined = le_eval.accumulate_measures([m1, m2], "src", "task")
+```
+
+### GenericInputData
+
+Base input data container carrying a name string:
+
+```python
+data = le_eval.GenericInputData()
+data = le_eval.GenericInputData("my_source")
+data.name = "updated_name"
+```
+
+### Measure
+
+Base measurement class with source/task names and extensible metadata:
+
+```python
+m = le_eval.Measure()
+m.source_name = "test_set"
+m.task_name = "detector_a"
+
+m.has_metadata("key")  # check metadata
+m.clear()               # clear all metadata
+```
+
+`PerformanceMeasureBase` extends `Measure` with timing durations, and
+`CVPerformanceMeasure` further adds image dimensions.
+
+### CVPerformanceData
+
+Image data container for performance benchmarks, extending `GenericInputData`
+with source and grayscale images:
+
+```python
+import numpy as np
+
+img = np.zeros((480, 640, 3), dtype=np.uint8)
+data = le_eval.CVPerformanceData("test_image", img)
+
+data.name       # "test_image"
+data.src        # source image (numpy array)
+data.src_gray   # grayscale version (numpy array)
 ```
 
 ## Data Providers
