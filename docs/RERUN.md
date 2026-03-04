@@ -225,15 +225,16 @@ rr.connect_grpc()   # connects to rerun viewer at localhost:9876
 # rerun &           (native Linux with display)
 ```
 
-### Available rerun notebook
+### Available Rerun notebooks
 
-A ready-made Rerun notebook for LSD visualization is included:
+Ready-made Rerun notebooks are included:
 
 ```bash
-examples/notebooks/rerun_lsd_demo.ipynb
+examples/notebooks/demo_rerun_lsd.ipynb       # LSD detection visualization
+examples/notebooks/demo_line_features.ipynb    # Line feature matching pipeline
 ```
 
-Open it in VS Code or JupyterLab — the kernel is the project `.venv`, same as all other notebooks.
+Open them in VS Code or JupyterLab — the kernel is the project `.venv`, same as all other notebooks.
 See [docs/JUPYTER.md](JUPYTER.md) for general notebook setup instructions.
 
 ### Display in WSL / headless

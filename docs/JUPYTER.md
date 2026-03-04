@@ -33,7 +33,7 @@ Interactive Jupyter Notebooks for learning and exploring the LineExtraction libr
 1. Open the notebook in VS Code:
 
    ```
-   examples/notebooks/line_extraction_bindings.ipynb
+   examples/notebooks/intro_line_extraction_overview.ipynb
    ```
 
 2. VS Code will prompt you to select a kernel — choose the `.venv` Python interpreter.
@@ -52,7 +52,7 @@ source .venv/bin/activate
 jupyter lab
 
 # Or open the specific notebook directly
-jupyter lab examples/notebooks/line_extraction_bindings.ipynb
+jupyter lab examples/notebooks/intro_line_extraction_overview.ipynb
 ```
 
 JupyterLab opens automatically in your default browser at `http://localhost:8888`.
@@ -61,7 +61,7 @@ JupyterLab opens automatically in your default browser at `http://localhost:8888
 
 ```bash
 source .venv/bin/activate
-jupyter notebook examples/notebooks/line_extraction_bindings.ipynb
+jupyter notebook examples/notebooks/intro_line_extraction_overview.ipynb
 ```
 
 ## Available Notebooks
@@ -74,7 +74,7 @@ The tutorial series is the recommended way to learn the Python bindings. Work th
 
 | # | Notebook | Description | Modules |
 |---|----------|-------------|---------|
-| 0 | [`cv_primer.ipynb`](../examples/notebooks/cv_primer.ipynb) | **Computer Vision Primer** — Self-contained introduction to CV concepts (images as arrays, gradients, edge detection, lines & LSD taxonomy). Uses only NumPy + Matplotlib — no library dependencies. Ideal prerequisite for newcomers to computer vision. | — |
+| 0 | [`intro_cv_primer.ipynb`](../examples/notebooks/intro_cv_primer.ipynb) | **Computer Vision Primer** — Self-contained introduction to CV concepts (images as arrays, gradients, edge detection, lines & LSD taxonomy). Uses only NumPy + Matplotlib — no library dependencies. Ideal prerequisite for newcomers to computer vision. | — |
 | 1 | [`tutorial_1_fundamentals.ipynb`](../examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Foundational modules: gradient filters, geometry primitives (Line, LineSegment, Polygon), drawing utilities, ValueManager configuration, and test image loading. | `le_imgproc`, `le_geometry` |
 | 2 | [`tutorial_2_pipelines.ipynb`](../examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full detection pipeline from edge sources through NMS, ESD variants, all 9 LSD detectors, grand comparison, line optimization, and noise robustness analysis. | `le_edge`, `le_lsd`, `le_imgproc`, `le_geometry` |
 | 3 | [`tutorial_3_evaluation.ipynb`](../examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation Framework** — Deep dive into benchmarking: StringTable, performance primitives, data providers, custom tasks, CVPerformanceTest orchestrator, result analysis, and full benchmark runs. | `le_eval`, `le_lsd`, `le_edge` |
@@ -87,8 +87,10 @@ The tutorial series is the recommended way to learn the Python bindings. Work th
 
 | Notebook | Description | Modules |
 |----------|-------------|---------|
-| [`line_extraction_bindings.ipynb`](../examples/notebooks/line_extraction_bindings.ipynb) | **API Reference Guide** — Compact tour of all 5 Python binding modules with interactive visualizations, zero-copy NumPy integration, Python subclassing, and performance comparisons. | all |
-| [`pytorch_esd_demo.ipynb`](../examples/notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration Demo** — Combines PyTorch-based object segmentation (SAM / YOLO) with the ESD line extraction framework. Interactive click-to-segment, automatic instance segmentation, and contour-to-line-segment conversion. | `le_edge`, PyTorch |
+| [`intro_line_extraction_overview.ipynb`](../examples/notebooks/intro_line_extraction_overview.ipynb) | **API Reference Guide** — Compact tour of all Python binding modules with interactive visualizations, zero-copy NumPy integration, Python subclassing, and performance comparisons. | all |
+| [`demo_pytorch_esd.ipynb`](../examples/notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration Demo** — Combines PyTorch-based object segmentation (SAM / YOLO) with the ESD line extraction framework. Interactive click-to-segment, automatic instance segmentation, and contour-to-line-segment conversion. | `le_edge`, PyTorch |
+| [`demo_rerun_lsd.ipynb`](../examples/notebooks/demo_rerun_lsd.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. | `le_lsd`, Rerun |
+| [`demo_line_features.ipynb`](../examples/notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD/LR descriptors, brute-force matching, GlobalRotationFilter, interactive [Rerun.io](https://rerun.io/) visualization. | `le_lfd`, `le_lsd`, Rerun |
 
 ## Module Import Path
 
@@ -202,12 +204,12 @@ while workspace.name != "LineExtraction" and workspace != workspace.parent:
     workspace = workspace.parent
 
 # Add Bazel output paths
-for lib in ["imgproc", "edge", "geometry", "eval", "lsd", "algorithm"]:
+for lib in ["imgproc", "edge", "geometry", "eval", "lsd", "lfd", "algorithm"]:
     p = workspace / f"bazel-bin/libs/{lib}/python"
     if p.exists():
         sys.path.insert(0, str(p))
 
-import le_imgproc, le_edge, le_geometry, le_eval, le_lsd, le_algorithm
+import le_imgproc, le_edge, le_geometry, le_eval, le_lsd, le_lfd, le_algorithm
 ```
 
 ## Further Reading
@@ -219,6 +221,7 @@ import le_imgproc, le_edge, le_geometry, le_eval, le_lsd, le_algorithm
 - [le_geometry API](../libs/geometry/python/README.md)
 - [le_eval API](../libs/eval/python/README.md)
 - [le_lsd API](../libs/lsd/python/README.md)
+- [le_lfd API](../libs/lfd/python/README.md)
 - [le_algorithm API](../libs/algorithm/python/README.md)
 - [Docker Setup](DOCKER.md)
 - [WSL Setup](WSL.md)

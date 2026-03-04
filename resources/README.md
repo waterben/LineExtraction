@@ -23,6 +23,7 @@ resources/
     │   └── example_challenge_gt.txt # Legacy format (no header)
     ├── noise/               # Synthetic noise test images
     ├── BSDS500/             # Auto-downloaded by Bazel (~50 MB)
+    ├── HPatches/            # HPatches benchmark (setup script)
     ├── MDB/                 # Middlebury stereo (manual setup)
     ├── YorkUrban/           # York Urban DB (setup script)
     └── Wireframe/           # Wireframe dataset (setup script)
@@ -94,6 +95,24 @@ Multi-resolution stereo pairs for stereo evaluation.
 - **Source:** [Middlebury Stereo Evaluation](https://vision.middlebury.edu/stereo/)
 - **Resolutions:** Quarter (Q), Half (H), Full (F)
 - **Setup:** `./tools/scripts/setup_mdb_dataset.sh`
+
+### HPatches (Homography Patches Benchmark)
+
+Standard benchmark for local feature descriptor and matcher evaluation.
+
+- **Source:** [github.com/hpatches/hpatches-dataset](https://github.com/hpatches/hpatches-dataset) (Balntas et al., CVPR 2017)
+- **Sequences:** 116 (57 illumination + 59 viewpoint changes)
+- **Content:** 6 images and 5 ground-truth homographies per sequence
+- **Use:** LBD descriptor matching benchmark, parameter sweep
+- **Bazel target:** `//resources/datasets:hpatches`
+
+**Setup:**
+
+```bash
+./tools/scripts/setup_hpatches.sh
+```
+
+This downloads all 116 sequences (~1.6 GB) to `resources/datasets/HPatches/`.
 
 ### Noise Test Images
 
@@ -265,6 +284,7 @@ To add a new image dataset for evaluation:
 | York Urban | 102 | Urban scenes with line annotations | [elderlab.yorku.ca](https://www.elderlab.yorku.ca/resources/) |
 | Wireframe | 5,462 | Indoor/outdoor wireframe annotations | [github.com/huangkuns/wireframe](https://github.com/huangkuns/wireframe) |
 | BSDS500 | 500 | Natural images with segmentation | [github.com/BIDS/BSDS500](https://github.com/BIDS/BSDS500) |
+| HPatches | 116 seq | Homography patches for descriptor evaluation | [github.com/hpatches/hpatches-dataset](https://github.com/hpatches/hpatches-dataset) |
 | Middlebury | varies | Stereo pairs with depth ground truth | [vision.middlebury.edu/stereo](https://vision.middlebury.edu/stereo/) |
 | ETH3D | varies | High-res multi-view stereo | [eth3d.net](https://www.eth3d.net/) |
 | ScanNet | 1,513 scenes | Indoor RGB-D scans | [scannet.org](http://www.scannet.org/) |
@@ -281,6 +301,7 @@ To add a new image dataset for evaluation:
 | `//resources/datasets:bsds500` | BSDS500 (auto-downloaded) |
 | `//resources/datasets:york_urban` | York Urban images |
 | `//resources/datasets:wireframe` | Wireframe images |
+| `//resources/datasets:hpatches` | HPatches sequences (setup script required) |
 | `//resources/datasets:mdb_q` / `:mdb_h` / `:mdb_f` | Middlebury stereo |
 | `//resources/datasets:ground_truth` | All GT CSV/TXT files |
 | `//resources/datasets:noise` | Noise test images |

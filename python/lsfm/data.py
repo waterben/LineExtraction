@@ -23,7 +23,93 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
+
+if TYPE_CHECKING:
+    import numpy as np
+
+
+# ---------------------------------------------------------------------------
+# Curated HPatches subsets for line-feature evaluation
+# ---------------------------------------------------------------------------
+
+#: Viewpoint-change sequences with strong architectural / structural content
+#: (buildings, urban scenes, interiors) — well-suited for line matching.
+HPATCHES_LINE_SEQUENCES: tuple[str, ...] = (
+    "v_london",
+    "v_coffeehouse",
+    "v_underground",
+    "v_yard",
+    "v_grace",
+    "v_wall",
+    "v_churchill",
+    "v_gardens",
+    "v_artisans",
+    "v_wapping",
+)
+
+#: All viewpoint-change sequences (harder than illumination for line matching).
+HPATCHES_VIEWPOINT_SEQUENCES: tuple[str, ...] = (
+    "v_abstract",
+    "v_adam",
+    "v_apprentices",
+    "v_artisans",
+    "v_astronautis",
+    "v_azzola",
+    "v_bark",
+    "v_bees",
+    "v_beyus",
+    "v_bip",
+    "v_bird",
+    "v_birdwoman",
+    "v_blueprint",
+    "v_boat",
+    "v_bricks",
+    "v_busstop",
+    "v_calder",
+    "v_cartooncity",
+    "v_charing",
+    "v_churchill",
+    "v_circus",
+    "v_coffeehouse",
+    "v_colors",
+    "v_courses",
+    "v_dirtywall",
+    "v_dogman",
+    "v_eastsouth",
+    "v_feast",
+    "v_fest",
+    "v_gardens",
+    "v_grace",
+    "v_graffiti",
+    "v_home",
+    "v_laptop",
+    "v_london",
+    "v_machines",
+    "v_man",
+    "v_maskedman",
+    "v_pomegranate",
+    "v_posters",
+    "v_samples",
+    "v_soldiers",
+    "v_strand",
+    "v_sunseason",
+    "v_tabletop",
+    "v_talent",
+    "v_tempera",
+    "v_there",
+    "v_underground",
+    "v_vitro",
+    "v_wall",
+    "v_wapping",
+    "v_war",
+    "v_weapons",
+    "v_woman",
+    "v_wormhole",
+    "v_wounded",
+    "v_yard",
+    "v_yuri",
+)
 
 
 # Supported image file extensions (lowercase, with dot).
@@ -176,6 +262,60 @@ class TestImages:
         """
         return self.get(f"ground_truth/{name}")
 
+    def hpatches_pair(
+        self, sequence: str, target_idx: int = 2
+    ) -> tuple[Path, Path, np.ndarray]:
+        """Return reference image, target image, and ground-truth homography.
+
+        Each HPatches sequence contains images ``1.ppm``-``6.ppm`` and
+        homography files ``H_1_2``-``H_1_6``.
+
+        :param sequence: Sequence name, e.g. ``"v_bark"`` or ``"i_dc"``.
+        :type sequence: str
+        :param target_idx: Target image index (2-6). Defaults to 2.
+        :type target_idx: int
+        :return: Tuple of ``(reference_path, target_path, homography_3x3)``.
+        :rtype: tuple[Path, Path, numpy.ndarray]
+        :raises FileNotFoundError: If the sequence or homography is not found.
+        :raises ValueError: If *target_idx* is not in [2, 6].
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_hpatches.sh``
+        """
+        if not 2 <= target_idx <= 6:
+            msg = f"target_idx must be in [2, 6], got {target_idx}"
+            raise ValueError(msg)
+        import numpy as np
+
+        ref = self.get(f"HPatches/{sequence}/1.ppm")
+        tgt = self.get(f"HPatches/{sequence}/{target_idx}.ppm")
+        h_file = self.get(f"HPatches/{sequence}/H_1_{target_idx}")
+        h_mat = np.loadtxt(h_file, dtype=np.float64).reshape(3, 3)
+        return ref, tgt, h_mat
+
+    def hpatches_sequences(self, category: str = "") -> Iterator[str]:
+        """Yield available HPatches sequence names.
+
+        :param category: Filter by ``"i"`` (illumination), ``"v"`` (viewpoint),
+            or ``""`` for all.
+        :type category: str
+        :return: Iterator of sequence name strings.
+        :rtype: Iterator[str]
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_hpatches.sh``
+        """
+        for base in self._search_paths:
+            d = base / "HPatches"
+            if d.is_dir():
+                for child in sorted(d.iterdir()):
+                    if child.is_dir() and child.name.startswith(("i_", "v_")):
+                        if not category or child.name.startswith(f"{category}_"):
+                            yield child.name
+                return
+
     def stereo_pair(self, scene: str, resolution: str = "H") -> tuple[Path, Path]:
         """Return the left/right image paths for an MDB stereo scene.
 
@@ -276,10 +416,13 @@ class TestImages:
                 rd = Path(runfiles_dir)
                 # External BSDS500 repository images
                 self._add_if_exists(rd / "bsds500" / "BSDS500" / "data" / "images")
-                # Local resources (windmill.jpg, etc.)
-                self._add_if_exists(rd / "line_extraction" / "resources")
-                # Local datasets (noise, MDB, YorkUrban, Wireframe, ground_truth)
-                self._add_if_exists(rd / "line_extraction" / "resources" / "datasets")
+                # Try both the WORKSPACE repo name and the Bzlmod canonical
+                # name (_main) so this works under both build systems.
+                for repo in ("line_extraction", "_main"):
+                    # Local resources (windmill.jpg, etc.)
+                    self._add_if_exists(rd / repo / "resources")
+                    # Local datasets (HPatches, MDB, YorkUrban, Wireframe, …)
+                    self._add_if_exists(rd / repo / "resources" / "datasets")
             else:
                 # Manifest-only mode (common on Windows): parse
                 # RUNFILES_MANIFEST_FILE to resolve runfile paths.

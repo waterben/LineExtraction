@@ -81,7 +81,7 @@ Work through the tutorials in order for a structured introduction:
 
 | # | Notebook | Description |
 |---|----------|-------------|
-| 0 | [`cv_primer.ipynb`](notebooks/cv_primer.ipynb) | **Computer Vision Primer** — CV basics with pure NumPy/Matplotlib (no library dependencies). Ideal prerequisite for newcomers. |
+| 0 | [`intro_cv_primer.ipynb`](notebooks/intro_cv_primer.ipynb) | **Computer Vision Primer** — CV basics with pure NumPy/Matplotlib (no library dependencies). Ideal prerequisite for newcomers. |
 | 1 | [`tutorial_1_fundamentals.ipynb`](notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Gradient filters, geometry primitives, drawing, ValueManager, test images. |
 | 2 | [`tutorial_2_pipelines.ipynb`](notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full pipeline: edge sources, NMS, ESD, all 9 LSD detectors, optimization, noise robustness. |
 | 3 | [`tutorial_3_evaluation.ipynb`](notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation** — Benchmarking framework: data providers, custom tasks, result analysis, full benchmarks. |
@@ -90,9 +90,10 @@ Work through the tutorials in order for a structured introduction:
 
 | Notebook | Description |
 |----------|-------------|
-| [`line_extraction_bindings.ipynb`](notebooks/line_extraction_bindings.ipynb) | **API Reference Guide** — Compact tour of all 5 Python modules with visualizations and performance comparisons. |
-| [`pytorch_esd_demo.ipynb`](notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) combined with ESD line extraction. |
-| [`rerun_lsd_demo.ipynb`](notebooks/rerun_lsd_demo.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. |
+| [`intro_line_extraction_overview.ipynb`](notebooks/intro_line_extraction_overview.ipynb) | **API Reference Guide** — Compact tour of all Python modules with visualizations and performance comparisons. |
+| [`demo_pytorch_esd.ipynb`](notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) combined with ESD line extraction. |
+| [`demo_rerun_lsd.ipynb`](notebooks/demo_rerun_lsd.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. |
+| [`demo_line_features.ipynb`](notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD descriptor matching (float + OpenCV binary), cross-check & ratio test filtering, runtime comparison, interactive [Rerun.io](https://rerun.io/) visualization. |
 
 ### Running Notebooks
 

@@ -11,6 +11,9 @@ All tools are in [tools/](tools/).
 | Script | Description |
 |--------|-------------|
 | [optimize_presets.py](tools/optimize_presets.py) | Optimize LSD detector parameters over image databases to generate Fast/Balanced/Accurate presets |
+| [detector_statistics.py](tools/detector_statistics.py) | Compute detection statistics for LSD detectors across benchmark datasets |
+| [lbd_benchmark.py](tools/lbd_benchmark.py) | Benchmark LBD descriptor matching accuracy + runtime across HPatches sequences |
+| [lbd_param_sweep.py](tools/lbd_param_sweep.py) | Parameter sweep for LBD `numBand` / `widthBand` configuration |
 | [chart_plot.py](tools/chart_plot.py) | Parse Excel chart XML files and render publication-quality charts using matplotlib |
 | [csv_table.py](tools/csv_table.py) | Convert CSV files into formatted PDF tables using ReportLab (simple and scientific styles) |
 | [replace_underscore.py](tools/replace_underscore.py) | Replace underscores with hyphens in LaTeX `\label{}` and `\ref{}` commands |
@@ -78,6 +81,50 @@ JSON file with optimized parameters per detector and profile:
 }
 ```
 
+## LBD Descriptor Benchmark
+
+The `lbd_benchmark.py` script evaluates both the internal float LBD and OpenCV's
+binary LBD across all curated architectural HPatches sequences, reporting accuracy
+and runtime per difficulty level.
+
+> **Extensive documentation:** See [`tools/LBD_BENCHMARK.md`](tools/LBD_BENCHMARK.md)
+> for full architecture details, methodology, output format, and extension guide.
+>
+> **Latest results:** See [`reports/lbd_benchmark_report.md`](reports/lbd_benchmark_report.md).
+
+### Prerequisites
+
+```bash
+./tools/scripts/setup_hpatches.sh
+```
+
+### Usage
+
+```bash
+# Run full benchmark (10 sequences x 5 difficulty levels = 50 pairs)
+bazel run //evaluation/python:lbd_benchmark
+
+# Custom difficulty range and descriptor parameters
+bazel run //evaluation/python:lbd_benchmark -- \
+    --idx-range 2 4 --num-band 11 --width-band 7 --top-k 50
+```
+
+## LBD Parameter Sweep
+
+The `lbd_param_sweep.py` script tests multiple `numBand` / `widthBand`
+combinations and reports accuracy for each configuration.
+
+### Usage
+
+```bash
+# Default 6 configurations on idx 2-4 (30 pairs per config)
+bazel run //evaluation/python:lbd_param_sweep
+
+# Custom configurations and full difficulty range
+bazel run //evaluation/python:lbd_param_sweep -- \
+    --params 9,7 11,7 13,9 --idx-range 2 6
+```
+
 ## Other Tools
 
 ```bash
@@ -93,8 +140,9 @@ python evaluation/python/tools/replace_underscore.py document.tex
 
 ## Dependencies
 
-- `le_algorithm`, `le_lsd`, `le_geometry` — Native pybind11 modules (Bazel-managed)
+- `le_algorithm`, `le_lsd`, `le_lfd`, `le_geometry` — Native pybind11 modules (Bazel-managed)
 - `numpy` — Numerical arrays
+- `Pillow` — Image loading (LBD scripts)
 - `matplotlib` — Chart rendering
 - `pandas` — Data manipulation
 - `reportlab` — PDF table generation
@@ -103,8 +151,11 @@ Dependencies are managed in the project's [pyproject.toml](../../pyproject.toml)
 
 ## Related
 
+- [LBD Benchmark Documentation](tools/LBD_BENCHMARK.md) — Extensive documentation for the LBD benchmark and comparison scripts
+- [LBD Benchmark Report](reports/lbd_benchmark_report.md) — Latest benchmark results
 - [evaluation/performance](../performance/) — C++ performance benchmarks (generates CSV results)
 - [evaluation/thesis](../thesis/) — C++ precision evaluations (generates CSV and image results)
+- [libs/lfd](../../libs/lfd/) — C++ LBD descriptor implementation
 - [libs/algorithm](../../libs/algorithm/) — C++ parameter optimizer library
 - [libs/algorithm/python](../../libs/algorithm/python/) — Python bindings for the optimizer
 - [Resources](../../resources/README.md) — Datasets, ground truth annotations, presets
