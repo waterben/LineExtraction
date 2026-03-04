@@ -152,12 +152,13 @@ The [`examples/notebooks/`](examples/notebooks/) directory contains interactive 
 
 | # | Notebook | Description |
 |---|----------|-------------|
-| 0 | [`cv_primer`](examples/notebooks/cv_primer.ipynb) | **Computer Vision Primer** — CV fundamentals with pure NumPy/Matplotlib (no library dependencies) |
+| 0 | [`intro_cv_primer`](examples/notebooks/intro_cv_primer.ipynb) | **Computer Vision Primer** — CV fundamentals with pure NumPy/Matplotlib (no library dependencies) |
 | 1 | [`tutorial_1_fundamentals`](examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Gradients, geometry primitives, drawing, ValueManager |
 | 2 | [`tutorial_2_pipelines`](examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full pipeline with all 9 LSD detectors |
 | 3 | [`tutorial_3_evaluation`](examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation** — Benchmarking framework and result analysis |
-| — | [`pytorch_esd_demo`](examples/notebooks/pytorch_esd_demo.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) + ESD line extraction |
-| — | [`line_extraction_bindings`](examples/notebooks/line_extraction_bindings.ipynb) | **API Reference** — Compact tour of all 5 Python modules |
+| — | [`demo_pytorch_esd`](examples/notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) + ESD line extraction |
+| — | [`intro_line_extraction_overview`](examples/notebooks/intro_line_extraction_overview.ipynb) | **API Reference** — Compact tour of all Python modules |
+| — | [`demo_line_features`](examples/notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD descriptor matching (float + OpenCV binary), runtime comparison, Rerun visualization |
 
 ```bash
 # Prerequisites: build the Python bindings
@@ -175,7 +176,7 @@ The [`evaluation/`](evaluation/README.md) directory contains performance benchma
 
 - **[Performance Benchmarks](evaluation/performance/README.md)**: Computational efficiency of all core algorithms (gradient, NMS, LSD, GPU convolution/FFT). Uses a task registry with auto-discovery.
 - **[Thesis Evaluations](evaluation/thesis/README.md)**: Precision and accuracy evaluations for gradient orientation, noise robustness, sub-pixel estimation, and color processing.
-- **[Python Tools](evaluation/python/README.md)**: Chart plotting, CSV table generation, and LaTeX utilities for result processing.
+- **[Python Tools](evaluation/python/README.md)**: LBD descriptor benchmark & parameter sweep, chart plotting, CSV tables, and LaTeX utilities.
 
 ```bash
 # Run all performance benchmarks
@@ -198,6 +199,7 @@ providing access to all major algorithms from Python with NumPy integration:
 | `le_geometry` | `libs/geometry` | [README](libs/geometry/python/README.md) | Line, LineSegment, Polygon, drawing, LineOptimizer |
 | `le_eval` | `libs/eval` | [README](libs/eval/python/README.md) | Performance benchmarking framework |
 | `le_lsd` | `libs/lsd` | [README](libs/lsd/python/README.md) | 9 line segment detection algorithms |
+| `le_lfd` | `libs/lfd` | [README](libs/lfd/python/README.md) | LBD/LR descriptors, matchers, filters |
 | `le_algorithm` | `libs/algorithm` | [README](libs/algorithm/python/README.md) | Post-processing, accuracy, parameter optimization |
 
 ```python
@@ -222,14 +224,15 @@ result = geo.draw_lines_random(vis, segments)
 # Build all Python bindings
 bazel build //libs/imgproc/python:le_imgproc //libs/edge/python:le_edge \
             //libs/geometry/python:le_geometry //libs/eval/python:le_eval \
-            //libs/lsd/python:le_lsd
+            //libs/lsd/python:le_lsd //libs/lfd/python:le_lfd
 
 # Run all Python tests
 bazel test //libs/imgproc/python:test_le_imgproc \
            //libs/edge/python:test_le_edge \
            //libs/geometry/python:test_le_geometry \
            //libs/eval/python:test_le_eval \
-           //libs/lsd/python:test_le_lsd
+           //libs/lsd/python:test_le_lsd \
+           //libs/lfd/python:test_le_lfd
 
 # Run Python example scripts
 bazel run //examples/lsd/python:lsd_demo
@@ -250,8 +253,10 @@ le_imgproc       le_geometry       le_eval
     ▼                 ▼                 │
          le_lsd                         │
     (9 LSD detectors)                   │
-              │                         │
-              ▼                         ▼
+              │                         │              ▼                         │
+          le_lfd                        │
+  (descriptors, matchers, filters)      │
+              │                         │              ▼                         ▼
                   le_algorithm
          (post-processing, optimization,
           accuracy, presets)
@@ -260,7 +265,7 @@ le_imgproc       le_geometry       le_eval
 ### Pip Package (Wheel)
 
 The Python bindings can be packaged as a pip-installable wheel — a single `.whl` file
-containing all 6 native modules with no external C++ dependencies:
+containing all 7 native modules with no external C++ dependencies:
 
 ```bash
 # Build the wheel

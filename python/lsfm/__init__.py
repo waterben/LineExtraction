@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     le_edge: ModuleType
     le_geometry: ModuleType
     le_eval: ModuleType
+    le_lfd: ModuleType
     le_lsd: ModuleType
 
 __version__ = "0.0.0.dev0"
@@ -38,6 +39,7 @@ _NATIVE_MODULES = frozenset(
         "le_edge",
         "le_geometry",
         "le_eval",
+        "le_lfd",
         "le_lsd",
     }
 )
@@ -52,7 +54,7 @@ def __getattr__(name: str) -> object:
     extensions to be loaded at package-import time.
     """
     if name in _NATIVE_MODULES:
-        import importlib  # noqa: C0415
+        import importlib
 
         module = importlib.import_module(name)
         globals()[name] = module

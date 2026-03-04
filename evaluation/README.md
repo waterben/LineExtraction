@@ -8,7 +8,7 @@ Performance benchmarking and precision evaluation suite for line detection and i
 |-----------|-------------|
 | [performance/](performance/) | Computational benchmarks: gradient, NMS, LSD, FFT, GPU, sub-pixel estimation |
 | [thesis/](thesis/) | Precision evaluations: gradient accuracy, noise robustness, color processing, SPE |
-| [python/](python/) | Python tools for result analysis (chart plotting, CSV tables, LaTeX utilities) |
+| [python/](python/) | Python tools: LBD descriptor benchmark, parameter sweep, chart plotting, CSV tables |
 
 Each subdirectory follows the same layout:
 

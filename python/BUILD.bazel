@@ -23,6 +23,7 @@ filegroup(
         "//libs/eval/python:le_eval_pyi",
         "//libs/geometry/python:le_geometry_pyi",
         "//libs/imgproc/python:le_imgproc_pyi",
+        "//libs/lfd/python:le_lfd_pyi",
         "//libs/lsd/python:le_lsd_pyi",
     ],
 )
@@ -52,6 +53,7 @@ py_wheel(
         "libs/edge/python",
         "libs/geometry/python",
         "libs/eval/python",
+        "libs/lfd/python",
         "libs/lsd/python",
         "python",
     ],
@@ -68,6 +70,7 @@ py_wheel(
         "//libs/edge/python:le_edge",
         "//libs/geometry/python:le_geometry",
         "//libs/eval/python:le_eval",
+        "//libs/lfd/python:le_lfd",
         "//libs/lsd/python:le_lsd",
 
         # ── Type stubs (.pyi) ──────────────────────────────────────────

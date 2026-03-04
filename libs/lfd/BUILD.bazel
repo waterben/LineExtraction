@@ -22,6 +22,7 @@ cc_library(
         "//libs/utility:lib_utility",
         "@arpackpp",
         "@opencv",
+        "@opencv_contrib//:line_descriptor",
     ],
 )
 

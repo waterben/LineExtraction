@@ -274,25 +274,22 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       desVec[desID + 7] = sqrt(ngdO2BandSum[bandID] * invN - temp * temp);  // std value of ngdO;
     }
 
-    // normalize;
-    FT tempM, tempS;
-    desVec = dst;
-    for (ushort i = 0; i < numBand; ++i) {
-      tempM = (*desVec) * *(desVec++) + (*desVec) * *(desVec++) + (*desVec) * *(desVec++) + (*desVec) * *(desVec++);
-      tempS = (*desVec) * *(desVec++) + (*desVec) * *(desVec++) + (*desVec) * *(desVec++) + (*desVec) * *(desVec++);
+    // Normalize means and standard deviations separately.
+    // Accumulate sum-of-squares for means (indices 0-3 per band)
+    // and stds (indices 4-7 per band) across ALL bands.
+    FT sumSqM = 0;
+    FT sumSqS = 0;
+    for (int i = 0; i < numBand; ++i) {
+      int base = i * 8;
+      for (int k = 0; k < 4; ++k) sumSqM += dst[base + k] * dst[base + k];
+      for (int k = 4; k < 8; ++k) sumSqS += dst[base + k] * dst[base + k];
     }
-    tempM = 1 / sqrt(tempM);
-    tempS = 1 / sqrt(tempS);
-    desVec = dst;
-    for (ushort i = 0; i < numBand; ++i) {
-      (*desVec) = *(desVec++) * tempM;
-      (*desVec) = *(desVec++) * tempM;
-      (*desVec) = *(desVec++) * tempM;
-      (*desVec) = *(desVec++) * tempM;
-      (*desVec) = *(desVec++) * tempS;
-      (*desVec) = *(desVec++) * tempS;
-      (*desVec) = *(desVec++) * tempS;
-      (*desVec) = *(desVec)*tempS;
+    FT invNormM = (sumSqM > 0) ? static_cast<FT>(1) / sqrt(sumSqM) : 0;
+    FT invNormS = (sumSqS > 0) ? static_cast<FT>(1) / sqrt(sumSqS) : 0;
+    for (int i = 0; i < numBand; ++i) {
+      int base = i * 8;
+      for (int k = 0; k < 4; ++k) dst[base + k] *= invNormM;
+      for (int k = 4; k < 8; ++k) dst[base + k] *= invNormS;
     }
 
     cv::Mat dstMat(1, descriptorSize, cv::DataType<FT>::type, dst);

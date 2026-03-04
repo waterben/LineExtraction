@@ -28,6 +28,49 @@ py_binary(
     ],
 )
 
+# LBD descriptor benchmark — accuracy + runtime across HPatches sequences
+# Usage:
+#   bazel run //evaluation/python:lbd_benchmark
+#   bazel run //evaluation/python:lbd_benchmark -- --idx-range 2 4 --num-band 11
+py_binary(
+    name = "lbd_benchmark",
+    srcs = ["tools/lbd_benchmark.py"],
+    data = [
+        "//resources/datasets:hpatches",
+    ],
+    main = "tools/lbd_benchmark.py",
+    deps = [
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)
+
+# LBD parameter sweep — compare numBand / widthBand configurations
+# Usage:
+#   bazel run //evaluation/python:lbd_param_sweep
+#   bazel run //evaluation/python:lbd_param_sweep -- --params 9,7 11,7 13,9
+py_binary(
+    name = "lbd_param_sweep",
+    srcs = [
+        "tools/lbd_benchmark.py",
+        "tools/lbd_param_sweep.py",
+    ],
+    data = [
+        "//resources/datasets:hpatches",
+    ],
+    main = "tools/lbd_param_sweep.py",
+    deps = [
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)
+
 # Detector statistics — accuracy evaluation across datasets
 # Usage:
 #   bazel run //evaluation/python:detector_statistics -- \

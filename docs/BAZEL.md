@@ -319,7 +319,7 @@ The following opencv_contrib modules are available for use:
 
 ### Tests
 
-**54/54 tests passing** ✅
+**77/77 tests passing** ✅
 
 ```bash
 bazel test //libs/...
@@ -564,7 +564,7 @@ For IDE autocomplete (Pylance/Pyright), you have two options:
 ## Python Wheel Package
 
 The Python bindings can be packaged as a pip-installable wheel file (`.whl`).
-The wheel contains all 5 native extension modules with statically linked C++ dependencies
+The wheel contains all 7 native extension modules with statically linked C++ dependencies
 (OpenCV, Eigen, etc.), so users only need `pip install` — no compiler or system libraries required.
 
 ### Build the Wheel
@@ -588,8 +588,11 @@ bazel-bin/python/lsfm-0.1.0-cp312-cp312-linux_x86_64.whl
 | `le_geometry.so` + `.pyi` | Geometry primitives module |
 | `le_eval.so` + `.pyi` | Evaluation framework module |
 | `le_lsd.so` + `.pyi` | Line segment detection module |
+| `le_lfd.so` + `.pyi` | Line feature descriptor / matcher module |
+| `le_algorithm.so` + `.pyi` | Post-processing, optimization, presets module |
 | `lsfm/__init__.py` | Python package with lazy re-exports |
 | `lsfm/data.py` | TestImages utility for dataset access |
+| `lsfm/limap_compat.py` | LIMAP forward-compatibility helpers |
 | `lsfm/py.typed` | PEP 561 type-checking marker |
 
 ### Install the Wheel
@@ -633,6 +636,7 @@ ssh user@server 'pip install /tmp/lsfm-*.whl'
 ```
 
 **Requirements on the target machine:**
+
 - Python 3.12 (matching the `cp312` ABI tag)
 - Linux x86_64
 - `numpy >= 1.24.0` (installed automatically by pip)

@@ -291,6 +291,28 @@ filter.valueEpipolarThreshold(Value(1.0));  // Epipolar constraint tolerance
 3. **Memory**: Descriptors stored efficiently as packed binary or floating-point
 4. **Parallelization**: Matching loop can be parallelized for large feature sets
 
+## Python Bindings
+
+The `le_lfd` Python module exposes descriptors, matchers, and filters with
+zero-copy NumPy integration. See [`python/README.md`](python/README.md) for
+the full API reference.
+
+```python
+import le_lsd, le_lfd
+
+det = le_lsd.LsdCC()
+det.detect(img)
+segs = det.line_segments()
+
+creator = le_lfd.FdcLBD(gx, gy)
+descriptors = creator.create_list(segs)
+```
+
+```bash
+bazel build //libs/lfd/python:le_lfd
+bazel test  //libs/lfd/python:test_le_lfd   # 54 tests
+```
+
 ## See Also
 
 - [Edge Detection Library](../edge/README.md) - For line feature extraction
@@ -300,4 +322,6 @@ filter.valueEpipolarThreshold(Value(1.0));  // Epipolar constraint tolerance
 - [Evaluation Library](../eval/README.md) - Performance measurement
 - [Utility Library](../utility/README.md) - ValueManager and core utilities
 - [LFD Examples](../../examples/lfd/README.md) - Demonstration programs
+- [LFD Python Bindings](python/README.md) - Python API reference
+- [Line Feature Demo](../../examples/notebooks/demo_line_features.ipynb) - Interactive Rerun demo
 - [Main README](../../README.md) - Project overview
