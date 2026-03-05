@@ -165,7 +165,49 @@ source .venv/bin/activate
 pip install "limap @ git+https://github.com/cvg/limap.git@4be6fca"
 ```
 
-### Step 6: Verify Installation
+### Step 6: Install LIMAP's Undeclared Python Dependencies
+
+CVG LIMAP's `pyproject.toml` does **not** declare its runtime Python
+dependencies, so they are never installed automatically. Install them
+manually after LIMAP itself:
+
+```bash
+uv pip install \
+    pycolmap \
+    pyceres \
+    pytlsd \
+    hloc@git+https://github.com/cvg/Hierarchical-Localization.git \
+    open3d \
+    omegaconf \
+    bresenham \
+    tqdm \
+    h5py \
+    scikit-learn \
+    shapely \
+    joblib \
+    seaborn
+```
+
+| Package | Why LIMAP needs it |
+|---|---|
+| `pycolmap` | COLMAP Python bindings (SfM) |
+| `pyceres` | Ceres Solver bindings (bundle adjustment) |
+| `pytlsd` | Transparent LSD detector (line detection) |
+| `hloc` | Hierarchical Localization (CVG, from GitHub) |
+| `open3d` | 3D visualization |
+| `omegaconf` | Configuration management |
+| `bresenham` | Line rasterization |
+| `tqdm` | Progress bars |
+| `h5py` | HDF5 I/O for features/matches |
+| `scikit-learn` | ML utilities (clustering) |
+| `shapely` | Geometric operations |
+| `joblib` | Parallel processing |
+| `seaborn` | Visualization / plotting |
+
+> **Note:** This list was verified against LIMAP v1.0.0.dev0 (commit `4be6fca`
+> and later). Future LIMAP versions may add or remove dependencies.
+
+### Step 7: Verify Installation
 
 ```bash
 source .venv/bin/activate
@@ -184,7 +226,7 @@ pip uninstall limap
 uv sync --extra limap
 ```
 
-### Step 7: Test in the Project
+### Step 8: Test in the Project
 
 ```bash
 source .venv/bin/activate

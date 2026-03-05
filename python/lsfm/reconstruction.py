@@ -327,33 +327,47 @@ def reconstruct_lines_multiview(
 ) -> dict[str, Any]:
     """Multi-view 3D line reconstruction via LIMAP.
 
-    Requires ``limap`` to be installed (``pip install limap``).  This
-    function bridges our detection/matching pipeline with LIMAP's
-    multi-view reconstruction.
+    Requires ``limap`` to be installed.  This function detects line
+    segments with LIMAP's LSD detector, matches them across views
+    using epipolar IoU, and triangulates matched pairs using LIMAP's
+    two-view line triangulation.
 
     :param images: Sequence of grayscale images.
     :type images: Sequence[numpy.ndarray]
     :param cameras: Camera parameter dicts. Each must have ``"K"``
         (3x3 intrinsics), ``"R"`` (3x3 rotation), ``"t"`` (3-vector
-        translation), and optionally ``"width"``/``"height"``.
+        **camera center in world coordinates**), and optionally
+        ``"width"``/``"height"``.
     :type cameras: Sequence[dict]
-    :param output_dir: Directory for intermediate results.
+    :param output_dir: Directory for intermediate LIMAP results.  If
+        *None*, a temporary directory is created and cleaned up.
     :type output_dir: str, optional
-    :param limap_config: Override dict merged into LIMAP's default config.
+    :param limap_config: Override dict merged into the default config
+        (controls detector settings, matching thresholds, etc.).
     :type limap_config: dict, optional
-    :return: Dict with ``"lines_3d"`` (list of 3D line arrays),
-        ``"tracks"`` (per-track visibility info), and ``"timings"``.
+    :return: Dict with ``"lines_3d"`` (list of Nx6 arrays for start/end
+        3D points), ``"n_lines_3d"`` (count), and ``"timings"``.
     :rtype: dict
     :raises ImportError: If ``limap`` is not installed.
 
     .. note::
-        This is a thin wrapper.  For advanced LIMAP usage (bundle
-        adjustment, line-to-surface association), call LIMAP directly
-        and use :mod:`lsfm.limap_compat` for format conversion.
+        This is a thin wrapper around LIMAP's lower-level API.  For
+        advanced usage (bundle adjustment, line-to-surface association),
+        call LIMAP directly and use :mod:`lsfm.limap_compat` for format
+        conversion.
     """
+    import os
+    import tempfile
+
     try:
         import limap  # noqa: F401
-        from limap.runners import line_triangulation  # type: ignore[import-untyped]
+        import limap.line2d  # type: ignore[import-untyped]
+        from limap.base import CameraView  # type: ignore[import-untyped]
+        from limap.base import Line2d as LLine2d
+        from limap.triangulation import (  # type: ignore[import-untyped]
+            compute_epipolar_IoU,
+            triangulate_line_by_endpoints,
+        )
     except ImportError as exc:
         msg = (
             "CVG LIMAP is required for multi-view reconstruction but is "
@@ -378,56 +392,178 @@ def reconstruct_lines_multiview(
         )
         raise ImportError(msg)
 
-    from lsfm.limap_compat import (
-        LsfmLineDescriptor,
-        LsfmLineDetector,
-    )
+    import cv2
+    from limap import runners  # type: ignore[import-untyped]
 
     timings: dict[str, float] = {}
 
-    # ---- 1. Detect & describe in all images ----
-    t0 = time.perf_counter()
-    detector = LsfmLineDetector()
-    descriptor = LsfmLineDescriptor()
+    # ---- 1. Write images to disk (LIMAP detector reads from files) ----
+    use_tmpdir = output_dir is None
+    tmpdir = tempfile.mkdtemp(prefix="limap_") if use_tmpdir else None
+    work_dir = tmpdir if use_tmpdir else output_dir
+    assert work_dir is not None
 
-    all_segments: list[NDArray] = []
-    all_desc_info: list[dict[str, Any]] = []
-    for img in images:
-        limap_segs = detector.detect(img)
-        all_segments.append(limap_segs)
-        desc_info = descriptor.compute(img, detector.line_segments)
-        all_desc_info.append(desc_info)
-    timings["detection_and_description"] = time.perf_counter() - t0
-
-    # ---- 2. Build LIMAP inputs ----
     t0 = time.perf_counter()
-    imagecols = _build_limap_imagecols(cameras, images)
+    img_dir = os.path.join(work_dir, "images")
+    os.makedirs(img_dir, exist_ok=True)
+    img_paths: list[str] = []
+    for idx, img in enumerate(images):
+        p = os.path.join(img_dir, f"image_{idx:04d}.png")
+        cv2.imwrite(p, img)
+        img_paths.append(p)
+
+    imagecols = _build_limap_imagecols(cameras, images, img_paths)
     timings["setup"] = time.perf_counter() - t0
 
-    # ---- 3. Run LIMAP triangulation ----
-    t0 = time.perf_counter()
-    cfg: dict[str, Any] = {}
+    # ---- 2. Build config & detect segments ----
+    cfg = _build_limap_default_config(work_dir)
     if limap_config:
-        cfg.update(limap_config)
+        _deep_update(cfg, limap_config)
+    cfg = runners.setup(cfg)
 
-    linetracks = line_triangulation.line_triangulation(
-        cfg,
-        imagecols,
-        all_segments,
-        all_desc_info,
+    if cfg["max_image_dim"] != -1 and cfg["max_image_dim"] is not None:
+        imagecols.set_max_image_dim(cfg["max_image_dim"])
+
+    t0 = time.perf_counter()
+    detector = limap.line2d.get_detector(
+        cfg["line2d"]["detector"],
+        max_num_2d_segs=cfg["line2d"]["max_num_2d_segs"],
+        do_merge_lines=cfg["line2d"]["do_merge_lines"],
+        visualize=cfg["line2d"]["visualize"],
     )
-    timings["triangulation"] = time.perf_counter() - t0
+    folder_save = os.path.join(
+        cfg["dir_save"], "line_detections", cfg["line2d"]["detector"]["method"]
+    )
+    all_2d_segs = detector.detect_all_images(folder_save, imagecols, skip_exists=False)
+    timings["detection"] = time.perf_counter() - t0
 
-    # ---- 4. Extract results ----
-    lines_3d = []
-    for track in linetracks:
-        if hasattr(track, "line"):
-            lines_3d.append(np.array(track.line.as_array()))
+    # ---- 3. Build camera views for triangulation ----
+    views: dict[int, CameraView] = {}
+    for img_id in imagecols.get_img_ids():
+        cam = imagecols.cam(img_id)
+        pose = imagecols.campose(img_id)
+        views[img_id] = CameraView(cam, pose)
+
+    # ---- 4. Match + triangulate across all neighbor pairs ----
+    t0 = time.perf_counter()
+    iou_threshold = 0.3
+    max_reproj_error = 5.0
+    # Maximum reliable depth: beyond this the triangulation angle is
+    # too shallow (< ~0.5 deg) for useful results.  Computed per-pair
+    # from focal length and baseline.
+    lines_3d_list: list[NDArray] = []
+    img_ids = imagecols.get_img_ids()
+
+    # Process all pairs (avoid duplicates)
+    processed_pairs: set[tuple[int, int]] = set()
+    for i in img_ids:
+        for j in img_ids:
+            if i >= j:
+                continue
+            pair = (i, j)
+            if pair in processed_pairs:
+                continue
+            processed_pairs.add(pair)
+
+            segs_i = all_2d_segs[i]  # (N_i, 4)
+            segs_j = all_2d_segs[j]  # (N_j, 4)
+            view_i = views[i]
+            view_j = views[j]
+
+            # Compute maximum reliable depth from camera geometry.
+            # Require at least min_parallax_deg convergence angle.
+            center_i = imagecols.campose(i).center()
+            center_j = imagecols.campose(j).center()
+            baseline = float(np.linalg.norm(np.array(center_i) - np.array(center_j)))
+            min_parallax_deg = 0.5
+            if baseline > 0:
+                max_depth = baseline / np.tan(np.radians(min_parallax_deg))
+            else:
+                max_depth = float("inf")
+
+            # Convert to Line2d objects
+            lines_i = [
+                LLine2d(np.array([s[0], s[1]]), np.array([s[2], s[3]])) for s in segs_i
+            ]
+            lines_j = [
+                LLine2d(np.array([s[0], s[1]]), np.array([s[2], s[3]])) for s in segs_j
+            ]
+
+            n_i = len(lines_i)
+            n_j = len(lines_j)
+
+            # Build IoU matrix and find mutual best matches
+            best_j_for_i: list[tuple[int, float]] = [(-1, 0.0)] * n_i
+            best_i_for_j: list[tuple[int, float]] = [(-1, 0.0)] * n_j
+
+            for li_idx, li in enumerate(lines_i):
+                for lj_idx, lj in enumerate(lines_j):
+                    iou = compute_epipolar_IoU(li, view_i, lj, view_j)
+                    if iou > iou_threshold:
+                        if iou > best_j_for_i[li_idx][1]:
+                            best_j_for_i[li_idx] = (lj_idx, iou)
+                        if iou > best_i_for_j[lj_idx][1]:
+                            best_i_for_j[lj_idx] = (li_idx, iou)
+
+            # Keep only mutual best matches (cross-check)
+            for li_idx in range(n_i):
+                lj_idx, iou_val = best_j_for_i[li_idx]
+                if lj_idx < 0:
+                    continue
+                # Verify mutual: j's best match should be i
+                if best_i_for_j[lj_idx][0] != li_idx:
+                    continue
+
+                li = lines_i[li_idx]
+                lj = lines_j[lj_idx]
+
+                line3d = triangulate_line_by_endpoints(li, view_i, lj, view_j)
+                s = line3d.start
+                e = line3d.end
+
+                # Filter invalid results: default [0,0,0]->[1,1,1]
+                # and lines with non-positive depth.
+                if line3d.length() <= 0:
+                    continue
+                if np.allclose(s, [0, 0, 0]) and np.allclose(e, [1, 1, 1]):
+                    continue
+                if s[2] <= 0 or e[2] <= 0:
+                    continue
+
+                # Depth filter: reject if either endpoint is deeper
+                # than the max reliable depth for this camera pair.
+                if s[2] > max_depth or e[2] > max_depth:
+                    continue
+
+                # Reprojection error filter: project 3D endpoints back
+                # and compare with original 2D segment endpoints.
+                proj_i = line3d.projection(view_i)
+                err_i_s = float(
+                    np.linalg.norm(np.array(proj_i.start) - np.array(li.start))
+                )
+                err_i_e = float(np.linalg.norm(np.array(proj_i.end) - np.array(li.end)))
+
+                proj_j = line3d.projection(view_j)
+                err_j_s = float(
+                    np.linalg.norm(np.array(proj_j.start) - np.array(lj.start))
+                )
+                err_j_e = float(np.linalg.norm(np.array(proj_j.end) - np.array(lj.end)))
+
+                if max(err_i_s, err_i_e, err_j_s, err_j_e) > max_reproj_error:
+                    continue
+
+                lines_3d_list.append(np.array([[s[0], s[1], s[2]], [e[0], e[1], e[2]]]))
+    timings["matching_and_triangulation"] = time.perf_counter() - t0
+
+    # ---- 5. Cleanup ----
+    if use_tmpdir and tmpdir is not None:
+        import shutil
+
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
     return {
-        "lines_3d": lines_3d,
-        "tracks": linetracks,
-        "n_lines_3d": len(lines_3d),
+        "lines_3d": lines_3d_list,
+        "n_lines_3d": len(lines_3d_list),
         "timings": timings,
     }
 
@@ -561,33 +697,191 @@ def _merge_colinear_3d(
 def _build_limap_imagecols(
     cameras: Sequence[dict[str, Any]],
     images: Sequence[NDArray[np.uint8]],
+    img_paths: Sequence[str],
 ) -> Any:
     """Build a LIMAP ``ImageCollection`` from camera dicts and images.
 
-    :param cameras: Per-image camera parameter dicts.
+    :param cameras: Per-image camera parameter dicts.  Each must have
+        ``"K"`` (3x3 intrinsics) and may include ``"R"`` (3x3 rotation,
+        default identity) and ``"t"`` (3-vector **camera center in world
+        coordinates**, default origin).
     :type cameras: Sequence[dict]
     :param images: Images (used to infer dimensions).
     :type images: Sequence[numpy.ndarray]
+    :param img_paths: Absolute file paths for each image (LIMAP reads
+        images from disk via ``imagecols.read_image``).
+    :type img_paths: Sequence[str]
     :return: ``limap.base.ImageCollection`` instance.
     :rtype: limap.base.ImageCollection
     """
     from limap.base import Camera as LCamera  # type: ignore[import-untyped]
+    from limap.base import CameraImage as LImage  # type: ignore[import-untyped]
     from limap.base import CameraPose as LPose  # type: ignore[import-untyped]
     from limap.base import ImageCollection  # type: ignore[import-untyped]
 
     lcameras = []
-    lposes = []
+    limages = []
 
     for idx, cam_dict in enumerate(cameras):
         K = np.asarray(cam_dict["K"], dtype=np.float64)
         h = cam_dict.get("height", images[idx].shape[0])
         w = cam_dict.get("width", images[idx].shape[1])
 
-        lcam = LCamera("PINHOLE", K, w, h)
+        lcam = LCamera("PINHOLE", K, cam_id=idx, hw=(h, w))
         lcameras.append(lcam)
 
         R = np.asarray(cam_dict.get("R", np.eye(3)), dtype=np.float64)
-        t = np.asarray(cam_dict.get("t", np.zeros(3)), dtype=np.float64)
-        lposes.append(LPose(R, t))
+        # cam_dict["t"] is the camera center in world coordinates.
+        # LIMAP CameraPose expects t_cam = -R @ center.
+        center = np.asarray(cam_dict.get("t", np.zeros(3)), dtype=np.float64)
+        t_cam = -R @ center
+        pose = LPose(R, t_cam)
+        limages.append(LImage(lcam, pose, img_paths[idx]))
 
-    return ImageCollection(lcameras, lposes)
+    return ImageCollection(lcameras, limages)
+
+
+def _build_limap_default_config(work_dir: str) -> dict[str, Any]:
+    """Build a minimal default LIMAP config for LSD + LBD triangulation.
+
+    This replicates the essential keys from LIMAP's
+    ``cfgs/triangulation/default.yaml`` with conservative settings and
+    classical (non-deep-learning) detector/descriptor/matcher.
+
+    :param work_dir: Working directory for intermediate LIMAP outputs.
+    :type work_dir: str
+    :return: LIMAP configuration dict.
+    :rtype: dict
+    """
+    import os
+
+    return {
+        "output_dir": os.path.join(work_dir, "limap_output"),
+        "output_folder": "finaltracks",
+        "load_dir": "",
+        "use_tmp": False,
+        "max_image_dim": -1,
+        "skip_exists": False,
+        "visualize": False,
+        "n_neighbors": 20,
+        "n_jobs": 1,
+        "n_visible_views": 4,
+        "load_det": False,
+        "load_match": False,
+        "load_undistort": False,
+        "undistortion_output_dir": "undistorted",
+        "var2d": {
+            "sold2": 5.0,
+            "lsd": 2.0,
+            "deeplsd": 2.0,
+            "tp_lsd": 2.0,
+            "hatp": 5.0,
+            "default": 5.0,
+        },
+        "line2d": {
+            "max_num_2d_segs": 3000,
+            "do_merge_lines": False,
+            "visualize": False,
+            "save_l3dpp": False,
+            "compute_descinfo": False,
+            "detector": {
+                "method": "lsd",
+                "skip_exists": False,
+            },
+            "extractor": {
+                "method": "lbd",
+                "skip_exists": False,
+            },
+            "matcher": {
+                "method": "lbd",
+                "n_jobs": 1,
+                "topk": 10,
+                "skip_exists": False,
+                "superglue": {
+                    "weights": "outdoor",
+                },
+            },
+        },
+        "triangulation": {
+            "method": "triangulate_scoring",
+            "var2d": -1,
+            "add_halfpix": False,
+            "fullscore_th": -1,
+            "max_valid_conns": -1,
+            "min_num_outer_edges": -1,
+            "merging_strategy": "greedy",
+            "num_outliers_aggregator": 2,
+            "use_vp": False,
+            "vpdet_config": {
+                "method": "jlinkage",
+                "n_jobs": -1,
+            },
+            "use_exhaustive_matcher": True,
+            "use_pointsfm": {
+                "enable": False,
+                "colmap_folder": None,
+                "reuse_sfminfos_colmap": True,
+                "use_triangulated_points": False,
+                "use_neighbors": True,
+            },
+            "linker2d": {
+                "score_th": 0.5,
+                "th_angle": 10.0,
+                "th_perp": 5.0,
+            },
+            "linker3d": {
+                "score_th": 0.5,
+                "th_angle": 5.0,
+                "th_overlap": 0.05,
+                "th_smartangle": 10.0,
+                "th_smartoverlap": 0.05,
+                "th_perp": 10.0,
+                "th_innerjunc": 10.0,
+            },
+            "filtering2d": {
+                "th_angular_2d": 10.0,
+                "th_perp_2d": 2.0,
+                "th_sv_angular_3d": 2.0,
+                "th_sv_num_supports": 4,
+                "th_overlap": 0.1,
+                "th_overlap_num_supports": 4,
+            },
+            "remerging": {
+                "disable": False,
+                "linker3d": {
+                    "score_th": 0.5,
+                    "th_angle": 3.0,
+                    "th_overlap": 0.02,
+                    "th_smartangle": 5.0,
+                    "th_smartoverlap": 0.02,
+                    "th_perp": 5.0,
+                    "th_innerjunc": 5.0,
+                },
+            },
+        },
+        "refinement": {
+            "disable": True,
+        },
+        "sfm": {},
+        "structures": {
+            "bpt2d": {},
+        },
+    }
+
+
+def _deep_update(base: dict, override: dict) -> dict:
+    """Recursively merge *override* into *base* in place.
+
+    :param base: Base dict to update.
+    :type base: dict
+    :param override: Values to merge in.
+    :type override: dict
+    :return: The updated *base*.
+    :rtype: dict
+    """
+    for k, v in override.items():
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            _deep_update(base[k], v)
+        else:
+            base[k] = v
+    return base
