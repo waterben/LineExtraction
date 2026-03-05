@@ -82,5 +82,23 @@ void bind_camera_cv(pybind11::module_& m, const std::string& suffix);
 template <class FT>
 void bind_geometry3d_preset(pybind11::module_& m, const std::string& suffix);
 
+// --- Stereo triangulation ---
+
+/// @brief Bind Stereo<FT> (ray-intersection stereo triangulation).
+template <class FT>
+void bind_stereo(pybind11::module_& m, const std::string& suffix);
+
+/// @brief Bind StereoPlane<FT> (plane-intersection stereo triangulation).
+template <class FT>
+void bind_stereo_plane(pybind11::module_& m, const std::string& suffix);
+
+/// @brief Bind StereoCV<FT> (OpenCV-based stereo triangulation).
+template <class FT>
+void bind_stereo_cv(pybind11::module_& m, const std::string& suffix);
+
+/// @brief Convenience: bind all stereo triangulation types for a given FT preset.
+template <class FT>
+void bind_stereo_preset(pybind11::module_& m, const std::string& suffix);
+
 }  // namespace python
 }  // namespace lsfm

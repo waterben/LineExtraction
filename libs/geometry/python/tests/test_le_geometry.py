@@ -1051,3 +1051,243 @@ class TestGeometry3dF64:
 
     def test_camera_cv_f64(self) -> None:
         assert hasattr(le_geometry, "CameraCV_f64")
+
+
+# =============================================================================
+# Stereo Triangulation
+# =============================================================================
+
+
+class TestStereo:
+    """Test Stereo (ray-intersection triangulation)."""
+
+    def _make_stereo_pair(self) -> tuple[object, object]:
+        """Create a canonical stereo pair with 10-unit baseline."""
+        cam_left = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        cam_right = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+            tx=10.0,
+        )
+        return cam_left, cam_right
+
+    def test_construction(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        assert repr(s) == "Stereo(ray-intersection)"
+
+    def test_triangulate_point(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        # A point at (5, 0, 100): projects to (320+25, 240) left; (320-25, 240) right
+        # left_x = fx * (X - tx_l) / Z + cx = 500 * 5 / 100 + 320 = 345
+        # right_x = fx * (X - tx_r) / Z + cx = 500 * (5-10) / 100 + 320 = 295
+        x, y, z = s.triangulate_point(345, 240, 295, 240)
+        assert z == pytest.approx(100.0, rel=0.1)
+        assert x == pytest.approx(5.0, rel=0.1)
+
+    def test_triangulate_points_batch(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        results = s.triangulate_points(
+            [(345.0, 240.0), (320.0, 240.0)],
+            [(295.0, 240.0), (270.0, 240.0)],
+        )
+        assert len(results) == 2
+
+    def test_triangulate_line(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        # Create horizontal lines at y=100, with different x-intercepts
+        line_l = le_geometry.Line.from_normal(0, 1, -100)
+        line_r = le_geometry.Line.from_normal(0, 1, -100)
+        line3 = s.triangulate_line(line_l, line_r)
+        # Even if degenerate for horizontal (normalX ~ 0), check API works
+        assert hasattr(line3, "direction")
+
+    def test_triangulate_segment(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        # Create matching line segments
+        seg_l = le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)
+        seg_r = le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)
+        seg3 = s.triangulate_segment(seg_l, seg_r)
+        assert hasattr(seg3, "length")
+
+    def test_triangulate_segments_batch(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        s = le_geometry.Stereo(cam_l, cam_r)
+        segs_l = [
+            le_geometry.LineSegment.from_endpoints(300, 100, 400, 300),
+            le_geometry.LineSegment.from_endpoints(100, 50, 200, 200),
+        ]
+        segs_r = [
+            le_geometry.LineSegment.from_endpoints(250, 100, 350, 300),
+            le_geometry.LineSegment.from_endpoints(50, 50, 150, 200),
+        ]
+        result = s.triangulate_segments(segs_l, segs_r)
+        assert len(result) == 2
+
+
+class TestStereoPlane:
+    """Test StereoPlane (plane-intersection triangulation)."""
+
+    def _make_stereo_pair(self) -> tuple[object, object]:
+        cam_left = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        cam_right = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+            tx=10.0,
+        )
+        return cam_left, cam_right
+
+    def test_construction(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        sp = le_geometry.StereoPlane(cam_l, cam_r)
+        assert repr(sp) == "StereoPlane(plane-intersection)"
+
+    def test_triangulate_point_inherited(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        sp = le_geometry.StereoPlane(cam_l, cam_r)
+        # Inherits point triangulation from Stereo
+        x, y, z = sp.triangulate_point(345, 240, 295, 240)
+        assert z == pytest.approx(100.0, rel=0.1)
+
+    def test_triangulate_line_plane_intersection(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        sp = le_geometry.StereoPlane(cam_l, cam_r)
+        # Non-horizontal lines should triangulate via plane intersection
+        seg_l = le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)
+        seg_r = le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)
+        line3 = sp.triangulate_line(seg_l, seg_r)
+        assert hasattr(line3, "direction")
+
+    def test_triangulate_segment_plane_intersection(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        sp = le_geometry.StereoPlane(cam_l, cam_r)
+        seg_l = le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)
+        seg_r = le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)
+        seg3 = sp.triangulate_segment(seg_l, seg_r)
+        assert hasattr(seg3, "length")
+        # Segment should have non-zero length for non-degenerate input
+        if not seg3.empty():
+            assert seg3.length > 0
+
+    def test_triangulate_segments_batch(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        sp = le_geometry.StereoPlane(cam_l, cam_r)
+        segs_l = [le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)]
+        segs_r = [le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)]
+        result = sp.triangulate_segments(segs_l, segs_r)
+        assert len(result) == 1
+
+
+class TestStereoCV:
+    """Test StereoCV (OpenCV-based triangulation)."""
+
+    def _make_stereo_pair(self) -> tuple[object, object]:
+        cam_left = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+        )
+        cam_right = le_geometry.Camera(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+            tx=10.0,
+        )
+        return cam_left, cam_right
+
+    def test_construction(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        scv = le_geometry.StereoCV(cam_l, cam_r)
+        assert repr(scv) == "StereoCV(opencv)"
+
+    def test_triangulate_point(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        scv = le_geometry.StereoCV(cam_l, cam_r)
+        x, y, z = scv.triangulate_point(345, 240, 295, 240)
+        # OpenCV triangulation should give similar results
+        assert z == pytest.approx(100.0, rel=0.15)
+
+    def test_triangulate_points_batch(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        scv = le_geometry.StereoCV(cam_l, cam_r)
+        results = scv.triangulate_points(
+            [(345.0, 240.0)],
+            [(295.0, 240.0)],
+        )
+        assert len(results) == 1
+
+    def test_triangulate_segment(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        scv = le_geometry.StereoCV(cam_l, cam_r)
+        seg_l = le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)
+        seg_r = le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)
+        seg3 = scv.triangulate_segment(seg_l, seg_r)
+        assert hasattr(seg3, "length")
+
+    def test_triangulate_segments_batch(self) -> None:
+        cam_l, cam_r = self._make_stereo_pair()
+        scv = le_geometry.StereoCV(cam_l, cam_r)
+        segs_l = [le_geometry.LineSegment.from_endpoints(300, 100, 400, 300)]
+        segs_r = [le_geometry.LineSegment.from_endpoints(250, 100, 350, 300)]
+        result = scv.triangulate_segments(segs_l, segs_r)
+        assert len(result) == 1
+
+
+class TestStereoF64:
+    """Test double-precision stereo triangulation presets."""
+
+    def test_stereo_f64(self) -> None:
+        assert hasattr(le_geometry, "Stereo_f64")
+        cam_l = le_geometry.Camera_f64(
+            focal_x=500, focal_y=500, offset_x=320, offset_y=240, width=640, height=480
+        )
+        cam_r = le_geometry.Camera_f64(
+            focal_x=500,
+            focal_y=500,
+            offset_x=320,
+            offset_y=240,
+            width=640,
+            height=480,
+            tx=10.0,
+        )
+        s = le_geometry.Stereo_f64(cam_l, cam_r)
+        x, y, z = s.triangulate_point(345.0, 240.0, 295.0, 240.0)
+        assert z == pytest.approx(100.0, rel=0.1)
+
+    def test_stereo_plane_f64(self) -> None:
+        assert hasattr(le_geometry, "StereoPlane_f64")
+
+    def test_stereo_cv_f64(self) -> None:
+        assert hasattr(le_geometry, "StereoCV_f64")

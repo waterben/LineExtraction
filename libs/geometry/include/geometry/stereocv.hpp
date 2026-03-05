@@ -107,10 +107,10 @@ class StereoCV {
     camLpnts.reserve(2);
     camRpnts.reserve(2);
 
-    camLpnts.push_back(Vec2<FT>(lineL.x()(0), 0));
-    camLpnts.push_back(Vec2<FT>(lineL.x()(100), 100));
-    camRpnts.push_back(Vec2<FT>(lineR.x()(0), 0));
-    camRpnts.push_back(Vec2<FT>(lineR.x()(100), 100));
+    camLpnts.push_back(Vec2<FT>(lineL.x(0), 0));
+    camLpnts.push_back(Vec2<FT>(lineL.x(100), 100));
+    camRpnts.push_back(Vec2<FT>(lineR.x(0), 0));
+    camRpnts.push_back(Vec2<FT>(lineR.x(100), 100));
 
     triangulatePoints(projL_, projR_, cv::Mat(camLpnts), cv::Mat(camRpnts), points4Dresult);
 

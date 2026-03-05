@@ -24,6 +24,7 @@
 #include <lfd/GlobalRotationFilter.hpp>
 #include <lfd/LRDescriptor.hpp>
 #include <lfd/StereoLineFilter.hpp>
+#include <lfd/StereoLineMatcher.hpp>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -125,6 +126,10 @@ using GRFilter = GlobalRotationFilter<FT, LSVec<FT>>;
 /// @brief StereoLineFilter for LineSegment vectors.
 template <class FT>
 using SLFilter = StereoLineFilter<FT, LSVec<FT>>;
+
+/// @brief StereoLineMatcher for LineSegment vectors with default helpers.
+template <class FT>
+using SLMatcher = StereoLineMatcher<FT, LSVec<FT>, GradImgHelper<FT>>;
 
 // ============================================================================
 // Core type bindings (non-templated, called once)
@@ -703,6 +708,79 @@ void bind_lfd_matchers(py::module_& m, const std::string& suffix) {
 }
 
 // ============================================================================
+// Stereo matcher
+// ============================================================================
+
+template <class FT>
+void bind_lfd_stereo_matcher(py::module_& m, const std::string& suffix) {
+  const std::string cls = "StereoLineMatcher" + suffix;
+  py::class_<SLMatcher<FT>>(m, cls.c_str(),
+                            ("Stereo line matcher with geometric filtering and LR consistency" + suffix +
+                             ".\n\n"
+                             "Combines StereoLineFilter for candidate generation with brute-force\n"
+                             "LR descriptor matching and left-right consistency check.\n\n"
+                             "Parameters:\n"
+                             "    height: Image height\n"
+                             "    max_dist: Max disparity in pixels (default 10000)\n"
+                             "    angle_th: Max angle difference in degrees (default 5)\n"
+                             "    min_y_overlap: Min Y overlap ratio 0-1 (default 0.5)\n"
+                             "    dist_th: Descriptor distance threshold, 0 = auto (default 0)\n"
+                             "    radius: Radius for radius matching (default 0)\n"
+                             "    k: Number of nearest neighbors (default 0)")
+                                .c_str())
+      // Constructor without descriptor creators (for use with pre-computed descriptors)
+      .def(py::init([](int height, FT max_dist, FT angle_th, FT min_y_overlap, FT dist_th, FT radius, int k) {
+             return std::make_unique<SLMatcher<FT>>(typename SLMatcher<FT>::FdcPtr(), typename SLMatcher<FT>::FdcPtr(),
+                                                    height, max_dist, angle_th, min_y_overlap, dist_th, radius, k);
+           }),
+           py::arg("height"), py::arg("max_dist") = static_cast<FT>(10000), py::arg("angle_th") = static_cast<FT>(5),
+           py::arg("min_y_overlap") = static_cast<FT>(0.5), py::arg("dist_th") = static_cast<FT>(0),
+           py::arg("radius") = static_cast<FT>(0), py::arg("k") = 0,
+           "Construct with filter parameters only (use match() with pre-computed descriptors).")
+      // Constructor with LR descriptor creators (for automatic descriptor computation)
+      .def(py::init([](LRCreator<FT>& cL, LRCreator<FT>& cR, int height, FT max_dist, FT angle_th, FT min_y_overlap,
+                       FT dist_th, FT radius, int k) {
+             return std::make_unique<SLMatcher<FT>>(cL, cR, height, max_dist, angle_th, min_y_overlap, dist_th, radius,
+                                                    k);
+           }),
+           py::arg("creator_left"), py::arg("creator_right"), py::arg("height"),
+           py::arg("max_dist") = static_cast<FT>(10000), py::arg("angle_th") = static_cast<FT>(5),
+           py::arg("min_y_overlap") = static_cast<FT>(0.5), py::arg("dist_th") = static_cast<FT>(0),
+           py::arg("radius") = static_cast<FT>(0), py::arg("k") = 0,
+           "Construct with LR descriptor creators for automatic matching.")
+      // match with pre-computed descriptors
+      .def(
+          "match",
+          [](SLMatcher<FT>& self, const LSVec<FT>& left, const LSVec<FT>& right, const LRDscVec<FT>& dsc_left,
+             const LRDscVec<FT>& dsc_right) {
+            DMatchVec<FT> matches;
+            self.match(left, right, dsc_left, dsc_right, matches);
+            return matches;
+          },
+          py::arg("left"), py::arg("right"), py::arg("dsc_left"), py::arg("dsc_right"),
+          "Match with pre-computed LR descriptors. Returns list of DescriptorMatch.")
+      // match with automatic descriptor creation
+      .def(
+          "match_auto",
+          [](SLMatcher<FT>& self, const LSVec<FT>& left, const LSVec<FT>& right) {
+            DMatchVec<FT> matches;
+            self.match(left, right, matches);
+            return matches;
+          },
+          py::arg("left"), py::arg("right"),
+          "Match with automatic descriptor computation (requires creators set in constructor).")
+      // accessors
+      .def("get_filter", &SLMatcher<FT>::getFilter, py::return_value_policy::reference_internal,
+           "Get the internal StereoLineFilter.")
+      .def(
+          "get_descriptor_left", [](SLMatcher<FT>& self) { return self.getDescriptorLeft(); },
+          "Get a copy of the left descriptors from the last match.")
+      .def(
+          "get_descriptor_right", [](SLMatcher<FT>& self) { return self.getDescriptorRight(); },
+          "Get a copy of the right descriptors from the last match.");
+}
+
+// ============================================================================
 // Convenience: bind all LFD types for one FT preset
 // ============================================================================
 
@@ -713,6 +791,7 @@ void bind_lfd_preset(py::module_& m, const std::string& suffix) {
   bind_lfd_descriptor_creators<FT>(m, suffix);
   bind_lfd_filters<FT>(m, suffix);
   bind_lfd_matchers<FT>(m, suffix);
+  bind_lfd_stereo_matcher<FT>(m, suffix);
 }
 
 // ============================================================================
@@ -725,6 +804,7 @@ template void bind_lfd_descriptor_types<float>(py::module_&, const std::string&)
 template void bind_lfd_descriptor_creators<float>(py::module_&, const std::string&);
 template void bind_lfd_filters<float>(py::module_&, const std::string&);
 template void bind_lfd_matchers<float>(py::module_&, const std::string&);
+template void bind_lfd_stereo_matcher<float>(py::module_&, const std::string&);
 template void bind_lfd_preset<float>(py::module_&, const std::string&);
 
 // Double (64-bit) — suffix "_f64"
@@ -733,6 +813,7 @@ template void bind_lfd_descriptor_types<double>(py::module_&, const std::string&
 template void bind_lfd_descriptor_creators<double>(py::module_&, const std::string&);
 template void bind_lfd_filters<double>(py::module_&, const std::string&);
 template void bind_lfd_matchers<double>(py::module_&, const std::string&);
+template void bind_lfd_stereo_matcher<double>(py::module_&, const std::string&);
 template void bind_lfd_preset<double>(py::module_&, const std::string&);
 
 }  // namespace python

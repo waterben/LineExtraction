@@ -4,11 +4,17 @@
 # =============================================================================
 #
 # This script downloads the Middlebury Stereo Evaluation 2014 dataset and
-# prepares it for use with the LineExtraction performance tests.
+# prepares it for use with the LineExtraction performance tests and stereo
+# reconstruction demos.
 #
-# The dataset is NOT included as a Bazel dependency due to its large size
-# (~2GB for all resolutions). Instead, this script downloads and extracts
-# only the necessary images (im0.png from "perfect" exposure).
+# For each scene, the script extracts:
+#   - im0.png  (left image, "perfect" or "imperfect" exposure)
+#   - im1.png  (right image)
+#   - calib.txt (calibration: cam0, cam1, doffs, baseline, width, height, ndisp)
+#
+# Layout: resources/datasets/MDB/MiddEval3-{Q|H|F}/{scene}/im0.png
+#                                                          /im1.png
+#                                                          /calib.txt
 #
 # Source: https://vision.middlebury.edu/stereo/data/scenes2014/
 #
@@ -158,11 +164,11 @@ download_scene() {
     local scene=$1
     local res=$2
     local version=${SCENES[$scene]}
-    local output_dir="${MDB_DIR}/MiddEval3-${res}"
-    local output_file="${output_dir}/${scene}.png"
+    local output_dir="${MDB_DIR}/MiddEval3-${res}/${scene}"
+    local output_im0="${output_dir}/im0.png"
 
-    # Skip if already exists
-    if [[ -f "$output_file" ]]; then
+    # Skip if already fully extracted (im0, im1, calib)
+    if [[ -f "$output_im0" && -f "${output_dir}/im1.png" && -f "${output_dir}/calib.txt" ]]; then
         log_info "  [SKIP] ${scene} (${res}) - already exists"
         return 0
     fi
@@ -197,33 +203,45 @@ download_scene() {
         return 1
     fi
 
-    # Extract only the im0.png for the requested resolution
-    local extract_path
-    case $res in
-        Q) extract_path="${scene}-${version}/im0.png" ;;
-        H) extract_path="${scene}-${version}/im0.png" ;;
-        F) extract_path="${scene}-${version}/im0.png" ;;
-    esac
-
-    # Check what's in the archive and extract appropriately
+    # Extract im0.png, im1.png, and calib.txt
     if unzip -l "$zip_file" | grep -q "im0.png"; then
-        # Extract to temp, then copy the right resolution
         local extract_dir="${TMP_DIR}/extract_${scene}"
         mkdir -p "$extract_dir"
         unzip -q -o "$zip_file" -d "$extract_dir"
 
-        # Find im0.png (structure varies)
+        # Create output directory for this scene
+        mkdir -p "$output_dir"
+
+        # Find and copy im0.png (left image)
         local im0_path
         im0_path=$(find "$extract_dir" -name "im0.png" -type f | head -1)
-
         if [[ -n "$im0_path" ]]; then
-            cp "$im0_path" "$output_file"
-            log_info "  [OK] ${scene} (${res})"
+            cp "$im0_path" "$output_im0"
         else
             log_warn "  [FAIL] im0.png not found in ${scene}"
+            rm -rf "$extract_dir"
             return 1
         fi
 
+        # Find and copy im1.png (right image)
+        local im1_path
+        im1_path=$(find "$extract_dir" -name "im1.png" -type f | head -1)
+        if [[ -n "$im1_path" ]]; then
+            cp "$im1_path" "${output_dir}/im1.png"
+        else
+            log_warn "  [WARN] im1.png not found in ${scene} (left-only)"
+        fi
+
+        # Find and copy calib.txt (calibration data)
+        local calib_path
+        calib_path=$(find "$extract_dir" -name "calib.txt" -type f | head -1)
+        if [[ -n "$calib_path" ]]; then
+            cp "$calib_path" "${output_dir}/calib.txt"
+        else
+            log_warn "  [WARN] calib.txt not found in ${scene}"
+        fi
+
+        log_info "  [OK] ${scene} (${res})"
         rm -rf "$extract_dir"
     else
         log_warn "  [FAIL] Invalid archive for ${scene}"

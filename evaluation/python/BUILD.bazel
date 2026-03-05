@@ -94,3 +94,25 @@ py_binary(
         "@pip//pillow",
     ],
 )
+
+# 3D line reconstruction benchmark — stereo triangulation evaluation on MDB
+# Usage:
+#   bazel run //evaluation/python:reconstruction_benchmark
+#   bazel run //evaluation/python:reconstruction_benchmark -- \
+#       --methods midpoint plane opencv --scenes Adirondack Piano
+py_binary(
+    name = "reconstruction_benchmark",
+    srcs = ["tools/reconstruction_benchmark.py"],
+    data = [
+        "//resources/datasets:mdb_h",
+    ],
+    main = "tools/reconstruction_benchmark.py",
+    deps = [
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

@@ -13,7 +13,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(le_geometry, m) {
   m.doc() =
       "LineExtraction geometry library — 2D/3D line, segment, polygon,\n"
-      "camera models, and drawing utilities.";
+      "camera models, stereo triangulation, and drawing utilities.";
 
   // Visualization helpers (non-templated, called once)
   lsfm::python::bind_visualization(m);
@@ -21,8 +21,10 @@ PYBIND11_MODULE(le_geometry, m) {
   // Float preset (default, no suffix)
   lsfm::python::bind_geometry_preset<float>(m, "");
   lsfm::python::bind_geometry3d_preset<float>(m, "");
+  lsfm::python::bind_stereo_preset<float>(m, "");
 
   // Double preset
   lsfm::python::bind_geometry_preset<double>(m, "_f64");
   lsfm::python::bind_geometry3d_preset<double>(m, "_f64");
+  lsfm::python::bind_stereo_preset<double>(m, "_f64");
 }

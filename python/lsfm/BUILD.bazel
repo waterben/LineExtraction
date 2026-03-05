@@ -12,8 +12,16 @@ py_library(
     srcs = [
         "__init__.py",
         "data.py",
+        "limap_compat.py",
+        "reconstruction.py",
     ],
     imports = [".."],
+    deps = [
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "@pip//numpy",
+    ],
 )
 
 py_test(

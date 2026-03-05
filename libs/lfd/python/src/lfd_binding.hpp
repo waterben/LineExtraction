@@ -88,6 +88,17 @@ template <class FT>
 void bind_lfd_matchers(py::module_& m, const std::string& suffix);
 
 // ============================================================================
+// Stereo matcher
+// ============================================================================
+
+/// @brief Bind StereoLineMatcher for a given floating-point type.
+/// @tparam FT Floating-point type
+/// @param m The pybind11 module
+/// @param suffix Python class name suffix
+template <class FT>
+void bind_lfd_stereo_matcher(py::module_& m, const std::string& suffix);
+
+// ============================================================================
 // Convenience: bind all LFD types for one FT preset
 // ============================================================================
 

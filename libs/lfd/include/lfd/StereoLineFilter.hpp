@@ -119,15 +119,18 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
       //                return true;
     }
 
-    // x's of endpoints in left image have to be >= than on the right
-    if (ld.beg.x() < rd.beg.x() || ld.end.x() < rd.end.x()) {
-      //                std::cout << " stereo constraint not met, left more right...";
+    // Use midpoint-based disparity: LSD does not guarantee consistent
+    // endpoint ordering, so comparing beg-to-beg / end-to-end is unreliable.
+    FT mid_x_l = (ld.beg.x() + ld.end.x()) / static_cast<FT>(2);
+    FT mid_x_r = (rd.beg.x() + rd.end.x()) / static_cast<FT>(2);
+
+    // Left midpoint x must be >= right midpoint x (positive disparity)
+    if (mid_x_l < mid_x_r) {
       return true;
     }
 
-    // if distance between left x and right x > maxDist_, filter
-    if (ld.beg.x() - rd.beg.x() > maxDisPx_ || ld.end.x() - rd.end.x() > maxDisPx_) {
-      //                std::cout << " x-Distance too high";
+    // Midpoint disparity must not exceed maximum
+    if (mid_x_l - mid_x_r > maxDisPx_) {
       return true;
     }
     /*

@@ -172,3 +172,419 @@ def matches_to_limap(
     if not pairs:
         return np.zeros((0, 2), dtype=np.int32)
     return np.array(pairs, dtype=np.int32)
+
+
+# ---------------------------------------------------------------------------
+# LIMAP adapter classes
+# ---------------------------------------------------------------------------
+# These classes conform to LIMAP's expected interfaces for line detection,
+# descriptor extraction, and matching.  They allow LIMAP's multi-view
+# reconstruction pipeline (``limap.runners``) to use our native C++
+# implementations transparently.
+#
+# LIMAP is an *optional* dependency.  The adapters work standalone —
+# they only need ``le_lsd``, ``le_lfd``, and ``le_geometry`` on sys.path.
+# ---------------------------------------------------------------------------
+
+
+class LsfmLineDetector:
+    """LIMAP-compatible line segment detector backed by ``le_lsd``.
+
+    Wraps any LSD detector variant (default: ``LsdCC``) so that it can
+    be plugged into LIMAP's ``LineDetector`` interface.
+
+    Usage::
+
+        from lsfm.limap_compat import LsfmLineDetector
+        det = LsfmLineDetector()          # uses LsdCC
+        segs = det.detect(image_gray)     # → (N, 5) ndarray
+
+    :param detector_cls: Name of the ``le_lsd`` detector class.
+    :type detector_cls: str
+    :param kwargs: Keyword arguments forwarded to the detector constructor.
+    """
+
+    def __init__(
+        self,
+        detector_cls: str = "LsdCC",
+        **kwargs: object,
+    ) -> None:
+        import le_lsd as _le_lsd  # noqa: N812
+
+        cls = getattr(_le_lsd, detector_cls)
+        self._det = cls(**kwargs)
+        self._le_lsd = _le_lsd
+
+    def detect(self, image: NDArray[np.uint8]) -> NDArray[np.float64]:
+        """Detect line segments and return them in LIMAP ``(N, 5)`` format.
+
+        :param image: Grayscale ``uint8`` image.
+        :type image: numpy.ndarray
+        :return: Segments as ``[x1, y1, x2, y2, score]`` rows.
+        :rtype: numpy.ndarray of shape ``(N, 5)``
+        """
+        self._det.detect(image)
+        segs = self._det.line_segments()
+        return segments_to_limap(segs)
+
+    @property
+    def line_segments(self) -> list[object]:
+        """Return raw ``LineSegment`` objects from the last detection.
+
+        :return: List of line segments.
+        :rtype: list[LineSegment]
+        """
+        return list(self._det.line_segments())
+
+    @property
+    def image_data(self) -> list[NDArray]:
+        """Return the detector's image data (gradients, maps).
+
+        :return: List of image data arrays ``[gx, gy, mag, edge, seg]``.
+        :rtype: list[numpy.ndarray]
+        """
+        return list(self._det.image_data())
+
+
+class LsfmLineDescriptor:
+    """LIMAP-compatible LBD descriptor extractor backed by ``le_lfd``.
+
+    Wraps ``FdcLBD`` so that it can be used where LIMAP expects a
+    descriptor extractor.
+
+    Usage::
+
+        from lsfm.limap_compat import LsfmLineDescriptor
+        desc = LsfmLineDescriptor()
+        desc_info = desc.compute(image_gray, segments)  # → dict
+
+    :param num_band: Number of bands for the LBD descriptor.
+    :type num_band: int
+    :param width_band: Width of each band.
+    :type width_band: int
+    """
+
+    def __init__(
+        self,
+        num_band: int = 9,
+        width_band: int = 7,
+    ) -> None:
+        self._num_band = num_band
+        self._width_band = width_band
+
+    def compute(
+        self,
+        image: NDArray[np.uint8],
+        segments: Sequence[object] | NDArray[np.float64],
+        *,
+        num_octaves: int = 5,
+    ) -> dict[str, object]:
+        """Compute LBD descriptors and return LIMAP ``descinfo`` dict.
+
+        Can accept either raw ``LineSegment`` objects or an ``(N, 5)``
+        LIMAP segment array (in which case segments are converted back
+        to ``LineSegment`` objects internally).
+
+        :param image: Grayscale ``uint8`` image.
+        :type image: numpy.ndarray
+        :param segments: Line segments — either ``LineSegment`` list or
+            ``(N, 5)`` LIMAP array.
+        :type segments: Sequence[LineSegment] or numpy.ndarray
+        :param num_octaves: Pyramid octaves for ``ms_lines``.
+        :type num_octaves: int
+        :return: LIMAP-compatible descriptor info dict with keys
+            ``"ms_lines"`` and ``"line_descriptors"``.
+        :rtype: dict
+        """
+        import le_lfd as _le_lfd  # noqa: N812
+        import le_geometry as _le_geometry  # noqa: N812
+        import le_lsd as _le_lsd  # noqa: N812
+
+        # Compute Sobel gradients for LBD
+        det = _le_lsd.LsdCC()
+        det.detect(image)
+        gx = det.image_data()[0].astype(np.float32)
+        gy = det.image_data()[1].astype(np.float32)
+
+        # Convert LIMAP array to LineSegment objects if needed
+        seg_objs: Sequence[object]
+        if isinstance(segments, np.ndarray) and segments.ndim == 2:
+            seg_objs = [
+                _le_geometry.LineSegment.from_endpoints(
+                    float(row[0]),
+                    float(row[1]),
+                    float(row[2]),
+                    float(row[3]),
+                )
+                for row in segments
+            ]
+        else:
+            seg_objs = segments
+
+        creator = _le_lfd.FdcLBD(
+            gx,
+            gy,
+            num_band=self._num_band,
+            width_band=self._width_band,
+        )
+        return descriptors_to_limap(
+            creator,
+            seg_objs,
+            num_octaves=num_octaves,
+        )
+
+    @property
+    def dimension(self) -> int:
+        """Descriptor dimension (depends on ``num_band``).
+
+        :return: Descriptor vector length.
+        :rtype: int
+        """
+        return self._num_band * 8
+
+
+class LsfmLineMatcher:
+    """LIMAP-compatible brute-force line matcher backed by ``le_lfd``.
+
+    Wraps ``BruteForceLBD`` with optional stereo and rotation filtering.
+
+    Usage::
+
+        from lsfm.limap_compat import LsfmLineMatcher
+        matcher = LsfmLineMatcher()
+        match_pairs = matcher.match(desc_info_1, desc_info_2)  # (M, 2)
+
+    :param use_stereo_filter: Enable ``StereoLineFilter``.
+    :type use_stereo_filter: bool
+    :param use_rotation_filter: Enable ``GlobalRotationFilter``.
+    :type use_rotation_filter: bool
+    :param stereo_kwargs: Additional keyword arguments for
+        ``StereoLineFilter`` (e.g. ``angle_th``, ``min_y_overlap``).
+    :type stereo_kwargs: dict
+    """
+
+    def __init__(
+        self,
+        *,
+        use_stereo_filter: bool = False,
+        use_rotation_filter: bool = False,
+        **stereo_kwargs: object,
+    ) -> None:
+        self._use_stereo = use_stereo_filter
+        self._use_rotation = use_rotation_filter
+        self._stereo_kwargs = stereo_kwargs
+
+    def match(
+        self,
+        desc_info_1: dict[str, object],
+        desc_info_2: dict[str, object],
+        *,
+        segments_1: Sequence[object] | None = None,
+        segments_2: Sequence[object] | None = None,
+        image_height: int = 0,
+    ) -> NDArray[np.int32]:
+        """Match descriptors and return ``(M, 2)`` index pairs.
+
+        :param desc_info_1: Descriptor info dict for the first image
+            (from :meth:`LsfmLineDescriptor.compute`).
+        :type desc_info_1: dict
+        :param desc_info_2: Descriptor info dict for the second image.
+        :type desc_info_2: dict
+        :param segments_1: Line segments of the first image (required
+            if stereo or rotation filter is enabled).
+        :type segments_1: Sequence[LineSegment], optional
+        :param segments_2: Line segments of the second image.
+        :type segments_2: Sequence[LineSegment], optional
+        :param image_height: Image height in pixels (for stereo filter).
+        :type image_height: int
+        :return: Match index pairs.
+        :rtype: numpy.ndarray of shape ``(M, 2)``
+        """
+        import le_lfd as _le_lfd  # noqa: N812
+
+        mat1 = np.asarray(
+            desc_info_1["line_descriptors"],
+            dtype=np.float32,
+        )
+        mat2 = np.asarray(
+            desc_info_2["line_descriptors"],
+            dtype=np.float32,
+        )
+
+        # Use the raw brute-force matching on descriptor matrices
+        matcher = _le_lfd.BruteForceLBD()
+
+        # If stereo filter requested + segments available, use filtered
+        if (
+            self._use_stereo
+            and segments_1 is not None
+            and segments_2 is not None
+            and image_height > 0
+        ):
+            sf = _le_lfd.StereoLineFilter(
+                height=image_height,
+                **self._stereo_kwargs,
+            )
+            sf.train(segments_1, segments_2)
+            # Need descriptor lists for filtered matching
+            desc_list_1 = _list_from_mat(mat1, _le_lfd)
+            desc_list_2 = _list_from_mat(mat2, _le_lfd)
+            matcher.train_filtered_stereo(desc_list_1, desc_list_2, sf)
+        else:
+            desc_list_1 = _list_from_mat(mat1, _le_lfd)
+            desc_list_2 = _list_from_mat(mat2, _le_lfd)
+            matcher.train(desc_list_1, desc_list_2)
+
+        best = matcher.best()
+
+        # Convert to index pairs, apply rotation filter if requested
+        rot_filter = None
+        if self._use_rotation and segments_1 is not None and segments_2 is not None:
+            rot_filter = _le_lfd.GlobalRotationFilter()
+            rot_filter.train(segments_1, segments_2)
+
+        pairs: list[list[int]] = []
+        for i, m in enumerate(best):
+            if np.isnan(m.distance):
+                continue
+            if rot_filter is not None and not rot_filter.filter(
+                i,
+                m.match_idx,
+            ):
+                continue
+            pairs.append([i, m.match_idx])
+
+        if not pairs:
+            return np.zeros((0, 2), dtype=np.int32)
+        return np.array(pairs, dtype=np.int32)
+
+
+def _list_from_mat(
+    mat: NDArray[np.floating],
+    le_lfd_module: object,
+) -> list[object]:
+    """Create a list of FdLBD descriptors from a matrix.
+
+    Constructs descriptors by creating a dummy FdcLBD and using
+    create_list with synthetic segments, then replacing data.
+    Falls back to raw matrix matching if not possible.
+
+    :param mat: Descriptor matrix of shape ``(N, D)``.
+    :type mat: numpy.ndarray
+    :param le_lfd_module: The ``le_lfd`` module.
+    :type le_lfd_module: module
+    :return: List of descriptor objects.
+    :rtype: list
+    """
+    # For BruteForceLBD.train(), we need FdLBD descriptor objects.
+    # Use the static best_match_mat approach if available, otherwise
+    # create descriptors via FdcLBD from a dummy gradient image.
+    n = mat.shape[0]
+    if n == 0:
+        return []
+
+    # Create matching-compatible descriptors from the matrix
+    # by using a tiny gradient image and replacing descriptor data
+    import le_geometry as _le_geometry  # noqa: N812
+
+    h, w = 4, max(mat.shape[1] + 20, 100)
+    dummy_gx = np.zeros((h, w), dtype=np.float32)
+    dummy_gy = np.ones((h, w), dtype=np.float32)
+
+    # Create one segment per descriptor
+    segs = [
+        _le_geometry.LineSegment.from_endpoints(0.0, 1.0, float(w - 1), 1.0)
+        for _ in range(n)
+    ]
+
+    creator = le_lfd_module.FdcLBD(dummy_gx, dummy_gy)
+    desc_list = creator.create_list(segs)
+
+    # Replace descriptor data with actual values
+    for i, desc in enumerate(desc_list):
+        desc.data[:] = mat[i]
+
+    return desc_list
+
+
+def cameras_to_limap(
+    cam_left: object,
+    cam_right: object,
+    baseline: float,
+) -> dict[str, object]:
+    """Convert our Camera_f64 pair to LIMAP camera/pose dicts.
+
+    :param cam_left: Left camera (``le_geometry.Camera_f64``).
+    :type cam_left: Camera_f64
+    :param cam_right: Right camera (``le_geometry.Camera_f64``).
+    :type cam_right: Camera_f64
+    :param baseline: Stereo baseline in world units.
+    :type baseline: float
+    :return: Dict with keys ``"cameras"`` (list of cam dicts) and
+        ``"poses"`` (list of ``[R, t]`` pairs as numpy arrays).
+    :rtype: dict
+    """
+    fx_l, fy_l = cam_left.focal  # type: ignore[attr-defined]
+    cx_l, cy_l = cam_left.offset  # type: ignore[attr-defined]
+    w = cam_left.width  # type: ignore[attr-defined]
+    h = cam_left.height  # type: ignore[attr-defined]
+
+    K_left = np.array(
+        [
+            [fx_l, 0, cx_l],
+            [0, fy_l, cy_l],
+            [0, 0, 1],
+        ],
+        dtype=np.float64,
+    )
+
+    fx_r, fy_r = cam_right.focal  # type: ignore[attr-defined]
+    cx_r, cy_r = cam_right.offset  # type: ignore[attr-defined]
+
+    K_right = np.array(
+        [
+            [fx_r, 0, cx_r],
+            [0, fy_r, cy_r],
+            [0, 0, 1],
+        ],
+        dtype=np.float64,
+    )
+
+    R_left = np.eye(3, dtype=np.float64)
+    t_left = np.zeros(3, dtype=np.float64)
+    R_right = np.eye(3, dtype=np.float64)
+    t_right = np.array([baseline, 0.0, 0.0], dtype=np.float64)
+
+    return {
+        "cameras": [
+            {"K": K_left, "width": w, "height": h},
+            {"K": K_right, "width": w, "height": h},
+        ],
+        "poses": [
+            [R_left, t_left],
+            [R_right, t_right],
+        ],
+    }
+
+
+def segments3d_to_limap(
+    segs3d: Sequence[object],
+) -> NDArray[np.float64]:
+    """Convert 3D line segments to LIMAP ``(N, 6)`` endpoint format.
+
+    Each row is ``[x1, y1, z1, x2, y2, z2]``.
+
+    :param segs3d: 3D line segments (``LineSegment3`` objects).
+    :type segs3d: Sequence[LineSegment3]
+    :return: Segment endpoint array.
+    :rtype: numpy.ndarray of shape ``(N, 6)``
+    """
+    if not segs3d:
+        return np.zeros((0, 6), dtype=np.float64)
+
+    rows = np.empty((len(segs3d), 6), dtype=np.float64)
+    for i, seg in enumerate(segs3d):
+        sp = seg.start_point()  # type: ignore[attr-defined]
+        ep = seg.end_point()  # type: ignore[attr-defined]
+        rows[i] = (*sp, *ep)
+    return rows

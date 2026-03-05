@@ -337,6 +337,127 @@ class TestImages:
         )
         return left, right
 
+    def stereo_calibration(self, scene: str, resolution: str = "H") -> dict[str, float]:
+        """Load MDB stereo calibration data for a scene.
+
+        Reads ``calib.txt`` which contains::
+
+            cam0=[fx 0 cx; 0 fy cy; 0 0 1]
+            cam1=[fx 0 cx; 0 fy cy; 0 0 1]
+            doffs=...
+            baseline=...
+            width=...
+            height=...
+            ndisp=...
+
+        :param scene: Scene name, e.g. ``"Adirondack"``.
+        :type scene: str
+        :param resolution: ``"Q"`` (quarter), ``"H"`` (half), ``"F"`` (full).
+        :type resolution: str
+        :return: Dict with keys ``"cam0"`` (3x3 list), ``"cam1"`` (3x3 list),
+            ``"focal_x"``, ``"focal_y"``, ``"offset_x"``, ``"offset_y"``,
+            ``"doffs"``, ``"baseline"``, ``"width"``, ``"height"``, ``"ndisp"``.
+        :rtype: dict[str, float]
+        :raises FileNotFoundError: If calib.txt is not found.
+
+        .. note::
+           Requires the dataset to be downloaded with stereo support:
+           ``./tools/scripts/setup_mdb_dataset.sh``
+        """
+        res_dir = f"MDB/MiddEval3-{resolution}"
+        calib_path = self._resolve_any(f"{res_dir}/{scene}/calib.txt")
+
+        result: dict[str, object] = {}
+        with open(calib_path, encoding="utf-8") as f:
+            for raw_line in f:
+                raw_line = raw_line.strip()
+                if not raw_line or raw_line.startswith("#"):
+                    continue
+                key, _, value = raw_line.partition("=")
+                key = key.strip()
+                value = value.strip()
+
+                if key in ("cam0", "cam1"):
+                    # Parse matrix: [fx 0 cx; 0 fy cy; 0 0 1]
+                    mat_str = value.strip("[]")
+                    rows = mat_str.split(";")
+                    matrix = []
+                    for row in rows:
+                        matrix.append([float(x) for x in row.split()])
+                    result[key] = matrix
+                else:
+                    try:
+                        result[key] = float(value)
+                    except ValueError:
+                        result[key] = value
+
+        # Extract convenient intrinsic fields from cam0
+        if "cam0" in result:
+            cam0 = result["cam0"]
+            result["focal_x"] = cam0[0][0]
+            result["focal_y"] = cam0[1][1]
+            result["offset_x"] = cam0[0][2]
+            result["offset_y"] = cam0[1][2]
+
+        return result  # type: ignore[return-value]
+
+    def stereo_camera_pair(
+        self, scene: str, resolution: str = "H"
+    ) -> tuple[object, object]:
+        """Construct calibrated Camera objects for an MDB stereo pair.
+
+        The left camera is at the origin; the right camera is shifted
+        along the x-axis by ``baseline`` (in world units).
+
+        :param scene: Scene name, e.g. ``"Adirondack"``.
+        :type scene: str
+        :param resolution: ``"Q"`` (quarter), ``"H"`` (half), ``"F"`` (full).
+        :type resolution: str
+        :return: Tuple of ``(cam_left, cam_right)`` Camera objects.
+        :rtype: tuple[Camera, Camera]
+        :raises FileNotFoundError: If calibration data is not available.
+
+        .. note::
+           Requires ``le_geometry`` module to be importable.
+        """
+        import le_geometry
+
+        calib = self.stereo_calibration(scene, resolution)
+        fx = calib["focal_x"]
+        fy = calib["focal_y"]
+        cx = calib["offset_x"]
+        cy = calib["offset_y"]
+        w = calib.get("width", 0)
+        h = calib.get("height", 0)
+        baseline = calib.get("baseline", 0)
+        doffs = calib.get("doffs", 0)
+
+        cam_left = le_geometry.Camera_f64(
+            focal_x=fx,
+            focal_y=fy,
+            offset_x=cx,
+            offset_y=cy,
+            width=w,
+            height=h,
+        )
+        # Right camera: shifted along x by baseline, cx adjusted by doffs
+        cam1 = calib.get("cam1")
+        if cam1 is not None:
+            rx_offset = cam1[0][2]
+        else:
+            rx_offset = cx + doffs
+
+        cam_right = le_geometry.Camera_f64(
+            focal_x=fx,
+            focal_y=fy,
+            offset_x=rx_offset,
+            offset_y=cy,
+            width=w,
+            height=h,
+            tx=baseline,
+        )
+        return cam_left, cam_right
+
     def stereo_scenes(self, resolution: str = "H") -> Iterator[str]:
         """Yield available MDB scene names for a given resolution.
 
