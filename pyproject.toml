@@ -1,7 +1,7 @@
 [project]
 name = "line-extraction-deps-env"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 dependencies = [
     "debugpy==1.8.14",
     "gitpython==3.1.43",
@@ -34,3 +34,21 @@ dependencies = [
     "segment-anything>=1.0",
     "ultralytics>=8.0.0",
 ]
+
+[project.optional-dependencies]
+# CVG LIMAP (https://github.com/cvg/limap) for multi-view 3D line mapping.
+# NOTE: The PyPI "limap" package is an UNRELATED project (LimerBoy Mapper).
+# The real CVG LIMAP must be installed from source and requires:
+#   - Python 3.10 or 3.11 (no 3.12+ support)
+#   - CMake >= 3.17, COLMAP, pybind11, scikit-build-core
+#   - CUDA (optional, for deep learning detectors/matchers)
+# Install with: pip install ".[limap]"  or  uv pip install ".[limap]"
+limap = ["limap @ git+https://github.com/cvg/limap.git"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# This project is a dependency-only environment — no Python packages to install.
+packages = []

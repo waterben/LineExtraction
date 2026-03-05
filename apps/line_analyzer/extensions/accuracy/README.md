@@ -88,7 +88,10 @@ Each row defines one ground truth line segment with sub-pixel endpoints. Multipl
 
 1. **Detect lines** and **Evaluate** to establish a baseline.
 2. **Open the [Precision Optimizer](../precision_optimizer/README.md)** and run **Optimize All** to refine line positions.
-3. **Re-evaluate** in the Accuracy panel — compare P/R/F1/sAP before and aft opti4. **Apply [Continuity Optimizer](../continuity_optimizer/README.md)** (merge and optionally gradient connection), then re-evaluate again to measure the effect of post-processing.## Bundled Example Datasets
+3. **Re-evaluate** in the Accuracy panel — compare P/R/F1/sAP before and after optimization.
+4. **Apply [Continuity Optimizer](../continuity_optimizer/README.md)** (merge and optionally gradient connection), then re-evaluate again to measure the effect of post-processing.
+
+## Bundled Example Datasets
 
 Two bundled synthetic datasets are available for quick evaluation without external files.
 

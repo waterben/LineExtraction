@@ -25,7 +25,7 @@ namespace lsfm {
 /// @tparam FT Float type for descriptor elements
 template <class FT>
 struct FdLBD {
-  FdLBD() {}
+  FdLBD() : data() {}
   /// @brief Construct from descriptor matrix.
   /// @param d The descriptor matrix
   FdLBD(const cv::Mat& d) : data(d) {}
@@ -67,38 +67,42 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   std::vector<FT> coefLocal, coefGlobal;  ///< Local and global Gaussian smoothing coefficients
   cv::Mat_<FT> bands;                     ///< Band accumulation matrix (8 rows x numBand cols)
   FT *pgdLBandSum, *ngdLBandSum, *pgdL2BandSum, *ngdL2BandSum, *pgdOBandSum, *ngdOBandSum, *pgdO2BandSum,
-      *ngdO2BandSum;  ///< Pointers into band rows for positive/negative gradient sums
+      *ngdO2BandSum;  ///< Non-owning pointers into band rows for positive/negative gradient sums
 
   int heightOfLSP, imageWidth, imageHeight,
       descriptorSize;  ///< Line support region height, image dimensions, and descriptor size
 
   FT invN2, invN3;  ///< Inverse normalization factors for boundary and interior bands
 
+  // Prevent copying — raw pointers alias into `bands`, so copies would dangle.
+  FdcLBD(const FdcLBD&) = delete;
+  FdcLBD& operator=(const FdcLBD&) = delete;
+
   /// @brief Initialize internal coefficients and data structures.
   /// Computes local/global Gaussian smoothing coefficients, sets up band
   /// accumulation matrix, and caches image dimensions and normalization factors.
   void init() {
     // compute local and global band smoothing coefficients
-    ushort size = widthBand * 3;
-    coefLocal.resize(size);
-    FT u = size / static_cast<FT>(2);
-    FT sigma = (widthBand * 2 + 1) / static_cast<FT>(2);
-    FT invsigma2 = -1 / (2 * sigma * sigma);
+    int isize = widthBand * 3;
+    coefLocal.resize(static_cast<size_t>(isize));
+    FT u = static_cast<FT>(isize) / static_cast<FT>(2);
+    FT sigma = static_cast<FT>(widthBand * 2 + 1) / static_cast<FT>(2);
+    FT invsigma2 = static_cast<FT>(-1) / (static_cast<FT>(2) * sigma * sigma);
     FT dis;
 
-    for (ushort i = 0; i != size; ++i) {
-      dis = i - u;
-      coefLocal[i] = exp(dis * dis * invsigma2);
+    for (int i = 0; i != isize; ++i) {
+      dis = static_cast<FT>(i) - u;
+      coefLocal[static_cast<size_t>(i)] = static_cast<FT>(exp(static_cast<double>(dis * dis * invsigma2)));
     }
 
-    size = numBand * widthBand;
-    coefGlobal.resize(size);
-    u = size / static_cast<FT>(2);
+    isize = numBand * widthBand;
+    coefGlobal.resize(static_cast<size_t>(isize));
+    u = static_cast<FT>(isize) / static_cast<FT>(2);
     sigma = u;
-    invsigma2 = -1 / (2 * sigma * sigma);
-    for (ushort i = 0; i != size; ++i) {
-      dis = i - u;
-      coefGlobal[i] = exp(dis * dis * invsigma2);
+    invsigma2 = static_cast<FT>(-1) / (static_cast<FT>(2) * sigma * sigma);
+    for (int i = 0; i != isize; ++i) {
+      dis = static_cast<FT>(i) - u;
+      coefGlobal[static_cast<size_t>(i)] = static_cast<FT>(exp(static_cast<double>(dis * dis * invsigma2)));
     }
 
 
@@ -189,7 +193,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       sCor0.y() += dL[0];
 
       // compute band
-      coefInGaussion = coefGlobal[hID];
+      coefInGaussion = coefGlobal[static_cast<size_t>(hID)];
       pgdLRowSum = coefInGaussion * pgdLRowSum;
       ngdLRowSum = coefInGaussion * ngdLRowSum;
       pgdL2RowSum = pgdLRowSum * pgdLRowSum;
@@ -203,7 +207,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       //{g_dO |g_dO>0 }, {g_dO |g_dO<0 } of each band in the line support region
       // first, current row belong to current band;
       bandID = hID / widthBand;
-      coefInGaussion = coefLocal[hID % widthBand + widthBand];
+      coefInGaussion = coefLocal[static_cast<size_t>(hID % widthBand + widthBand)];
       pgdLBandSum[bandID] += coefInGaussion * pgdLRowSum;
       ngdLBandSum[bandID] += coefInGaussion * ngdLRowSum;
       pgdL2BandSum[bandID] += coefInGaussion * coefInGaussion * pgdL2RowSum;
@@ -219,7 +223,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       bandID--;
       // the band above the current band
       if (bandID >= 0) {
-        coefInGaussion = coefLocal[hID % widthBand + 2 * widthBand];
+        coefInGaussion = coefLocal[static_cast<size_t>(hID % widthBand + 2 * widthBand)];
         pgdLBandSum[bandID] += coefInGaussion * pgdLRowSum;
         ngdLBandSum[bandID] += coefInGaussion * ngdLRowSum;
         pgdL2BandSum[bandID] += coefInGaussion * coefInGaussion * pgdL2RowSum;
@@ -233,7 +237,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       bandID = bandID + 2;
       // the band below the current band
       if (bandID < numBand) {
-        coefInGaussion = coefLocal[hID % widthBand];
+        coefInGaussion = coefLocal[static_cast<size_t>(hID % widthBand)];
         pgdLBandSum[bandID] += coefInGaussion * pgdLRowSum;
         ngdLBandSum[bandID] += coefInGaussion * ngdLRowSum;
         pgdL2BandSum[bandID] += coefInGaussion * coefInGaussion * pgdL2RowSum;
@@ -258,20 +262,20 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
 
       desID = bandID * 8;
       temp = pgdLBandSum[bandID] * invN;
-      desVec[desID] = temp;                                                 // mean value of pgdL;
-      desVec[desID + 4] = sqrt(pgdL2BandSum[bandID] * invN - temp * temp);  // std value of pgdL;
+      desVec[desID] = temp;                                                                  // mean value of pgdL;
+      desVec[desID + 4] = static_cast<FT>(sqrt(pgdL2BandSum[bandID] * invN - temp * temp));  // std value of pgdL;
 
       temp = ngdLBandSum[bandID] * invN;
-      desVec[desID + 1] = temp;                                             // mean value of ngdL;
-      desVec[desID + 5] = sqrt(ngdL2BandSum[bandID] * invN - temp * temp);  // std value of ngdL;
+      desVec[desID + 1] = temp;                                                              // mean value of ngdL;
+      desVec[desID + 5] = static_cast<FT>(sqrt(ngdL2BandSum[bandID] * invN - temp * temp));  // std value of ngdL;
 
       temp = pgdOBandSum[bandID] * invN;
-      desVec[desID + 2] = temp;                                             // mean value of pgdO;
-      desVec[desID + 6] = sqrt(pgdO2BandSum[bandID] * invN - temp * temp);  // std value of pgdO;
+      desVec[desID + 2] = temp;                                                              // mean value of pgdO;
+      desVec[desID + 6] = static_cast<FT>(sqrt(pgdO2BandSum[bandID] * invN - temp * temp));  // std value of pgdO;
 
       temp = ngdOBandSum[bandID] * invN;
-      desVec[desID + 3] = temp;                                             // mean value of ngdO;
-      desVec[desID + 7] = sqrt(ngdO2BandSum[bandID] * invN - temp * temp);  // std value of ngdO;
+      desVec[desID + 3] = temp;                                                              // mean value of ngdO;
+      desVec[desID + 7] = static_cast<FT>(sqrt(ngdO2BandSum[bandID] * invN - temp * temp));  // std value of ngdO;
     }
 
     // Normalize means and standard deviations separately.
@@ -284,8 +288,8 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
       for (int k = 0; k < 4; ++k) sumSqM += dst[base + k] * dst[base + k];
       for (int k = 4; k < 8; ++k) sumSqS += dst[base + k] * dst[base + k];
     }
-    FT invNormM = (sumSqM > 0) ? static_cast<FT>(1) / sqrt(sumSqM) : 0;
-    FT invNormS = (sumSqS > 0) ? static_cast<FT>(1) / sqrt(sumSqS) : 0;
+    FT invNormM = (sumSqM > 0) ? static_cast<FT>(1) / static_cast<FT>(sqrt(sumSqM)) : 0;
+    FT invNormS = (sumSqS > 0) ? static_cast<FT>(1) / static_cast<FT>(sqrt(sumSqS)) : 0;
     for (int i = 0; i < numBand; ++i) {
       int base = i * 8;
       for (int k = 0; k < 4; ++k) dst[base + k] *= invNormM;
@@ -315,7 +319,27 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   /// @param nBand Number of bands in the line support region (default 9)
   /// @param wBand Width of each band in pixels (default 7)
   FdcLBD(const cv::Mat& dxImg, const cv::Mat& dyImg, ushort nBand = 9, ushort wBand = 7)
-      : dx(dxImg), dy(dyImg), numBand(nBand), widthBand(wBand) {
+      : dx(dxImg),
+        dy(dyImg),
+        numBand(nBand),
+        widthBand(wBand),
+        coefLocal(),
+        coefGlobal(),
+        bands(),
+        pgdLBandSum(nullptr),
+        ngdLBandSum(nullptr),
+        pgdL2BandSum(nullptr),
+        ngdL2BandSum(nullptr),
+        pgdOBandSum(nullptr),
+        ngdOBandSum(nullptr),
+        pgdO2BandSum(nullptr),
+        ngdO2BandSum(nullptr),
+        heightOfLSP(0),
+        imageWidth(0),
+        imageHeight(0),
+        descriptorSize(0),
+        invN2(0),
+        invN3(0) {
     this->options_.push_back(OptionManager::OptionEntry("num_band", nBand, "ushort", "Number of bands."));
     this->options_.push_back(OptionManager::OptionEntry("width_band", wBand, "ushort", "Width of band."));
 
@@ -327,7 +351,26 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
   /// @param data Map of named matrices containing gradient data
   /// @param nBand Number of bands in the line support region (default 9)
   /// @param wBand Width of each band in pixels (default 7)
-  FdcLBD(const MatMap& data, ushort nBand = 9, ushort wBand = 7) : numBand(nBand), widthBand(wBand) {
+  FdcLBD(const MatMap& data, ushort nBand = 9, ushort wBand = 7)
+      : numBand(nBand),
+        widthBand(wBand),
+        coefLocal(),
+        coefGlobal(),
+        bands(),
+        pgdLBandSum(nullptr),
+        ngdLBandSum(nullptr),
+        pgdL2BandSum(nullptr),
+        ngdL2BandSum(nullptr),
+        pgdOBandSum(nullptr),
+        ngdOBandSum(nullptr),
+        pgdO2BandSum(nullptr),
+        ngdO2BandSum(nullptr),
+        heightOfLSP(0),
+        imageWidth(0),
+        imageHeight(0),
+        descriptorSize(0),
+        invN2(0),
+        invN3(0) {
     this->options_.push_back(OptionManager::OptionEntry("num_band", nBand, "ushort", "Number of bands."));
     this->options_.push_back(OptionManager::OptionEntry("width_band", wBand, "ushort", "Width of band."));
 

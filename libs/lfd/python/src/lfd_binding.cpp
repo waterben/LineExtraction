@@ -29,6 +29,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>

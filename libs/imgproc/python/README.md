@@ -58,7 +58,7 @@ results = grad.results()       # {"gx": FilterData, "gy": ..., "mag": ..., "dir"
 | Class | Description | Parameters |
 |-------|-------------|------------|
 | `LaplaceSimple` | Simple 3×3 Laplacian convolution | — |
-| `LoG` | Laplacian of Gaussian | `grad_kernel_size`, `grad_kernel_range` |
+| `LoG` | Laplacian of Gaussian | `grad_kernel_size`, `grad_kernel_spacing`, `grad_kernel_scale` |
 | `LaplaceCV` | OpenCV `cv::Laplacian` wrapper | `grad_kernel_size` |
 
 ### Quadrature Filters
@@ -67,7 +67,7 @@ results = grad.results()       # {"gx": FilterData, "gy": ..., "mag": ..., "dir"
 |-------|-------------|------------|
 | `QuadratureG2` | Steerable G2/H2 separable filter pair | `grad_kernel_size`, `grad_kernel_spacing` |
 | `QuadratureLGF` | Log-Gabor filter (frequency domain) | `grad_waveLength`, `grad_sigmaOnf` |
-| `QuadratureS` | Difference of Poisson (spatial domain) | `grad_kernel_size`, `grad_scale`, `grad_muls` |
+| `QuadratureS` | Difference of Poisson (spatial domain) | `grad_kernel_size`, `grad_kernel_spacing`, `grad_kernel_scale`, `grad_scale`, `grad_muls` |
 | `QuadratureSF` | Difference of Poisson (frequency domain) | `grad_kernel_spacing`, `grad_scale`, `grad_muls` |
 
 ### Image Operators

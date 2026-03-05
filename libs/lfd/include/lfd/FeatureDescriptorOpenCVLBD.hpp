@@ -18,6 +18,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/line_descriptor/descriptor.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <string>
 #include <vector>
@@ -125,6 +126,7 @@ class FdcOpenCVLBD : public FdcObj<FT, GT, FdOpenCVLBD<FT>> {
   /// @param dst Output descriptors (resized to match lines.size())
   template <template <class, class...> class GV, class... Args>
   void createAll(const GV<GT, Args...>& lines, std::vector<FdOpenCVLBD<FT>>& dst) {
+    dst.clear();
     dst.resize(lines.size());
 
     // Convert all line segments to OpenCV KeyLine format

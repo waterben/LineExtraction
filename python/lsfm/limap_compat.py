@@ -186,6 +186,39 @@ def matches_to_limap(
 # they only need ``le_lsd``, ``le_lfd``, and ``le_geometry`` on sys.path.
 # ---------------------------------------------------------------------------
 
+_LIMAP_INSTALL_MSG = (
+    "CVG LIMAP (https://github.com/cvg/limap) is not installed.\n"
+    "Install from source with:\n"
+    "  uv sync --extra limap\n"
+    "or manually:\n"
+    "  git clone --recursive https://github.com/cvg/limap.git\n"
+    "  pip install -Ive ./limap\n"
+    "NOTE: The PyPI 'limap' package is an unrelated project. "
+    "Requires Python 3.10/3.11 and CMake >= 3.17."
+)
+
+
+def check_limap_available() -> None:
+    """Verify that CVG LIMAP is installed and is the correct package.
+
+    :raises ImportError: If LIMAP is missing or the wrong package is
+        installed (e.g. the unrelated PyPI ``limap``).
+    """
+    try:
+        import limap  # noqa: F401
+    except ImportError as exc:
+        raise ImportError(_LIMAP_INSTALL_MSG) from exc
+
+    if not hasattr(limap, "base"):
+        msg = (
+            "The installed 'limap' package is not CVG LIMAP "
+            "(https://github.com/cvg/limap). You may have the unrelated "
+            "PyPI package installed. Uninstall it and install the real one:\n"
+            "  pip uninstall limap\n"
+            "  uv sync --extra limap"
+        )
+        raise ImportError(msg)
+
 
 class LsfmLineDetector:
     """LIMAP-compatible line segment detector backed by ``le_lsd``.

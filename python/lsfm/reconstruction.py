@@ -356,10 +356,27 @@ def reconstruct_lines_multiview(
         from limap.runners import line_triangulation  # type: ignore[import-untyped]
     except ImportError as exc:
         msg = (
-            "LIMAP is required for multi-view reconstruction. "
-            "Install it with: pip install limap"
+            "CVG LIMAP is required for multi-view reconstruction but is "
+            "not installed.  Install from source with:\n"
+            "  uv sync --extra limap\n"
+            "or manually:\n"
+            "  git clone --recursive https://github.com/cvg/limap.git\n"
+            "  pip install -Ive ./limap\n"
+            "NOTE: The PyPI 'limap' package is an unrelated project. "
+            "Requires Python 3.10/3.11 and CMake >= 3.17."
         )
         raise ImportError(msg) from exc
+
+    # Verify this is the real CVG LIMAP, not the unrelated PyPI package.
+    if not hasattr(limap, "base"):
+        msg = (
+            "The installed 'limap' package is not CVG LIMAP "
+            "(https://github.com/cvg/limap). You may have the unrelated "
+            "PyPI package installed. Uninstall it and install the real one:\n"
+            "  pip uninstall limap\n"
+            "  uv sync --extra limap"
+        )
+        raise ImportError(msg)
 
     from lsfm.limap_compat import (
         LsfmLineDescriptor,

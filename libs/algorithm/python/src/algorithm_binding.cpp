@@ -114,8 +114,14 @@ void bind_line_connect(py::module_& m, const std::string& suffix) {
                   "the gradient response along the connecting path is strong enough.")
                      .c_str())
       .def(py::init<>(), "Construct with default parameters.")
-      .def(py::init<FT, FT, FT>(), py::arg("max_radius") = FT(15), py::arg("accuracy") = FT(2),
-           py::arg("threshold") = FT(10), "Construct with explicit parameters.")
+      .def(py::init<FT, FT, FT, FT>(), py::arg("max_radius") = FT(15), py::arg("accuracy") = FT(2),
+           py::arg("threshold") = FT(10), py::arg("max_angle") = FT(0),
+           "Construct with explicit parameters.\n\n"
+           "Args:\n"
+           "    max_radius: Maximum endpoint distance for connection candidates.\n"
+           "    accuracy: Sampling step along the connecting path.\n"
+           "    threshold: Minimum average gradient magnitude for connection.\n"
+           "    max_angle: Maximum angle difference in degrees (0 = disabled).")
       .def(
           "connect_lines",
           [](const LC& self, const std::vector<LST>& input, const cv::Mat& magnitude) {
