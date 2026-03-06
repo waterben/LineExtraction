@@ -19,6 +19,8 @@ dependencies = [
     "urllib3==1.26.6",
     "xmljson==0.2.1",
     "pre-commit>=3.0.0",
+    "ruff>=0.4.0",
+    "yamllint>=1.35.0",
     "jupyter>=1.0.0",
     "notebook>=7.0.0",
     "ipykernel>=6.29.0",

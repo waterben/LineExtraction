@@ -478,6 +478,74 @@ class TestImages:
                 return
 
     # ------------------------------------------------------------------
+    # ETH3D multi-view scenes
+    # ------------------------------------------------------------------
+
+    def eth3d_scenes(self) -> list[str]:
+        """Return the names of available ETH3D scenes.
+
+        A scene is considered available when its directory contains both
+        a ``cameras.json`` file and an ``images/`` subdirectory.
+
+        :return: Sorted list of scene name strings.
+        :rtype: list[str]
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_eth3d.sh``
+        """
+        scenes: list[str] = []
+        for base in self._search_paths:
+            d = base / "ETH3D"
+            if d.is_dir():
+                for child in sorted(d.iterdir()):
+                    if (
+                        child.is_dir()
+                        and (child / "cameras.json").is_file()
+                        and (child / "images").is_dir()
+                    ):
+                        scenes.append(child.name)
+                if scenes:
+                    return scenes
+        return scenes
+
+    def eth3d_scene(self, name: str) -> dict[str, Path]:
+        """Return paths for an ETH3D scene.
+
+        :param name: Scene name, e.g. ``"courtyard"`` or ``"delivery_area"``.
+        :type name: str
+        :return: Dict with keys ``"scene_dir"``, ``"cameras_json"``,
+            ``"images_dir"``, and ``"colmap_dir"`` (path to the
+            ``dslr_calibration_undistorted/`` COLMAP model).
+        :rtype: dict[str, Path]
+        :raises FileNotFoundError: If the scene directory or required
+            files are not found.
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_eth3d.sh``
+        """
+        for base in self._search_paths:
+            scene_dir = base / "ETH3D" / name
+            cam_json = scene_dir / "cameras.json"
+            images_dir = scene_dir / "images"
+            colmap_dir = scene_dir / "dslr_calibration_undistorted"
+            if cam_json.is_file() and images_dir.is_dir():
+                result: dict[str, Path] = {
+                    "scene_dir": scene_dir.resolve(),
+                    "cameras_json": cam_json.resolve(),
+                    "images_dir": images_dir.resolve(),
+                }
+                if colmap_dir.is_dir():
+                    result["colmap_dir"] = colmap_dir.resolve()
+                return result
+
+        searched = "\n  ".join(str(p / "ETH3D" / name) for p in self._search_paths)
+        raise FileNotFoundError(
+            f"ETH3D scene '{name}' not found.\nSearched in:\n  {searched}"
+        )
+
+    # ------------------------------------------------------------------
     # Generic resolver
     # ------------------------------------------------------------------
 

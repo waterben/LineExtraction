@@ -237,7 +237,7 @@ print('LIMAP integration OK')
 "
 ```
 
-Then open `examples/notebooks/demo_3d_reconstruction.ipynb` — it should
+Then open `examples/notebooks/demo_stereo_reconstruction_limap.ipynb` — it should
 show "LIMAP available — multi-view reconstruction enabled".
 
 ## How LIMAP is Used in This Project
@@ -253,7 +253,7 @@ When LIMAP is not installed, the code gracefully falls back to **pairwise stereo
 reconstruction** using the native `le_geometry` C++ backend. No functionality is
 lost for the two-view case.
 
-### Architecture
+### Architecture (Stereo)
 
 ```
 Your image data
@@ -283,6 +283,89 @@ Your image data
     ▼
   3D line map
 ```
+
+### Architecture (Multi-View with LIMAP)
+
+The multi-view reconstruction demo
+([`demo_multiview_reconstruction.ipynb`](../examples/notebooks/demo_multiview_reconstruction.ipynb))
+uses LIMAP's full `line_triangulation` pipeline on calibrated multi-view
+datasets such as [ETH3D](https://www.eth3d.net/). The architecture integrates
+our native C++ line detectors into LIMAP's runner system via a custom
+`BaseDetector` adapter and monkey-patching of the detector registry.
+
+```
+ETH3D scene (COLMAP calibration + images)
+    │
+    ├── cameras.json / COLMAP model ──▶ limap.pointsfm.read_infos_colmap()
+    │                                        │
+    │                                        ▼
+    │                                  ImageCollection
+    │                                  (cameras, poses, image paths)
+    │
+    ├── images/ ───────────────────────────────────────────┐
+    │                                                      │
+    ▼                                                      ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  lsfm.reconstruction.reconstruct_lines_multiview_full()         │
+│                                                                  │
+│  1. Build LIMAP config (max_image_dim, n_neighbors, ...)        │
+│  2. Optionally patch limap.line2d.get_detector for "lsfm_lsd"   │
+│  3. Call limap.runners.line_triangulation(cfg, imagecols)        │
+│     └──────────────────────────────────────────────────────┐     │
+│                        LIMAP Pipeline                      │     │
+│     ┌──────────────────────────────────────────────────┐   │     │
+│     │  Per-image 2D detection                          │   │     │
+│     │  ┌─────────────────┐  ┌────────────────────────┐ │   │     │
+│     │  │ pytlsd (builtin)│  │ LsfmLimapDetector      │ │   │     │
+│     │  │ LIMAP's default │  │ wraps le_lsd.LsdCC     │ │   │     │
+│     │  │ LSD detector    │  │ via BaseDetector API    │ │   │     │
+│     │  └─────────────────┘  └────────────────────────┘ │   │     │
+│     │         OR (selected via config)                  │   │     │
+│     └──────────────────────────────────────────────────┘   │     │
+│     ┌──────────────────────────────────────────────────┐   │     │
+│     │  Epipolar line matching (exhaustive)             │   │     │
+│     │  Multi-view triangulation                        │   │     │
+│     │  Track building & scoring                        │   │     │
+│     │  Reprojection filtering                          │   │     │
+│     │  Track remerging                                 │   │     │
+│     └──────────────────────────────────────────────────┘   │     │
+│  4. Restore original detector registry                     │     │
+│  5. Return linetracks + statistics                         │     │
+└──────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌────────────────────────────────────────────┐
+│  Results                                   │
+│  • linetracks: list[LineTrack]             │
+│  • n_tracks: total 3D line count           │
+│  • track_lengths: segments per track       │
+│  • supporting_views: views per track       │
+│  • timings: per-stage timing breakdown     │
+└────────────────────────────────────────────┘
+    │
+    ▼
+  3D visualization (Rerun / Open3D)
+```
+
+**Key components:**
+
+| Component | Role |
+|-----------|------|
+| `lsfm.data.TestImages.eth3d_scene()` | Resolves ETH3D scene paths (images, COLMAP calibration) |
+| `limap.pointsfm.read_infos_colmap()` | Loads COLMAP model → `ImageCollection` with camera intrinsics and poses |
+| `lsfm.limap_compat.LsfmLimapDetector` | `BaseDetector` adapter that wraps `le_lsd.LsdCC` for LIMAP's runner |
+| `lsfm.reconstruction.reconstruct_lines_multiview_full()` | Orchestrates the full pipeline: config, detector injection, triangulation |
+| `limap.runners.line_triangulation()` | LIMAP's core runner: detection → matching → triangulation → track building |
+
+**Detector injection mechanism:**
+
+The `LsfmLimapDetector` class dynamically inherits from LIMAP's `BaseDetector`
+at instantiation time (via `__new__`), so `limap_compat.py` can be imported even
+when LIMAP is not installed. To route LIMAP's runner to use this detector,
+`reconstruct_lines_multiview_full()` temporarily monkey-patches
+`limap.line2d.get_detector()` — the factory function that the runner calls to
+instantiate a detector from config. The original factory is always restored in
+a `finally` block, even on error.
 
 ## Troubleshooting
 
@@ -333,6 +416,7 @@ CMAKE_BUILD_PARALLEL_LEVEL=2 uv sync --extra limap
 - [CVG LIMAP Repository](https://github.com/cvg/limap)
 - [LIMAP Paper](https://arxiv.org/abs/2303.17504) — "3D Line Mapping Revisited" (CVPR 2023)
 - [COLMAP Installation](https://colmap.github.io/install.html)
-- [Notebook: Multi-View 3D Reconstruction](../examples/notebooks/demo_3d_reconstruction.ipynb)
+- [Notebook: Stereo Reconstruction with LIMAP](../examples/notebooks/demo_stereo_reconstruction_limap.ipynb)
+- [Notebook: Multi-View Reconstruction](../examples/notebooks/demo_multiview_reconstruction.ipynb)
 - [LIMAP API — `lsfm.limap_compat`](../python/lsfm/limap_compat.py)
 - [Jupyter Notebook Guide](JUPYTER.md)

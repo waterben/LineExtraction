@@ -569,6 +569,145 @@ def reconstruct_lines_multiview(
 
 
 # ---------------------------------------------------------------------------
+# Full multi-view reconstruction via LIMAP runner
+# ---------------------------------------------------------------------------
+
+
+def reconstruct_lines_multiview_full(
+    imagecols: Any,
+    neighbors: dict[int, list[int]] | None = None,
+    ranges: Any | None = None,
+    *,
+    output_dir: str | None = None,
+    max_image_dim: int = 1600,
+    n_neighbors: int = 20,
+    n_visible_views: int = 4,
+    use_exhaustive_matcher: bool = True,
+    detector_class: str | None = None,
+    limap_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Full multi-view 3D line reconstruction via LIMAP's ``line_triangulation`` runner.
+
+    Unlike :func:`reconstruct_lines_multiview` (which does pairwise
+    triangulation), this function uses LIMAP's complete pipeline:
+    multi-view triangulation with track building, reprojection
+    filtering, remerging, and optional bundle adjustment.
+
+    :param imagecols: A ``limap.base.ImageCollection`` with camera
+        poses and image paths.  Use ``limap.pointsfm.read_infos_colmap()``
+        or build manually.
+    :type imagecols: limap.base.ImageCollection
+    :param neighbors: Per-image neighbor lists.  If *None*, LIMAP
+        computes them from COLMAP covisibility.
+    :type neighbors: dict[int, list[int]], optional
+    :param ranges: Scene bounding ranges ``(min_xyz, max_xyz)``.  If
+        *None*, LIMAP computes them automatically.
+    :type ranges: pair of numpy arrays, optional
+    :param output_dir: Working directory for LIMAP outputs.  A
+        temporary directory is used if *None*.
+    :type output_dir: str, optional
+    :param max_image_dim: Maximum image dimension (longest side).
+        ETH3D images are ~6200px; 1600 is a good balance.
+    :type max_image_dim: int
+    :param n_neighbors: Number of visual neighbors per image.
+    :type n_neighbors: int
+    :param n_visible_views: Minimum views a track must appear in.
+    :type n_visible_views: int
+    :param use_exhaustive_matcher: Use exhaustive epipolar matching
+        (no descriptor matching needed).
+    :type use_exhaustive_matcher: bool
+    :param detector_class: Detector to use.  ``None`` for LIMAP's
+        built-in LSD (pytlsd), ``"lsfm_lsd"`` for our native detector.
+    :type detector_class: str, optional
+    :param limap_config: Override dict merged into the default config.
+    :type limap_config: dict, optional
+    :return: Dict with ``"linetracks"`` (list of ``LineTrack``),
+        ``"n_tracks"`` (count), ``"track_lengths"`` (list of segment
+        counts per track), ``"supporting_views"`` (list of view counts
+        per track), and ``"timings"``.
+    :rtype: dict
+    :raises ImportError: If ``limap`` is not installed.
+    """
+    import tempfile
+
+    from lsfm.limap_compat import check_limap_available
+
+    check_limap_available()
+
+    import limap.runners as runners  # type: ignore[import-untyped]
+    from limap.runners import line_triangulation as _line_triangulation  # type: ignore[import-untyped]
+
+    timings: dict[str, float] = {}
+
+    # ---- 1. Build config ----
+    use_tmpdir = output_dir is None
+    tmpdir = tempfile.mkdtemp(prefix="limap_mv_") if use_tmpdir else None
+    work_dir = tmpdir if use_tmpdir else output_dir
+    assert work_dir is not None
+
+    t0 = time.perf_counter()
+    cfg = _build_limap_default_config(work_dir)
+    cfg["max_image_dim"] = max_image_dim
+    cfg["n_neighbors"] = n_neighbors
+    cfg["n_visible_views"] = n_visible_views
+    cfg["triangulation"]["use_exhaustive_matcher"] = use_exhaustive_matcher
+
+    # Inject our detector if requested
+    if detector_class == "lsfm_lsd":
+        cfg["line2d"]["detector"]["method"] = "lsfm_lsd"
+
+    if limap_config:
+        _deep_update(cfg, limap_config)
+
+    cfg = runners.setup(cfg)
+
+    # ---- 2. Monkey-patch detector registry if using our detector ----
+    if detector_class == "lsfm_lsd":
+        import limap.line2d  # type: ignore[import-untyped]
+        from lsfm.limap_compat import LsfmLimapDetector
+
+        _orig_get_detector = limap.line2d.get_detector
+
+        def _patched_get_detector(detector_cfg: dict[str, Any], **kwargs: Any) -> Any:
+            if detector_cfg.get("method") == "lsfm_lsd":
+                return LsfmLimapDetector(
+                    max_num_2d_segs=kwargs.get("max_num_2d_segs", 3000),
+                    do_merge_lines=kwargs.get("do_merge_lines", False),
+                    visualize=kwargs.get("visualize", False),
+                )
+            return _orig_get_detector(detector_cfg, **kwargs)
+
+        limap.line2d.get_detector = _patched_get_detector
+    timings["setup"] = time.perf_counter() - t0
+
+    # ---- 3. Run full pipeline ----
+    t0 = time.perf_counter()
+    try:
+        linetracks = _line_triangulation(
+            cfg, imagecols, neighbors=neighbors, ranges=ranges
+        )
+    finally:
+        # Restore original detector registry
+        if detector_class == "lsfm_lsd":
+            limap.line2d.get_detector = _orig_get_detector  # type: ignore[possibly-undefined]
+    timings["pipeline"] = time.perf_counter() - t0
+
+    # ---- 4. Extract statistics ----
+    track_lengths = [track.count_lines() for track in linetracks]
+    supporting_views = [track.count_images() for track in linetracks]
+
+    result: dict[str, Any] = {
+        "linetracks": linetracks,
+        "n_tracks": len(linetracks),
+        "track_lengths": track_lengths,
+        "supporting_views": supporting_views,
+        "timings": timings,
+    }
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
 

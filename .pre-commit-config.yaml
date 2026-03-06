@@ -32,10 +32,9 @@ repos:
         name: Lint YAML files
         description: This hook runs yamllint.
         entry: yamllint
-        language: python
+        language: system
         types: [yaml]
         args: [--format, parsable, --strict, -c, .yamllint.yml]
-        additional_dependencies: []
       - id: actionlint
         name: Lint GitHub Workflows
         description: Runs actionlint to lint GitHub Actions workflow files
@@ -47,13 +46,13 @@ repos:
         name: ruff check
         description: "Run 'ruff check'"
         entry: ruff
-        language: python
+        language: system
         types_or: [python]
         args: [check, --force-exclude]
       - id: ruff-format
         name: ruff format
         description: "Run 'ruff format'"
         entry: ruff
-        language: python
+        language: system
         types_or: [python]
         args: [format, --force-exclude]

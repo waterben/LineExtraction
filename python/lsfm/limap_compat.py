@@ -621,3 +621,121 @@ def segments3d_to_limap(
         ep = seg.end_point()  # type: ignore[attr-defined]
         rows[i] = (*sp, *ep)
     return rows
+
+
+# ---------------------------------------------------------------------------
+# LIMAP BaseDetector subclass
+# ---------------------------------------------------------------------------
+
+
+class LsfmLimapDetector:
+    """LIMAP ``BaseDetector`` subclass backed by our native LSD detector.
+
+    Integrates with LIMAP's full multi-view pipeline
+    (``limap.runners.line_triangulation``) by implementing the
+    ``detect(camview)`` and ``get_module_name()`` interface that
+    ``BaseDetector.detect_all_images()`` calls.
+
+    The class lazily inherits from ``limap.line2d.base_detector.BaseDetector``
+    at instantiation time so the module works even when LIMAP is not
+    installed (import guarded).
+
+    Usage::
+
+        from lsfm.limap_compat import LsfmLimapDetector
+        detector = LsfmLimapDetector()
+        # Use like any LIMAP detector:
+        all_segs = detector.detect_all_images(folder, imagecols)
+
+    :param detector_cls: Name of the ``le_lsd`` detector class.
+    :type detector_cls: str
+    :param max_num_2d_segs: Maximum number of segments to keep (longest).
+    :type max_num_2d_segs: int
+    :param do_merge_lines: Whether to merge close similar lines.
+    :type do_merge_lines: bool
+    :param visualize: Whether to output detection visualizations.
+    :type visualize: bool
+    :param kwargs: Extra keyword arguments for the detector constructor.
+    """
+
+    def __new__(
+        cls,
+        detector_cls: str = "LsdCC",
+        *,
+        max_num_2d_segs: int = 3000,
+        do_merge_lines: bool = False,
+        visualize: bool = False,
+        **kwargs: object,
+    ) -> LsfmLimapDetector:
+        """Create instance inheriting from LIMAP BaseDetector at runtime."""
+        from limap.line2d.base_detector import (
+            BaseDetector,
+            BaseDetectorOptions,
+        )
+
+        # Dynamically create a subclass that inherits from both
+        if not issubclass(cls, BaseDetector):
+            cls = type(
+                cls.__name__,
+                (cls, BaseDetector),
+                {},
+            )
+
+        options = BaseDetectorOptions(
+            set_gray=True,
+            max_num_2d_segs=max_num_2d_segs,
+            do_merge_lines=do_merge_lines,
+            visualize=visualize,
+        )
+        instance = object.__new__(cls)
+        BaseDetector.__init__(instance, options)
+        return instance
+
+    def __init__(
+        self,
+        detector_cls: str = "LsdCC",
+        *,
+        max_num_2d_segs: int = 3000,
+        do_merge_lines: bool = False,
+        visualize: bool = False,
+        **kwargs: object,
+    ) -> None:
+        import le_lsd as _le_lsd  # noqa: N812
+
+        det_class = getattr(_le_lsd, detector_cls)
+        self._det = det_class(**kwargs)
+        self._detector_cls_name = detector_cls
+
+    def get_module_name(self) -> str:
+        """Return the module name for LIMAP's folder-based I/O.
+
+        :return: Module identifier string.
+        :rtype: str
+        """
+        return "lsfm_lsd"
+
+    def detect(self, camview: object) -> NDArray[np.float64]:
+        """Detect line segments from a LIMAP ``CameraView``.
+
+        Reads the grayscale image from the camera view, runs our LSD
+        detector, and returns segments in LIMAP's ``(N, 5)`` format.
+
+        :param camview: A ``limap.base.CameraView`` instance.
+        :type camview: limap.base.CameraView
+        :return: Segments as ``[x1, y1, x2, y2, score]`` rows.
+        :rtype: numpy.ndarray of shape ``(N, 5)``
+        """
+        import cv2
+
+        img = camview.read_image(True)  # type: ignore[attr-defined]
+        if img is None:
+            return np.zeros((0, 5), dtype=np.float64)
+        # Ensure grayscale uint8
+        if img.ndim == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if img.dtype != np.uint8:
+            img = np.clip(img, 0, 255).astype(np.uint8)
+
+        self._det.detect(img)
+        segs = self._det.line_segments()
+        return segments_to_limap(segs)

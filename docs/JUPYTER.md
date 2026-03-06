@@ -91,7 +91,8 @@ The tutorial series is the recommended way to learn the Python bindings. Work th
 | [`demo_pytorch_esd.ipynb`](../examples/notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration Demo** — Combines PyTorch-based object segmentation (SAM / YOLO) with the ESD line extraction framework. Interactive click-to-segment, automatic instance segmentation, and contour-to-line-segment conversion. | `le_edge`, PyTorch |
 | [`demo_rerun_lsd.ipynb`](../examples/notebooks/demo_rerun_lsd.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. | `le_lsd`, Rerun |
 | [`demo_line_features.ipynb`](../examples/notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD/LR descriptors, brute-force matching, GlobalRotationFilter, interactive [Rerun.io](https://rerun.io/) visualization. | `le_lfd`, `le_lsd`, Rerun |
-| [`demo_3d_reconstruction.ipynb`](../examples/notebooks/demo_3d_reconstruction.ipynb) | **Multi-View 3D Reconstruction** — LIMAP multi-view triangulation with native detection & matching. Falls back to pairwise stereo if LIMAP is not installed. | `le_lsd`, `le_lfd`, `le_geometry`, LIMAP (optional) |
+| [`demo_stereo_reconstruction_limap.ipynb`](../examples/notebooks/demo_stereo_reconstruction_limap.ipynb) | **Stereo 3D Reconstruction with LIMAP** — Pairwise stereo triangulation with native detection & matching. Falls back to pairwise stereo if LIMAP is not installed. | `le_lsd`, `le_lfd`, `le_geometry`, LIMAP (optional) |
+| [`demo_multiview_reconstruction.ipynb`](../examples/notebooks/demo_multiview_reconstruction.ipynb) | **Multi-View 3D Reconstruction** — Full LIMAP multi-view pipeline on ETH3D scenes with custom detector integration. Compares built-in vs. our LSD detector. | `le_lsd`, `le_lfd`, `le_geometry`, LIMAP |
 
 ## LIMAP (Optional)
 
