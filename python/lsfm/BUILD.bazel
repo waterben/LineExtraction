@@ -13,6 +13,7 @@ py_library(
         "__init__.py",
         "data.py",
         "limap_compat.py",
+        "notebook.py",
         "reconstruction.py",
     ],
     imports = [".."],

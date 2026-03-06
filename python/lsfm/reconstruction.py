@@ -915,6 +915,7 @@ def _build_limap_default_config(work_dir: str) -> dict[str, Any]:
             "deeplsd": 2.0,
             "tp_lsd": 2.0,
             "hatp": 5.0,
+            "lsfm_lsd": 2.0,
             "default": 5.0,
         },
         "line2d": {
