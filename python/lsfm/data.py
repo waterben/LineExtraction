@@ -172,6 +172,35 @@ class TestImages:
         """
         return self.get("windmill.jpg")
 
+    def office(self) -> Path:
+        """Return the path to ``office.png``.
+
+        :return: Resolved path to the office photo test image.
+        :rtype: Path
+        """
+        return self.get("office.png")
+
+    def synthetic_simple(self) -> Path:
+        """Return the path to ``synthetic_simple.png``.
+
+        Single hexagon with no noise and 6 known ground truth segments.
+
+        :return: Resolved path to the synthetic simple test image.
+        :rtype: Path
+        """
+        return self.get("synthetic_simple.png")
+
+    def synthetic_challenge(self) -> Path:
+        """Return the path to ``synthetic_challenge.png``.
+
+        Eight shapes with varying contrast and Gaussian noise (σ = 5),
+        comprising 31 known ground truth segments.
+
+        :return: Resolved path to the synthetic challenge test image.
+        :rtype: Path
+        """
+        return self.get("synthetic_challenge.png")
+
     def noise(self, name: str) -> Path:
         """Return the path to an image in the *noise* dataset.
 

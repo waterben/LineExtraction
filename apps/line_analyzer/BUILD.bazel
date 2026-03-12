@@ -165,9 +165,10 @@ cc_binary(
         "-I$(GENDIR)/apps/line_analyzer",  # For ui_*.h files
     ],
     data = [
-        "//resources:example_challenge",
-        "//resources:example_lines",
+        "//resources:office",
         "//resources:presets",
+        "//resources:synthetic_challenge",
+        "//resources:synthetic_simple",
         "//resources:windmill",
         "//resources/datasets:ground_truth",
     ] + glob([

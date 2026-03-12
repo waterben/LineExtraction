@@ -29,6 +29,9 @@ py_test(
     name = "test_data",
     srcs = ["tests/test_data.py"],
     data = [
+        "//resources:office",
+        "//resources:synthetic_challenge",
+        "//resources:synthetic_simple",
         "//resources:windmill",
         "//resources/datasets:noise",
     ],
