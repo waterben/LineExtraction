@@ -122,6 +122,10 @@ class BadExample {
   - `color` not `colour`, `gray` not `grey`, `initialize` not `initialise`, `optimize` not `optimise`,
     `normalize` not `normalise`, `neighbor` not `neighbour`, `behavior` not `behaviour`, etc.
 
+**LE Library First:**
+
+Before writing a custom algorithm or utility, **always check whether the LE library already provides it** under `libs/` (e.g., `edge/threshold_estimator.hpp` for `ThresholdOtsu`, `imgproc/` for filters, `geometry/` for geometric primitives). Only implement custom code when the LE library genuinely does not cover the use case.
+
 **Additional Documentation Guidelines:**
 
 - Use `@brief` for short descriptions
