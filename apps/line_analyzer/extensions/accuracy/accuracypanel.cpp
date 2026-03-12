@@ -21,10 +21,10 @@ AccuracyPanel::AccuracyPanel(QWidget* parent)
   ui->pb_browse->setToolTip(tr("Open a file dialog to select a ground truth CSV."));
   ui->pb_load_example->setToolTip(
       tr("Load the easy example: single hexagon, no noise, 6 GT segments "
-         "(example_gt.csv + example_lines.png)."));
+         "(example_gt.csv + synthetic_simple.png)."));
   ui->pb_load_challenge->setToolTip(
       tr("Load the challenge example: 8 shapes, varying contrast, noise, "
-         "31 GT segments (example_challenge_gt.csv + example_challenge.png)."));
+         "31 GT segments (example_challenge_gt.csv + synthetic_challenge.png)."));
   ui->spin_threshold->setToolTip(
       tr("Maximum endpoint distance (px) for a detected segment "
          "to count as a true positive match against a GT segment."));
@@ -76,11 +76,11 @@ void AccuracyPanel::browseGroundTruth() {
 }
 
 void AccuracyPanel::loadExampleGroundTruth() {
-  loadBundledExample("datasets/ground_truth/example_gt.csv", "example_lines.png", "easy example");
+  loadBundledExample("datasets/ground_truth/example_gt.csv", "synthetic_simple.png", "easy example");
 }
 
 void AccuracyPanel::loadChallengeGroundTruth() {
-  loadBundledExample("datasets/ground_truth/example_challenge_gt.csv", "example_challenge.png", "challenge example");
+  loadBundledExample("datasets/ground_truth/example_challenge_gt.csv", "synthetic_challenge.png", "challenge example");
 }
 
 void AccuracyPanel::evaluate() {

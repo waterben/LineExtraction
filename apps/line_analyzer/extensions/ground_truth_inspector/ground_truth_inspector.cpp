@@ -101,10 +101,10 @@ void LineAnalyser2D::initUISetup() {
   ui->pb_load->setToolTip(tr("Parse the selected GT file and populate the tables."));
   ui->pb_load_easy->setToolTip(
       tr("Load the easy example: single hexagon, no noise, 6 GT segments "
-         "(example_gt.txt + example_lines.png)."));
+         "(example_gt.txt + synthetic_simple.png)."));
   ui->pb_load_hard->setToolTip(
       tr("Load the challenge example: 8 shapes, varying contrast, noise, "
-         "31 GT segments (example_challenge_gt.txt + example_challenge.png)."));
+         "31 GT segments (example_challenge_gt.txt + synthetic_challenge.png)."));
 
   // -- Display row --
   ui->cb_uniform_data->setToolTip(
@@ -600,11 +600,11 @@ void LineAnalyser2D::loadGroundTruthDataFromFile(std::string file_path) {
 // ---------------------------------------------------------------------------
 
 void LineAnalyser2D::loadEasyExample() {
-  loadBundledExample("datasets/ground_truth/example_gt.txt", "example_lines.png", "Easy example");
+  loadBundledExample("datasets/ground_truth/example_gt.txt", "synthetic_simple.png", "Easy example");
 }
 
 void LineAnalyser2D::loadHardExample() {
-  loadBundledExample("datasets/ground_truth/example_challenge_gt.txt", "example_challenge.png", "Challenge example");
+  loadBundledExample("datasets/ground_truth/example_challenge_gt.txt", "synthetic_challenge.png", "Challenge example");
 }
 
 /**

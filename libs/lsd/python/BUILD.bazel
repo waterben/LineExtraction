@@ -11,9 +11,11 @@ package(default_visibility = ["//visibility:public"])
 pybind_library(
     name = "lsd_python_pybind",
     srcs = [
+        "src/contour_lines_binding.cpp",
         "src/lsd_binding.cpp",
     ],
     hdrs = [
+        "src/contour_lines_binding.hpp",
         "src/lsd_binding.hpp",
     ],
     copts = LE_PYBIND_COPTS,

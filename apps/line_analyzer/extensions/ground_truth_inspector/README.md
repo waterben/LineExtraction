@@ -78,8 +78,8 @@ data.  Click the toolbar buttons to load them:
 
 | Button | Dataset | Description |
 |--------|---------|-------------|
-| **Easy** | `example_lines.png` / `example_gt.txt` | Single hexagon, 6 segments, no noise — trivially detectable |
-| **Hard** | `example_challenge.png` / `example_challenge_gt.txt` | 8 shapes, 31 segments, varying contrast (13–88), Gaussian noise σ = 5 |
+| **Easy** | `synthetic_simple.png` / `example_gt.txt` | Single hexagon, 6 segments, no noise — trivially detectable |
+| **Hard** | `synthetic_challenge.png` / `example_challenge_gt.txt` | 8 shapes, 31 segments, varying contrast (13–88), Gaussian noise σ = 5 |
 
 The buttons load both the ground truth file **and** the matching image into the
 main window, so detection can be run immediately afterward.

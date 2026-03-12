@@ -8,15 +8,21 @@ filegroup(
     srcs = ["windmill.jpg"],
 )
 
+# Office photo for demos and pipeline visualization
+filegroup(
+    name = "office",
+    srcs = ["office.png"],
+)
+
 # Synthetic example images with known line segments for accuracy evaluation
 filegroup(
-    name = "example_lines",
-    srcs = ["example_lines.png"],
+    name = "synthetic_simple",
+    srcs = ["synthetic_simple.png"],
 )
 
 filegroup(
-    name = "example_challenge",
-    srcs = ["example_challenge.png"],
+    name = "synthetic_challenge",
+    srcs = ["synthetic_challenge.png"],
 )
 
 # Optimized detector parameter presets (fast / balanced / accurate)

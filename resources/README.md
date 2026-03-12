@@ -8,8 +8,9 @@ Test images, evaluation datasets, ground truth annotations, and optimized detect
 resources/
 ├── BUILD.bazel              # Bazel filegroups
 ├── windmill.jpg             # Default test image
-├── example_lines.png        # Synthetic image with known line segments
-├── example_challenge.png    # Challenge test image
+├── office.png               # Office photo for demos and pipeline visualization
+├── synthetic_simple.png     # Synthetic image with known line segments (6 GT segments)
+├── synthetic_challenge.png  # More complex synthetic test image (31 GT segments)
 ├── presets/
 │   └── lsd_presets.json     # Optimized detector parameter presets
 └── datasets/
@@ -17,8 +18,8 @@ resources/
     ├── ground_truth/        # CSV ground truth annotations
     │   ├── york_urban_gt.csv        # 12,122 segments from 102 images
     │   ├── wireframe_gt.csv         # 34,287 segments from ~5,000 images
-    │   ├── example_gt.csv           # GT for example_lines.png
-    │   ├── example_challenge_gt.csv # GT for example_challenge.png
+    │   ├── example_gt.csv           # GT for synthetic_simple.png
+    │   ├── example_challenge_gt.csv # GT for synthetic_challenge.png
     │   ├── example_gt.txt           # Legacy format (no header)
     │   └── example_challenge_gt.txt # Legacy format (no header)
     ├── noise/               # Synthetic noise test images
@@ -34,8 +35,9 @@ resources/
 | Image | Description | Used By |
 |-------|-------------|---------|
 | `windmill.jpg` | Default test image for examples | Most examples, CLI defaults |
-| `example_lines.png` | Synthetic image with known line geometry | Accuracy tests, tutorials |
-| `example_challenge.png` | More complex synthetic test image | Challenge evaluations |
+| `office.png` | Office photo for demos and pipeline visualization | Defense slides, tutorials |
+| `synthetic_simple.png` | Synthetic image with known line geometry | Accuracy tests, tutorials |
+| `synthetic_challenge.png` | More complex synthetic test image | Challenge evaluations |
 
 ## Datasets
 
@@ -295,8 +297,9 @@ To add a new image dataset for evaluation:
 | Target | Contents |
 |--------|----------|
 | `//resources:windmill` | Default test image |
-| `//resources:example_lines` | Synthetic test image |
-| `//resources:example_challenge` | Challenge test image |
+| `//resources:office` | Office photo |
+| `//resources:synthetic_simple` | Synthetic test image |
+| `//resources:synthetic_challenge` | Challenge test image |
 | `//resources:presets` | Detector parameter presets JSON |
 | `//resources/datasets:bsds500` | BSDS500 (auto-downloaded) |
 | `//resources/datasets:york_urban` | York Urban images |
