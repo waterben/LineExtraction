@@ -640,7 +640,7 @@ void bind_precision_optimize(py::module_& m) {
           "Get parameter descriptions as a dict.\n\n"
           "Returns:\n"
           "    Dict mapping parameter names to description strings.")
-      // Optimization methods
+      // Optimization methods — double precision
       .def(
           "optimize_line",
           [](const PrecisionOptimize& self, const cv::Mat& magnitude, const LST& line) {
@@ -649,14 +649,33 @@ void bind_precision_optimize(py::module_& m) {
             return py::make_tuple(error, copy);
           },
           py::arg("magnitude"), py::arg("line"),
-          "Optimize a single line segment.\n\n"
+          "Optimize a single line segment (double precision).\n\n"
           "Refines the line position to maximize gradient response.\n\n"
           "Args:\n"
           "    magnitude: Gradient magnitude image (float32 or int).\n"
-          "    line: Line segment to optimize.\n\n"
+          "    line: LineSegment_f64 to optimize.\n\n"
           "Returns:\n"
           "    Tuple of (error, optimized_line) where error is the negative\n"
           "    of the maximized mean gradient response.")
+      // Optimization methods — float precision (converts internally)
+      .def(
+          "optimize_line",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude, const LineSegment<float, Vec2>& line) {
+            LST dbl_line(line);
+            double error = self.optimize_line(magnitude, dbl_line);
+            return py::make_tuple(error, LineSegment<float, Vec2>(dbl_line));
+          },
+          py::arg("magnitude"), py::arg("line"),
+          "Optimize a single line segment (float precision).\n\n"
+          "Accepts a LineSegment (float) and converts internally to double\n"
+          "for the optimizer, then converts back.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    line: LineSegment to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (error, optimized_line) where error is the negative\n"
+          "    of the maximized mean gradient response.")
+      // optimize_all — double precision
       .def(
           "optimize_all",
           [](const PrecisionOptimize& self, const cv::Mat& magnitude, const std::vector<LST>& lines) {
@@ -665,10 +684,39 @@ void bind_precision_optimize(py::module_& m) {
             return py::make_tuple(errors, output);
           },
           py::arg("magnitude"), py::arg("lines"),
-          "Optimize all line segments.\n\n"
+          "Optimize all line segments (double precision).\n\n"
           "Args:\n"
           "    magnitude: Gradient magnitude image (float32 or int).\n"
-          "    lines: List of line segments to optimize.\n\n"
+          "    lines: List of LineSegment_f64 to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (errors, optimized_lines) where errors is a list of\n"
+          "    error values and optimized_lines is the refined segments.")
+      // optimize_all — float precision (converts internally)
+      .def(
+          "optimize_all",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude,
+             const std::vector<LineSegment<float, Vec2>>& lines) {
+            std::vector<LST> dbl_lines;
+            dbl_lines.reserve(lines.size());
+            for (const auto& seg : lines) {
+              dbl_lines.emplace_back(seg);
+            }
+            std::vector<LST> output;
+            auto errors = self.optimize_copy(magnitude, dbl_lines, output);
+            std::vector<LineSegment<float, Vec2>> result;
+            result.reserve(output.size());
+            for (const auto& seg : output) {
+              result.emplace_back(seg);
+            }
+            return py::make_tuple(errors, result);
+          },
+          py::arg("magnitude"), py::arg("lines"),
+          "Optimize all line segments (float precision).\n\n"
+          "Accepts a list of LineSegment (float), converts internally to\n"
+          "double for the optimizer, then converts back.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    lines: List of LineSegment to optimize.\n\n"
           "Returns:\n"
           "    Tuple of (errors, optimized_lines) where errors is a list of\n"
           "    error values and optimized_lines is the refined segments.")

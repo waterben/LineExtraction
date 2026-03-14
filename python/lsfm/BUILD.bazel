@@ -12,7 +12,6 @@ py_library(
     srcs = [
         "__init__.py",
         "data.py",
-        "limap_compat.py",
         "notebook.py",
         "reconstruction.py",
     ],
