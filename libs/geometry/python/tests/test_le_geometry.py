@@ -800,6 +800,24 @@ class TestPose:
         assert hm[1][3] == pytest.approx(2.0, abs=1e-6)
         assert hm[2][3] == pytest.approx(3.0, abs=1e-6)
 
+    def test_base_h_matrix(self) -> None:
+        pose = le_geometry.Pose(tx=1, ty=2, tz=3)
+        bh = pose.base_h_matrix()
+        assert len(bh) == 4
+        # For pure translation: inverse translation is -t
+        assert bh[0][3] == pytest.approx(-1.0, abs=1e-6)
+        assert bh[1][3] == pytest.approx(-2.0, abs=1e-6)
+        assert bh[2][3] == pytest.approx(-3.0, abs=1e-6)
+
+    def test_base_h_matrix_is_inverse_of_hom(self) -> None:
+        import numpy as np
+
+        pose = le_geometry.Pose(tx=1, ty=2, tz=3, rx=0.1, ry=0.2, rz=0.3)
+        hm = np.array(pose.hom_matrix(), dtype=np.float64)
+        bh = np.array(pose.base_h_matrix(), dtype=np.float64)
+        product = bh @ hm
+        np.testing.assert_allclose(product, np.eye(4), atol=1e-10)
+
     def test_translate(self) -> None:
         pose = le_geometry.Pose()
         pose.translate(1, 2, 3)

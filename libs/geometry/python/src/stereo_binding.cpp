@@ -12,6 +12,7 @@
 ///   | _f64    | double |
 
 #include "geometry_binding.hpp"
+#include <geometry/multiview.hpp>
 #include <geometry/stereo.hpp>
 #include <geometry/stereocv.hpp>
 #include <pybind11/pybind11.h>
@@ -267,6 +268,76 @@ void bind_stereo_cv(py::module_& m, const std::string& suffix) {
 }
 
 // ============================================================================
+// MultiviewStereo<FT> binding — N-view line triangulation
+// ============================================================================
+
+template <class FT>
+void bind_multiview_stereo(py::module_& m, const std::string& suffix) {
+  using MVT = MultiviewStereo<FT>;
+  using CamT = Camera<FT>;
+  using L = Line<FT, Vec2>;
+  using LS = LineSegment<FT, Vec2>;
+  using L3 = Line3<FT>;
+  using LS3 = LineSegment3<FT>;
+  const std::string cls = "MultiviewStereo" + suffix;
+
+  py::class_<MVT>(m, cls.c_str(),
+                  ("Multiview line triangulation via plane intersection" + suffix +
+                   ".\n\n"
+                   "Triangulates 3D lines from corresponding 2D line\n"
+                   "observations in N >= 2 views.  Constructs interpretation\n"
+                   "planes and recovers the 3D line through SVD.\n"
+                   "For 2 views this reduces to StereoPlane.")
+                      .c_str())
+      // --- Constructor ---
+      .def(py::init<const std::vector<CamT>&>(), py::arg("cameras"),
+           "Construct from a list of Camera objects in a common world frame.")
+
+      // --- Properties ---
+      .def("num_cameras", &MVT::num_cameras, "Number of registered cameras.")
+
+      // --- Line triangulation ---
+      .def(
+          "triangulate_line",
+          [](const MVT& s, const std::vector<std::pair<size_t, L>>& obs) { return s.triangulate(obs); },
+          py::arg("observations"),
+          "Triangulate a 3D line from N observations.\n\n"
+          "Each observation is a (camera_index, Line) pair.\n"
+          "Returns Line3 (empty if degenerate).")
+      .def(
+          "triangulate_lines",
+          [](const MVT& s, const std::vector<std::vector<std::pair<size_t, L>>>& tracks) {
+            std::vector<L3> ret;
+            s.triangulate(tracks, ret);
+            return ret;
+          },
+          py::arg("tracks"),
+          "Batch triangulate line tracks.\n\n"
+          "Each track is a list of (camera_index, Line) pairs.")
+
+      // --- Segment triangulation ---
+      .def(
+          "triangulate_segment",
+          [](const MVT& s, const std::vector<std::pair<size_t, LS>>& obs) { return s.triangulate(obs); },
+          py::arg("observations"),
+          "Triangulate a 3D line segment from N observations.\n\n"
+          "Each observation is a (camera_index, LineSegment) pair.\n"
+          "Returns LineSegment3 (empty if degenerate).")
+      .def(
+          "triangulate_segments",
+          [](const MVT& s, const std::vector<std::vector<std::pair<size_t, LS>>>& tracks) {
+            std::vector<LS3> ret;
+            s.triangulate(tracks, ret);
+            return ret;
+          },
+          py::arg("tracks"),
+          "Batch triangulate segment tracks.\n\n"
+          "Each track is a list of (camera_index, LineSegment) pairs.")
+
+      .def("__repr__", [cls](const MVT&) { return cls + "(multiview)"; });
+}
+
+// ============================================================================
 // Preset convenience — bind all stereo types for a given FT
 // ============================================================================
 
@@ -275,6 +346,7 @@ void bind_stereo_preset(py::module_& m, const std::string& suffix) {
   bind_stereo<FT>(m, suffix);
   bind_stereo_plane<FT>(m, suffix);
   bind_stereo_cv<FT>(m, suffix);
+  bind_multiview_stereo<FT>(m, suffix);
 }
 
 // --- Explicit template instantiations ---
@@ -286,6 +358,9 @@ template void bind_stereo_plane<double>(py::module_&, const std::string&);
 
 template void bind_stereo_cv<float>(py::module_&, const std::string&);
 template void bind_stereo_cv<double>(py::module_&, const std::string&);
+
+template void bind_multiview_stereo<float>(py::module_&, const std::string&);
+template void bind_multiview_stereo<double>(py::module_&, const std::string&);
 
 template void bind_stereo_preset<float>(py::module_&, const std::string&);
 template void bind_stereo_preset<double>(py::module_&, const std::string&);

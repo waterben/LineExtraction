@@ -62,6 +62,7 @@ py_wheel(
     deps = [
         # ── Python package ─────────────────────────────────────────────
         "//python/lsfm",
+        "//python/lsfm/synthetic",
         ":_wheel_py_typed",
 
         # ── Native extension modules (.so) ─────────────────────────────

@@ -76,6 +76,15 @@ PYBIND11_MODULE(le_edge, m) {
   // Alias: _f32 uses same NMS C++ type as _16u
   m.attr("NonMaximaSuppression_f32") = m.attr("NonMaximaSuppression_16u");
 
+  // ---- ThresholdOtsu: one per unique MT ----
+  // MT=float  -> default (also covers _16u and _f32)
+  // MT=double -> _f64
+  lsfm::python::bind_threshold_otsu<float>(m, "");
+  lsfm::python::bind_threshold_otsu<double>(m, "_f64");
+  // Aliases: _16u and _f32 use same C++ type as default
+  m.attr("ThresholdOtsu_16u") = m.attr("ThresholdOtsu");
+  m.attr("ThresholdOtsu_f32") = m.attr("ThresholdOtsu");
+
   // ---- ESD types: one registration per unique MT ----
   // MT=float  -> default (also covers _16u and _f32)
   // MT=double -> _f64

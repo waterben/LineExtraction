@@ -20,6 +20,7 @@ py_library(
         "//libs/geometry/python:le_geometry_lib",
         "//libs/lfd/python:le_lfd_lib",
         "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm/synthetic",
         "@pip//numpy",
     ],
 )
@@ -29,6 +30,7 @@ py_test(
     srcs = ["tests/test_data.py"],
     data = [
         "//resources:office",
+        "//resources:step_line",
         "//resources:synthetic_challenge",
         "//resources:synthetic_simple",
         "//resources:windmill",

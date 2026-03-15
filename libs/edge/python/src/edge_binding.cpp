@@ -21,6 +21,7 @@
 #include <edge/edge_simple.hpp>
 #include <edge/edge_source.hpp>
 #include <edge/nms.hpp>
+#include <edge/threshold_estimator.hpp>
 #include <imgproc/derivative_gradient.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -328,6 +329,37 @@ void bind_esd_pattern(py::module_& m, const std::string& suffix) {
 }
 
 // ============================================================================
+// ThresholdOtsu binding
+// ============================================================================
+
+template <class MT>
+void bind_threshold_otsu(py::module_& m, const std::string& suffix) {
+  // Use MT as both the image element type and the internal float type.
+  using OtsuType = ThresholdOtsu<MT, 256, MT>;
+  const std::string cls = "ThresholdOtsu" + suffix;
+
+  py::class_<OtsuType>(m, cls.c_str(),
+                       ("Automatic threshold estimation using Otsu's method" + suffix +
+                        ".\n\n"
+                        "Computes the optimal threshold by maximizing inter-class variance\n"
+                        "of the histogram of magnitude values.\n\n"
+                        "Args:\n"
+                        "    r_max: Maximum magnitude value\n"
+                        "    r_min: Minimum magnitude value (default: 0)")
+                           .c_str())
+      .def(py::init<MT, MT>(), py::arg("r_max"), py::arg("r_min") = static_cast<MT>(0),
+           "Construct an Otsu threshold estimator with magnitude range.")
+      .def("process", &OtsuType::process, py::arg("mag"),
+           "Compute the Otsu threshold from a magnitude map.\n\n"
+           "Args:\n"
+           "    mag: Input magnitude map (cv::Mat)\n\n"
+           "Returns:\n"
+           "    Computed threshold value in the original magnitude scale.")
+      .def("max", &OtsuType::max, "Get the maximum magnitude value.")
+      .def_static("name", &OtsuType::name, "Get the name of this threshold method.");
+}
+
+// ============================================================================
 // Concrete EdgeSource bindings (EdgeSourceGRAD<GRAD, NMS>)
 // ============================================================================
 
@@ -430,6 +462,10 @@ void bind_edge_preset(py::module_& m, const std::string& suffix) {
 // ============================================================================
 // Explicit template instantiations for supported presets
 // ============================================================================
+
+// ThresholdOtsu instantiations
+template void bind_threshold_otsu<float>(py::module_&, const std::string&);
+template void bind_threshold_otsu<double>(py::module_&, const std::string&);
 
 // Default: 8-bit unsigned (uchar) — suffix ""
 template void bind_nms<short, float, float>(py::module_&, const std::string&);

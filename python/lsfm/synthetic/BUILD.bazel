@@ -1,0 +1,146 @@
+"""Bazel build for lsfm.synthetic sub-package."""
+
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "synthetic",
+    srcs = glob(
+        ["*.py"],
+        exclude = ["tests/**"],
+    ),
+    imports = ["../.."],
+    deps = [
+        "//libs/algorithm/python:le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)
+
+py_test(
+    name = "test_primitives",
+    srcs = ["tests/test_primitives.py"],
+    main = "tests/test_primitives.py",
+    deps = [
+        ":synthetic",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_conversions",
+    srcs = ["tests/test_conversions.py"],
+    main = "tests/test_conversions.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_scene",
+    srcs = ["tests/test_scene.py"],
+    main = "tests/test_scene.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_camera_rig",
+    srcs = ["tests/test_camera_rig.py"],
+    main = "tests/test_camera_rig.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_ground_truth",
+    srcs = ["tests/test_ground_truth.py"],
+    main = "tests/test_ground_truth.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_renderer",
+    srcs = ["tests/test_renderer.py"],
+    main = "tests/test_renderer.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pillow",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_oracle",
+    srcs = ["tests/test_oracle.py"],
+    main = "tests/test_oracle.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_evaluation",
+    srcs = ["tests/test_evaluation.py"],
+    main = "tests/test_evaluation.py",
+    deps = [
+        ":synthetic",
+        "//libs/algorithm/python:le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+    ],
+)
+
+py_test(
+    name = "test_rerun_viz",
+    srcs = ["tests/test_rerun_viz.py"],
+    main = "tests/test_rerun_viz.py",
+    deps = [
+        ":synthetic",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pytest",
+        "@pip//rerun_sdk",
+    ],
+)
+
+py_test(
+    name = "test_pipeline_integration",
+    srcs = ["tests/test_pipeline_integration.py"],
+    main = "tests/test_pipeline_integration.py",
+    deps = [
+        ":synthetic",
+        "//libs/algorithm/python:le_algorithm_lib",
+        "//libs/geometry/python:le_geometry_lib",
+        "@pip//numpy",
+        "@pip//pillow",
+        "@pip//pytest",
+    ],
+)

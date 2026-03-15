@@ -106,6 +106,13 @@ void bind_esd_pattern(py::module_& m, const std::string& suffix);
 template <class IT, class GT, class MT, class DT>
 void bind_edge_sources(py::module_& m, const std::string& suffix);
 
+/// @brief Bind ThresholdOtsu threshold estimator for a specific magnitude type.
+/// @tparam MT Magnitude element type
+/// @param m The pybind11 module
+/// @param suffix Python class name suffix
+template <class MT>
+void bind_threshold_otsu(py::module_& m, const std::string& suffix);
+
 /// @brief Convenience: bind all edge interfaces + concrete classes for one preset.
 ///
 /// Calls bind_edge_source_interface, bind_nms, bind_esd_base, the ESD

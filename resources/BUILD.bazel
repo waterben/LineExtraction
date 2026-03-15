@@ -14,6 +14,12 @@ filegroup(
     srcs = ["office.png"],
 )
 
+# Step-function line image for edge / sub-pixel accuracy tests
+filegroup(
+    name = "step_line",
+    srcs = ["step_line.png"],
+)
+
 # Synthetic example images with known line segments for accuracy evaluation
 filegroup(
     name = "synthetic_simple",

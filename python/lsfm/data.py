@@ -180,6 +180,16 @@ class TestImages:
         """
         return self.get("office.png")
 
+    def step_line(self) -> Path:
+        """Return the path to ``step_line.png``.
+
+        Step-function line image for edge / sub-pixel accuracy tests.
+
+        :return: Resolved path to the step line test image.
+        :rtype: Path
+        """
+        return self.get("step_line.png")
+
     def synthetic_simple(self) -> Path:
         """Return the path to ``synthetic_simple.png``.
 

@@ -167,6 +167,7 @@ cc_binary(
     data = [
         "//resources:office",
         "//resources:presets",
+        "//resources:step_line",
         "//resources:synthetic_challenge",
         "//resources:synthetic_simple",
         "//resources:windmill",

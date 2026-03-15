@@ -96,6 +96,10 @@ void bind_stereo_plane(pybind11::module_& m, const std::string& suffix);
 template <class FT>
 void bind_stereo_cv(pybind11::module_& m, const std::string& suffix);
 
+/// @brief Bind MultiviewStereo<FT> (N-view line triangulation).
+template <class FT>
+void bind_multiview_stereo(pybind11::module_& m, const std::string& suffix);
+
 /// @brief Convenience: bind all stereo triangulation types for a given FT preset.
 template <class FT>
 void bind_stereo_preset(pybind11::module_& m, const std::string& suffix);
