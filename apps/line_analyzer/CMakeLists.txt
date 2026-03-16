@@ -20,6 +20,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/precision_optimizer
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/profile_analyzer
     ${CMAKE_CURRENT_SOURCE_DIR}/extensions/quivers
+    ${CMAKE_CURRENT_SOURCE_DIR}/extensions/nfa_filter
 )
 
 # Line Analyzer Qt Application
@@ -43,6 +44,7 @@ le_add_executable(app_line_analyzer
         extensions/precision_optimizer/precision_optimizer.cpp
         extensions/profile_analyzer/profile_analyzer.cpp
         extensions/quivers/quiverpanel.cpp
+        extensions/nfa_filter/nfa_filter.cpp
     HEADERS
         # Core
         src/helpers.h
@@ -63,6 +65,7 @@ le_add_executable(app_line_analyzer
         extensions/precision_optimizer/precision_optimizer.h
         extensions/profile_analyzer/profile_analyzer.h
         extensions/quivers/quiverpanel.h
+        extensions/nfa_filter/nfa_filter.h
         # UI files
         ui/analyzer.ui
         ui/preprocessing.ui
@@ -76,6 +79,7 @@ le_add_executable(app_line_analyzer
         extensions/precision_optimizer/precision_optimizer.ui
         extensions/profile_analyzer/profile_analyzer.ui
         extensions/quivers/quiverpanel.ui
+        extensions/nfa_filter/nfa_filter.ui
     QT_MODULES Core Gui Widgets PrintSupport OpenGL
     DEPS
         lib_algorithm

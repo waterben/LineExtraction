@@ -55,6 +55,7 @@ EXTENSION_SRCS = [
     "extensions/precision_optimizer/precision_optimizer.cpp",
     "extensions/profile_analyzer/profile_analyzer.cpp",
     "extensions/quivers/quiverpanel.cpp",
+    "extensions/nfa_filter/nfa_filter.cpp",
 ]
 
 EXTENSION_HDRS = [
@@ -68,6 +69,7 @@ EXTENSION_HDRS = [
     "extensions/precision_optimizer/precision_optimizer.h",
     "extensions/profile_analyzer/profile_analyzer.h",
     "extensions/quivers/quiverpanel.h",
+    "extensions/nfa_filter/nfa_filter.h",
 ]
 
 # Headers requiring MOC processing (Q_OBJECT macro)
@@ -86,6 +88,7 @@ MOC_HEADERS = [
     "extensions/precision_optimizer/precision_optimizer.h",
     "extensions/profile_analyzer/profile_analyzer.h",
     "extensions/quivers/quiverpanel.h",
+    "extensions/nfa_filter/nfa_filter.h",
 ]
 
 # UI files for UIC processing
@@ -102,6 +105,7 @@ UI_FILES = [
     "extensions/precision_optimizer/precision_optimizer.ui",
     "extensions/profile_analyzer/profile_analyzer.ui",
     "extensions/quivers/quiverpanel.ui",
+    "extensions/nfa_filter/nfa_filter.ui",
 ]
 
 # Include paths so that #include "foo.h" works across directories
@@ -116,6 +120,7 @@ INCLUDE_PATHS = [
     "-Iapps/line_analyzer/extensions/precision_optimizer",
     "-Iapps/line_analyzer/extensions/profile_analyzer",
     "-Iapps/line_analyzer/extensions/quivers",
+    "-Iapps/line_analyzer/extensions/nfa_filter",
 ]
 
 # ---------------------------------------------------------------------------
@@ -134,6 +139,7 @@ qt5_moc(
         "apps/line_analyzer/extensions/detector_profile",
         "apps/line_analyzer/extensions/ground_truth_inspector",
         "apps/line_analyzer/extensions/image_analyzer",
+        "apps/line_analyzer/extensions/nfa_filter",
         "apps/line_analyzer/extensions/precision_optimizer",
         "apps/line_analyzer/extensions/profile_analyzer",
         "apps/line_analyzer/extensions/quivers",

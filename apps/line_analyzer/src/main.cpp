@@ -4,6 +4,7 @@
 #include "continuity_optimizer.h"
 #include "ground_truth_inspector.h"
 #include "helpers.h"
+#include "nfa_filter.h"
 #include "precision_optimizer.h"
 #include "profile_analyzer.h"
 
@@ -222,6 +223,7 @@ int main(int argc, char* argv[]) {
   w.addTool<ProfileAnalyzer>();
   w.addTool<POFuncPlot>();
   w.addTool<AccuracyPanel>();
+  w.addTool<NfaFilter>();
   w.addTool<LineAnalyser2D>();
 
   w.show();
