@@ -888,6 +888,7 @@ void Analyzer::processData() {
 }
 
 void Analyzer::clearLines() {
+  clearLineSelected();
   lines.clear();
   lplot->qplot->clearItems();
   indicator = nullptr;
@@ -901,9 +902,9 @@ void Analyzer::setLines(const LineSegmentVector& ls) {
 
 void Analyzer::processLineData() {
   lplot->show();
+  ui->table_lines->blockSignals(true);
   ui->table_lines->setRowCount(static_cast<int>(lines.size()));
   int row = 0;
-  ui->table_lines->blockSignals(true);
   ui->table_lines->clearSelection();
   ui->table_lines->scrollToTop();
 
@@ -1226,6 +1227,7 @@ void Analyzer::clearLineSelected() {
 }
 
 void Analyzer::setLineSelected(Line& l) {
+  if (l.line == nullptr || l.normal == nullptr) return;
   lplot->qplot->blockSignals(true);
   l.line->setSelected(true);
   l.normal->setSelected(true);
