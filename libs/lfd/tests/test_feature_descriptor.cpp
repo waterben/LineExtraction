@@ -465,3 +465,25 @@ TEST_F(LbdDescriptorTest, ElementsBoundedAfterClipping) {
     EXPECT_GE(min_val, 0.0) << "Descriptor " << i << " has negative element";
   }
 }
+
+TEST_F(LbdDescriptorTest, NearConstantGradientNoNaN) {
+  // A near-constant gradient image has E[X^2] - E[X]^2 ~ 0.
+  // Without a std::max(0, ...) guard the sqrt() argument can be slightly
+  // negative due to floating-point rounding, producing NaN.
+  cv::Mat const_gx(kImageSize, kImageSize, CV_16S, cv::Scalar(1));
+  cv::Mat const_gy(kImageSize, kImageSize, CV_16S, cv::Scalar(0));
+
+  FdcLBD<float, LineSegment<float>, short> fdc(const_gx, const_gy);
+  std::vector<FdLBD<float>> descriptors;
+  const auto& lines = lines_;
+  fdc.createList(lines, descriptors);
+
+  for (size_t i = 0; i < descriptors.size(); ++i) {
+    const float* ptr = descriptors[i].data.ptr<float>(0);
+    int n = descriptors[i].data.cols;
+    for (int j = 0; j < n; ++j) {
+      EXPECT_FALSE(std::isnan(ptr[j])) << "NaN at descriptor " << i << " element " << j;
+      EXPECT_FALSE(std::isinf(ptr[j])) << "Inf at descriptor " << i << " element " << j;
+    }
+  }
+}

@@ -12,14 +12,27 @@ py_library(
     srcs = [
         "__init__.py",
         "data.py",
+        "notebook.py",
+        "reconstruction.py",
     ],
     imports = [".."],
+    deps = [
+        "//libs/geometry/python:le_geometry_lib",
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm/synthetic",
+        "@pip//numpy",
+    ],
 )
 
 py_test(
     name = "test_data",
     srcs = ["tests/test_data.py"],
     data = [
+        "//resources:office",
+        "//resources:step_line",
+        "//resources:synthetic_challenge",
+        "//resources:synthetic_simple",
         "//resources:windmill",
         "//resources/datasets:noise",
     ],

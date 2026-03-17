@@ -13,6 +13,7 @@ pybind_library(
     srcs = [
         "src/geometry3d_binding.cpp",
         "src/geometry_binding.cpp",
+        "src/stereo_binding.cpp",
     ],
     hdrs = [
         "src/geometry_binding.hpp",

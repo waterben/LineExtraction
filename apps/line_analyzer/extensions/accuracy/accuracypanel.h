@@ -14,7 +14,7 @@
 /// against the currently detected lines from the Analyzer.
 /// Displays precision, recall, F1-score, sAP, and match counts.
 ///
-/// A bundled example ground truth (example_gt.csv for example_lines.png)
+/// A bundled example ground truth (example_gt.csv for synthetic_simple.png)
 /// can be loaded via the **Example** button for quick out-of-the-box testing.
 class AccuracyPanel : public LATool {
   Q_OBJECT
@@ -39,14 +39,14 @@ class AccuracyPanel : public LATool {
   /// @brief Load the bundled easy example ground truth (example_gt.csv).
   ///
   /// Searches standard resource locations (Bazel runfiles, relative paths)
-  /// for the shipped example CSV. Also loads the matching example_lines.png
+  /// for the shipped example CSV. Also loads the matching synthetic_simple.png
   /// image into the Analyzer if found.
   void loadExampleGroundTruth();
 
   /// @brief Load the bundled challenge ground truth (example_challenge_gt.csv).
   ///
   /// The challenge scene has 8 shapes with varying contrast plus noise.
-  /// Also loads the matching example_challenge.png into the Analyzer.
+  /// Also loads the matching synthetic_challenge.png into the Analyzer.
   void loadChallengeGroundTruth();
 
   /// @brief Evaluate detected lines against the loaded ground truth.
@@ -71,7 +71,7 @@ class AccuracyPanel : public LATool {
 
   /// @brief Load a bundled example (CSV + image) by name.
   /// @param csv_relative CSV path relative to resources/ (e.g., "datasets/ground_truth/example_gt.csv").
-  /// @param image_name Image filename in resources/ (e.g., "example_lines.png").
+  /// @param image_name Image filename in resources/ (e.g., "synthetic_simple.png").
   /// @param label Human-readable label for status messages (e.g., "easy example").
   void loadBundledExample(const std::string& csv_relative, const std::string& image_name, const std::string& label);
 

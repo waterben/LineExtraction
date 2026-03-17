@@ -243,6 +243,18 @@ deps = [
 
 Python environment is in `.venv/` (created by setup script). Dependencies in `pyproject.toml` managed with `uv`. Python is primarily used for evaluation scripts and tooling.
 
+## LE Library First Policy
+
+Before implementing any algorithm, utility, or data-processing step — whether in C++ or Python — **always check the LE library first**.
+
+- **C++:** Search `libs/` headers (e.g., `edge/threshold_estimator.hpp`, `imgproc/`, `geometry/`) before writing custom code or reaching for a raw OpenCV call.
+- **Python:** Check whether the corresponding `le_*` Python bindings already expose the functionality (bindings live in `libs/*/python/`). If the C++ class exists but is not yet exposed, **add the Python binding** rather than re-implementing the algorithm using NumPy/OpenCV.
+
+**Examples:**
+- Otsu thresholding → C++: `lsfm::ThresholdOtsu` (`edge/threshold_estimator.hpp`); Python: not yet bound — add binding instead of using `cv2.threshold(..., THRESH_OTSU)`.
+- Gradient computation → `lsfm::DerivativeGradient` / `le_edge.EdgeSourceSobel` (already bound).
+- NMS → `lsfm::NonMaximaSuppression` / `le_edge.NonMaximaSuppression` (already bound).
+
 ## Common Pitfalls
 
 - **ALWAYS use Bazel** unless explicitly asked for CMake

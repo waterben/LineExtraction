@@ -10,13 +10,13 @@
     <x>0</x>
     <y>0</y>
     <width>340</width>
-    <height>420</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>320</width>
-    <height>380</height>
+    <height>440</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,7 @@
       </property>
       <layout class="QFormLayout" name="formLayout_knobs">
        <property name="verticalSpacing">
-        <number>10</number>
+        <number>14</number>
        </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label_detail">
@@ -75,6 +75,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="spin_detail">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>0</number>
            </property>
@@ -118,6 +124,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="spin_gap_tolerance">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>0</number>
            </property>
@@ -161,6 +173,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="spin_min_length">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>0</number>
            </property>
@@ -204,6 +222,12 @@
          </item>
          <item>
           <widget class="QSpinBox" name="spin_precision">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>0</number>
            </property>
@@ -229,6 +253,9 @@
        <string>Adaptive Factors</string>
       </property>
       <layout class="QFormLayout" name="formLayout_factors">
+       <property name="verticalSpacing">
+        <number>14</number>
+       </property>
        <item row="0" column="0">
         <widget class="QLabel" name="label_contrast_factor">
          <property name="text">
@@ -238,6 +265,12 @@
        </item>
        <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="spin_contrast_factor">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>28</height>
+          </size>
+         </property>
          <property name="minimum">
           <double>0.500000000000000</double>
          </property>
@@ -264,6 +297,12 @@
        </item>
        <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="spin_noise_factor">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>28</height>
+          </size>
+         </property>
          <property name="minimum">
           <double>0.500000000000000</double>
          </property>

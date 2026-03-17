@@ -141,28 +141,28 @@ class LineConnect : public ValueManager {
     this->add(
         "max_radius",
         [this](const Value& v) -> Value {
-          if (v.type()) max_radius_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) max_radius_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(max_radius_));
         },
         "Maximum endpoint distance for connection candidates");
     this->add(
         "accuracy",
         [this](const Value& v) -> Value {
-          if (v.type()) accuracy_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) accuracy_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(accuracy_));
         },
         "Sampling step along the connecting path");
     this->add(
         "threshold",
         [this](const Value& v) -> Value {
-          if (v.type()) threshold_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) threshold_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(threshold_));
         },
         "Minimum average gradient magnitude for connection");
     this->add(
         "max_angle",
         [this](const Value& v) -> Value {
-          if (v.type()) max_angle_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) max_angle_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(max_angle_));
         },
         "Maximum angle difference in degrees (0 = disabled)");

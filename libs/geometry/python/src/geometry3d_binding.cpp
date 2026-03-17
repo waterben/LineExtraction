@@ -377,6 +377,17 @@ void bind_pose(py::module_& m, const std::string& suffix) {
             return rows;
           },
           "Get 4x4 homogeneous transformation matrix as list of row tuples.")
+      .def(
+          "base_h_matrix",
+          [](const PoseT& p) {
+            auto bh = p.baseH();
+            py::list rows;
+            for (int r = 0; r < 4; ++r) {
+              rows.append(py::make_tuple(bh(r, 0), bh(r, 1), bh(r, 2), bh(r, 3)));
+            }
+            return rows;
+          },
+          "Get 4x4 world-to-pose (inverse) homogeneous matrix as list of row tuples.")
 
       // --- Transforms ---
       .def(

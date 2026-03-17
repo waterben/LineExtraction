@@ -14,4 +14,3 @@ else
   echo "Invalid type '$type', must be 'launch' or 'task'"
   exit -1
 fi
-

@@ -91,6 +91,45 @@ The tutorial series is the recommended way to learn the Python bindings. Work th
 | [`demo_pytorch_esd.ipynb`](../examples/notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration Demo** — Combines PyTorch-based object segmentation (SAM / YOLO) with the ESD line extraction framework. Interactive click-to-segment, automatic instance segmentation, and contour-to-line-segment conversion. | `le_edge`, PyTorch |
 | [`demo_rerun_lsd.ipynb`](../examples/notebooks/demo_rerun_lsd.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with inline [Rerun.io](https://rerun.io/) viewer widget. | `le_lsd`, Rerun |
 | [`demo_line_features.ipynb`](../examples/notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD/LR descriptors, brute-force matching, GlobalRotationFilter, interactive [Rerun.io](https://rerun.io/) visualization. | `le_lfd`, `le_lsd`, Rerun |
+| [`demo_stereo_reconstruction_limap.ipynb`](../examples/notebooks/demo_stereo_reconstruction_limap.ipynb) | **Stereo 3D Reconstruction with LIMAP** — Pairwise stereo triangulation with native detection & matching. Falls back to pairwise stereo if LIMAP is not installed. | `le_lsd`, `le_lfd`, `le_geometry`, LIMAP (optional) |
+| [`demo_multiview_reconstruction.ipynb`](../examples/notebooks/demo_multiview_reconstruction.ipynb) | **Multi-View 3D Reconstruction** — Full LIMAP multi-view pipeline on ETH3D scenes with custom detector integration. Compares built-in vs. our LSD detector. | `le_lsd`, `le_lfd`, `le_geometry`, LIMAP |
+
+## LIMAP (Optional)
+
+The 3D reconstruction notebook can optionally use [CVG LIMAP](https://github.com/cvg/limap)
+for multi-view line triangulation. LIMAP is **not** required — the notebook falls back to
+pairwise stereo reconstruction when it is not installed.
+
+> **Warning:** The `limap` package on PyPI is an **unrelated** project (LimerBoy Mapper).
+> Do **not** install it with `pip install limap`. Use one of the methods below.
+
+### Requirements
+
+- **Python 3.10 or 3.11** (LIMAP does not support 3.12+)
+- CMake >= 3.17
+- COLMAP, pybind11, scikit-build-core
+- CUDA (optional, for deep learning detectors/matchers)
+
+### Installation
+
+**Via optional extra** (recommended):
+
+```bash
+uv sync --extra limap
+```
+
+**Manual from source:**
+
+```bash
+git clone --recursive https://github.com/cvg/limap.git
+pip install -Ive ./limap
+```
+
+### Verification
+
+```bash
+python -c "import limap; print(limap.__version__)"
+```
 
 ## Module Import Path
 

@@ -190,49 +190,49 @@ class LineContinuityOptimizer : public ValueManager {
     this->add(
         "max_dist",
         [this](const Value& v) -> Value {
-          if (v.type()) max_dist_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) max_dist_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(max_dist_));
         },
         "Maximum endpoint distance for merge candidates");
     this->add(
         "angle_error",
         [this](const Value& v) -> Value {
-          if (v.type()) angle_error_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) angle_error_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(angle_error_));
         },
         "Maximum angle difference in degrees");
     this->add(
         "distance_error",
         [this](const Value& v) -> Value {
-          if (v.type()) distance_error_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) distance_error_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(distance_error_));
         },
         "Maximum perpendicular distance");
     this->add(
         "parallel_error",
         [this](const Value& v) -> Value {
-          if (v.type()) parallel_error_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) parallel_error_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(parallel_error_));
         },
         "Maximum parallel gap (geometry-only path)");
     this->add(
         "merge_type",
         [this](const Value& v) -> Value {
-          if (v.type()) merge_type_ = static_cast<ContinuityMergeType>(v.getInt());
+          if (v.type() != Value::NOT_A_VALUE) merge_type_ = static_cast<ContinuityMergeType>(static_cast<int>(v));
           return Value(static_cast<int>(merge_type_));
         },
         "Merge type: 0 = STANDARD, 1 = AVG");
     this->add(
         "accuracy",
         [this](const Value& v) -> Value {
-          if (v.type()) accuracy_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) accuracy_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(accuracy_));
         },
         "Sampling step along the gradient path (pixels)");
     this->add(
         "threshold",
         [this](const Value& v) -> Value {
-          if (v.type()) threshold_ = static_cast<FT>(v.getDouble());
+          if (v.type() != Value::NOT_A_VALUE) threshold_ = static_cast<FT>(static_cast<double>(v));
           return Value(static_cast<double>(threshold_));
         },
         "Minimum average gradient magnitude for gradient-assisted merge");

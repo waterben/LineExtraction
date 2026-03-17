@@ -38,8 +38,14 @@ DATASET_DIR="${WORKSPACE_ROOT}/resources/datasets/HPatches"
 # Official mirror hosted on HuggingFace (the original icvl.ee.ic.ac.uk URL is defunct).
 # See: https://github.com/hpatches/hpatches-dataset#full-image-sequences
 DOWNLOAD_URL="https://huggingface.co/datasets/vbalnt/hpatches/resolve/main/hpatches-sequences-release.zip"
+# SHA-256 of the known-good archive.
+# Obtain by downloading once and running: sha256sum hpatches-sequences-release.zip
+# Then set this variable and commit the result to the repository.
+# Use --skip-checksum only as a temporary measure while obtaining the hash.
+EXPECTED_SHA256=""
 
 CLEAN=false
+SKIP_CHECKSUM=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -58,8 +64,9 @@ usage() {
     echo "Download and prepare the HPatches dataset."
     echo ""
     echo "Options:"
-    echo "  --clean    Remove existing data before download"
-    echo "  --help     Show this help message"
+    echo "  --clean           Remove existing data before download"
+    echo "  --skip-checksum   Bypass SHA-256 verification (use only to obtain initial hash)"
+    echo "  --help            Show this help message"
 }
 
 log_info() {
@@ -82,6 +89,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --clean)
             CLEAN=true
+            shift
+            ;;
+        --skip-checksum)
+            SKIP_CHECKSUM=true
             shift
             ;;
         --help)
@@ -148,10 +159,50 @@ if [[ "${FILESIZE}" -lt 100000000 ]]; then
     exit 1
 fi
 
+# Verify archive integrity via SHA-256 checksum (when pinned)
+if [[ "${SKIP_CHECKSUM}" == "true" ]]; then
+    log_warn "Checksum verification skipped via --skip-checksum."
+elif [[ -n "${EXPECTED_SHA256}" ]]; then
+    log_info "Verifying archive checksum..."
+    if command -v sha256sum &>/dev/null; then
+        ACTUAL_SHA256=$(sha256sum "${ARCHIVE}" | awk '{print $1}')
+    elif command -v shasum &>/dev/null; then
+        ACTUAL_SHA256=$(shasum -a 256 "${ARCHIVE}" | awk '{print $1}')
+    else
+        log_warn "Neither sha256sum nor shasum found — skipping checksum verification."
+        ACTUAL_SHA256="${EXPECTED_SHA256}"
+    fi
+    if [[ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]]; then
+        log_error "Checksum mismatch! Archive may be corrupted or tampered with."
+        log_error "  Expected: ${EXPECTED_SHA256}"
+        log_error "  Actual:   ${ACTUAL_SHA256}"
+        rm -f "${ARCHIVE}"
+        exit 1
+    fi
+else
+    log_warn "No SHA-256 checksum pinned for this archive."
+    log_warn "To pin the checksum, run: sha256sum \"${ARCHIVE}\""
+    log_warn "Then set EXPECTED_SHA256 in this script to the resulting hash."
+    log_warn "Proceeding without verification — use --skip-checksum to suppress this warning."
+fi
+
 # Extract (zip archive — uses a top-level hpatches-sequences-release/ directory)
+# Guard against Zip Slip: reject entries with absolute paths or ".." components.
 log_info "Extracting archive..."
 TMPDIR="${DATASET_DIR}/_extract_tmp"
 mkdir -p "${TMPDIR}"
+
+# Scan for dangerous paths before extracting
+UNSAFE_ENTRIES=$(unzip -l "${ARCHIVE}" | awk 'NR>3 && !/^-/{print $4}' \
+    | grep -E '(^/|/\.\./|\.\./|^\.\./)' || true)
+if [[ -n "${UNSAFE_ENTRIES}" ]]; then
+    log_error "Archive contains unsafe path entries (potential Zip Slip attack):"
+    echo "${UNSAFE_ENTRIES}" | head -20
+    rm -f "${ARCHIVE}"
+    rm -rf "${TMPDIR}"
+    exit 1
+fi
+
 unzip -q "${ARCHIVE}" -d "${TMPDIR}"
 
 # Move contents from the top-level directory inside the zip into DATASET_DIR.

@@ -4,6 +4,10 @@ applyTo: "**/*.{py}"
 
 Write Python docstrings in Sphinx style and always use type hints for the code.
 
+**LE Library First:**
+
+Before using NumPy, OpenCV, or other external libraries for an algorithm, **always check whether the `le_*` Python bindings already expose the needed functionality** (bindings live in `libs/*/python/`). If the algorithm exists in the LE C++ library but is not yet exposed in Python, **add the pybind11 binding** in the corresponding `libs/*/python/src/` file rather than re-implementing it externally.
+
 **Language:** Use **American English** spelling in all docstrings, comments, and string literals.
 - `color` not `colour`, `gray` not `grey`, `initialize` not `initialise`, `optimize` not `optimise`,
   `normalize` not `normalise`, `recognize` not `recognise`, `visualize` not `visualise`, etc. Here are some examples:

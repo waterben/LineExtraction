@@ -4,8 +4,8 @@
 #include <algorithm/image_analyzer.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <QDebug>
 #include <QMessageBox>
-#include <iostream>
 
 ImageAnalyzerPanel::ImageAnalyzerPanel(QWidget* parent)
     : LATool("Image Analyzer", parent), ui(new Ui::ImageAnalyzerPanel) {
@@ -60,8 +60,8 @@ void ImageAnalyzerPanel::analyze() {
     }
     auto props = lsfm::ImageAnalyzer::analyze(gray);
 
-    std::cout << "Image analysis: contrast=" << props.contrast << ", noise=" << props.noise_level
-              << ", edge_density=" << props.edge_density << ", dynamic_range=" << props.dynamic_range << std::endl;
+    qDebug() << "Image analysis: contrast=" << props.contrast << "noise=" << props.noise_level
+             << "edge_density=" << props.edge_density << "dynamic_range=" << props.dynamic_range;
 
     // Display image properties
     ui->lbl_contrast->setText(QString::number(props.contrast, 'f', 3));

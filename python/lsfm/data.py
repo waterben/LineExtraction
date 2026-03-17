@@ -172,6 +172,45 @@ class TestImages:
         """
         return self.get("windmill.jpg")
 
+    def office(self) -> Path:
+        """Return the path to ``office.png``.
+
+        :return: Resolved path to the office photo test image.
+        :rtype: Path
+        """
+        return self.get("office.png")
+
+    def step_line(self) -> Path:
+        """Return the path to ``step_line.png``.
+
+        Step-function line image for edge / sub-pixel accuracy tests.
+
+        :return: Resolved path to the step line test image.
+        :rtype: Path
+        """
+        return self.get("step_line.png")
+
+    def synthetic_simple(self) -> Path:
+        """Return the path to ``synthetic_simple.png``.
+
+        Single hexagon with no noise and 6 known ground truth segments.
+
+        :return: Resolved path to the synthetic simple test image.
+        :rtype: Path
+        """
+        return self.get("synthetic_simple.png")
+
+    def synthetic_challenge(self) -> Path:
+        """Return the path to ``synthetic_challenge.png``.
+
+        Eight shapes with varying contrast and Gaussian noise (σ = 5),
+        comprising 31 known ground truth segments.
+
+        :return: Resolved path to the synthetic challenge test image.
+        :rtype: Path
+        """
+        return self.get("synthetic_challenge.png")
+
     def noise(self, name: str) -> Path:
         """Return the path to an image in the *noise* dataset.
 
@@ -337,6 +376,129 @@ class TestImages:
         )
         return left, right
 
+    def stereo_calibration(
+        self, scene: str, resolution: str = "H"
+    ) -> dict[str, object]:
+        """Load MDB stereo calibration data for a scene.
+
+        Reads ``calib.txt`` which contains::
+
+            cam0=[fx 0 cx; 0 fy cy; 0 0 1]
+            cam1=[fx 0 cx; 0 fy cy; 0 0 1]
+            doffs=...
+            baseline=...
+            width=...
+            height=...
+            ndisp=...
+
+        :param scene: Scene name, e.g. ``"Adirondack"``.
+        :type scene: str
+        :param resolution: ``"Q"`` (quarter), ``"H"`` (half), ``"F"`` (full).
+        :type resolution: str
+        :return: Dict with keys ``"cam0"`` (3x3 list of lists), ``"cam1"`` (3x3 list of lists),
+            ``"focal_x"``, ``"focal_y"``, ``"offset_x"``, ``"offset_y"``,
+            ``"doffs"``, ``"baseline"``, ``"width"``, ``"height"``, ``"ndisp"``.
+        :rtype: dict[str, object]
+        :raises FileNotFoundError: If calib.txt is not found.
+
+        .. note::
+           Requires the dataset to be downloaded with stereo support:
+           ``./tools/scripts/setup_mdb_dataset.sh``
+        """
+        res_dir = f"MDB/MiddEval3-{resolution}"
+        calib_path = self._resolve_any(f"{res_dir}/{scene}/calib.txt")
+
+        result: dict[str, object] = {}
+        with open(calib_path, encoding="utf-8") as f:
+            for raw_line in f:
+                raw_line = raw_line.strip()
+                if not raw_line or raw_line.startswith("#"):
+                    continue
+                key, _, value = raw_line.partition("=")
+                key = key.strip()
+                value = value.strip()
+
+                if key in ("cam0", "cam1"):
+                    # Parse matrix: [fx 0 cx; 0 fy cy; 0 0 1]
+                    mat_str = value.strip("[]")
+                    rows = mat_str.split(";")
+                    matrix = []
+                    for row in rows:
+                        matrix.append([float(x) for x in row.split()])
+                    result[key] = matrix
+                else:
+                    try:
+                        result[key] = float(value)
+                    except ValueError:
+                        result[key] = value
+
+        # Extract convenient intrinsic fields from cam0
+        if "cam0" in result:
+            cam0 = result["cam0"]
+            result["focal_x"] = cam0[0][0]
+            result["focal_y"] = cam0[1][1]
+            result["offset_x"] = cam0[0][2]
+            result["offset_y"] = cam0[1][2]
+
+        return result
+
+    def stereo_camera_pair(
+        self, scene: str, resolution: str = "H"
+    ) -> tuple[object, object]:
+        """Construct calibrated Camera objects for an MDB stereo pair.
+
+        The left camera is at the origin; the right camera is shifted
+        along the x-axis by ``baseline`` (in world units).
+
+        :param scene: Scene name, e.g. ``"Adirondack"``.
+        :type scene: str
+        :param resolution: ``"Q"`` (quarter), ``"H"`` (half), ``"F"`` (full).
+        :type resolution: str
+        :return: Tuple of ``(cam_left, cam_right)`` Camera objects.
+        :rtype: tuple[Camera, Camera]
+        :raises FileNotFoundError: If calibration data is not available.
+
+        .. note::
+           Requires ``le_geometry`` module to be importable.
+        """
+        import le_geometry
+
+        calib = self.stereo_calibration(scene, resolution)
+        fx = calib["focal_x"]
+        fy = calib["focal_y"]
+        cx = calib["offset_x"]
+        cy = calib["offset_y"]
+        w = calib.get("width", 0)
+        h = calib.get("height", 0)
+        baseline = calib.get("baseline", 0)
+        doffs = calib.get("doffs", 0)
+
+        cam_left = le_geometry.Camera_f64(
+            focal_x=fx,
+            focal_y=fy,
+            offset_x=cx,
+            offset_y=cy,
+            width=w,
+            height=h,
+        )
+        # Right camera: shifted along x by baseline, cx adjusted by doffs
+        cam1 = calib.get("cam1")
+        if cam1 is not None:
+            rx_offset = cam1[0][2]
+        else:
+            rx_offset = cx + doffs
+
+        cam_right = le_geometry.Camera_f64(
+            focal_x=fx,
+            focal_y=fy,
+            offset_x=rx_offset,
+            offset_y=cy,
+            width=w,
+            height=h,
+            tx=baseline,
+        )
+        return cam_left, cam_right
+
     def stereo_scenes(self, resolution: str = "H") -> Iterator[str]:
         """Yield available MDB scene names for a given resolution.
 
@@ -355,6 +517,74 @@ class TestImages:
                     elif child.is_dir():
                         yield child.name
                 return
+
+    # ------------------------------------------------------------------
+    # ETH3D multi-view scenes
+    # ------------------------------------------------------------------
+
+    def eth3d_scenes(self) -> list[str]:
+        """Return the names of available ETH3D scenes.
+
+        A scene is considered available when its directory contains both
+        a ``cameras.json`` file and an ``images/`` subdirectory.
+
+        :return: Sorted list of scene name strings.
+        :rtype: list[str]
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_eth3d.sh``
+        """
+        scenes: list[str] = []
+        for base in self._search_paths:
+            d = base / "ETH3D"
+            if d.is_dir():
+                for child in sorted(d.iterdir()):
+                    if (
+                        child.is_dir()
+                        and (child / "cameras.json").is_file()
+                        and (child / "images").is_dir()
+                    ):
+                        scenes.append(child.name)
+                if scenes:
+                    return scenes
+        return scenes
+
+    def eth3d_scene(self, name: str) -> dict[str, Path]:
+        """Return paths for an ETH3D scene.
+
+        :param name: Scene name, e.g. ``"courtyard"`` or ``"delivery_area"``.
+        :type name: str
+        :return: Dict with keys ``"scene_dir"``, ``"cameras_json"``,
+            ``"images_dir"``, and ``"colmap_dir"`` (path to the
+            ``dslr_calibration_undistorted/`` COLMAP model).
+        :rtype: dict[str, Path]
+        :raises FileNotFoundError: If the scene directory or required
+            files are not found.
+
+        .. note::
+           Requires the dataset to be downloaded first:
+           ``./tools/scripts/setup_eth3d.sh``
+        """
+        for base in self._search_paths:
+            scene_dir = base / "ETH3D" / name
+            cam_json = scene_dir / "cameras.json"
+            images_dir = scene_dir / "images"
+            colmap_dir = scene_dir / "dslr_calibration_undistorted"
+            if cam_json.is_file() and images_dir.is_dir():
+                result: dict[str, Path] = {
+                    "scene_dir": scene_dir.resolve(),
+                    "cameras_json": cam_json.resolve(),
+                    "images_dir": images_dir.resolve(),
+                }
+                if colmap_dir.is_dir():
+                    result["colmap_dir"] = colmap_dir.resolve()
+                return result
+
+        searched = "\n  ".join(str(p / "ETH3D" / name) for p in self._search_paths)
+        raise FileNotFoundError(
+            f"ETH3D scene '{name}' not found.\nSearched in:\n  {searched}"
+        )
 
     # ------------------------------------------------------------------
     # Generic resolver

@@ -114,8 +114,14 @@ void bind_line_connect(py::module_& m, const std::string& suffix) {
                   "the gradient response along the connecting path is strong enough.")
                      .c_str())
       .def(py::init<>(), "Construct with default parameters.")
-      .def(py::init<FT, FT, FT>(), py::arg("max_radius") = FT(15), py::arg("accuracy") = FT(2),
-           py::arg("threshold") = FT(10), "Construct with explicit parameters.")
+      .def(py::init<FT, FT, FT, FT>(), py::arg("max_radius") = FT(15), py::arg("accuracy") = FT(2),
+           py::arg("threshold") = FT(10), py::arg("max_angle") = FT(0),
+           "Construct with explicit parameters.\n\n"
+           "Args:\n"
+           "    max_radius: Maximum endpoint distance for connection candidates.\n"
+           "    accuracy: Sampling step along the connecting path.\n"
+           "    threshold: Minimum average gradient magnitude for connection.\n"
+           "    max_angle: Maximum angle difference in degrees (0 = disabled).")
       .def(
           "connect_lines",
           [](const LC& self, const std::vector<LST>& input, const cv::Mat& magnitude) {
@@ -347,6 +353,7 @@ void bind_param_optimizer(py::module_& m) {
              const py::object& py_progress) {
             // Wrap detect_fn: convert C++ ParamConfig to Python dicts
             auto detect_fn = [&py_detect_fn](const cv::Mat& src, const ParamConfig& params) {
+              py::gil_scoped_acquire gil;
               py::list py_params = param_config_to_python(params);
               py::object result = py_detect_fn(src, py_params);
               return result.cast<std::vector<LST>>();
@@ -355,9 +362,15 @@ void bind_param_optimizer(py::module_& m) {
             ProgressCallback cb = nullptr;
             if (!py_progress.is_none()) {
               auto progress_fn = py_progress.cast<std::function<bool(int, int, double)>>();
-              cb = [progress_fn](int step, int total, double score) -> bool { return progress_fn(step, total, score); };
+              cb = [progress_fn](int step, int total, double score) -> bool {
+                py::gil_scoped_acquire gil;
+                return progress_fn(step, total, score);
+              };
             }
-            return self.optimize(strategy, space, images, ground_truth, detect_fn, cb);
+            {
+              py::gil_scoped_release release;
+              return self.optimize(strategy, space, images, ground_truth, detect_fn, cb);
+            }
           },
           py::arg("strategy"), py::arg("space"), py::arg("images"), py::arg("ground_truth"), py::arg("detect_fn"),
           py::arg("progress") = py::none(),
@@ -634,7 +647,7 @@ void bind_precision_optimize(py::module_& m) {
           "Get parameter descriptions as a dict.\n\n"
           "Returns:\n"
           "    Dict mapping parameter names to description strings.")
-      // Optimization methods
+      // Optimization methods — double precision
       .def(
           "optimize_line",
           [](const PrecisionOptimize& self, const cv::Mat& magnitude, const LST& line) {
@@ -643,14 +656,33 @@ void bind_precision_optimize(py::module_& m) {
             return py::make_tuple(error, copy);
           },
           py::arg("magnitude"), py::arg("line"),
-          "Optimize a single line segment.\n\n"
+          "Optimize a single line segment (double precision).\n\n"
           "Refines the line position to maximize gradient response.\n\n"
           "Args:\n"
           "    magnitude: Gradient magnitude image (float32 or int).\n"
-          "    line: Line segment to optimize.\n\n"
+          "    line: LineSegment_f64 to optimize.\n\n"
           "Returns:\n"
           "    Tuple of (error, optimized_line) where error is the negative\n"
           "    of the maximized mean gradient response.")
+      // Optimization methods — float precision (converts internally)
+      .def(
+          "optimize_line",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude, const LineSegment<float, Vec2>& line) {
+            LST dbl_line(line);
+            double error = self.optimize_line(magnitude, dbl_line);
+            return py::make_tuple(error, LineSegment<float, Vec2>(dbl_line));
+          },
+          py::arg("magnitude"), py::arg("line"),
+          "Optimize a single line segment (float precision).\n\n"
+          "Accepts a LineSegment (float) and converts internally to double\n"
+          "for the optimizer, then converts back.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    line: LineSegment to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (error, optimized_line) where error is the negative\n"
+          "    of the maximized mean gradient response.")
+      // optimize_all — double precision
       .def(
           "optimize_all",
           [](const PrecisionOptimize& self, const cv::Mat& magnitude, const std::vector<LST>& lines) {
@@ -659,10 +691,39 @@ void bind_precision_optimize(py::module_& m) {
             return py::make_tuple(errors, output);
           },
           py::arg("magnitude"), py::arg("lines"),
-          "Optimize all line segments.\n\n"
+          "Optimize all line segments (double precision).\n\n"
           "Args:\n"
           "    magnitude: Gradient magnitude image (float32 or int).\n"
-          "    lines: List of line segments to optimize.\n\n"
+          "    lines: List of LineSegment_f64 to optimize.\n\n"
+          "Returns:\n"
+          "    Tuple of (errors, optimized_lines) where errors is a list of\n"
+          "    error values and optimized_lines is the refined segments.")
+      // optimize_all — float precision (converts internally)
+      .def(
+          "optimize_all",
+          [](const PrecisionOptimize& self, const cv::Mat& magnitude,
+             const std::vector<LineSegment<float, Vec2>>& lines) {
+            std::vector<LST> dbl_lines;
+            dbl_lines.reserve(lines.size());
+            for (const auto& seg : lines) {
+              dbl_lines.emplace_back(seg);
+            }
+            std::vector<LST> output;
+            auto errors = self.optimize_copy(magnitude, dbl_lines, output);
+            std::vector<LineSegment<float, Vec2>> result;
+            result.reserve(output.size());
+            for (const auto& seg : output) {
+              result.emplace_back(seg);
+            }
+            return py::make_tuple(errors, result);
+          },
+          py::arg("magnitude"), py::arg("lines"),
+          "Optimize all line segments (float precision).\n\n"
+          "Accepts a list of LineSegment (float), converts internally to\n"
+          "double for the optimizer, then converts back.\n\n"
+          "Args:\n"
+          "    magnitude: Gradient magnitude image (float32 or int).\n"
+          "    lines: List of LineSegment to optimize.\n\n"
           "Returns:\n"
           "    Tuple of (errors, optimized_lines) where errors is a list of\n"
           "    error values and optimized_lines is the refined segments.")

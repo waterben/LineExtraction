@@ -21,12 +21,35 @@ macro(gtest3_extern quiet)
     else()
         find_package (GTest REQUIRED)
     endif()
+
+    # Modern CMake config-mode sets GTest_FOUND and imported targets
+    # (GTest::gtest, GTest::gtest_main) but not the legacy GTEST_* variables.
+    # Bridge the gap so the rest of the build system works uniformly.
+    if (NOT GTEST_FOUND AND (GTest_FOUND OR TARGET GTest::gtest))
+        set(GTEST_FOUND TRUE)
+    endif()
+
     if (${GTEST_FOUND})
-        string(FIND ${GTEST_LIBRARY} "/" index REVERSE)
-        if (NOT (${index} EQUAL -1))
-            string(SUBSTRING ${GTEST_LIBRARY} 0 ${index} GTEST_LIBRARY_DIR)
+        # Prefer imported targets when available (modern GTestConfig.cmake)
+        if (TARGET GTest::gtest AND NOT GTEST_LIBRARY)
+            set(GTEST_LIBRARY GTest::gtest)
+            set(GTEST_MAIN_LIBRARY GTest::gtest_main)
+            # Extract include dir from imported target
+            get_target_property(_gtest_inc GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+            if (_gtest_inc)
+                set(GTEST_INCLUDE_DIR "${_gtest_inc}")
+            endif()
+            unset(_gtest_inc)
         endif()
-        set(GTEST_LIBRARIES "${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY}")
+
+        if (NOT TARGET GTest::gtest)
+            # Legacy path: derive library directory from GTEST_LIBRARY path
+            string(FIND "${GTEST_LIBRARY}" "/" index REVERSE)
+            if (NOT (${index} EQUAL -1))
+                string(SUBSTRING "${GTEST_LIBRARY}" 0 ${index} GTEST_LIBRARY_DIR)
+            endif()
+        endif()
+        set(GTEST_LIBRARIES "${GTEST_LIBRARY};${GTEST_MAIN_LIBRARY}")
     endif()
 endmacro()
 

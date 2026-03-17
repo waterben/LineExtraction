@@ -16,6 +16,7 @@
 ///   | (none) | float  | LsdCC()                     |
 ///   | _f64   | double | LsdCC_f64()                 |
 
+#include "contour_lines_binding.hpp"
 #include "lsd_binding.hpp"
 #include <pybind11/pybind11.h>
 
@@ -76,4 +77,7 @@ PYBIND11_MODULE(le_lsd, m) {
 
   // ---- Double preset: FT=double, suffix="_f64" ----
   lsfm::python::bind_lsd_preset<double>(m, "_f64");
+
+  // ---- Contour-to-line-segment utilities ----
+  lsfm::python::bind_contour_lines(m);
 }

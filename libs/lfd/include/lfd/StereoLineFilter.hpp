@@ -17,7 +17,8 @@
 
 #include <algorithm>
 #include <array>
-#include <math.h>
+#include <cmath>
+#include <limits>
 
 namespace lsfm {
 
@@ -113,21 +114,24 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     assert(height_ > 0);
 
     // vertical length too short?
-    if (fabs(ld.beg.y() - ld.end.y()) < static_cast<FT>(MIN_VERTICAL_LENGTH) ||
-        fabs(rd.beg.y() - rd.end.y()) < static_cast<FT>(MIN_VERTICAL_LENGTH)) {
+    if (std::abs(ld.beg.y() - ld.end.y()) < static_cast<FT>(MIN_VERTICAL_LENGTH) ||
+        std::abs(rd.beg.y() - rd.end.y()) < static_cast<FT>(MIN_VERTICAL_LENGTH)) {
       //                std::cout << " too short on vertical length";
       //                return true;
     }
 
-    // x's of endpoints in left image have to be >= than on the right
-    if (ld.beg.x() < rd.beg.x() || ld.end.x() < rd.end.x()) {
-      //                std::cout << " stereo constraint not met, left more right...";
+    // Use midpoint-based disparity: LSD does not guarantee consistent
+    // endpoint ordering, so comparing beg-to-beg / end-to-end is unreliable.
+    FT mid_x_l = (ld.beg.x() + ld.end.x()) / static_cast<FT>(2);
+    FT mid_x_r = (rd.beg.x() + rd.end.x()) / static_cast<FT>(2);
+
+    // Left midpoint x must be >= right midpoint x (positive disparity)
+    if (mid_x_l < mid_x_r) {
       return true;
     }
 
-    // if distance between left x and right x > maxDist_, filter
-    if (ld.beg.x() - rd.beg.x() > maxDisPx_ || ld.end.x() - rd.end.x() > maxDisPx_) {
-      //                std::cout << " x-Distance too high";
+    // Midpoint disparity must not exceed maximum
+    if (mid_x_l - mid_x_r > maxDisPx_) {
       return true;
     }
     /*
@@ -143,9 +147,9 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     }
 
     // skip lines with unsimilar orientations
-    FT adiff = fabs(ld.angle - rd.angle);
+    FT adiff = std::abs(ld.angle - rd.angle);
     adiff += (adiff > 180) ? -360 : 0;
-    adiff = fabs(adiff);
+    adiff = std::abs(adiff);
     if (adiff > angleTh_) {
       //                std::cout << " unsimilar orientation";
       return true;
@@ -173,12 +177,12 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     }
 
     // min y Overlap Ratio for one of both lines required
-    FT l1 = fabs(ld.end.y() - ld.beg.y()) * minYOverlap_, l2 = fabs(rd.end.y() - rd.beg.y()) * minYOverlap_, l3;
+    FT l1 = std::abs(ld.end.y() - ld.beg.y()) * minYOverlap_, l2 = std::abs(rd.end.y() - rd.beg.y()) * minYOverlap_, l3;
 
     if (rd.beg.y() > ld.beg.y())
-      l3 = fabs(ld.end.y() - rd.beg.y());
+      l3 = std::abs(ld.end.y() - rd.beg.y());
     else
-      l3 = fabs(rd.end.y() - ld.beg.y());
+      l3 = std::abs(rd.end.y() - ld.beg.y());
     if (l3 < l1 && l3 < l2) {
       //                std::cout << " not enough y Overlap";
       return true;
@@ -202,8 +206,12 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
   /// @param r Right line segment
   /// @return True if the match should be rejected
   virtual bool filter(geometric_type l, geometric_type r) const {
-    const LineData& ld = LineData(l.startPoint(), l.endPoint(), l.anglef(), std::abs(1 / l.normalX()));
-    const LineData& rd = LineData(r.startPoint(), r.endPoint(), r.anglef(), std::abs(1 / r.normalX()));
+    FT lnx = l.normalX();
+    FT rnx = r.normalX();
+    FT lscale = (std::abs(lnx) > static_cast<FT>(1e-6)) ? std::abs(FT(1) / lnx) : std::numeric_limits<FT>::max();
+    FT rscale = (std::abs(rnx) > static_cast<FT>(1e-6)) ? std::abs(FT(1) / rnx) : std::numeric_limits<FT>::max();
+    const LineData& ld = LineData(l.startPoint(), l.endPoint(), l.anglef(), lscale);
+    const LineData& rd = LineData(r.startPoint(), r.endPoint(), r.anglef(), rscale);
     return filter(ld, rd);
   }
 
@@ -341,7 +349,9 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     data.clear();
     data.reserve(lines.size());
     for_each(lines.begin(), lines.end(), [&](const geometric_type& line) {
-      data.push_back(LineData(line.startPoint(), line.endPoint(), line.anglef(), std::abs(1 / line.normalX())));
+      FT nx = line.normalX();
+      FT scale = (std::abs(nx) > static_cast<FT>(1e-6)) ? std::abs(FT(1) / nx) : std::numeric_limits<FT>::max();
+      data.push_back(LineData(line.startPoint(), line.endPoint(), line.anglef(), scale));
     });
   }
 
@@ -364,7 +374,9 @@ class StereoLineFilter : public FeatureFilter<FT>, public OptionManager {
     int size = static_cast<int>(lines.size());
     for (int idx = 0; idx != size; ++idx) {
       const geometric_type& line = lines[static_cast<size_t>(idx)];
-      LineData ld(line.startPoint(), line.endPoint(), line.anglef(), std::fabs(1 / line.normalX()));
+      FT nx = line.normalX();
+      FT scale = (std::abs(nx) > static_cast<FT>(1e-6)) ? std::abs(FT(1) / nx) : std::numeric_limits<FT>::max();
+      LineData ld(line.startPoint(), line.endPoint(), line.anglef(), scale);
       data.push_back(ld);
 
       std::array<std::vector<int>, bins>& qbins = this->bins_[static_cast<size_t>(static_cast<int>(ld.angle / 90) % 4)];

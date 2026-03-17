@@ -152,77 +152,78 @@ class PrecisionOptimize : public ValueManager {
     this->add(
         "search_range_d",
         [this](const Value& v) -> Value {
-          if (v.type()) search_range_d_ = v.getDouble();
+          if (v.type() != Value::NOT_A_VALUE) search_range_d_ = static_cast<double>(v);
           return Value(search_range_d_);
         },
         "Orthogonal distance search range in pixels");
     this->add(
         "search_range_r",
         [this](const Value& v) -> Value {
-          if (v.type()) search_range_r_ = v.getDouble();
+          if (v.type() != Value::NOT_A_VALUE) search_range_r_ = static_cast<double>(v);
           return Value(search_range_r_);
         },
         "Rotation search range in degrees");
     this->add(
         "interpolation",
         [this](const Value& v) -> Value {
-          if (v.type()) interpolation_ = static_cast<InterpolationMode>(v.getInt());
+          if (v.type() != Value::NOT_A_VALUE) interpolation_ = static_cast<InterpolationMode>(static_cast<int>(v));
           return Value(static_cast<int>(interpolation_));
         },
         "Interpolation: 0=nearest, 1=nearest_round, 2=bilinear, 3=bicubic");
     this->add(
         "search_strategy",
         [this](const Value& v) -> Value {
-          if (v.type()) search_strategy_ = static_cast<PrecisionSearchStrategy>(v.getInt());
+          if (v.type() != Value::NOT_A_VALUE)
+            search_strategy_ = static_cast<PrecisionSearchStrategy>(static_cast<int>(v));
           return Value(static_cast<int>(search_strategy_));
         },
         "Search strategy: 0=BFGS, 1=LBFGS, 2=CG");
     this->add(
         "stop_strategy",
         [this](const Value& v) -> Value {
-          if (v.type()) stop_strategy_ = static_cast<PrecisionStopStrategy>(v.getInt());
+          if (v.type() != Value::NOT_A_VALUE) stop_strategy_ = static_cast<PrecisionStopStrategy>(static_cast<int>(v));
           return Value(static_cast<int>(stop_strategy_));
         },
         "Stop strategy: 0=delta, 1=gradient_norm");
     this->add(
         "stop_delta",
         [this](const Value& v) -> Value {
-          if (v.type()) stop_delta_ = v.getDouble();
+          if (v.type() != Value::NOT_A_VALUE) stop_delta_ = static_cast<double>(v);
           return Value(stop_delta_);
         },
         "Stop criterion threshold");
     this->add(
         "max_iterations",
         [this](const Value& v) -> Value {
-          if (v.type()) max_iterations_ = v.getInt();
+          if (v.type() != Value::NOT_A_VALUE) max_iterations_ = static_cast<int>(v);
           return Value(max_iterations_);
         },
         "Maximum iterations (0 = unlimited)");
     this->add(
         "derivative_precision",
         [this](const Value& v) -> Value {
-          if (v.type()) derivative_precision_ = v.getDouble();
+          if (v.type() != Value::NOT_A_VALUE) derivative_precision_ = static_cast<double>(v);
           return Value(derivative_precision_);
         },
         "Numerical derivative delta");
     this->add(
         "mean_param",
         [this](const Value& v) -> Value {
-          if (v.type()) mean_param_ = v.getDouble();
+          if (v.type() != Value::NOT_A_VALUE) mean_param_ = static_cast<double>(v);
           return Value(mean_param_);
         },
         "Mean calculation parameter");
     this->add(
         "use_sampled",
         [this](const Value& v) -> Value {
-          if (v.type()) use_sampled_ = v.getBool();
+          if (v.type() != Value::NOT_A_VALUE) use_sampled_ = v.getBool();
           return Value(use_sampled_);
         },
         "Use sampled mean calculation");
     this->add(
         "use_fast",
         [this](const Value& v) -> Value {
-          if (v.type()) use_fast_ = v.getBool();
+          if (v.type() != Value::NOT_A_VALUE) use_fast_ = v.getBool();
           return Value(use_fast_);
         },
         "Use fast interpolation");
