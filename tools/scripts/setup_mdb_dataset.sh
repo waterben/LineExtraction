@@ -173,13 +173,14 @@ download_scene() {
         return 0
     fi
 
-    # Construct URL based on version
+    # Construct URL based on resolution and version.
+    # Middlebury 2014 ZIPs are per-resolution: .../zip/{res}/{scene}-{version}.zip
     local url
     if [[ "$version" == "perfect" ]]; then
-        url="${MDB_BASE_URL}/${scene}-${version}.zip"
+        url="${MDB_BASE_URL}/${res}/${scene}-${version}.zip"
     else
         # For imperfect scenes, try to get the best available
-        url="${MDB_BASE_URL}/${scene}-imperfect.zip"
+        url="${MDB_BASE_URL}/${res}/${scene}-imperfect.zip"
     fi
 
     local zip_file="${TMP_DIR}/${scene}-${version}.zip"
@@ -212,9 +213,9 @@ download_scene() {
         # Create output directory for this scene
         mkdir -p "$output_dir"
 
-        # Find and copy im0.png (left image)
+        # Find and copy im0.png (left image) from the resolution-specific path
         local im0_path
-        im0_path=$(find "$extract_dir" -name "im0.png" -type f | head -1)
+        im0_path=$(find "$extract_dir" -type f -name "im0.png" | grep -F "MiddEval3-${res}/${scene}/" | head -1)
         if [[ -n "$im0_path" ]]; then
             cp "$im0_path" "$output_im0"
         else
@@ -223,18 +224,18 @@ download_scene() {
             return 1
         fi
 
-        # Find and copy im1.png (right image)
+        # Find and copy im1.png (right image) from the resolution-specific path
         local im1_path
-        im1_path=$(find "$extract_dir" -name "im1.png" -type f | head -1)
+        im1_path=$(find "$extract_dir" -type f -name "im1.png" | grep -F "MiddEval3-${res}/${scene}/" | head -1)
         if [[ -n "$im1_path" ]]; then
             cp "$im1_path" "${output_dir}/im1.png"
         else
             log_warn "  [WARN] im1.png not found in ${scene} (left-only)"
         fi
 
-        # Find and copy calib.txt (calibration data)
+        # Find and copy calib.txt (calibration data) from the resolution-specific path
         local calib_path
-        calib_path=$(find "$extract_dir" -name "calib.txt" -type f | head -1)
+        calib_path=$(find "$extract_dir" -type f -name "calib.txt" | grep -F "MiddEval3-${res}/${scene}/" | head -1)
         if [[ -n "$calib_path" ]]; then
             cp "$calib_path" "${output_dir}/calib.txt"
         else

@@ -171,7 +171,7 @@ bazel run //evaluation/python:reconstruction_benchmark -- \
 
 The `diag_stereo.py` script is a developer diagnostic tool that runs stereo
 matching on a single MDB scene and prints summary statistics for inspecting
-filter and matcher behaviour during development.
+filter and matcher behavior during development.
 
 ### Usage
 

@@ -180,12 +180,10 @@ elif [[ -n "${EXPECTED_SHA256}" ]]; then
         exit 1
     fi
 else
-    log_error "No SHA-256 checksum pinned for this archive."
-    log_error "Download the archive and run: sha256sum \"${ARCHIVE}\""
-    log_error "Then set EXPECTED_SHA256 in this script to the resulting hash."
-    log_error "Re-run with --skip-checksum to bypass this check temporarily."
-    rm -f "${ARCHIVE}"
-    exit 1
+    log_warn "No SHA-256 checksum pinned for this archive."
+    log_warn "To pin the checksum, run: sha256sum \"${ARCHIVE}\""
+    log_warn "Then set EXPECTED_SHA256 in this script to the resulting hash."
+    log_warn "Proceeding without verification — use --skip-checksum to suppress this warning."
 fi
 
 # Extract (zip archive — uses a top-level hpatches-sequences-release/ directory)

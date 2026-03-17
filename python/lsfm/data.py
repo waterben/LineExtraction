@@ -376,7 +376,9 @@ class TestImages:
         )
         return left, right
 
-    def stereo_calibration(self, scene: str, resolution: str = "H") -> dict[str, float]:
+    def stereo_calibration(
+        self, scene: str, resolution: str = "H"
+    ) -> dict[str, object]:
         """Load MDB stereo calibration data for a scene.
 
         Reads ``calib.txt`` which contains::
@@ -393,10 +395,10 @@ class TestImages:
         :type scene: str
         :param resolution: ``"Q"`` (quarter), ``"H"`` (half), ``"F"`` (full).
         :type resolution: str
-        :return: Dict with keys ``"cam0"`` (3x3 list), ``"cam1"`` (3x3 list),
+        :return: Dict with keys ``"cam0"`` (3x3 list of lists), ``"cam1"`` (3x3 list of lists),
             ``"focal_x"``, ``"focal_y"``, ``"offset_x"``, ``"offset_y"``,
             ``"doffs"``, ``"baseline"``, ``"width"``, ``"height"``, ``"ndisp"``.
-        :rtype: dict[str, float]
+        :rtype: dict[str, object]
         :raises FileNotFoundError: If calib.txt is not found.
 
         .. note::
@@ -438,7 +440,7 @@ class TestImages:
             result["offset_x"] = cam0[0][2]
             result["offset_y"] = cam0[1][2]
 
-        return result  # type: ignore[return-value]
+        return result
 
     def stereo_camera_pair(
         self, scene: str, resolution: str = "H"

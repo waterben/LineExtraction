@@ -38,11 +38,11 @@ def main() -> None:
         f"\nSegments: {len(all_l)} raw L, {len(segs_l)} filtered L; {len(all_r)} raw R, {len(segs_r)} filtered R"
     )
 
-    # Descriptors
-    gx_l = det_l.image_data()[0].astype(np.float32)
-    gy_l = det_l.image_data()[1].astype(np.float32)
-    gx_r = det_r.image_data()[0].astype(np.float32)
-    gy_r = det_r.image_data()[1].astype(np.float32)
+    # Descriptors — use named accessors to avoid dependence on implicit list ordering
+    gx_l = det_l.image_data_by_name("gx").astype(np.float32)
+    gy_l = det_l.image_data_by_name("gy").astype(np.float32)
+    gx_r = det_r.image_data_by_name("gx").astype(np.float32)
+    gy_r = det_r.image_data_by_name("gy").astype(np.float32)
 
     lbd_l = le_lfd.FdcLBD(gx_l, gy_l)
     desc_l = lbd_l.create_list(segs_l)
