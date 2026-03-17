@@ -27,7 +27,9 @@ resources/
     ├── HPatches/            # HPatches benchmark (setup script)
     ├── MDB/                 # Middlebury stereo (manual setup)
     ├── YorkUrban/           # York Urban DB (setup script)
-    └── Wireframe/           # Wireframe dataset (setup script)
+    ├── Wireframe/           # Wireframe dataset (setup script)
+    ├── ETH3D/               # ETH3D multi-view stereo (setup script)
+    └── Hypersim/            # Hypersim synthetic indoor scenes (setup script)
 ```
 
 ## Test Images
@@ -131,6 +133,82 @@ noise/
 ├── ...
 ├── im0_gray.png           # Clean stereo pair
 └── im0_noise_gray.png     # Noisy stereo pair
+```
+
+### ETH3D Multi-View Stereo Benchmark
+
+High-resolution calibrated multi-view image sets with ground-truth point clouds for evaluating 3D line reconstruction.
+
+- **Source:** [eth3d.net](https://www.eth3d.net/) (Schops et al., CVPR 2017)
+- **Archives:** `.7z` format hosted at `https://www.eth3d.net/data/`
+- **Default scenes:** `courtyard`, `delivery_area`, `electro`
+- **Content:** Multi-view images, COLMAP camera parameters, converted `cameras.json`
+- **Bazel target:** `//resources/datasets:eth3d`
+
+**Setup:**
+
+```bash
+./tools/scripts/setup_eth3d.sh
+```
+
+This downloads the selected scenes (`.7z` archives), extracts them to
+`resources/datasets/ETH3D/<scene>/`, and converts the COLMAP camera files to
+`cameras.json` format used by the reconstruction pipeline.
+
+```
+ETH3D/
+└── <scene>/
+    ├── images/          # Multi-view images
+    ├── cameras.txt      # COLMAP camera parameters
+    ├── images.txt       # Image list
+    └── cameras.json     # Converted camera parameters
+```
+
+**Options:**
+
+```bash
+# Download specific scenes
+./tools/scripts/setup_eth3d.sh --scenes courtyard,facade,terrace
+
+# Test split instead of training
+./tools/scripts/setup_eth3d.sh --type test
+```
+
+### Hypersim Synthetic Indoor Scenes
+
+Photorealistic synthetic indoor dataset with known camera intrinsics, depth maps, and surface normals for evaluating 3D reconstruction without ground-truth depth uncertainty.
+
+- **Source:** [github.com/apple/ml-hypersim](https://github.com/apple/ml-hypersim) (Roberts et al., ICCV 2021)
+- **Content:** Tone-mapped RGB images, depth maps (`.npy`), per-frame `cameras.json`
+- **Default scenes:** `ai_001_001`, `ai_001_002`
+- **Bazel target:** `//resources/datasets:hypersim`
+
+**Setup:**
+
+```bash
+./tools/scripts/setup_hypersim.sh
+```
+
+This selectively extracts images and camera metadata from the large scene ZIP
+archives using HTTP range requests (avoids downloading multi-GB full archives),
+outputting to `resources/datasets/Hypersim/<scene>/`.
+
+```
+Hypersim/
+└── <scene>/
+    ├── images/          # RGB tone-mapped images
+    ├── depth/           # Depth maps (.npy)
+    └── cameras.json     # Per-frame camera parameters
+```
+
+**Options:**
+
+```bash
+# Download specific scenes
+./tools/scripts/setup_hypersim.sh --scenes ai_001_001,ai_002_001
+
+# Limit frames per scene
+./tools/scripts/setup_hypersim.sh --max-frames 10
 ```
 
 ## Ground Truth Format
@@ -289,6 +367,7 @@ To add a new image dataset for evaluation:
 | HPatches | 116 seq | Homography patches for descriptor evaluation | [github.com/hpatches/hpatches-dataset](https://github.com/hpatches/hpatches-dataset) |
 | Middlebury | varies | Stereo pairs with depth ground truth | [vision.middlebury.edu/stereo](https://vision.middlebury.edu/stereo/) |
 | ETH3D | varies | High-res multi-view stereo | [eth3d.net](https://www.eth3d.net/) |
+| Hypersim | 461 scenes | Synthetic indoor RGB + depth | [github.com/apple/ml-hypersim](https://github.com/apple/ml-hypersim) |
 | ScanNet | 1,513 scenes | Indoor RGB-D scans | [scannet.org](http://www.scannet.org/) |
 | Holicity | 6,500 | City-scale holistic 3D structure | [holicity.io](https://holicity.io/) |
 

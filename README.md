@@ -176,7 +176,7 @@ The [`evaluation/`](evaluation/README.md) directory contains performance benchma
 
 - **[Performance Benchmarks](evaluation/performance/README.md)**: Computational efficiency of all core algorithms (gradient, NMS, LSD, GPU convolution/FFT). Uses a task registry with auto-discovery.
 - **[Thesis Evaluations](evaluation/thesis/README.md)**: Precision and accuracy evaluations for gradient orientation, noise robustness, sub-pixel estimation, and color processing.
-- **[Python Tools](evaluation/python/README.md)**: LBD descriptor benchmark & parameter sweep, chart plotting, CSV tables, and LaTeX utilities.
+- **[Python Tools](evaluation/python/README.md)**: LBD descriptor benchmark & parameter sweep, 3D reconstruction benchmark, chart plotting, CSV tables, and LaTeX utilities.
 
 ```bash
 # Run all performance benchmarks

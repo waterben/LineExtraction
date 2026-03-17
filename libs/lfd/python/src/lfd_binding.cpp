@@ -334,6 +334,10 @@ void bind_lfd_descriptor_creators(py::module_& m, const std::string& suffix) {
                                "a line segment using gradient and image intensity bands.")
                                   .c_str())
         .def(py::init([](const std::map<std::string, cv::Mat>& data, FT pos, FT step_dir, FT lstep) {
+               for (const char* key : {"gx", "gy", "img"}) {
+                 if (data.find(key) == data.end())
+                   throw std::invalid_argument(std::string("FdcGenericLR: missing required key '") + key + "'");
+               }
                MatMap mm(data.begin(), data.end());
                return std::make_unique<LRCreator<FT>>(mm, pos, step_dir, lstep);
              }),
@@ -388,6 +392,8 @@ void bind_lfd_descriptor_creators(py::module_& m, const std::string& suffix) {
                                       .c_str())
         .def(py::init<const cv::Mat&>(), py::arg("image"), "Construct from a grayscale image (CV_8U).")
         .def(py::init([](const std::map<std::string, cv::Mat>& data) {
+               if (data.find("img") == data.end() && data.find("image") == data.end())
+                 throw std::invalid_argument("FdcOpenCVLBD: missing required key 'img' or 'image'");
                MatMap mm(data.begin(), data.end());
                return std::make_unique<OCVLBDCreator<FT>>(mm);
              }),
@@ -568,8 +574,7 @@ void bind_lfd_matchers(py::module_& m, const std::string& suffix) {
         .def(
             "match",
             [](BFMatcherLBD<FT>& self, const LBDVec<FT>& q, const LBDVec<FT>& m_dsc) { return self.match(q, m_dsc); },
-            py::arg("query"), py::arg("match"), py::return_value_policy::reference_internal,
-            "Train and return all matches.")
+            py::arg("query"), py::arg("match"), py::return_value_policy::copy, "Train and return all matches.")
         // best
         .def(
             "best",
@@ -624,8 +629,7 @@ void bind_lfd_matchers(py::module_& m, const std::string& suffix) {
             [](BFMatcherLR<FT>& self, const LRDscVec<FT>& q, const LRDscVec<FT>& m_dsc) {
               return self.match(q, m_dsc);
             },
-            py::arg("query"), py::arg("match"), py::return_value_policy::reference_internal,
-            "Train and return all matches.")
+            py::arg("query"), py::arg("match"), py::return_value_policy::copy, "Train and return all matches.")
         .def(
             "best",
             [](BFMatcherLR<FT>& self) {
@@ -671,8 +675,7 @@ void bind_lfd_matchers(py::module_& m, const std::string& suffix) {
             [](BFMatcherOCVLBD<FT>& self, const OCVLBDVec<FT>& q, const OCVLBDVec<FT>& m_dsc) {
               return self.match(q, m_dsc);
             },
-            py::arg("query"), py::arg("match"), py::return_value_policy::reference_internal,
-            "Train and return all matches.")
+            py::arg("query"), py::arg("match"), py::return_value_policy::copy, "Train and return all matches.")
         .def(
             "best",
             [](BFMatcherOCVLBD<FT>& self) {

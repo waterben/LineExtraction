@@ -105,8 +105,8 @@ TEST(MultiviewStereoTest, TwoViewMatchesStereoPlane) {
   Vec3<FT> gt_dir(0, 0, 1);
   FT mv_dot = std::abs(mv_result.direction().dot(gt_dir) / std::sqrt(mv_result.direction().dot(mv_result.direction())));
   FT sp_dot = std::abs(sp_result.direction().dot(gt_dir) / std::sqrt(sp_result.direction().dot(sp_result.direction())));
-  EXPECT_GT(mv_dot, 0.5) << "Multiview direction too far from GT";
-  EXPECT_GT(sp_dot, 0.5) << "StereoPlane direction too far from GT";
+  EXPECT_GT(mv_dot, 0.95) << "Multiview direction too far from GT";
+  EXPECT_GT(sp_dot, 0.95) << "StereoPlane direction too far from GT";
 
   // Both should be close to the ground truth line.
   EXPECT_LT(gt_line.distance(mv_result.origin()), 2.0);
@@ -166,9 +166,8 @@ TEST(MultiviewStereoTest, SegmentTriangulation) {
   LineSegment3<FT> result = mv.triangulate(obs);
   EXPECT_FALSE(result.empty());
 
-  // Length should be reasonable (GT length = 2).
-  EXPECT_GT(result.length(), 0.5);
-  EXPECT_LT(result.length(), 5.0);
+  // Length should be close to GT length of 2.
+  EXPECT_NEAR(result.length(), 2.0, 0.5);
 }
 
 TEST(MultiviewStereoTest, BatchTriangulation) {
@@ -215,5 +214,33 @@ TEST(MultiviewStereoTest, DegenerateSingleView) {
 
   std::vector<std::pair<size_t, Line<FT>>> obs = {{0, proj}};
   Line3<FT> result = mv.triangulate(obs);
+  EXPECT_TRUE(result.empty());
+}
+
+TEST(MultiviewStereoTest, OutOfBoundsCameraIndexReturnsEmpty) {
+  auto cameras = make_orbital_cameras(4, 10.0, 3.0);
+  MultiviewStereo<FT> mv(cameras);
+
+  CameraPluecker<FT> cam_p(cameras[0]);
+  Line3<FT> gt = Line3<FT>::twoPoint(Vec3<FT>(-1, 0, 0), Vec3<FT>(1, 0, 0));
+  Line<FT> proj = cam_p.project(gt);
+
+  // Camera index 99 is out of bounds — must return empty, not crash.
+  std::vector<std::pair<size_t, Line<FT>>> obs = {{0, proj}, {99, proj}};
+  Line3<FT> result = mv.triangulate(obs);
+  EXPECT_TRUE(result.empty());
+}
+
+TEST(MultiviewStereoTest, OutOfBoundsCameraIndexSegmentReturnsEmpty) {
+  auto cameras = make_orbital_cameras(4, 10.0, 3.0);
+  MultiviewStereo<FT> mv(cameras);
+
+  CameraPluecker<FT> cam_p(cameras[0]);
+  LineSegment3<FT> gt_seg(Vec3<FT>(-1, 1, 0), Vec3<FT>(1, 1, 0));
+  LineSegment<FT> proj = cam_p.project(gt_seg);
+
+  // Camera index 99 is out of bounds — must return empty, not crash.
+  std::vector<std::pair<size_t, LineSegment<FT>>> obs = {{0, proj}, {99, proj}};
+  LineSegment3<FT> result = mv.triangulate(obs);
   EXPECT_TRUE(result.empty());
 }

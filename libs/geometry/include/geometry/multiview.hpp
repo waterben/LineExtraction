@@ -89,6 +89,7 @@ class MultiviewStereo {
 
     for (size_t i = 0; i < n; ++i) {
       const size_t idx = observations[i].first;
+      if (idx >= cameras_.size()) return Line3<FT>();
       const Line<FT>& line2d = observations[i].second;
       const auto& cam = cameras_[idx];
       const auto& rot = rotations_[idx];
@@ -175,6 +176,7 @@ class MultiviewStereo {
     FT t_max = std::numeric_limits<FT>::lowest();
 
     for (const auto& [idx, seg] : observations) {
+      if (idx >= cameras_.size()) return LineSegment3<FT>();
       const auto& cam = cameras_[idx];
       const auto& rot = rotations_[idx];
 

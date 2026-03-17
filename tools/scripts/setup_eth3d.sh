@@ -19,11 +19,12 @@
 #   ./tools/scripts/setup_eth3d.sh [OPTIONS]
 #
 # Options:
-#   --scenes LIST   Comma-separated scene names
-#                   (default: courtyard,delivery_area,electro)
-#   --type TYPE     "training" or "test" (default: training)
-#   --clean         Remove existing data before download
-#   --help          Show this help message
+#   --scenes LIST       Comma-separated scene names
+#                       (default: courtyard,delivery_area,electro)
+#   --type TYPE         "training" or "test" (default: training)
+#   --clean             Remove existing data before download
+#   --skip-checksum     Bypass SHA-256 verification (use only to obtain initial hash)
+#   --help              Show this help message
 #
 # Output:
 #   resources/datasets/ETH3D/<scene>/images/       - Multi-view images
@@ -44,9 +45,30 @@ VENV_PYTHON="${WORKSPACE_ROOT}/.venv/bin/python"
 SCENES="courtyard,delivery_area,electro"
 SPLIT="training"
 CLEAN=false
+SKIP_CHECKSUM=false
 
 # ETH3D download base URL
 BASE_URL="https://www.eth3d.net/data"
+
+# SHA-256 checksums for ETH3D undistorted archives.
+# Populate each entry after a trusted download by running:
+#   sha256sum <scene>_dslr_undistorted.7z
+# Leave empty to require --skip-checksum.
+declare -A SCENE_SHA256=(
+    ["courtyard"]=""
+    ["delivery_area"]=""
+    ["electro"]=""
+    ["facade"]=""
+    ["kicker"]=""
+    ["meadow"]=""
+    ["office"]=""
+    ["pipes"]=""
+    ["playground"]=""
+    ["relief"]=""
+    ["relief_2"]=""
+    ["terrace"]=""
+    ["terrains"]=""
+)
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,6 +100,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --clean)
             CLEAN=true
+            shift
+            ;;
+        --skip-checksum)
+            SKIP_CHECKSUM=true
             shift
             ;;
         --help|-h)
@@ -140,6 +166,47 @@ download_file() {
     fi
 }
 
+# Verify a downloaded archive against an expected SHA-256 hash.
+# Usage: verify_sha256 <archive_path> <expected_sha256> <scene_name>
+# Pass empty expected_sha256 to require --skip-checksum.
+verify_sha256() {
+    local archive="$1"
+    local expected="$2"
+    local label="$3"
+
+    if [[ "${SKIP_CHECKSUM}" == "true" ]]; then
+        log_warn "  Checksum verification skipped for ${label} (--skip-checksum)."
+        return 0
+    fi
+
+    if [[ -z "${expected}" ]]; then
+        log_error "  No SHA-256 checksum configured for ${label}."
+        log_error "  Run: sha256sum \"${archive}\" and add the hash to SCENE_SHA256 in this script."
+        log_error "  Re-run with --skip-checksum to bypass temporarily."
+        rm -f "${archive}"
+        return 1
+    fi
+
+    local actual
+    if command -v sha256sum &>/dev/null; then
+        actual=$(sha256sum "${archive}" | awk '{print $1}')
+    elif command -v shasum &>/dev/null; then
+        actual=$(shasum -a 256 "${archive}" | awk '{print $1}')
+    else
+        log_warn "  Neither sha256sum nor shasum found — skipping checksum for ${label}."
+        return 0
+    fi
+
+    if [[ "${actual}" != "${expected}" ]]; then
+        log_error "  Checksum mismatch for ${label}!"
+        log_error "    Expected: ${expected}"
+        log_error "    Actual:   ${actual}"
+        rm -f "${archive}"
+        return 1
+    fi
+    log_info "  Checksum OK for ${label}."
+}
+
 extract_7z() {
     local archive="$1"
     local dest_dir="$2"
@@ -191,6 +258,7 @@ for scene in "${SCENE_ARRAY[@]}"; do
 
     log_info "  Fetching ${archive_url}..."
     if download_file "$archive_url" "$archive_path"; then
+        verify_sha256 "$archive_path" "${SCENE_SHA256[$scene]:-}" "$scene" || exit 1
         log_info "  Extracting (${archive_name})..."
         extract_7z "$archive_path" "$scene_dir"
         rm -f "$archive_path"

@@ -38,11 +38,14 @@ DATASET_DIR="${WORKSPACE_ROOT}/resources/datasets/HPatches"
 # Official mirror hosted on HuggingFace (the original icvl.ee.ic.ac.uk URL is defunct).
 # See: https://github.com/hpatches/hpatches-dataset#full-image-sequences
 DOWNLOAD_URL="https://huggingface.co/datasets/vbalnt/hpatches/resolve/main/hpatches-sequences-release.zip"
-# SHA-256 of the known-good archive. Set to empty to skip verification.
-# To pin, download once and run:  sha256sum hpatches-sequences-release.zip
+# SHA-256 of the known-good archive.
+# Obtain by downloading once and running: sha256sum hpatches-sequences-release.zip
+# Then set this variable and commit the result to the repository.
+# Use --skip-checksum only as a temporary measure while obtaining the hash.
 EXPECTED_SHA256=""
 
 CLEAN=false
+SKIP_CHECKSUM=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -61,8 +64,9 @@ usage() {
     echo "Download and prepare the HPatches dataset."
     echo ""
     echo "Options:"
-    echo "  --clean    Remove existing data before download"
-    echo "  --help     Show this help message"
+    echo "  --clean           Remove existing data before download"
+    echo "  --skip-checksum   Bypass SHA-256 verification (use only to obtain initial hash)"
+    echo "  --help            Show this help message"
 }
 
 log_info() {
@@ -85,6 +89,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --clean)
             CLEAN=true
+            shift
+            ;;
+        --skip-checksum)
+            SKIP_CHECKSUM=true
             shift
             ;;
         --help)
@@ -152,7 +160,9 @@ if [[ "${FILESIZE}" -lt 100000000 ]]; then
 fi
 
 # Verify archive integrity via SHA-256 checksum (when pinned)
-if [[ -n "${EXPECTED_SHA256}" ]]; then
+if [[ "${SKIP_CHECKSUM}" == "true" ]]; then
+    log_warn "Checksum verification skipped via --skip-checksum."
+elif [[ -n "${EXPECTED_SHA256}" ]]; then
     log_info "Verifying archive checksum..."
     if command -v sha256sum &>/dev/null; then
         ACTUAL_SHA256=$(sha256sum "${ARCHIVE}" | awk '{print $1}')
@@ -170,8 +180,12 @@ if [[ -n "${EXPECTED_SHA256}" ]]; then
         exit 1
     fi
 else
-    log_warn "No SHA-256 checksum pinned — skipping integrity verification."
-    log_warn "Pin one by running: sha256sum \"${ARCHIVE}\""
+    log_error "No SHA-256 checksum pinned for this archive."
+    log_error "Download the archive and run: sha256sum \"${ARCHIVE}\""
+    log_error "Then set EXPECTED_SHA256 in this script to the resulting hash."
+    log_error "Re-run with --skip-checksum to bypass this check temporarily."
+    rm -f "${ARCHIVE}"
+    exit 1
 fi
 
 # Extract (zip archive — uses a top-level hpatches-sequences-release/ directory)

@@ -116,3 +116,22 @@ py_binary(
         "@pip//pillow",
     ],
 )
+
+# Stereo matching diagnostics — single-scene diagnostic for development
+# Usage:
+#   bazel run //evaluation/python:diag_stereo
+py_binary(
+    name = "diag_stereo",
+    srcs = ["tools/diag_stereo.py"],
+    data = [
+        "//resources/datasets:mdb_h",
+    ],
+    main = "tools/diag_stereo.py",
+    deps = [
+        "//libs/lfd/python:le_lfd_lib",
+        "//libs/lsd/python:le_lsd_lib",
+        "//python/lsfm",
+        "@pip//numpy",
+        "@pip//pillow",
+    ],
+)

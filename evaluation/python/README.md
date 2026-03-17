@@ -17,6 +17,8 @@ All tools are in [tools/](tools/).
 | [chart_plot.py](tools/chart_plot.py) | Parse Excel chart XML files and render publication-quality charts using matplotlib |
 | [csv_table.py](tools/csv_table.py) | Convert CSV files into formatted PDF tables using ReportLab (simple and scientific styles) |
 | [replace_underscore.py](tools/replace_underscore.py) | Replace underscores with hyphens in LaTeX `\label{}` and `\ref{}` commands |
+| [reconstruction_benchmark.py](tools/reconstruction_benchmark.py) | Benchmark 3D line reconstruction pipeline: detection, matching, and triangulation on MDB stereo pairs |
+| [diag_stereo.py](tools/diag_stereo.py) | Diagnose stereo matching in `reconstruct_lines_stereo` on a single MDB scene |
 
 ## Preset Optimization
 
@@ -138,9 +140,49 @@ python evaluation/python/tools/csv_table.py results.csv --style scientific --out
 python evaluation/python/tools/replace_underscore.py document.tex
 ```
 
+## 3D Line Reconstruction Benchmark
+
+The `reconstruction_benchmark.py` script evaluates the full stereo line
+reconstruction pipeline on Middlebury stereo pairs, measuring detection
+throughput, matching quality, and triangulation accuracy.
+
+### Prerequisites
+
+```bash
+./tools/scripts/setup_mdb_dataset.sh
+```
+
+### Usage
+
+```bash
+# Quick benchmark on default MDB scenes (Half resolution)
+bazel run //evaluation/python:reconstruction_benchmark
+
+# Select specific scenes
+bazel run //evaluation/python:reconstruction_benchmark -- \
+    --scenes Adirondack Jadeplant Piano
+
+# Compare triangulation methods
+bazel run //evaluation/python:reconstruction_benchmark -- \
+    --methods midpoint plane opencv
+```
+
+## Stereo Matching Diagnostics
+
+The `diag_stereo.py` script is a developer diagnostic tool that runs stereo
+matching on a single MDB scene and prints summary statistics for inspecting
+filter and matcher behaviour during development.
+
+### Usage
+
+```bash
+bazel run //evaluation/python:diag_stereo
+```
+
 ## Dependencies
 
 - `le_algorithm`, `le_lsd`, `le_lfd`, `le_geometry` — Native pybind11 modules (Bazel-managed)
+- `lsfm` — Python package with `data`, `reconstruction`, and `synthetic` utilities (in `python/lsfm/`)
 - `numpy` — Numerical arrays
 - `Pillow` — Image loading (LBD scripts)
 - `matplotlib` — Chart rendering

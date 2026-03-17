@@ -13,6 +13,7 @@ and ``import cv2`` is not available in the Bazel sandbox.
 from __future__ import annotations
 
 import math
+from enum import Enum
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -109,14 +110,27 @@ def render_all_views(
 # Textured rendering — per-primitive color + fine texture
 # ---------------------------------------------------------------------------
 
+
+class TextureType(str, Enum):
+    """Supported procedural texture types for surface rendering."""
+
+    BRICK = "brick"
+    SHINGLE = "shingle"
+    GRASS = "grass"
+    FINE_NOISE = "fine_noise"
+
+
 # Maps primitive names to (texture_type, base_rgb_color).
-_PRIM_STYLES: dict[str, tuple[str, tuple[int, int, int]]] = {
-    "body": ("brick", (185, 185, 190)),
-    "roof": ("shingle", (185, 60, 45)),
-    "tower": ("brick", (170, 175, 185)),
-    "steeple": ("shingle", (170, 50, 35)),
+_PRIM_STYLES: dict[str, tuple[TextureType, tuple[int, int, int]]] = {
+    "body": (TextureType.BRICK, (185, 185, 190)),
+    "roof": (TextureType.SHINGLE, (185, 60, 45)),
+    "tower": (TextureType.BRICK, (170, 175, 185)),
+    "steeple": (TextureType.SHINGLE, (170, 50, 35)),
 }
-_DEFAULT_STYLE: tuple[str, tuple[int, int, int]] = ("fine_noise", (180, 180, 180))
+_DEFAULT_STYLE: tuple[TextureType, tuple[int, int, int]] = (
+    TextureType.FINE_NOISE,
+    (180, 180, 180),
+)
 
 
 def _generate_brick(width: int, height: int, seed: int = 0) -> NDArray[np.uint8]:
@@ -454,7 +468,7 @@ def render_textured(
 
         tw = x_max - x_min + 1
         th = y_max - y_min + 1
-        gen = _TEXTURE_GENERATORS.get(tex_type, _generate_fine_noise)
+        gen = _TEXTURE_GENERATORS[tex_type]
         texture_gray = gen(tw, th, seed)
         lit_color = tuple(int(min(255, c * brightness)) for c in base_color)
         texture_rgb = _tint_texture(texture_gray, lit_color)

@@ -579,10 +579,11 @@ class CameraHom : public Camera<FT> {
             FT rot_x = 0,
             FT rot_y = 0,
             FT rot_z = 0)
-      : Camera<FT>(
-            focal_x, focal_y, offset_x, offset_y, width, height, trans_x, trans_y, trans_z, rot_x, rot_y, rot_z) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_);
-  }
+      : Camera<FT>(focal_x, focal_y, offset_x, offset_y, width, height, trans_x, trans_y, trans_z, rot_x, rot_y, rot_z),
+        proj_(Camera<FT>::composeProjectionMatrix(Vec2<FT>(focal_x, focal_y),
+                                                  Vec2<FT>(offset_x, offset_y),
+                                                  Vec3<FT>(trans_x, trans_y, trans_z),
+                                                  Vec3<FT>(rot_x, rot_y, rot_z))) {}
 
   /// @brief Construct from FOV and image size.
   CameraHom(FT fov,
@@ -615,27 +616,23 @@ class CameraHom : public Camera<FT> {
             const Vec3<FT>& trans,
             const Vec3<FT>& rot = Vec3<FT>(0, 0, 0),
             const Vec2<FT>& imageSize = Vec2<FT>(0, 0))
-      : Camera<FT>(cam, trans, rot, imageSize) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_);
-  }
+      : Camera<FT>(cam, trans, rot, imageSize), proj_(Camera<FT>::composeProjectionMatrix(cam, trans, rot)) {}
 
   /// @brief Construct from camera matrix and rotation matrix.
   CameraHom(const Matx33<FT>& cam,
             const Vec3<FT>& trans,
             const Matx33<FT>& rot,
             const Vec2<FT>& imageSize = Vec2<FT>(0, 0))
-      : Camera<FT>(cam, trans, rot, imageSize) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot);
-  }
+      : Camera<FT>(cam, trans, rot, imageSize), proj_(Camera<FT>::composeProjectionMatrix(cam, trans, rot)) {}
 
   /// @brief Construct from projection matrix directly.
   CameraHom(const Matx34<FT>& proj, const Vec2<FT>& imageSize = Vec2<FT>(0, 0))
       : Camera<FT>(proj, imageSize), proj_(proj) {}
 
   /// @brief Construct from base Camera.
-  CameraHom(const Camera<FT>& cam) : Camera<FT>(cam) {
-    proj_ = Camera<FT>::composeProjectionMatrix(focal_, offset_, trans_, rot_);
-  }
+  CameraHom(const Camera<FT>& cam)
+      : Camera<FT>(cam),
+        proj_(Camera<FT>::composeProjectionMatrix(cam.focal(), cam.offset(), cam.origin(), cam.orientation())) {}
 
   /// @brief Get cached projection matrix.
   virtual Matx34<FT> projM() const { return proj_; }
@@ -819,10 +816,9 @@ class CameraPluecker : public CameraHom<FT> {
                  FT rot_y = FT(0),
                  FT rot_z = FT(0))
       : CameraHom<FT>(
-            focal_x, focal_y, offset_x, offset_y, width, height, trans_x, trans_y, trans_z, rot_x, rot_y, rot_z) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+            focal_x, focal_y, offset_x, offset_y, width, height, trans_x, trans_y, trans_z, rot_x, rot_y, rot_z),
+        rotMt_(rodrigues(Vec3<FT>(-Vec3<FT>(rot_x, rot_y, rot_z)))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(Vec2<FT>(focal_x, focal_y), Vec2<FT>(offset_x, offset_y))) {}
 
   /// @brief Construct from FOV and image size.
   CameraPluecker(FT fov,
@@ -872,10 +868,9 @@ class CameraPluecker : public CameraHom<FT> {
                  const Vec3<FT>& trans,
                  const Vec3<FT>& rot = Vec3<FT>(FT(0), FT(0), FT(0)),
                  const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)))
-      : CameraHom<FT>(cam, trans, rot, imageSize) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(cam, trans, rot, imageSize),
+        rotMt_(rodrigues(Vec3<FT>(-rot))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(cam)) {}
 
   /// @brief Construct from camera and rotation matrices.
   /// @param cam Camera intrinsic matrix (3x3).
@@ -886,25 +881,22 @@ class CameraPluecker : public CameraHom<FT> {
                  const Vec3<FT>& trans,
                  const Matx33<FT>& rot,
                  const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)))
-      : CameraHom<FT>(cam, trans, rot, imageSize), rotMt_(rot.t()) {
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(cam, trans, rot, imageSize), rotMt_(rot.t()), camMCOF_(Camera<FT>::composeCameraMatrixCOF(cam)) {}
 
   /// @brief Construct from projection matrix.
   /// @param proj 3x4 projection matrix.
   /// @param imageSize Image dimensions.
   CameraPluecker(const Matx34<FT>& proj, const Vec2<FT>& imageSize = Vec2<FT>(FT(0), FT(0)))
-      : CameraHom<FT>(proj, imageSize) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+      : CameraHom<FT>(proj, imageSize),
+        rotMt_(rodrigues(Vec3<FT>(-rot_))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(focal_, offset_)) {}
 
   /// @brief Copy construct from base Camera.
   /// @param cam Source camera.
-  CameraPluecker(const Camera<FT>& cam) : CameraHom<FT>(cam) {
-    rotMt_ = rodrigues(Vec3<FT>(-rot_));
-    camMCOF_ = Camera<FT>::composeCameraMatrixCOF(focal_, offset_);
-  }
+  CameraPluecker(const Camera<FT>& cam)
+      : CameraHom<FT>(cam),
+        rotMt_(rodrigues(Vec3<FT>(-cam.orientation()))),
+        camMCOF_(Camera<FT>::composeCameraMatrixCOF(cam.focal(), cam.offset())) {}
 
   /// @brief Get camera matrix cofactors.
   /// @return Cofactor matrix (cached).

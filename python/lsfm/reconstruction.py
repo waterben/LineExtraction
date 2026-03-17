@@ -88,6 +88,43 @@ class StereoConfig:
     merge_angle_threshold: float = 5.0
     merge_distance_threshold: float = 1.0
 
+    _TRIANGULATION_METHODS = frozenset({"midpoint", "plane", "opencv"})
+
+    def __post_init__(self) -> None:
+        """Validate configuration values."""
+        if self.min_length <= 0:
+            raise ValueError(f"min_length must be positive, got {self.min_length}")
+        if not (0.0 < self.ratio_threshold <= 1.0):
+            raise ValueError(
+                f"ratio_threshold must be in (0, 1], got {self.ratio_threshold}"
+            )
+        if self.triangulation_method not in self._TRIANGULATION_METHODS:
+            raise ValueError(
+                f"triangulation_method must be one of {sorted(self._TRIANGULATION_METHODS)},"
+                f" got '{self.triangulation_method}'"
+            )
+        if not (0.0 <= self.stereo_min_overlap <= 1.0):
+            raise ValueError(
+                f"stereo_min_overlap must be in [0, 1], got {self.stereo_min_overlap}"
+            )
+        if self.stereo_max_distance <= 0:
+            raise ValueError(
+                f"stereo_max_distance must be positive, got {self.stereo_max_distance}"
+            )
+        if self.max_reproj_error <= 0:
+            raise ValueError(
+                f"max_reproj_error must be positive, got {self.max_reproj_error}"
+            )
+        if self.merge_angle_threshold < 0:
+            raise ValueError(
+                f"merge_angle_threshold must be non-negative, got {self.merge_angle_threshold}"
+            )
+        if self.merge_distance_threshold < 0:
+            raise ValueError(
+                f"merge_distance_threshold must be non-negative,"
+                f" got {self.merge_distance_threshold}"
+            )
+
 
 @dataclass
 class StereoResult:

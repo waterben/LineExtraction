@@ -204,6 +204,28 @@ std::pair<cv::Mat, cv::Mat> compute_gradient(const cv::Mat& src) {
   return {gx, gy};
 }
 
+/// @brief Read a single pixel value from a matrix as double.
+/// Supports CV_8U, CV_16S, CV_32S, CV_32F, and CV_64F depths.
+/// @param mat Source single-channel matrix
+/// @param pos Pixel position (x = column, y = row)
+/// @return Pixel value cast to double
+static double read_pixel(const cv::Mat& mat, cv::Point pos) {
+  switch (mat.depth()) {
+    case CV_8U:
+      return mat.at<uchar>(pos);
+    case CV_16S:
+      return mat.at<short>(pos);
+    case CV_32S:
+      return mat.at<int>(pos);
+    case CV_32F:
+      return mat.at<float>(pos);
+    case CV_64F:
+      return mat.at<double>(pos);
+    default:
+      return mat.at<double>(pos);
+  }
+}
+
 /// @brief Compute contrast-based NFA for a single line segment.
 ///
 /// Rasterizes the segment via cv::LineIterator, finds the minimum magnitude
@@ -230,27 +252,7 @@ double nfa_contrast(const ::LineSegment& seg, const cv::Mat& mag, int nl) {
   // Find minimum magnitude along the segment
   double min_val = std::numeric_limits<double>::max();
   for (int i = 0; i < it.count; ++i, ++it) {
-    double v = 0;
-    switch (mag.depth()) {
-      case CV_8U:
-        v = mag.at<uchar>(it.pos());
-        break;
-      case CV_16S:
-        v = mag.at<short>(it.pos());
-        break;
-      case CV_32S:
-        v = mag.at<int>(it.pos());
-        break;
-      case CV_32F:
-        v = mag.at<float>(it.pos());
-        break;
-      case CV_64F:
-        v = mag.at<double>(it.pos());
-        break;
-      default:
-        v = mag.at<double>(it.pos());
-        break;
-    }
+    double v = read_pixel(mag, it.pos());
     if (v < min_val) min_val = v;
   }
 
@@ -259,27 +261,7 @@ double nfa_contrast(const ::LineSegment& seg, const cv::Mat& mag, int nl) {
   int count_ge = 0;
   for (int r = 0; r < mag.rows; ++r) {
     for (int c = 0; c < mag.cols; ++c) {
-      double v = 0;
-      switch (mag.depth()) {
-        case CV_8U:
-          v = mag.at<uchar>(r, c);
-          break;
-        case CV_16S:
-          v = mag.at<short>(r, c);
-          break;
-        case CV_32S:
-          v = mag.at<int>(r, c);
-          break;
-        case CV_32F:
-          v = mag.at<float>(r, c);
-          break;
-        case CV_64F:
-          v = mag.at<double>(r, c);
-          break;
-        default:
-          v = mag.at<double>(r, c);
-          break;
-      }
+      double v = read_pixel(mag, cv::Point(c, r));
       if (v > 0) ++total;
       if (v >= min_val) ++count_ge;
     }
@@ -329,30 +311,12 @@ double nfa_binomial(
   int k = 0;
   for (int i = 0; i < n; ++i, ++it) {
     cv::Point pos = it.pos();
-    double vx = 0, vy = 0;
-    switch (gx.depth()) {
-      case CV_16S:
-        vx = gx.at<short>(pos);
-        vy = gy.at<short>(pos);
-        break;
-      case CV_32F:
-        vx = gx.at<float>(pos);
-        vy = gy.at<float>(pos);
-        break;
-      case CV_64F:
-        vx = gx.at<double>(pos);
-        vy = gy.at<double>(pos);
-        break;
-      default:
-        vx = gx.at<double>(pos);
-        vy = gy.at<double>(pos);
-        break;
-    }
+    double vx = read_pixel(gx, pos);
+    double vy = read_pixel(gy, pos);
 
     double pixel_angle = cv::fastAtan2(static_cast<float>(vy), static_cast<float>(vx));
-    double diff = std::abs(line_angle - pixel_angle);
-    if (diff > 360) diff -= 360.0 * static_cast<int>(diff / 360);
-    if (diff > 180) diff = 360.0 - diff;
+    double diff = std::fmod(std::abs(line_angle - pixel_angle), 360.0);
+    if (diff > 180.0) diff = 360.0 - diff;
     if (diff < tau) ++k;
   }
 

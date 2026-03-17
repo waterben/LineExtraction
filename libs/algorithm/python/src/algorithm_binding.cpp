@@ -353,6 +353,7 @@ void bind_param_optimizer(py::module_& m) {
              const py::object& py_progress) {
             // Wrap detect_fn: convert C++ ParamConfig to Python dicts
             auto detect_fn = [&py_detect_fn](const cv::Mat& src, const ParamConfig& params) {
+              py::gil_scoped_acquire gil;
               py::list py_params = param_config_to_python(params);
               py::object result = py_detect_fn(src, py_params);
               return result.cast<std::vector<LST>>();
@@ -361,9 +362,15 @@ void bind_param_optimizer(py::module_& m) {
             ProgressCallback cb = nullptr;
             if (!py_progress.is_none()) {
               auto progress_fn = py_progress.cast<std::function<bool(int, int, double)>>();
-              cb = [progress_fn](int step, int total, double score) -> bool { return progress_fn(step, total, score); };
+              cb = [progress_fn](int step, int total, double score) -> bool {
+                py::gil_scoped_acquire gil;
+                return progress_fn(step, total, score);
+              };
             }
-            return self.optimize(strategy, space, images, ground_truth, detect_fn, cb);
+            {
+              py::gil_scoped_release release;
+              return self.optimize(strategy, space, images, ground_truth, detect_fn, cb);
+            }
           },
           py::arg("strategy"), py::arg("space"), py::arg("images"), py::arg("ground_truth"), py::arg("detect_fn"),
           py::arg("progress") = py::none(),

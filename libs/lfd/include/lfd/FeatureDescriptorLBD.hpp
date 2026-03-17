@@ -74,6 +74,9 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
 
   FT invN2, invN3;  ///< Inverse normalization factors for boundary and interior bands
 
+  /// @brief Maximum element value before re-normalization (empirical, Z. Wang).
+  static constexpr FT CLIP_THRESHOLD = FT(0.4);
+
   // Prevent copying — raw pointers alias into `bands`, so copies would dangle.
   FdcLBD(const FdcLBD&) = delete;
   FdcLBD& operator=(const FdcLBD&) = delete;
@@ -262,20 +265,24 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
 
       desID = bandID * 8;
       temp = pgdLBandSum[bandID] * invN;
-      desVec[desID] = temp;                                                                  // mean value of pgdL;
-      desVec[desID + 4] = static_cast<FT>(sqrt(pgdL2BandSum[bandID] * invN - temp * temp));  // std value of pgdL;
+      desVec[desID] = temp;  // mean value of pgdL;
+      desVec[desID + 4] =
+          static_cast<FT>(sqrt(std::max(FT(0), pgdL2BandSum[bandID] * invN - temp * temp)));  // std value of pgdL;
 
       temp = ngdLBandSum[bandID] * invN;
-      desVec[desID + 1] = temp;                                                              // mean value of ngdL;
-      desVec[desID + 5] = static_cast<FT>(sqrt(ngdL2BandSum[bandID] * invN - temp * temp));  // std value of ngdL;
+      desVec[desID + 1] = temp;  // mean value of ngdL;
+      desVec[desID + 5] =
+          static_cast<FT>(sqrt(std::max(FT(0), ngdL2BandSum[bandID] * invN - temp * temp)));  // std value of ngdL;
 
       temp = pgdOBandSum[bandID] * invN;
-      desVec[desID + 2] = temp;                                                              // mean value of pgdO;
-      desVec[desID + 6] = static_cast<FT>(sqrt(pgdO2BandSum[bandID] * invN - temp * temp));  // std value of pgdO;
+      desVec[desID + 2] = temp;  // mean value of pgdO;
+      desVec[desID + 6] =
+          static_cast<FT>(sqrt(std::max(FT(0), pgdO2BandSum[bandID] * invN - temp * temp)));  // std value of pgdO;
 
       temp = ngdOBandSum[bandID] * invN;
-      desVec[desID + 3] = temp;                                                              // mean value of ngdO;
-      desVec[desID + 7] = static_cast<FT>(sqrt(ngdO2BandSum[bandID] * invN - temp * temp));  // std value of ngdO;
+      desVec[desID + 3] = temp;  // mean value of ngdO;
+      desVec[desID + 7] =
+          static_cast<FT>(sqrt(std::max(FT(0), ngdO2BandSum[bandID] * invN - temp * temp)));  // std value of ngdO;
     }
 
     // Normalize means and standard deviations separately.
@@ -301,7 +308,7 @@ class FdcLBD : public Fdc<FT, GT, FdLBD<FT>> {
     // a threshold is used to limit the value of element in the unit feature
     // vector no larger than this threshold. In Z.Wang's work, a value of 0.4 is found
     // empirically to be a proper threshold.
-    dstMat.setTo(0.4, dstMat > 0.4);
+    dstMat.setTo(CLIP_THRESHOLD, dstMat > CLIP_THRESHOLD);
 
     // re-normalize desVec;
     dstMat *= 1.0 / static_cast<FT>(cv::norm(dstMat, cv::NORM_L2));

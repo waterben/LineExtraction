@@ -15,6 +15,7 @@ class NfaFilter : public LATool {
 
   Ui::NfaFilter* ui{nullptr};
   Analyzer* ctrl{nullptr};
+  // Non-owning. Lifetime managed by parent Analyzer (Qt ownership).
   const Analyzer::LineVector* lines{nullptr};
   const ImageSources* sources{nullptr};
   const cv::Mat* srcImg{nullptr};
