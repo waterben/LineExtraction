@@ -14,7 +14,38 @@ This module exposes the image filter interface hierarchy to Python:
 - **Image operators**: `NoOp`, `GaussianBlurOperator`, `MedianBlurOperator`, `BlurOperator`, `BilateralOperator`, `FastNlMeansOperator`, `GaussianNoiseOperator`, `UniformNoiseOperator`, `ResizeOperator`, `RotateOperator`, `ScaleOperator`, `TranslateOperator`, `PipelineOperator`
 - **Quadrature filters**: `QuadratureG2`, `QuadratureLGF`, `QuadratureS`, `QuadratureSF`
 
-Images are passed as numpy arrays and automatically converted to/from `cv::Mat`.
+Images are passed as NumPy arrays and automatically converted to/from `cv::Mat` via [cvnp](https://github.com/pthom/cvnp) — a Pybind11 type-caster that uses shared memory (zero-copy) for the conversion.
+
+## NumPy Array Requirements
+
+All `le_*` functions that accept images require the input NumPy array to meet two conditions:
+
+- **Writable**: The array must not be read-only. `np.asarray(x)` may return a read-only view; use `np.array(x)` to get a writable copy.
+- **C-contiguous**: The array must have a contiguous row-major memory layout. NumPy slices (e.g. `img[10:50, 20:80]`) are typically non-contiguous; wrap them with `np.ascontiguousarray()` before passing.
+
+Arrays from `cv2.imread()` or created directly with `np.zeros()` / `np.ones()` always satisfy both conditions.
+
+## Interoperability with `cv2`
+
+The `le_*` modules and the official OpenCV Python package (`cv2`) can be used together without any conflict. Their OpenCV builds are fully isolated at the binary level: `le_*` extension modules statically embed OpenCV (no external `libopencv_*.so`), while the `cv2` pip wheel bundles its own private OpenCV copy. Neither links a shared system OpenCV library, so symbol conflicts are impossible.
+
+Interoperability works through NumPy as the common data format — cvnp uses only the NumPy buffer protocol (shape, dtype, strides) and is entirely independent of `cv2`'s internal types. In practice:
+
+```python
+import cv2
+import le_lsd, le_geometry
+
+# cv2.imread returns a writable, C-contiguous NumPy array — passes directly to le_*
+img = cv2.imread("image.png", cv2.IMREAD_GRAYSCALE)
+det = le_lsd.LsdCC()
+det.detect(img)  # no conversion or copying needed
+
+canvas = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+le_geometry.draw_lines_random_inplace(canvas, det.line_segments())
+cv2.imwrite("result.png", canvas)
+```
+
+**Note:** `cv2` is not a declared dependency of this project (it arrives transitively via `ultralytics`). In Bazel Python environments it may not be available; use PIL/Pillow or pure NumPy for image loading instead, and call `np.array()` rather than `np.asarray()` to ensure writability.
 
 ## Quick Start
 

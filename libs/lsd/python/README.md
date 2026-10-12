@@ -15,6 +15,8 @@ algorithms with a unified interface:
 
 Images are passed as NumPy arrays and automatically converted to/from `cv::Mat`.
 
+> **NumPy requirements and `cv2` interoperability:** Arrays must be writable and C-contiguous. For details and examples see the [le_imgproc README](../../imgproc/python/README.md#numpy-array-requirements).
+
 > **Dependencies:** `le_lsd` imports `le_geometry`, `le_imgproc`, and `le_edge`
 > at load time.  All three modules must be available.
 
