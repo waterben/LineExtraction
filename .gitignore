@@ -58,6 +58,9 @@ compile_commands.json
 **/*:Zone.Identifier
 .venv/**/*
 
+# Model weights (downloaded on demand)
+*.pt
+
 #c++
 # Prerequisites
 *.d
