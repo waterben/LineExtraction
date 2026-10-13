@@ -31,13 +31,10 @@ This directory contains feature flags and configuration for conditional compilat
 
 ### OpenCV Photo Module
 
-- **Flag**: `--//bazel:enable_photo=true/false`
-- **Default**: `true` (available since opencv 4.12.0.bcr.1)
-- **Description**: Enable OpenCV photo module for advanced denoising
+- **Flag**: none — always enabled (requires opencv >= 4.12.0.bcr.1)
+- **Description**: OpenCV photo module for advanced denoising
 - **Affects**:
   - `FastNlMeansOperator` in `//libs/imgproc`
-
-**Note:** The photo module is now available in BCR and enabled by default.
 
 ## Usage Examples
 
@@ -136,7 +133,7 @@ cc_library(
 
 - ✅ Qt5: Configurable (disabled by default due to sandbox issues)
 - ✅ OpenGL: Configurable (disabled by default)
-- ✅ OpenCV Photo: Available and enabled by default (BCR >= 4.12.0.bcr.1)
+- ✅ OpenCV Photo: Always enabled (BCR >= 4.12.0.bcr.1)
 - ⏸️ CUDA: Flag defined but not yet implemented
 
 ## Compiler Options
@@ -176,4 +173,4 @@ code, not to external libraries.
 | `ENABLE_QT` | `--//bazel:enable_qt5` | Qt5 support |
 | `ENABLE_CUDA` | `--//bazel:enable_cuda` | CUDA support (TBD) |
 | `WITH_OPENGL` | `--//bazel:enable_opengl` | OpenGL support |
-| N/A | `--//bazel:enable_photo` | OpenCV photo module |
+| N/A | N/A | OpenCV photo module is always enabled |

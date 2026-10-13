@@ -17,11 +17,5 @@ target_link_libraries(test_geometry_gt lib_geometry le::opencv)
 add_executable(test_geometry_line src/line_test.cpp)
 target_link_libraries(test_geometry_line lib_geometry lib_imgproc le::opencv)
 
-if(OPENGL_FOUND)
-    add_executable(test_geometry_obj src/obj_test.cpp)
-    target_link_libraries(test_geometry_obj lib_geometry ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} le::opencv)
-
-endif()
-
 add_executable(test_geometry_poly src/poly_test.cpp)
 target_link_libraries(test_geometry_poly lib_imgproc lib_geometry le::opencv)

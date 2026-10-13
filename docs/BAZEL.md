@@ -302,6 +302,7 @@ The following opencv_contrib modules are available for use:
 | `//libs/lsd` | ✅ | Line Segment Detector |
 | `//libs/lfd` | ✅ | Line Feature Detector |
 | `//libs/eval` | ✅ | Evaluation framework |
+| `//libs/algorithm` | ✅ | Post-processing, accuracy evaluation, parameter optimization, presets |
 
 ### Third-Party Libraries
 
@@ -309,7 +310,6 @@ The following opencv_contrib modules are available for use:
 |--------|--------|-------|
 | `//third-party/qplot` | ✅ | Requires `--//bazel:enable_qt5=true` |
 | `//third-party/qplot3d` | ✅ | Requires Qt5 + OpenGL |
-| `//third-party/opencv_wrapper` | ✅ | OpenCV utilities |
 
 ### Applications
 
@@ -592,7 +592,9 @@ bazel-bin/python/lsfm-0.1.0-cp312-cp312-linux_x86_64.whl
 | `le_algorithm.so` + `.pyi` | Post-processing, optimization, presets module |
 | `lsfm/__init__.py` | Python package with lazy re-exports |
 | `lsfm/data.py` | TestImages utility for dataset access |
-| `lsfm/limap_compat.py` | LIMAP forward-compatibility helpers |
+| `lsfm/notebook.py` | Helpers for Jupyter notebooks |
+| `lsfm/reconstruction.py` | Stereo line reconstruction helpers |
+| `lsfm/synthetic/` | Synthetic scenes with ground truth for 3D reconstruction |
 | `lsfm/py.typed` | PEP 561 type-checking marker |
 
 ### Install the Wheel

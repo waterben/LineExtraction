@@ -156,9 +156,16 @@ The [`examples/notebooks/`](examples/notebooks/) directory contains interactive 
 | 1 | [`tutorial_1_fundamentals`](examples/notebooks/tutorial_1_fundamentals.ipynb) | **Library Fundamentals** — Gradients, geometry primitives, drawing, ValueManager |
 | 2 | [`tutorial_2_pipelines`](examples/notebooks/tutorial_2_pipelines.ipynb) | **Edge & Line Detection Pipelines** — Full pipeline with all 9 LSD detectors |
 | 3 | [`tutorial_3_evaluation`](examples/notebooks/tutorial_3_evaluation.ipynb) | **Performance Evaluation** — Benchmarking framework and result analysis |
+| 4 | [`tutorial_4_algorithm`](examples/notebooks/tutorial_4_algorithm.ipynb) | **Algorithm Library** — Post-processing, accuracy evaluation, detector profiling, parameter optimization |
+| 5 | [`tutorial_5_advanced_filters`](examples/notebooks/tutorial_5_advanced_filters.ipynb) | **Advanced Filters** — SUSAN and RCMG gradients, quadrature filters |
+| 6 | [`tutorial_6_image_operators`](examples/notebooks/tutorial_6_image_operators.ipynb) | **Image Operators & Pipelines** — Blur, denoise, noise, geometric transforms, operator pipelines |
+| 7 | [`tutorial_7_3d_geometry`](examples/notebooks/tutorial_7_3d_geometry.ipynb) | **3D Geometry & Camera Models** — 3D lines, planes, poses, camera hierarchy, projection |
 | — | [`demo_pytorch_esd`](examples/notebooks/demo_pytorch_esd.ipynb) | **PyTorch Integration** — Object segmentation (SAM/YOLO) + ESD line extraction |
 | — | [`intro_line_extraction_overview`](examples/notebooks/intro_line_extraction_overview.ipynb) | **API Reference** — Compact tour of all Python modules |
 | — | [`demo_line_features`](examples/notebooks/demo_line_features.ipynb) | **Line Feature Demo** — LBD descriptor matching (float + OpenCV binary), runtime comparison, Rerun visualization |
+| — | [`demo_rerun_lsd`](examples/notebooks/demo_rerun_lsd.ipynb) | **Rerun LSD Visualization** — Interactive line segment visualization with the inline Rerun viewer |
+| — | [`demo_stereo_reconstruction`](examples/notebooks/demo_stereo_reconstruction.ipynb) | **Stereo Line Reconstruction** — Matching and triangulating line segments from a calibrated stereo pair |
+| — | [`demo_3d_recon_synthetic`](examples/notebooks/demo_3d_recon_synthetic.ipynb) | **Synthetic 3D Line Reconstruction** — Stereo and multi-view reconstruction with known ground truth |
 
 ```bash
 # Prerequisites: build the Python bindings
@@ -253,10 +260,12 @@ le_imgproc       le_geometry       le_eval
     ▼                 ▼                 │
          le_lsd                         │
     (9 LSD detectors)                   │
-              │                         │              ▼                         │
+              │                         │
+              ▼                         │
           le_lfd                        │
   (descriptors, matchers, filters)      │
-              │                         │              ▼                         ▼
+              │                         │
+              ▼                         ▼
                   le_algorithm
          (post-processing, optimization,
           accuracy, presets)
@@ -313,7 +322,6 @@ All dependencies are automatically managed by both build systems:
 | [`docs/WSL.md`](docs/WSL.md) | Windows Subsystem for Linux setup |
 | [`docs/JUPYTER.md`](docs/JUPYTER.md) | Jupyter Notebook tutorials and Python onboarding |
 | [`docs/RERUN.md`](docs/RERUN.md) | Rerun visualization — viewer setup, C++ SDK, Python SDK, Jupyter |
-| [`docs/NextSteps.md`](docs/NextSteps.md) | Feature roadmap and implementation status |
 | [`resources/README.md`](resources/README.md) | Datasets, ground truth, presets, data sources |
 
 ### API Documentation

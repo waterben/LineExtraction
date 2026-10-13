@@ -153,8 +153,8 @@ Debug workflow uses build-and-copy pattern to fixed debug location (`.vscode/deb
 bazel test //...
 
 # Run specific test
-bazel test //libs/geometry:test_geometry
-bazel test //libs/edge:test_edge
+bazel test //libs/geometry:test_line
+bazel test //libs/edge:test_nms
 
 # Run tests with verbose output
 bazel test //... --test_output=all
@@ -214,7 +214,6 @@ Tests are automatically discovered from `libs/*/tests/*.cpp` in both build syste
        ],
    )
    ```
-4. Add library to `libs/BUILD.bazel` if needed
 
 **For CMake (legacy only):** See `docs/CMAKE.md` if explicitly requested.
 
