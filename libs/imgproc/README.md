@@ -369,7 +369,7 @@ Most classes are templated for flexibility:
 ```bash
 # Bazel
 bazel build //libs/imgproc:lib_imgproc
-bazel test //libs/imgproc:test_imgproc
+bazel test //libs/imgproc:test_gradient
 
 # CMake
 cmake --build build --target lib_imgproc

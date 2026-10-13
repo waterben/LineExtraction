@@ -187,7 +187,7 @@ This ensures:
 # Bazel
 bazel build //libs/utility:lib_utility        # Core library
 bazel build //libs/utility:lib_utility_gui    # GUI utilities
-bazel test //libs/utility:test_utility
+bazel test //libs/utility:test_value
 
 # CMake
 cmake --build build --target lib_utility

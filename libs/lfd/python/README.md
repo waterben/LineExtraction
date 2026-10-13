@@ -309,19 +309,6 @@ for m in valid[:10]:
     print(f"  seg {m.query_idx} -> {m.match_idx}  dist={m.distance:.3f}")
 ```
 
-## LIMAP Forward-Compatibility
-
-The `lsfm.limap_compat` module provides conversion helpers for feeding
-line features into [LIMAP](https://github.com/cvg/limap) 3D reconstruction:
-
-```python
-from lsfm.limap_compat import segments_to_limap, descriptors_to_limap, matches_to_limap
-
-limap_segs  = segments_to_limap(segments)               # (N, 5) ndarray
-limap_desc  = descriptors_to_limap(lbd_creator, segs)   # {"ms_lines", "line_descriptors"}
-limap_pairs = matches_to_limap(matches)                  # (M, 2) int32
-```
-
 ## Double Precision
 
 All types are available in double precision:

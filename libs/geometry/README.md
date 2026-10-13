@@ -301,7 +301,7 @@ bazel build //libs/geometry:lib_geometry
 bazel test //libs/geometry:all
 
 # Build and run specific test
-bazel test //libs/geometry:test_geometry
+bazel test //libs/geometry:test_line
 ```
 
 ## Directory Structure
