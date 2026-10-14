@@ -148,9 +148,10 @@ restore_dev() {
 }
 
 echo "=== Stamping version ${VERSION} ==="
+# Set the trap first so a failed verification also restores the dev version
+trap restore_dev EXIT INT TERM
 stamp_version "${VERSION}"
 verify_stamp "${VERSION}"
-trap restore_dev EXIT INT TERM
 echo "  MODULE.bazel, python/BUILD.bazel, python/lsfm/__init__.py"
 
 # --- Build wheel --------------------------------------------------------------
