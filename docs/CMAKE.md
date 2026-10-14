@@ -104,9 +104,9 @@ ctest
 ctest --verbose
 
 # Run specific test
-./bin/test_geometry
-./bin/test_edge
-./bin/test_lsd
+./bin/test_line
+./bin/test_nms
+./bin/test_lsd_base
 
 # Run tests in parallel
 ctest -j$(nproc)
@@ -395,7 +395,7 @@ cmake --build . --clean-first
 ctest --verbose
 
 # Run specific test directly
-./bin/test_utility --gtest_filter=MyTest.*
+./bin/test_value --gtest_filter=MyTest.*
 ```
 
 ## Advanced Configuration

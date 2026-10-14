@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 3.5...3.27)
 
 # Add Libraries
 
-#add_executable(test_geometry_camera src/camera_test.cpp)
-#target_link_libraries(test_geometry_camera lib_geometry ${Boost_LIBRARIES} le::opencv)
-
-#add_executable(test_geometry_stereo src/stereo_test.cpp)
-#target_link_libraries(test_geometry_stereo lib_geometry ${Boost_LIBRARIES} le::opencv)
-
 add_executable(test_geometry_stereo_pluecker src/stereo_pluecker_test.cpp)
 target_link_libraries(test_geometry_stereo_pluecker lib_geometry le::opencv)
 

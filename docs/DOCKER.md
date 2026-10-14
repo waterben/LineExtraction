@@ -331,9 +331,6 @@ clangd --version
 # Generate compile_commands.json (for CMake)
 cd build
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-
-# Or for Bazel
-./tools/scripts/generate_compile_commands.sh
 ```
 
 ### Performance issues

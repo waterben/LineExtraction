@@ -13,10 +13,6 @@ Examples demonstrating geometric primitives, camera models, stereo vision, and 3
 | `test_geometry_poly` | [poly_test.cpp](src/poly_test.cpp) | Polygon operations: area, perimeter, point-in-polygon, rendering |
 | `test_geometry_stereo_pluecker` | [stereo_pluecker_test.cpp](src/stereo_pluecker_test.cpp) | Plücker line representation for 3D line triangulation from stereo views |
 
-> **Not built by default** (commented out in CMake):
-> [camera_test.cpp](src/camera_test.cpp) — camera projection and intrinsic/extrinsic parameters,
-> [stereo_test.cpp](src/stereo_test.cpp) — stereo calibration, rectification, and 3D reconstruction.
-
 ## Building & Running
 
 ```bash
